@@ -7,6 +7,7 @@ mypy-extensions==0.4.3
 numpy==1.24.1
 pathspec==0.10.3
 platformdirs==2.6.2
+psycopg2==2.9.5
 pytz==2022.7.1
 rcal @ git+https://github.com/jtiosue/rcal@e29060ebc23f7bba43bb57a74b0789983728aa25
 sqlparse==0.4.3
