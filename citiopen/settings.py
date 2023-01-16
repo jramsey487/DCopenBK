@@ -153,7 +153,7 @@ USE_I18N = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "api/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "frontend/build/static")]
 
 # Default primary key field type
