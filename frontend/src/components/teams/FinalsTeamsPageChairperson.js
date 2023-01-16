@@ -287,7 +287,9 @@ function Header(props) {
   }, []);
 
   return showFinalsTeams == null ? (
-    ""
+    <Typography variant="h4" sx={{ mb: 1 }}>
+      Finals Teams
+    </Typography>
   ) : (
     <div>
       <Alerts

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Grid, Box } from "@mui/material";
-import { getAuthHeader, getSessionStorage, RatingButton } from "./Utils";
+import { getAuthHeader, getSessionStorage, RatingButton } from "../Utils";
 
 export default function BallkidPage(props) {
   const [ballkid, setBallkid] = useState(null);

@@ -33,12 +33,12 @@ import {
   ReportOff,
   Shortcut,
 } from "@mui/icons-material";
-import RatingDialog from "./ratings/RatingDialog";
-import { Icons, getAuthHeader } from "./Utils";
-import { CheckinHistoryChart } from "./charts/CheckinHistoryChart";
-import { CaptainHistoryChart } from "./charts/CaptainHistoryChart";
-import { CourtHistoryChart } from "./charts/CourtHistoryChart";
-import { RaterParamsChart } from "./charts/RaterParamsChart";
+import RatingDialog from "../ratings/RatingDialog";
+import { Icons, getAuthHeader } from "../Utils";
+import { CheckinHistoryChart } from "./CheckinHistoryChart";
+import { CaptainHistoryChart } from "./CaptainHistoryChart";
+import { CourtHistoryChart } from "./CourtHistoryChart";
+import { RaterParamsChart } from "./RaterParamsChart";
 
 function renderHeader(ballkid, setUpdated) {
   return (

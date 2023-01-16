@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import BallkidList from "./lists/BallkidList";
-import BallkidPage from "./BallkidPage";
+import BallkidPage from "./ballkid/BallkidPage";
 import TeamsPage from "./teams/TeamsPage";
 import TeamsPageChairperson from "./teams/TeamsPageChairperson";
 import CutPage from "./lists/CutPage";
@@ -11,7 +11,7 @@ import ArchivedBallkidList from "./lists/ArchivedBallkidList";
 import SchedulePage from "./schedule/SchedulePage";
 import DebugPage from "./DebugPage";
 import LoginPage from "./LoginPage";
-import BallkidPageChairperson from "./BallkidPageChairperson";
+import BallkidPageChairperson from "./ballkid/BallkidPageChairperson";
 import FinalsTeamsPageChairperson from "./teams/FinalsTeamsPageChairperson";
 import FinalsTeamsPage from "./teams/FinalsTeamsPage";
 import RatingsPage from "./ratings/RatingsPage";
