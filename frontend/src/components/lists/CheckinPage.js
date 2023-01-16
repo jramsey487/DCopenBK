@@ -15,8 +15,8 @@ import {
   LayoutButtons,
   getAuthHeader,
   getSessionStorage,
-} from "./Utils";
-import { MARGINS } from "./Consts";
+} from "../Utils";
+import { MARGINS } from "../Consts";
 
 function renderCheckinButton(firstName, lastName, isCheckedIn, setUpdated) {
   const checkinString = isCheckedIn ? "Check Out" : "Check In";

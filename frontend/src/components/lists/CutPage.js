@@ -15,8 +15,8 @@ import {
   LayoutButtons,
   getAuthHeader,
   getSessionStorage,
-} from "./Utils";
-import { MARGINS } from "./Consts";
+} from "../Utils";
+import { MARGINS } from "../Consts";
 
 function renderButton(firstName, lastName, newCutStatus, setUpdated) {
   var cutString = "";
