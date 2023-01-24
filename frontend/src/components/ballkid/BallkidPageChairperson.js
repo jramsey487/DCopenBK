@@ -284,7 +284,7 @@ function RatingSection({ ballkid }) {
   return (
     <Grid container>
       <Grid item xs={12}>
-        <Typography variant="h6">Ratings Info:</Typography>
+        <Typography variant="h6">Ratings:</Typography>
       </Grid>
 
       {!ballkid.is_captain ? (
@@ -337,15 +337,13 @@ function RatingSection({ ballkid }) {
           View ratings for this ballkid
         </Button>
         {params.improvement == null ? (
-          ""
+          <Typography></Typography>
         ) : (
           <Typography variant="body1">
             Improvement: {Number(params.improvement).toFixed(3)}
           </Typography>
         )}
-      </Grid>
 
-      <Grid item xs={12} md={4.5} lg={5.5} sx={{ mx: 1 }}>
         <Button
           size="small"
           variant="outlined"

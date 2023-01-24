@@ -25,19 +25,8 @@ export default function BallkidPageCaptain(props) {
         <Typography variant="h4">
           {ballkid.first_name} {ballkid.last_name}
         </Typography>
-        <div style={{ alignItems: "right" }}>
-          <RatingButton ballkid={ballkid} />
-          <Button
-            size="small"
-            variant="outlined"
-            component={Link}
-            href={`/my-ratings?rater=${ballkid.id}`}
-            endIcon={<Shortcut />}
-            sx={{ my: 1 }}
-          >
-            View my ratings for this ballkid
-          </Button>
-        </div>
+
+        <RatingButton ballkid={ballkid} />
       </div>
 
       <Grid container>
@@ -55,6 +44,7 @@ export default function BallkidPageCaptain(props) {
             Preferred position: {ballkid.preferred_position}
           </Typography>
           <br />
+
           {(ballkid.is_cut === "true") | !ballkid.is_active ? (
             ""
           ) : (
@@ -70,6 +60,18 @@ export default function BallkidPageCaptain(props) {
                   : ballkid.current_team}
               </Typography>
               <br />
+
+              <Typography variant="h6">Ratings:</Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                component={Link}
+                href={`/my-ratings?ratee=${ballkid.id}`}
+                endIcon={<Shortcut />}
+                sx={{ my: 1 }}
+              >
+                View my ratings for this ballkid
+              </Button>
             </div>
           )}
         </Grid>
