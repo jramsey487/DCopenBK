@@ -6,3 +6,7 @@ export const MATCH_TYPES = {
   WS: "Women's Singles",
   WD: "Women's Doubles",
 };
+
+// Note that these dates are 0-indexed!!
+export const START_DATE = new Date(2023, 0, 15);
+export const END_DATE = new Date(2023, 0, 30);

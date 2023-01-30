@@ -16,6 +16,7 @@ import {
 import { Star, Circle, GridView, List } from "@mui/icons-material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import RatingDialog from "./ratings/RatingDialog";
+import { END_DATE, START_DATE } from "./Consts";
 
 export function Icons({ ballkid, margin }) {
   if (!ballkid.is_captain && ballkid.num_years_experience > 0) {
@@ -337,6 +338,21 @@ export function RatingAndLabel({ label, rating, setRating }) {
       />
     </Grid>
   );
+}
+
+export function getDays() {
+  // Note that these dates are 0-indexed!!
+  const startDate = new Date(START_DATE);
+  const endDate = new Date(END_DATE);
+
+  const days = [];
+  const date = startDate;
+  while (date <= endDate) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
+  }
+
+  return days;
 }
 
 export function getTimeFloat(str) {
