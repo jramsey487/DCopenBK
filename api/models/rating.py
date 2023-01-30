@@ -20,9 +20,10 @@ class Rating(models.Model):
 
 class CalibrationParams(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE, related_name="ballkid")
-    improvement = models.FloatField(blank=True, null=True)
+    ballkid_improvement = models.FloatField(blank=True, null=True)
+    ballkid_offset = models.FloatField(blank=True, null=True)
     reviewer_scale = models.FloatField(blank=True, null=True)
     reviewer_offset = models.FloatField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.ballkid.get_name()} with improvement {self.improvement}, reviewer scale {self.reviewer_scale}, and reviewer offset {self.reviewer_offset}"
+        return f"{self.ballkid.get_name()} with improvement {self.ballkid_improvement} and offset {self.ballkid_offset}, reviewer scale {self.reviewer_scale} and offset {self.reviewer_offset}"
