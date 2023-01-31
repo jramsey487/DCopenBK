@@ -120,7 +120,6 @@ class UpdateBallkid(APIView):  # consider changing to extend UpdateAPIView
                     if field in ["first_name", "last_name", "user"]:
                         continue
 
-                    print(f"Setting field {field} with {serializer.data[field]}")
                     ballkid.set_field(field, serializer.data[field])
 
                 ballkid.validate()
