@@ -14,7 +14,7 @@ export default function ResetEmailSent(props) {
         >
           <Grid item xs={12}>
             <Typography component="h4" variant="h4">
-              Reset password email sent!
+              Password reset email sent!
             </Typography>
           </Grid>
           <Grid item xs={12}>

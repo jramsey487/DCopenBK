@@ -47,13 +47,6 @@ function chairpersonRoutes(setToken) {
       <Route path="/teams" element={<TeamsPageChairperson />} />
       <Route path="/finals-teams" element={<FinalsTeamsPageChairperson />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-email-sent" element={<ResetEmailSent />} />
-      <Route
-        path="/reset-password-complete"
-        element={<ResetPasswordComplete />}
-      />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
   );
@@ -72,13 +65,6 @@ function captainRoutes(setToken) {
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/finals-teams" element={<FinalsTeamsPage />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-email-sent" element={<ResetEmailSent />} />
-      <Route
-        path="/reset-password-complete"
-        element={<ResetPasswordComplete />}
-      />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
   );
@@ -93,13 +79,6 @@ function ballkidRoutes(setToken) {
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/finals-teams" element={<FinalsTeamsPage />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-email-sent" element={<ResetEmailSent />} />
-      <Route
-        path="/reset-password-complete"
-        element={<ResetPasswordComplete />}
-      />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
   );

@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Button, Grid, Typography, TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPasswordPage(props) {
   const [email, setEmail] = useState("");
+
+  const navigate = useNavigate();
 
   return (
     <div className="page">
@@ -20,7 +23,7 @@ export default function ForgotPasswordPage(props) {
             </Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography component="body1" variant="body1">
+            <Typography variant="body1">
               Enter your email address below, and we'll email instructions for
               setting a new one.
             </Typography>
@@ -39,17 +42,16 @@ export default function ForgotPasswordPage(props) {
             <Button
               color="primary"
               variant="contained"
-              onClick={(e) =>
-                fetch("/accounts/get-token", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    email: email,
-                  }),
-                })
-                  .then((response) => response.json())
-                  .then((data) => console.log(data))
-                  .catch((error) => {})
+              onClick={
+                (e) =>
+                  fetch("/accounts/reset-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      email: email,
+                    }),
+                  }).then((response) => response.json())
+                // .then((data) => navigate("reset-email-sent"))
               }
             >
               Submit

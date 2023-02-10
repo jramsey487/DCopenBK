@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # Third-party apps
     "rest_framework",
     "rest_framework.authtoken",
+    "django_rest_passwordreset",
     # Local apps
     "api.apps.ApiConfig",
     "accounts.apps.AccountsConfig",
@@ -153,3 +154,5 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "frontend/build/static")]
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
