@@ -8,11 +8,16 @@ import {
   Button,
   Menu,
   MenuItem,
+  IconButton,
 } from "@mui/material";
-import { SportsTennis } from "@mui/icons-material";
+import { AccountCircle, SportsTennis } from "@mui/icons-material";
 import { getSessionStorage, setSessionStorage } from "./Utils";
 
-function NavbarItem({ tab }) {
+function NavbarItem(props) {
+  const tab = props?.tab;
+  const useIconButton = props?.useIconButton;
+  const setToken = props?.setToken;
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [overButton, setOverButton] = useState(false);
   const [overMenu, setOverMenu] = useState(false);
@@ -20,6 +25,14 @@ function NavbarItem({ tab }) {
   const handleClose = () => {
     setOverButton(false);
     setOverMenu(false);
+  };
+
+  const handleLogout = () => {
+    handleClose();
+    setToken("");
+    setSessionStorage("group", "");
+    setSessionStorage("ballkid_id", "");
+    setSessionStorage("username", "");
   };
 
   const enterButton = (e) => {
@@ -45,17 +58,28 @@ function NavbarItem({ tab }) {
 
   return (
     <div>
-      <Button
-        color="inherit"
-        onMouseEnter={enterButton}
-        onMouseLeave={leaveButton}
-        component={Link}
-        to={tab.url}
-      >
-        {tab.label}
-      </Button>
+      {useIconButton ? (
+        <IconButton
+          color="inherit"
+          onMouseEnter={enterButton}
+          onMouseLeave={leaveButton}
+          component={Link}
+          to={tab.url}
+        >
+          {tab.icon}
+        </IconButton>
+      ) : (
+        <Button
+          color="inherit"
+          onMouseEnter={enterButton}
+          onMouseLeave={leaveButton}
+          component={Link}
+          to={tab.url}
+        >
+          {tab.label}
+        </Button>
+      )}
 
-      {/* {tab.subtabs ? <Dropdown subtabs={tab.subtabs} /> : ""} */}
       {!tab.subtabs ? (
         ""
       ) : (
@@ -77,7 +101,7 @@ function NavbarItem({ tab }) {
               key={subtab.label}
               component={Link}
               to={subtab.url}
-              onClick={handleClose}
+              onClick={subtab.label !== "Logout" ? handleClose : handleLogout}
             >
               {subtab.label}
             </MenuItem>
@@ -168,6 +192,16 @@ export default function Navbar(props) {
     },
   ];
 
+  const accountTab = {
+    icon: <AccountCircle />,
+    url: "/me",
+    subtabs: [
+      { label: "My Profile", url: "/me" },
+      { label: "Account Settings", url: "/settings" },
+      { label: "Logout", url: "/login" },
+    ],
+  };
+
   var tabs = [];
   switch (group) {
     case "ballkid":
@@ -218,7 +252,7 @@ export default function Navbar(props) {
             ) : (
               <div className="sxs">
                 {tabs.map((tab) => (
-                  <NavbarItem key={tab.label} tab={tab} />
+                  <NavbarItem key={tab.label} tab={tab} useIconButton={false} />
                 ))}
               </div>
             )}
@@ -229,19 +263,11 @@ export default function Navbar(props) {
               Login
             </Button>
           ) : (
-            <Button
-              color="inherit"
-              component={Link}
-              to="/login"
-              onClick={() => {
-                props.setToken("");
-                setSessionStorage("group", "");
-                setSessionStorage("ballkid_id", "");
-                setSessionStorage("username", "");
-              }}
-            >
-              Logout
-            </Button>
+            <NavbarItem
+              tab={accountTab}
+              useIconButton={true}
+              setToken={props.setToken}
+            />
           )}
         </div>
       </Toolbar>
