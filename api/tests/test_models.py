@@ -152,10 +152,10 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_checkin_history_existing_row_check_out(self):
         self.assertEqual(0, len(CheckinHistory.objects.all()))
 
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
 
-        self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 1, 11, 30))
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 11, 30))
         self.ballkid.is_checked_in = False
         self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
@@ -165,10 +165,10 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_checkin_history_many_hours_check_out(self):
         self.assertEqual(0, len(CheckinHistory.objects.all()))
 
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
 
-        self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 1, 18, 45))
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 18, 45))
         self.ballkid.is_checked_in = False
 
         self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
@@ -179,15 +179,15 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_checkin_history_mult_histories(self):
         self.assertEqual(0, len(CheckinHistory.objects.all()))
 
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
-        self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 1, 18, 45))
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 18, 45))
         self.ballkid.is_checked_in = False
         self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 2, 15, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 2, 15, 30))
         self.ballkid.is_checked_in = True
-        self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 2, 18, 31))
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 2, 18, 31))
         self.ballkid.is_checked_in = False
         self.assertEqual(2, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
@@ -199,36 +199,36 @@ class TestBallkidModelAnalytics(TestCase):
         self.assertEqual(timedelta(hours=3, minutes=1), history2.duration)
 
     def test_handle_checkin_history_checkout_before_checkin(self):
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
         with self.assertRaises(Exception):
-            self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 1, 8, 45)),
+            self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 8, 45)),
             self.ballkid.is_checked_in = False
 
     def test_handle_checkin_history_mult_ballkids(self):
         self.assertEqual(0, len(CheckinHistory.objects.all()))
 
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
-        self.ballkid.handle_checkin_history(False, time=datetime(2022, 1, 1, 18, 45))
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 18, 45))
         self.ballkid.is_checked_in = False
         self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
-        self.ballkid2.handle_checkin_history(True, time=datetime(2022, 1, 2, 15, 30))
+        self.ballkid2.handle_checkin_history(True, now=datetime(2022, 1, 2, 15, 30))
         self.ballkid.is_checked_in = True
-        self.ballkid2.handle_checkin_history(False, time=datetime(2022, 1, 2, 18, 31))
+        self.ballkid2.handle_checkin_history(False, now=datetime(2022, 1, 2, 18, 31))
         self.ballkid.is_checked_in = False
         self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
     def test_handle_checkin_history_same_value(self):
         self.ballkid.is_checked_in = True
-        self.ballkid.handle_checkin_history(True, time=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
         self.assertEqual(0, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
 
     def test_handle_team_history_unassigned_to_team(self):
         start = datetime(2022, 1, 1, 10, 30)
-        self.ballkid.handle_team_history(3, time=start)
+        self.ballkid.handle_team_history(3, now=start)
         self.ballkid.current_team = 3
         self.assertEqual(1, len(TeamHistory.objects.filter(ballkid=self.ballkid)))
 
@@ -240,10 +240,10 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_team_history_team_to_team(self):
         time1 = datetime(2022, 1, 1, 10, 30)
         time2 = datetime(2022, 1, 1, 11, 30)
-        self.ballkid.handle_team_history(3, time=time1)
+        self.ballkid.handle_team_history(3, now=time1)
         self.ballkid.current_team = 3
 
-        self.ballkid.handle_team_history(5, time=time2)
+        self.ballkid.handle_team_history(5, now=time2)
         self.ballkid.current_team = 5
         self.assertEqual(2, len(TeamHistory.objects.filter(ballkid=self.ballkid)))
 
@@ -261,10 +261,10 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_team_history_team_to_unassigned(self):
         time1 = datetime(2022, 1, 1, 10, 30)
         time2 = datetime(2022, 1, 1, 11, 30)
-        self.ballkid.handle_team_history(3, time=time1)
+        self.ballkid.handle_team_history(3, now=time1)
         self.ballkid.current_team = 3
 
-        self.ballkid.handle_team_history(0, time=time2)
+        self.ballkid.handle_team_history(0, now=time2)
         self.ballkid.current_team = 0
         self.assertEqual(1, len(TeamHistory.objects.filter(ballkid=self.ballkid)))
 
@@ -276,11 +276,11 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_team_history_end_after_start(self):
         time1 = datetime(2022, 1, 1, 10, 30)
         time2 = datetime(2022, 1, 1, 8, 30)
-        self.ballkid.handle_team_history(3, time=time1)
+        self.ballkid.handle_team_history(3, now=time1)
         self.ballkid.current_team = 3
 
         with self.assertRaises(Exception):
-            self.ballkid.handle_team_history(0, time=time2)
+            self.ballkid.handle_team_history(0, now=time2)
             self.ballkid.current_team = 0
 
         histories = TeamHistory.objects.filter(ballkid=self.ballkid)
@@ -293,10 +293,10 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_team_history_same_value(self):
         time1 = datetime(2022, 1, 1, 10, 30)
         time2 = datetime(2022, 1, 1, 12, 30)
-        self.ballkid.handle_team_history(3, time=time1)
+        self.ballkid.handle_team_history(3, now=time1)
         self.ballkid.current_team = 3
 
-        self.ballkid.handle_team_history(3, time=time2)
+        self.ballkid.handle_team_history(3, now=time2)
         self.ballkid.current_team = 3
 
         histories = TeamHistory.objects.filter(ballkid=self.ballkid)
@@ -307,16 +307,16 @@ class TestBallkidModelAnalytics(TestCase):
         self.assertIsNone(history.end)
         self.assertEqual(timedelta(), history.duration)
 
-    def test_handle_captain_history_same_value(self):
+    def test_handle_captain_history_team_same_value(self):
         self.ballkid.current_team = 2
-        self.ballkid.handle_captain_history(2, time=datetime(2023, 1, 1, 10, 30))
+        self.ballkid.handle_captain_history_team(2, now=datetime(2023, 1, 1, 10, 30))
         self.assertEqual(0, len(CaptainHistory.objects.all()))
 
-    def test_handle_captain_history_assign_ballkid_no_captains(self):
-        self.ballkid.handle_captain_history(2, time=datetime(2023, 1, 1, 10, 30))
+    def test_handle_captain_history_team_assign_ballkid_no_captains(self):
+        self.ballkid.handle_captain_history_team(2, now=datetime(2023, 1, 1, 10, 30))
         self.assertEqual(0, len(CaptainHistory.objects.filter(ballkid=self.ballkid)))
 
-    def test_handle_captain_history_assign_ballkid_nonzero_captains(self):
+    def test_handle_captain_history_team_assign_ballkid_nonzero_captains(self):
         start = datetime(2023, 1, 1, 10, 30, 10)
         self.ballkid.current_team = 0
         self.captain.current_team = 1
@@ -324,7 +324,7 @@ class TestBallkidModelAnalytics(TestCase):
         self.captain.save()
         self.captain2.save()
 
-        self.ballkid.handle_captain_history(1, time=start)
+        self.ballkid.handle_captain_history_team(1, now=start)
         self.assertEqual(2, len(CaptainHistory.objects.all()))
 
         history1 = CaptainHistory.objects.get(ballkid=self.ballkid, captain=self.captain)
@@ -335,12 +335,12 @@ class TestBallkidModelAnalytics(TestCase):
         self.assertIsNone(history1.end)
         self.assertIsNone(history2.end)
 
-    def test_handle_captain_history_assign_captain_no_ballkids(self):
+    def test_handle_captain_history_team_assign_captain_no_ballkids(self):
         start = datetime(2023, 1, 1, 10, 30, 10)
-        self.captain.handle_captain_history(1, time=start)
+        self.captain.handle_captain_history_team(1, now=start)
         self.assertEqual(0, len(CaptainHistory.objects.all()))
 
-    def test_handle_captain_history_assign_captain_nonzero_ballkids(self):
+    def test_handle_captain_history_team_assign_captain_nonzero_ballkids(self):
         start = datetime(2023, 1, 1, 10, 30, 10)
         self.captain.current_team = 0
         self.ballkid.current_team = 1
@@ -348,7 +348,7 @@ class TestBallkidModelAnalytics(TestCase):
         self.ballkid.save()
         self.ballkid2.save()
 
-        self.captain.handle_captain_history(1, time=start)
+        self.captain.handle_captain_history_team(1, now=start)
         self.assertEqual(2, len(CaptainHistory.objects.all()))
 
         history1 = CaptainHistory.objects.get(ballkid=self.ballkid, captain=self.captain)
@@ -359,29 +359,29 @@ class TestBallkidModelAnalytics(TestCase):
         self.assertIsNone(history1.end)
         self.assertIsNone(history2.end)
 
-    def test_handle_captain_history_diff_teams(self):
+    def test_handle_captain_history_team_diff_teams(self):
         self.captain.current_team = 0
         self.ballkid.current_team = 2
         self.ballkid2.current_team = 2
         self.ballkid.save()
         self.ballkid2.save()
 
-        self.captain.handle_captain_history(1)
+        self.captain.handle_captain_history_team(1)
         self.assertEqual(0, len(CaptainHistory.objects.all()))
 
-    def test_handle_captain_history_reassign_ballkid(self):
+    def test_handle_captain_history_team_reassign_ballkid(self):
         pass
 
-    def test_handle_captain_history_reassign_captain(self):
+    def test_handle_captain_history_team_reassign_captain(self):
         pass
 
-    def test_handle_captain_history_unassign_ballkid(self):
+    def test_handle_captain_history_team_unassign_ballkid(self):
         pass
 
-    def test_handle_captain_history_unassign_captain(self):
+    def test_handle_captain_history_team_unassign_captain(self):
         pass
 
-    def test_handle_captain_history_promote_to_captain(self):
+    def test_handle_captain_history_team_promote_to_captain(self):
         pass
 
     def test_recalc_checkin_analytics_doesnt_exist(self):
