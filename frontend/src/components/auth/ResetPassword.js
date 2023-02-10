@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Grid, Typography, TextField, Button } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
+import { Alerts } from "../Utils";
 
 export default function ResetPassword(props) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const { uid, token } = useParams();
   const navigate = useNavigate();
@@ -20,10 +24,19 @@ export default function ResetPassword(props) {
           justifyContent="center"
         >
           <Grid item xs={12}>
+            <Alerts
+              successMsg={successMsg}
+              errorMsg={errorMsg}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </Grid>
+          <Grid item xs={12}>
             <Typography component="h4" variant="h4">
               Reset Password
             </Typography>
           </Grid>
+
           <Grid item xs={12}>
             <TextField
               label="New Password"
@@ -59,7 +72,13 @@ export default function ResetPassword(props) {
                     new_password: password,
                     re_new_password: confirmPassword,
                   }),
-                }).then((response) => navigate("/reset-password-complete"))
+                }).then((response) => {
+                  if (response.ok) {
+                    navigate("/reset-password-complete");
+                  } else {
+                    setErrorMsg("Error resetting password.");
+                  }
+                })
               }
             >
               Submit
