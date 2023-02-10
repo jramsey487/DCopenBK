@@ -11,11 +11,12 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-from environs import Env
+
+# from environs import Env
 import os
 
-env = Env()
-env.read_env()
+# env = Env()
+# env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = "django-insecure-b*0^h432^nk2szzgvi81q@kq5rqx4xi)=beyug=1$k=euallto"
-SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY = "django-insecure-b*0^h432^nk2szzgvi81q@kq5rqx4xi)=beyug=1$k=euallto"
+# SECRET_KEY = env.str("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = True
+# DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "citiopenballkids.fly.dev"]
 
@@ -100,15 +101,15 @@ WSGI_APPLICATION = "citiopen.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": env.dj_db_url("DATABASE_URL", default="sqlite:///db.sqlite3"),
-    # "default": {
-    #     "ENGINE": "django.db.backends.postgresql",
-    #     "NAME": "citiopen",
-    #     "USER": "iosue",
-    #     "PASSWORD": "password",
-    #     "HOST": "localhost",
-    #     "PORT": "",
-    # }
+    # "default": env.dj_db_url("DATABASE_URL", default="sqlite:///db.sqlite3"),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "citiopen",
+        "USER": "iosue",
+        "PASSWORD": "password",
+        "HOST": "localhost",
+        "PORT": "",
+    }
 }
 if os.environ.get("GITHUB_WORKFLOW"):
     DATABASES = {
