@@ -9,6 +9,8 @@ from django.db.models import Max, Q, Sum
 from django.db.models.functions import TruncDay
 from api.utils import *
 from api.permissions import *
+from accounts.views import UpdateCaptainStatus
+import requests
 
 
 class BallkidsList(generics.ListAPIView):
@@ -102,37 +104,44 @@ class GetBallkid(generics.RetrieveAPIView):
     queryset = Ballkid.objects.all()
 
 
-class UpdateBallkid(APIView):  # consider changing to extend UpdateAPIView
+class UpdateBallkid(APIView):
     serializer_class = BallkidSerializer
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
+        # I have absolutely no idea why, but the following line is necessary to
+        # prevent a RawPostDataException: You cannot access body after reading
+        # from request's data stream
+        request.body
+
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
+            # Get ballkid with the corresponding first and last names
             first_name = serializer.data["first_name"]
             last_name = serializer.data["last_name"]
-
-            queryset = Ballkid.objects.filter(first_name=first_name, last_name=last_name)
-            if queryset.exists():
-                ballkid = queryset[0]
-                for field in serializer.data:
-                    if field in ["first_name", "last_name", "user"]:
-                        continue
-
-                    ballkid.set_field(field, serializer.data[field])
-
-                ballkid.validate()
-                ballkid.save()
-
-                return Response(BallkidSerializer(ballkid).data)
-
-            return Response(
-                {
-                    f"Ballkid Not Found": "Invalid ballkid first name {first_name} and last name {last_name}"
-                },
-                status=status.HTTP_404_NOT_FOUND,
+            ballkid = get_object_or_404(
+                Ballkid, first_name=first_name, last_name=last_name
             )
+
+            for field in serializer.data:
+                if field in ["first_name", "last_name", "user"]:
+                    continue
+
+                # Update the ballkid's field per the patch request
+                ballkid.set_field(field, serializer.data[field])
+
+                # If updating whether or not the ballkid is a captain, also update
+                # account permissions for that ballkid
+                if field == "is_captain":
+                    view = UpdateCaptainStatus.as_view()
+                    response = view(request._request)
+
+            ballkid.validate()
+            ballkid.save()
+
+            return Response(BallkidSerializer(ballkid).data)
+
         return Response(
             {"Invalid serializer": "Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,

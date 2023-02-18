@@ -9,6 +9,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from accounts.serializers import *
+from api.permissions import IsChairperson
 from api.models.ballkid import Ballkid
 
 
@@ -30,6 +31,39 @@ class GetTokenView(ObtainAuthToken):
                 "group": user.groups.all()[0].name,
                 "ballkid_id": ballkid.id if ballkid is not None else "",
             },
+            status=status.HTTP_200_OK,
+        )
+
+
+class UpdateCaptainStatus(APIView):
+    permission_classes = [IsChairperson]
+    model = User
+
+    def patch(self, request, format=None):
+        first_name = request.data["first_name"]
+        last_name = request.data["last_name"]
+        ballkid = Ballkid.objects.get(first_name=first_name, last_name=last_name)
+        user = User.objects.get(ballkid=ballkid)
+
+        if ballkid.is_chairperson:
+            raise Exception("Cannot change captain status of a chairperson")
+
+        # If promoting to captain, then remove ballkid and add captain as a group
+        if request.data["is_captain"]:
+            user.groups.clear()
+
+            captain_group = Group.objects.get(name="captain")
+            user.groups.add(captain_group)
+
+        # If demoting from captain, then add ballkid and remove captain asa group
+        else:
+            user.groups.clear()
+
+            ballkid_group = Group.objects.get(name="ballkid")
+            user.groups.add(ballkid_group)
+
+        return Response(
+            f"Successfully updated account group to {user.groups.all()}",
             status=status.HTTP_200_OK,
         )
 
