@@ -209,6 +209,14 @@ class TestUpdateBallkidView(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_name_not_matching(self):
+        response = self.client.patch(
+            self.url,
+            {"first_name": "Lacy", "last_name": "Missing", "is_checked_in": True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_update_checkin_status(self):
         self.assertFalse(self.ballkid.is_checked_in)
 
