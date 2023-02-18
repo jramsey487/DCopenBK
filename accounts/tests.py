@@ -1,9 +1,9 @@
 from django.urls import reverse
-from django.core import mail
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
 from rest_framework import status
+from django.contrib.auth.models import User, Group
+from api.models.ballkid import Ballkid
 
 
 class AccountsTest(APITestCase):
@@ -118,6 +118,87 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data["email"]), 1)
+
+
+class UpdateCaptainStatusTest(APITestCase):
+    def setUp(self):
+        ballkid_group = Group.objects.create(name="ballkid")
+        captain_group = Group.objects.create(name="captain")
+        chairperson_group = Group.objects.create(name="chairperson")
+
+        # Create chairperson ballkid and user
+        self.chairperson = Ballkid.objects.create(
+            first_name="Lacy", last_name="Iosue", is_chairperson=True
+        )
+        self.chairperson_user = User.objects.create(
+            username="chairperson", first_name="Lacy", last_name="Iosue"
+        )
+        self.chairperson_user.groups.add(chairperson_group)
+        self.chairperson_user.save()
+
+        # Create ballkid ballkid and user
+        self.ballkid = Ballkid.objects.create(first_name="Andrea", last_name="Iosue")
+        self.ballkid_user = User.objects.create(
+            username="ballkid", first_name="Andrea", last_name="Iosue"
+        )
+        self.ballkid_user.groups.add(ballkid_group)
+        self.ballkid_user.save()
+
+        # Create captain ballkid and user
+        self.captain = Ballkid.objects.create(first_name="Joe", last_name="Iosue")
+        self.captain_user = User.objects.create(
+            username="captain", first_name="Joe", last_name="Iosue"
+        )
+        self.captain_user.groups.add(captain_group)
+        self.captain_user.save()
+
+        self.url = reverse("update-captain-status")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.chairperson_user)
+
+    def test_cannot_modify_chairperson(self):
+        self.assertEqual(3, User.objects.count())
+
+        data = {"first_name": "Lacy", "last_name": "Iosue", "is_captain": True}
+        with self.assertRaises(Exception):
+            self.client.patch(self.url, data, format="json")
+
+        data = {"first_name": "Lacy", "last_name": "Iosue", "is_captain": False}
+        with self.assertRaises(Exception):
+            self.client.patch(self.url, data, format="json")
+
+    def test_no_change(self):
+        self.assertEqual(3, User.objects.count())
+        self.assertEqual(1, self.ballkid_user.groups.count())
+        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+
+        data = {"first_name": "Andrea", "last_name": "Iosue", "is_captain": False}
+        response = self.client.patch(self.url, data, format="json")
+
+        self.assertEqual(1, self.ballkid_user.groups.count())
+        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+
+    def test_promote_to_captain(self):
+        self.assertEqual(3, User.objects.count())
+        self.assertEqual(1, self.ballkid_user.groups.count())
+        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+
+        data = {"first_name": "Andrea", "last_name": "Iosue", "is_captain": True}
+        response = self.client.patch(self.url, data, format="json")
+
+        self.assertEqual(1, self.ballkid_user.groups.count())
+        self.assertEqual("captain", self.ballkid_user.groups.all()[0].name)
+
+    def test_demote_from_captain(self):
+        self.assertEqual(3, User.objects.count())
+        self.assertEqual(1, self.captain_user.groups.count())
+        self.assertEqual("captain", self.captain_user.groups.all()[0].name)
+
+        data = {"first_name": "Joe", "last_name": "Iosue", "is_captain": False}
+        response = self.client.patch(self.url, data, format="json")
+
+        self.assertEqual(1, self.captain_user.groups.count())
+        self.assertEqual("ballkid", self.captain_user.groups.all()[0].name)
 
 
 # class PasswordResetTest(APITestCase):

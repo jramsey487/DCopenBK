@@ -43,7 +43,7 @@ class UpdateCaptainStatus(APIView):
         first_name = request.data["first_name"]
         last_name = request.data["last_name"]
         ballkid = Ballkid.objects.get(first_name=first_name, last_name=last_name)
-        user = User.objects.get(ballkid=ballkid)
+        user = User.objects.get(first_name=first_name, last_name=last_name)
 
         if ballkid.is_chairperson:
             raise Exception("Cannot change captain status of a chairperson")
@@ -61,6 +61,8 @@ class UpdateCaptainStatus(APIView):
 
             ballkid_group = Group.objects.get(name="ballkid")
             user.groups.add(ballkid_group)
+
+        user.save()
 
         return Response(
             f"Successfully updated account group to {user.groups.all()}",
