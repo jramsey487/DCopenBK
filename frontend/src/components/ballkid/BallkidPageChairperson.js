@@ -699,7 +699,12 @@ export default function BallkidPageChairperson(props) {
           </Grid>
 
           <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-            <CheckinHistoryChart histories={checkins} pk={pk} />
+            <CheckinHistoryChart
+              histories={checkins}
+              pk={pk}
+              updated={updated}
+              setUpdated={setUpdated}
+            />
           </Grid>
 
           <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>

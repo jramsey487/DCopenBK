@@ -22,11 +22,10 @@ class MATCH_TYPE(models.TextChoices):
 
 
 class CUT_STATUS(models.TextChoices):
-    NONE = "none"
-    DEFINITELY_KEEP = "definitely keep"
-    POSSIBLY_KEEP = "possibly keep"
-    POSSIBLY_CUT = "possibly cut"
-    DEFINITELY_CUT = "definitely cut"
+    DEFINITELY_KEEP = "Definitely Keep"
+    POSSIBLY_KEEP = "Possibly Keep"
+    POSSIBLY_CUT = "Possibly Cut"
+    DEFINITELY_CUT = "Definitely Cut"
 
 
 class Ballkid(models.Model):
@@ -50,9 +49,7 @@ class Ballkid(models.Model):
 
     # Ballkid status
     is_cut = models.BooleanField(default=False)
-    cut_status = models.CharField(
-        max_length=20, choices=CUT_STATUS.choices, default=CUT_STATUS.NONE
-    )
+    cut_status = models.CharField(max_length=20, choices=CUT_STATUS.choices, blank=True)
     # Archive ballkids from previous years. This refers to if the
     # ballkid was active this year or not
     is_active = models.BooleanField(default=True)

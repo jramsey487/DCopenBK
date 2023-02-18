@@ -165,15 +165,20 @@ class CutAll(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
+        cut_all = request.data["cut_all"]
+
         cut_status = request.data["cut_status"]
         queryset = Ballkid.objects.filter(cut_status=cut_status)
         for ballkid in queryset:
-            ballkid.set_field("is_cut", True)
+            ballkid.set_field("is_cut", cut_all)
+            ballkid.set_field("cut_status", "")
             ballkid.validate()
             ballkid.save()
 
         return Response(
-            {"Success": f"All ballkids in cut status tier {cut_status} were cut"},
+            {
+                "Success": f"All ballkids in cut status tier {cut_status} were handled for cut_all: {cut_all}"
+            },
             status=status.HTTP_200_OK,
         )
 

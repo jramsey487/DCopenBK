@@ -114,8 +114,9 @@ export function CheckinHistoryChart(props) {
   useEffect(() => {
     fetch("/api/get-checkin-time/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setTotalTime(data["duration"]));
-  });
+      .then((data) => setTotalTime(data["duration"]))
+      .then(() => props.setUpdated(false));
+  }, [props.updated]);
 
   return (
     <div>

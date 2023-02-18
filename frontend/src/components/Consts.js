@@ -7,6 +7,13 @@ export const MATCH_TYPES = {
   WD: "Women's Doubles",
 };
 
+export const CUT_STATUSES = {
+  DEFINITELY_KEEP: "Definitely Keep",
+  POSSIBLY_KEEP: "Possibly Keep",
+  POSSIBLY_CUT: "Possibly Cut",
+  DEFINITELY_CUT: "Definitely Cut",
+};
+
 // Note that these dates are 0-indexed!!
 export const START_DATE = new Date(2023, 0, 15);
 export const END_DATE = new Date(2023, 0, 30);
