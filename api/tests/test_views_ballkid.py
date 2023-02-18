@@ -1,9 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User, Group
 from rest_framework.test import APITestCase, APIClient, force_authenticate
-from api.models.ballkid import Ballkid, CUT_STATUS
+from api.models.ballkid import Ballkid
 from api.serializers import BallkidSerializer
 
 
@@ -34,7 +33,7 @@ class TestBallkidListView(APITestCase):
             first_name="Dinosaur",
             last_name="Iosue",
             is_active=True,
-            is_cut=CUT_STATUS.T,
+            is_cut=True,
         )
 
     def test_list(self):
@@ -62,7 +61,7 @@ class TestBallkidListView(APITestCase):
         self.assertEqual(serializer.data, response.data)
 
     def test_cut_list(self):
-        response = self.client.get(reverse("cut-list"))
+        response = self.client.get(reverse("all-list"))
         ballkids = [self.ballkid5, self.ballkid3, self.ballkid1, self.ballkid2]
         serializer = BallkidSerializer(ballkids, many=True)
 

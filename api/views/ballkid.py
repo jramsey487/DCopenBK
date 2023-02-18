@@ -18,14 +18,12 @@ class BallkidsList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            Ballkid.objects.filter(is_active=True)
-            .exclude(is_cut=CUT_STATUS.T)
-            .order_by("last_name", "first_name")
+        return Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
+            "last_name", "first_name"
         )
 
 
-class BallkidsCutList(generics.ListAPIView):
+class AllBallkidsList(generics.ListAPIView):
     serializer_class = BallkidSerializer
     permission_classes = [IsChairperson]
 
@@ -44,8 +42,7 @@ class BallkidsSortedList(generics.ListAPIView):
     def get_queryset(self):
         return (
             Ballkid.objects.all()
-            .filter(is_active=True)
-            .exclude(is_cut=CUT_STATUS.T)
+            .filter(is_active=True, is_cut=False)
             .order_by(
                 "-is_captain",
                 "-num_years_experience",
@@ -168,14 +165,15 @@ class CutAll(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
-        queryset = Ballkid.objects.filter(is_cut=CUT_STATUS.P)
+        cut_status = request.data["cut_status"]
+        queryset = Ballkid.objects.filter(cut_status=cut_status)
         for ballkid in queryset:
-            ballkid.set_field("is_cut", CUT_STATUS.T)
+            ballkid.set_field("is_cut", True)
             ballkid.validate()
             ballkid.save()
 
         return Response(
-            {"Success": "All pending ballkids cut"},
+            {"Success": f"All ballkids in cut status tier {cut_status} were cut"},
             status=status.HTTP_200_OK,
         )
 

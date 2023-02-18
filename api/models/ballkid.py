@@ -416,6 +416,8 @@ class Ballkid(models.Model):
             self.is_active = value
         elif field == "is_cut":
             self.is_cut = value
+        elif field == "cut_status":
+            self.cut_status = value
         elif field == "is_captain":
             self.handle_captain_history_captain(value)
             self.is_captain = value
@@ -458,7 +460,7 @@ class Ballkid(models.Model):
             - Ballkid's actual position can only be back or net
         """
         # Ballkid cannot be checked in if cut or inactive
-        if not self.is_active or self.is_cut == CUT_STATUS.T:
+        if not self.is_active or self.is_cut:
             self.set_field("is_checked_in", False)
 
         # Ballkid cannot be assigned to a team if not checked in

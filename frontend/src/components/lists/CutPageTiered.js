@@ -179,7 +179,7 @@ export default function CutPageTiered(props) {
   ];
 
   useEffect(() => {
-    fetch("/api/cut-list", { headers: getAuthHeader() })
+    fetch("/api/all-list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
         setActive(data.filter((ballkid) => ballkid.is_cut === "false"));

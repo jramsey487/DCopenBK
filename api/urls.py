@@ -6,7 +6,7 @@ from api.views.rating import *
 # Ballkid URLs
 ballkid_urls = [
     path("list", BallkidsList.as_view(), name="list"),
-    path("cut-list", BallkidsCutList.as_view(), name="cut-list"),
+    path("all-list", AllBallkidsList.as_view(), name="all-list"),
     path("sorted-list", BallkidsSortedList.as_view(), name="sorted-list"),
     path("archived-list", BallkidsArchivedList.as_view(), name="archived-list"),
     path("create-ballkid", CreateBallkid.as_view(), name="create-ballkid"),
