@@ -15,5 +15,5 @@ export const CUT_STATUSES = {
 };
 
 // Note that these dates are 0-indexed!!
-export const START_DATE = new Date(2023, 0, 15);
-export const END_DATE = new Date(2023, 0, 30);
+export const START_DATE = new Date(2023, 1, 15);
+export const END_DATE = new Date(2023, 1, 30);

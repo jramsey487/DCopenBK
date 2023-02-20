@@ -79,6 +79,8 @@ export default function MyProfile(props) {
   const [captains, setCaptains] = useState([]);
   const [courts, setCourts] = useState([]);
 
+  const [totalTime, setTotalTime] = useState("");
+
   const [updated, setUpdated] = useState(false);
 
   const pk = getSessionStorage("ballkid_id");
@@ -103,7 +105,11 @@ export default function MyProfile(props) {
 
     fetch("/api/get-checkins/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setCheckins(data))
+      .then((data) => setCheckins(data));
+
+    fetch("/api/get-checkin-time/" + pk, { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setTotalTime(data["duration"]))
       .then(() => setUpdated(false));
   }, [updated, pk]);
 
@@ -162,7 +168,7 @@ export default function MyProfile(props) {
             </Grid>
 
             <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CheckinHistoryChart histories={checkins} pk={pk} />
+              <CheckinHistoryChart histories={checkins} totalTime={totalTime} />
             </Grid>
 
             <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
