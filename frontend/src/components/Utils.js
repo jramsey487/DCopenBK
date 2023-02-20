@@ -372,7 +372,6 @@ export function getTimeFloat(str) {
 }
 
 export function getTimeStr(timeStr) {
-  console.log(timeStr);
   var day = 0;
   var hour = 0;
   var minute = 0;

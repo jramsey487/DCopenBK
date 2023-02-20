@@ -47,7 +47,7 @@ function DraggableBallkidAndIcon({ ballkid }) {
 }
 
 function CutStatusSection({ section, active, setUpdated }) {
-  const cutAll = section.includes("Cut") ? true : false;
+  const shouldCut = section.includes("Cut") ? true : false;
   const cutAllStr = section.includes("Cut") ? "Cut All" : "Keep All";
   const cutAllColor = section.includes("Cut") ? "error" : "success";
   const cutAllVariant = section.includes("Cut") ? "contained" : "outlined";
@@ -87,7 +87,7 @@ function CutStatusSection({ section, active, setUpdated }) {
                   headers: getAuthHeader(),
                   body: JSON.stringify({
                     cut_status: section,
-                    cut_all: cutAll,
+                    should_cut: shouldCut,
                   }),
                 })
                   .then((response) => response.json())
