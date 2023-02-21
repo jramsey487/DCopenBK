@@ -5,12 +5,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from api.serializers import *
 from api.models.ballkid import *
-from django.db.models import Max, Q, Sum
+from django.db.models import Max
 from django.db.models.functions import TruncDay
 from api.utils import *
 from api.permissions import *
 from accounts.views import UpdateCaptainStatus
-import requests
 
 
 class BallkidsList(generics.ListAPIView):

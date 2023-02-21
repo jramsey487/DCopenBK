@@ -400,11 +400,68 @@ class TestBallkidModelAnalytics(TestCase):
         self.captain.handle_captain_history_team(1)
         self.assertEqual(0, len(CaptainHistory.objects.all()))
 
+    def test_handle_captain_history_team_missing_history(self):
+        """
+        Even if CaptainHistory item is missing for whatever reason, handle_captain_history
+        should not fail / raise an Exception
+        """
+        self.ballkid.current_team = 2
+        self.captain.current_team = 2
+        self.ballkid.save()
+        self.captain.save()
+        self.captain2.handle_captain_history_team(2, now=datetime(2023, 1, 1, 10, 30))
+        self.assertEqual(3, len(CaptainHistory.objects.all()))
+
+        self.ballkid.handle_captain_history_team(3, now=datetime(2023, 1, 1, 10, 30))
+        self.assertEqual(3, len(CaptainHistory.objects.all()))
+
     def test_handle_captain_history_team_reassign_ballkid(self):
-        pass
+        start = datetime(2023, 1, 1, 10, 30, 10)
+        end = datetime(2023, 1, 1, 20, 30, 0)
+
+        self.captain.set_field("current_team", 1)
+        self.captain2.set_field("current_team", 2)
+
+        self.ballkid.handle_captain_history_team(1, now=start)
+        self.ballkid.current_team = 1
+        self.ballkid.save()
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+
+        self.ballkid.handle_captain_history_team(2, now=end)
+        self.ballkid.current_team = 2
+        self.ballkid.save()
+        self.assertEqual(2, len(CaptainHistory.objects.all()))
+
+        history1 = CaptainHistory.objects.get(ballkid=self.ballkid, captain=self.captain)
+        history2 = CaptainHistory.objects.get(ballkid=self.ballkid, captain=self.captain2)
+
+        self.assertEqual(start, history1.start)
+        self.assertEqual(end, history1.end)
+        self.assertEqual(end, history2.start)
+        self.assertIsNone(history2.end)
 
     def test_handle_captain_history_team_reassign_captain(self):
-        pass
+        start = datetime(2023, 1, 1, 10, 30, 10)
+
+        self.ballkid.current_team = 1
+        self.captain.current_team = 1
+        self.captain2.current_team = 2
+        self.ballkid.save()
+        self.captain.save()
+        self.captain2.save()
+
+        self.captain.handle_captain_history_team(2, now=start)
+        self.captain.current_team = 2
+        self.captain.save()
+        self.assertEqual(2, len(CaptainHistory.objects.all()))
+
+        history1 = CaptainHistory.objects.get(ballkid=self.captain2, captain=self.captain)
+        history2 = CaptainHistory.objects.get(ballkid=self.captain, captain=self.captain2)
+
+        self.assertEqual(start, history1.start)
+        self.assertEqual(start, history2.start)
+        self.assertIsNone(history1.end)
+        self.assertIsNone(history2.end)
 
     def test_handle_captain_history_team_unassign_ballkid(self):
         pass
@@ -412,8 +469,56 @@ class TestBallkidModelAnalytics(TestCase):
     def test_handle_captain_history_team_unassign_captain(self):
         pass
 
-    def test_handle_captain_history_team_promote_to_captain(self):
-        pass
+    def test_handle_captain_history_captain_promote_to_captain(self):
+        self.ballkid.set_field("current_team", 1)
+        self.captain.set_field("current_team", 1)
+
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+        history = CaptainHistory.objects.all()[0]
+        self.assertIsNone(history.end)
+
+        self.ballkid.handle_captain_history_captain(
+            True, now=datetime(2023, 1, 1, 10, 30)
+        )
+        self.assertEqual(2, len(CaptainHistory.objects.all()))
+
+    def test_handle_captain_history_captain_demote_from_captain(self):
+        self.ballkid.set_field("current_team", 1)
+        self.captain.set_field("current_team", 1)
+
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+        history = CaptainHistory.objects.all()[0]
+        self.assertIsNone(history.end)
+
+        self.captain.handle_captain_history_captain(
+            False, now=datetime(2023, 1, 1, 10, 30)
+        )
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+        history = CaptainHistory.objects.all()[0]
+        self.assertIsNotNone(history.end)
+
+    def test_handle_captain_history_captain_no_change(self):
+        self.ballkid.set_field("current_team", 1)
+        self.captain.set_field("current_team", 1)
+
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+        history = CaptainHistory.objects.all()[0]
+        self.assertIsNone(history.end)
+
+        self.captain.handle_captain_history_captain(
+            True, now=datetime(2023, 1, 1, 10, 30)
+        )
+        self.assertEqual(1, len(CaptainHistory.objects.all()))
+        history = CaptainHistory.objects.all()[0]
+        self.assertIsNone(history.end)
+
+    def test_handle_captain_history_captain_unassigned(self):
+        self.captain.set_field("current_team", 2)
+
+        self.ballkid.handle_captain_history_captain(
+            True, now=datetime(2023, 1, 1, 10, 30)
+        )
+        self.assertEqual(0, len(CaptainHistory.objects.all()))
 
     def test_recalc_checkin_analytics_doesnt_exist(self):
         self.assertEqual(0, len(CheckinAnalytics.objects.all()))

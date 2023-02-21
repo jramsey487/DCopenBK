@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from api.utils import calc_overlapping_time
 from api.models.schedule import Schedule, Court
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
 
 
 class Position(models.TextChoices):
@@ -265,11 +264,10 @@ class Ballkid(models.Model):
             history = TeamHistory(ballkid=self, start=now, team=value)
             history.save()
 
-    # TODO: need to handle if a ballkid is promoted to a captain
     def handle_captain_history_team(self, value, now=None):
         """
-        Handle logic for saving captain history and recalculating days / total amount of time
-        with each captain.
+        Handle logic for saving captain history, specifically when changing a ballkid/
+        captain's team assignment.
 
         Arguments:
         value(int): New team assignment that the ballkid is getting set to. 0 if the ballkid
@@ -286,8 +284,7 @@ class Ballkid(models.Model):
         # Regardless of whether the ballkid is a captain or not, when leaving Team A, Team
         # A's captains need to be updated with the ending. If the ballkid was previously
         # unassigned, skip.
-        histories = CaptainHistory.objects.filter(ballkid=self)
-        if self.current_team != 0 and len(histories) > 0:
+        if self.current_team != 0:
             # Get all captains on previous team
             prev_captains = Ballkid.objects.filter(
                 is_captain=True, current_team=self.current_team
@@ -295,7 +292,11 @@ class Ballkid(models.Model):
 
             # For each captain, find the most recent CaptainHistory entry for (ballkid, captain)
             for captain in prev_captains:
-                captain_histories = histories.filter(captain=captain)
+                captain_histories = CaptainHistory.objects.filter(
+                    ballkid=self, captain=captain
+                )
+                if len(captain_histories) == 0:
+                    continue
                 history = captain_histories.order_by("-start")[0]
 
                 # If this most recent entry has empty end, then update end and duration
@@ -316,23 +317,24 @@ class Ballkid(models.Model):
         if value:
             new_captains = Ballkid.objects.filter(is_captain=True, current_team=value)
             for captain in new_captains:
-                history = CaptainHistory(ballkid=self, captain=captain, start=now)
-                history.save()
+                CaptainHistory.objects.create(ballkid=self, captain=captain, start=now)
 
         # If the ballkid is also a captain, then need to update all other ballkids when leaving
-        # Team A and joining Team B
-
-        # If ballkid is a captain, get and update everybody on the previous team
+        # Team A and joining Team B.
         if self.is_captain:
-            histories = CaptainHistory.objects.filter(captain=self)
-            if self.current_team != 0 and len(histories) > 0:
+            # Get and update everybody on the previous team
+            if self.current_team != 0:
                 ballkids = Ballkid.objects.filter(current_team=self.current_team).exclude(
                     id=self.id
                 )
 
                 # For each ballkid, find the most recent CaptainHistory entry
                 for ballkid in ballkids:
-                    ballkid_histories = histories.filter(ballkid=ballkid)
+                    ballkid_histories = CaptainHistory.objects.filter(
+                        captain=self, ballkid=ballkid
+                    )
+                    if len(ballkid_histories) == 0:
+                        continue
                     history = ballkid_histories.order_by("-start")[0]
 
                     # If this most recent entry has empty end, then log end and duration
@@ -357,6 +359,14 @@ class Ballkid(models.Model):
                     history.save()
 
     def handle_captain_history_captain(self, value, now=None):
+        """
+        Handle logic for saving captain history, specifically when a ballkid is demoted or
+        promoted to captain.
+
+        Arguments:
+        value(bool): True if the ballkid is getting promoted to captain and False if the
+        ballkid is getting demoted from captain
+        """
         if now is None:
             now = datetime.now()
 
@@ -365,6 +375,11 @@ class Ballkid(models.Model):
         if self.current_team == 0:
             return
 
+        # If there is no change in the captain status, then do nothing
+        if self.is_captain == value:
+            return
+
+        # Get all the ballkids on the current team excluding self
         ballkids = (
             Ballkid.objects.all()
             .filter(current_team=self.current_team)
