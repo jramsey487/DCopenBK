@@ -27,6 +27,16 @@ class CUT_STATUS(models.TextChoices):
     DEFINITELY_CUT = "Definitely Cut"
 
 
+class DAY_OF_WEEK(models.TextChoices):
+    MONDAY = "Monday"
+    TUESDAY = "Tuesday"
+    WEDNESDAY = "Wednesday"
+    THURSDAY = "Thursday"
+    FRIDAY = "Friday"
+    SATURDAY = "Saturday"
+    SUNDAY = "Sunday"
+
+
 class Ballkid(models.Model):
     # Ballkid static information
     user = models.ForeignKey(
@@ -396,6 +406,35 @@ class Ballkid(models.Model):
                 history.end = now
                 history.save()
 
+    def handle_cut_history(self, value, now=None):
+        """
+        Handle logic for saving cut history.
+
+        Arguments:
+        value(bool): True if the ballkid is getting cut, False if ballkid is
+        getting uncut
+        now(datetime): Optional argument for supplying a manual datetime at
+        which the ballkid was cut
+        """
+
+        if now is None:
+            now = datetime.now()
+
+        # If no change to field value (trying to set the field to the same as
+        # the current value), then do nothing
+        if self.is_cut == value:
+            return
+
+        history = CutHistory.objects.create(
+            ballkid=self,
+            year=now.year,
+            time=now,
+            furthest_day=now.strftime("%A"),
+            is_cut=value,
+            num_years_experience=self.num_years_experience,
+        )
+        history.save()
+
     def set_field(self, field, value):
         """
         Sets corresponding field to the value provided. Calls specialty handle
@@ -427,6 +466,7 @@ class Ballkid(models.Model):
         elif field == "is_active":
             self.is_active = value
         elif field == "is_cut":
+            self.handle_cut_history(value)
             self.is_cut = value
         elif field == "cut_status":
             self.cut_status = value
@@ -505,8 +545,10 @@ class FinalsHistory(models.Model):
 
 class CutHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
+    time = models.DateTimeField(default=datetime.now)
     year = models.IntegerField()
-    furthest_day = models.DateField(default=datetime.today)
+    furthest_day = models.CharField(max_length=10, choices=DAY_OF_WEEK.choices)
+    is_cut = models.BooleanField(default=True)
     num_years_experience = models.IntegerField(default=0)
     self_cut = models.BooleanField(default=False)
 
