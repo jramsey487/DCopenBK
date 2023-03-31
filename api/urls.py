@@ -30,11 +30,13 @@ schedule_urls = [
 # Analytics URLs
 analytics_urls = [
     path(
-        "get-checkin-time/<int:pk>",
-        GetCheckinAnalytics.as_view(),
-        name="get-checkin-time",
+        "get-checkin-analytic/<int:pk>",
+        GetCheckinAnalytic.as_view(),
+        name="get-checkin-analytic",
     ),
-    path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
+    path(
+        "get-checkins/<int:pk>", GetBallkidCheckinHistory.as_view(), name="get-checkins"
+    ),
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
     path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),
     path("get-courts/<int:pk>", GetCourtAnalytics.as_view(), name="get-courts"),
@@ -44,7 +46,11 @@ analytics_urls = [
         name="get-finals-history",
     ),
     path("get-cut-history/<int:pk>", GetCutHistory.as_view(), name="get-cut-history"),
-    path("get-checkin-times", GetCheckinTimes.as_view(), name="get-checkin-times"),
+    path(
+        "get-checkin-analytics",
+        GetCheckinAnalytics.as_view(),
+        name="get-checkin-analytics",
+    ),
 ]
 
 # Tournament URLs

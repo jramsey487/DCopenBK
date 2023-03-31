@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Link } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
-import { getAuthHeader, getTimeStr } from "../Utils";
+import { getAuthHeader } from "../Utils";
 
 export default function RatingsLeaderboard(props) {
   const [checkinTimes, setCheckinTimes] = useState([]);
@@ -31,22 +31,10 @@ export default function RatingsLeaderboard(props) {
       ),
     },
     {
-      field: "time",
-      headerName: "Total Time",
+      field: "numRatings",
+      headerName: "# of Ratings",
       width: 300,
-      renderCell: (rowData) => getTimeStr(rowData.row.time),
-    },
-    {
-      field: "days",
-      headerName: "# of Days",
-      width: 200,
-      valueGetter: (rowData) => rowData.row.days,
-    },
-    {
-      field: "timePerDay",
-      headerName: "Average Time Per Day",
-      width: 200,
-      valueGetter: (rowData) => rowData.row.timePerDay,
+      valueGetter: (rowData) => rowData.row.numRatings,
     },
   ];
 

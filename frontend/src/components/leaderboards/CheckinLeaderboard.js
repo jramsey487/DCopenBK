@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Typography, Link } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
-import { getAuthHeader, getTimeStr } from "../Utils";
+import { getAuthHeader, getTimeStr, getTimeFloat } from "../Utils";
 
 export default function CheckinLeaderboard(props) {
   const [checkinTimes, setCheckinTimes] = useState([]);
 
   useEffect(() => {
-    fetch("/api/get-checkin-times", { headers: getAuthHeader() })
+    fetch("/api/get-checkin-analytics", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCheckinTimes(data));
+    // .then((data) => console.log(data));
   }, []);
 
   const columns = [
@@ -33,29 +34,30 @@ export default function CheckinLeaderboard(props) {
     {
       field: "time",
       headerName: "Total Time",
-      width: 300,
-      renderCell: (rowData) => getTimeStr(rowData.row.time),
+      width: 200,
+      renderCell: (rowData) => getTimeStr(getTimeFloat(rowData.row.time)),
     },
     {
       field: "days",
       headerName: "# of Days",
-      width: 200,
+      width: 100,
       valueGetter: (rowData) => rowData.row.days,
     },
     {
       field: "timePerDay",
       headerName: "Average Time Per Day",
       width: 200,
-      valueGetter: (rowData) => rowData.row.timePerDay,
+      valueGetter: (rowData) =>
+        getTimeStr(getTimeFloat(rowData.row.time) / rowData.row.days),
     },
   ];
 
-  const rows = checkinTimes.map((analytic, index) => ({
-    id: analytic.id,
+  const rows = checkinTimes.map((ballkid, index) => ({
+    id: ballkid.id,
     rank: index + 1,
-    ballkid_id: analytic.ballkid,
-    ballkid_name: analytic.ballkid_name,
-    time: analytic.duration,
+    ballkid_name: ballkid.ballkid_name,
+    days: ballkid.total_checkin_days,
+    time: ballkid.total_checkin_duration,
   }));
 
   return (

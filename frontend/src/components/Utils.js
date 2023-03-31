@@ -355,28 +355,31 @@ export function getDays() {
   return days;
 }
 
-export function getTimeFloat(str) {
-  var timeStr, days;
-  if (str.includes(" ")) {
-    timeStr = str.split(" ")[1];
-    days = parseInt(str.split(" ")[0]);
-  } else {
-    timeStr = str;
-    days = 0;
-  }
+// export function getTimeFloat(str) {
+//   var timeStr, days;
+//   if (str.includes(" ")) {
+//     timeStr = str.split(" ")[1];
+//     days = parseInt(str.split(" ")[0]);
+//   } else {
+//     timeStr = str;
+//     days = 0;
+//   }
 
-  const hours = parseInt(timeStr.split(":")[0]);
-  const minutes = parseInt(timeStr.split(":")[1]);
+//   const hours = parseInt(timeStr.split(":")[0]);
+//   const minutes = parseInt(timeStr.split(":")[1]);
 
-  return 24 * days + hours + minutes / 60;
-}
+//   return 24 * days + hours + minutes / 60;
+// }
 
-export function getTimeStr(timeStr) {
+// Converts datetime string into human readable format. Assumes format of:
+// {days} {hours}:{minutes}:{seconds}.{milliseconds} OR
+// {hours}:{minutes}:{seconds}.{milliseconds}. Returns as float of # hours
+export function getTimeFloat(timeStr) {
   var day = 0;
   var hour = 0;
   var minute = 0;
 
-  if (timeStr !== "") {
+  if (timeStr !== "" && timeStr !== null) {
     const hourStr = timeStr.split(":")[0];
 
     if (hourStr.length > 2) {
@@ -389,7 +392,20 @@ export function getTimeStr(timeStr) {
     minute = parseInt(timeStr.split(":")[1]);
   }
 
-  return day * 24 + hour + " hrs " + minute + " mins";
+  return day * 24 + hour + minute / 60;
+}
+
+// Takes as input a float which represents the total duration in # hours
+// as a float. Outputs as {hours} hrs {minutes} mins
+export function getTimeStr(timeFloat) {
+  if (timeFloat === null || isNaN(timeFloat)) {
+    timeFloat = 0;
+  }
+
+  const hours = Math.floor(timeFloat);
+  const mins = parseInt((timeFloat % 1) * 60);
+
+  return hours + " hrs " + mins + " mins";
 }
 
 export function getToday() {

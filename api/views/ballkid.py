@@ -3,8 +3,8 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Max, Value, Count
-from django.db.models.functions import Concat, TruncDay
+from django.db.models import Max, Value, Count, Sum
+from django.db.models.functions import Concat, TruncDay, TruncDate
 from api.serializers import *
 from api.models.ballkid import *
 from api.utils import *
@@ -289,7 +289,7 @@ class GetPastTeams(APIView):
         return Response(date_to_ballkids, status=status.HTTP_200_OK)
 
 
-class GetCheckinAnalytics(APIView):
+class GetCheckinAnalytic(APIView):
     permission_classes = [IsChairpersonOrSelf]
 
     def get(self, request, pk):
@@ -299,17 +299,25 @@ class GetCheckinAnalytics(APIView):
         return Response(CheckinAnalyticsSerializer(analytic).data)
 
 
-class GetCheckinTimes(generics.ListAPIView):
+class GetCheckinAnalytics(generics.ListAPIView):
     permission_classes = [IsChairperson]
-    serializer_class = CheckinAnalyticsSerializer
+    serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        return CheckinAnalytics.objects.order_by("-duration").annotate(
-            ballkid_name=Concat("ballkid__first_name", Value(" "), "ballkid__last_name"),
+        return (
+            Ballkid.objects.filter(is_active=True)
+            .annotate(
+                ballkid_name=Concat("first_name", Value(" "), "last_name"),
+                total_checkin_duration=Sum("checkinhistory__duration"),
+                total_checkin_days=Count(
+                    TruncDate("checkinhistory__checkin"), distinct=True
+                ),
+            )
+            .order_by("-total_checkin_duration")
         )
 
 
-class GetCheckinHistory(APIView):
+class GetBallkidCheckinHistory(APIView):
     permission_classes = [IsChairpersonOrSelf]
 
     def get(self, request, pk):

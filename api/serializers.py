@@ -5,6 +5,10 @@ from api.models.rating import *
 
 
 class BallkidSerializer(serializers.ModelSerializer):
+    ballkid_name = serializers.CharField(max_length=60, required=False)
+    total_checkin_duration = serializers.DurationField(required=False)
+    total_checkin_days = serializers.IntegerField(required=False)
+
     class Meta:
         model = Ballkid
         fields = "__all__"
@@ -18,6 +22,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 class CheckinAnalyticsSerializer(serializers.ModelSerializer):
     ballkid_name = serializers.CharField(max_length=60, required=False)
+    num_days = serializers.IntegerField(required=False)
 
     class Meta:
         model = CheckinAnalytics
