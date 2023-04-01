@@ -11,15 +11,15 @@ export default function CheckinLeaderboard(props) {
     fetch("/api/get-checkin-leaderboard", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCheckinTimes(data));
-    // .then((data) => console.log(data));
   }, []);
 
   const columns = [
     {
       field: "rank",
-      headerName: "Rank",
-      width: 75,
-      valueGetter: (rowData) => rowData.row.rank,
+      headerName: "",
+      width: 30,
+      sortable: true,
+      renderCell: (index) => index.api.getRowIndex(index.row.id) + 1,
     },
     {
       field: "name",
@@ -35,7 +35,8 @@ export default function CheckinLeaderboard(props) {
       field: "time",
       headerName: "Total Time",
       width: 200,
-      renderCell: (rowData) => getTimeStr(getTimeFloat(rowData.row.time)),
+      valueGetter: (rowData) => getTimeFloat(rowData.row.time),
+      valueFormatter: (obj) => getTimeStr(obj.value),
     },
     {
       field: "days",
@@ -48,13 +49,13 @@ export default function CheckinLeaderboard(props) {
       headerName: "Average Time Per Day",
       width: 200,
       valueGetter: (rowData) =>
-        getTimeStr(getTimeFloat(rowData.row.time) / rowData.row.days),
+        getTimeFloat(rowData.row.time) / rowData.row.days,
+      valueFormatter: (obj) => getTimeStr(obj.value),
     },
   ];
 
-  const rows = checkinTimes.map((ballkid, index) => ({
+  const rows = checkinTimes.map((ballkid) => ({
     id: ballkid.id,
-    rank: index + 1,
     ballkid_name: ballkid.ballkid_name,
     days: ballkid.total_checkin_days,
     time: ballkid.total_checkin_duration,
