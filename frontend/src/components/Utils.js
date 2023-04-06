@@ -211,8 +211,40 @@ export function RatingsGrid(props) {
       width: ratingColWidth,
     },
     {
-      field: "speedRating",
-      headerName: "Speed Rating",
+      field: "athleticismRating",
+      headerName: "Athleticism",
+      renderCell: (rowData) =>
+        rowData.value == null ? (
+          ""
+        ) : (
+          <Rating
+            value={parseFloat(rowData.value)}
+            precision={0.5}
+            size="small"
+            readOnly
+          />
+        ),
+      width: ratingColWidth,
+    },
+    {
+      field: "rollingRating",
+      headerName: "Rolling",
+      renderCell: (rowData) =>
+        rowData.value == null ? (
+          ""
+        ) : (
+          <Rating
+            value={parseFloat(rowData.value)}
+            precision={0.5}
+            size="small"
+            readOnly
+          />
+        ),
+      width: ratingColWidth,
+    },
+    {
+      field: "awarenessRating",
+      headerName: "Awareness",
       renderCell: (rowData) =>
         rowData.value == null ? (
           ""
@@ -228,7 +260,23 @@ export function RatingsGrid(props) {
     },
     {
       field: "decisionRating",
-      headerName: "Decision-making Rating",
+      headerName: "Decision-making",
+      renderCell: (rowData) =>
+        rowData.value == null ? (
+          ""
+        ) : (
+          <Rating
+            value={parseFloat(rowData.value)}
+            precision={0.5}
+            size="small"
+            readOnly
+          />
+        ),
+      width: ratingColWidth,
+    },
+    {
+      field: "effortRating",
+      headerName: "Effort",
       renderCell: (rowData) =>
         rowData.value == null ? (
           ""
@@ -263,8 +311,11 @@ export function RatingsGrid(props) {
     ratee_name: rating.ratee_name,
     rater_name: rating.rater_name,
     rating: rating.rating,
-    speedRating: rating.speed_rating,
+    athleticismRating: rating.athleticism_rating,
+    rollingRating: rating.rolling_rating,
+    awarenessRating: rating.awareness_rating,
     decisionRating: rating.decision_rating,
+    effortRating: rating.effort_rating,
     comments: rating.comments,
     year: rating.year,
     month: rating.month,
@@ -327,11 +378,13 @@ export function RatingAndLabel({ label, rating, setRating }) {
   return (
     <Grid
       item
-      className="justify"
-      sx={{ mt: 1, mb: 0.5 }}
+      className="sxs"
+      sx={{ mt: 1, mb: 0.5, mx: 3 }}
       style={{ maxWidth: "350px" }}
     >
-      <Typography variant="h6">{label}</Typography>
+      <Typography variant="subtitle2" sx={{ mx: 1 }}>
+        {label}
+      </Typography>
       <Rating
         precision={0.5}
         value={rating}

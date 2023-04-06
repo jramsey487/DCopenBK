@@ -574,8 +574,11 @@ function CreateRating({ ballkidsList, captainsList }) {
   const [rater, setRater] = useState(null);
   const [date, setDate] = useState(null);
   const [rating, setRating] = useState(null);
-  const [speedRating, setSpeedRating] = useState(null);
+  const [athleticismRating, setAthleticismRating] = useState(null);
+  const [rollingRating, setRollingRating] = useState(null);
+  const [awarenessRating, setAwarenessRating] = useState(null);
   const [decisionRating, setDecisionRating] = useState(null);
+  const [effortRating, setEffortRating] = useState(null);
   const [comments, setComments] = useState("");
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -656,17 +659,45 @@ function CreateRating({ ballkidsList, captainsList }) {
         </LocalizationProvider>
       </Grid>
 
-      <RatingAndLabel label={"Overall"} rating={rating} setRating={setRating} />
-      <RatingAndLabel
-        label={"Speed"}
-        rating={speedRating}
-        setRating={setSpeedRating}
-      />
-      <RatingAndLabel
-        label={"Decision-making"}
-        rating={decisionRating}
-        setRating={setDecisionRating}
-      />
+      <Grid item xs={12}>
+        <div className="sxs">
+          <RatingAndLabel
+            label={"Overall"}
+            rating={rating}
+            setRating={setRating}
+          />
+          <RatingAndLabel
+            label={"Athleticism"}
+            rating={athleticismRating}
+            setRating={setAthleticismRating}
+          />
+        </div>
+        <div className="sxs">
+          <RatingAndLabel
+            label={"Rolling"}
+            rating={rollingRating}
+            setRating={setRollingRating}
+          />
+          <RatingAndLabel
+            label={"Awareness"}
+            rating={awarenessRating}
+            setRating={setAwarenessRating}
+          />
+        </div>
+        <div className="sxs">
+          <RatingAndLabel
+            label={"Decision-making"}
+            rating={decisionRating}
+            setRating={setDecisionRating}
+          />
+          <RatingAndLabel
+            label={"Effort"}
+            rating={effortRating}
+            setRating={setEffortRating}
+          />
+        </div>
+      </Grid>
+
       <Grid item xs={12}>
         <TextField
           label="Comments"
@@ -691,8 +722,11 @@ function CreateRating({ ballkidsList, captainsList }) {
                 ratee: ratee.id,
                 date: date,
                 rating: rating,
-                speed_rating: speedRating,
+                athleticism_rating: athleticismRating,
+                rolling_rating: rollingRating,
+                awareness_rating: awarenessRating,
                 decision_rating: decisionRating,
+                effort_rating: effortRating,
                 comments: comments,
               }),
             }).then((response) => {
@@ -703,8 +737,11 @@ function CreateRating({ ballkidsList, captainsList }) {
                 setComments("");
                 setRating(null);
                 setDate(null);
-                setSpeedRating(null);
+                setAthleticismRating(null);
+                setRollingRating(null);
+                setAwarenessRating(null);
                 setDecisionRating(null);
+                setEffortRating(null);
               } else {
                 setErrorMsg("Error submitting rating.");
               }

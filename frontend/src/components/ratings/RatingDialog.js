@@ -30,8 +30,11 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
   const [date, setDate] = useState(getToday());
   const [rating, setRating] = useState(null);
   const [comments, setComments] = useState("");
-  const [speedRating, setSpeedRating] = useState(null);
+  const [athleticismRating, setAthleticismRating] = useState(null);
+  const [rollingRating, setRollingRating] = useState(null);
+  const [awarenessRating, setAwarenessRating] = useState(null);
   const [decisionRating, setDecisionRating] = useState(null);
+  const [effortRating, setEffortRating] = useState(null);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -119,21 +122,42 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
             </div>
           </Grid>
 
-          <RatingAndLabel
-            label={"Overall"}
-            rating={rating}
-            setRating={setRating}
-          />
-          <RatingAndLabel
-            label={"Speed"}
-            rating={speedRating}
-            setRating={setSpeedRating}
-          />
-          <RatingAndLabel
-            label={"Decision-making"}
-            rating={decisionRating}
-            setRating={setDecisionRating}
-          />
+          <div className="justify">
+            <RatingAndLabel
+              label={"Overall"}
+              rating={rating}
+              setRating={setRating}
+            />
+            <RatingAndLabel
+              label={"Athleticism"}
+              rating={athleticismRating}
+              setRating={setAthleticismRating}
+            />
+          </div>
+          <div className="justify">
+            <RatingAndLabel
+              label={"Rolling"}
+              rating={rollingRating}
+              setRating={setRollingRating}
+            />
+            <RatingAndLabel
+              label={"Awareness"}
+              rating={awarenessRating}
+              setRating={setAwarenessRating}
+            />
+          </div>
+          <div className="justify">
+            <RatingAndLabel
+              label={"Decision-making"}
+              rating={decisionRating}
+              setRating={setDecisionRating}
+            />
+            <RatingAndLabel
+              label={"Effort"}
+              rating={effortRating}
+              setRating={setEffortRating}
+            />
+          </div>
 
           <Grid item xs={12}>
             <TextField
@@ -159,8 +183,11 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
                 ratee: ratee.id,
                 date: date,
                 rating: rating,
-                speed_rating: speedRating,
+                athleticism_rating: athleticismRating,
+                rolling_rating: rollingRating,
+                awareness_rating: awarenessRating,
                 decision_rating: decisionRating,
+                effort_rating: effortRating,
                 comments: comments,
               }),
             }).then((response) => {
@@ -170,8 +197,11 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
                   setOpen(false);
                   setComments("");
                   setRating(null);
-                  setSpeedRating(null);
+                  setAthleticismRating(null);
+                  setRollingRating(null);
+                  setAwarenessRating(null);
                   setDecisionRating(null);
+                  setEffortRating(null);
                   setSuccessMsg("");
                 }, 1000);
               } else {

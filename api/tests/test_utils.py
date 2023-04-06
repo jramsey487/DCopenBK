@@ -300,7 +300,7 @@ class TestUtils(TestCase):
 
         self.assertEqual(rcal_dict, dict_to_rcal(ratings, min_date, returnAveraged=False))
 
-    def test_dict_to_rcal_speed_empty(self):
+    def test_dict_to_rcal_athleticism_empty(self):
         rating1 = Rating.objects.create(
             ratee=self.ratee1, rater=self.rater1, date=date.today(), rating=5
         )
@@ -316,15 +316,17 @@ class TestUtils(TestCase):
 
         rcal_dict = {}
 
-        self.assertEqual(rcal_dict, dict_to_rcal(ratings, min_date, rating_name="speed"))
+        self.assertEqual(
+            rcal_dict, dict_to_rcal(ratings, min_date, rating_name="athleticism")
+        )
 
-    def test_dict_to_rcal_speed_zero(self):
+    def test_dict_to_rcal_athleticism_zero(self):
         rating1 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=5,
-            speed_rating=0,
+            athleticism_rating=0,
         )
         rating2 = Rating.objects.create(
             ratee=self.ratee1,
@@ -338,22 +340,24 @@ class TestUtils(TestCase):
 
         rcal_dict = {}
 
-        self.assertEqual(rcal_dict, dict_to_rcal(ratings, min_date, rating_name="speed"))
+        self.assertEqual(
+            rcal_dict, dict_to_rcal(ratings, min_date, rating_name="athleticism")
+        )
 
-    def test_dict_to_rcal_speed_nonzero(self):
+    def test_dict_to_rcal_athleticism_nonzero(self):
         rating1 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=5,
-            speed_rating=0.5,
+            athleticism_rating=0.5,
         )
         rating2 = Rating.objects.create(
             ratee=self.ratee2,
             rater=self.rater2,
             date=date.today(),
             rating=3,
-            speed_rating=2,
+            athleticism_rating=2,
         )
 
         ratings = Rating.objects.all()
@@ -364,22 +368,24 @@ class TestUtils(TestCase):
             ("Joe Iosue", "Andrea Iosue", 0): 2,
         }
 
-        self.assertEqual(rcal_dict, dict_to_rcal(ratings, min_date, rating_name="speed"))
+        self.assertEqual(
+            rcal_dict, dict_to_rcal(ratings, min_date, rating_name="athleticism")
+        )
 
-    def test_dict_to_rcal_speed_nonzero_averaged(self):
+    def test_dict_to_rcal_athleticism_nonzero_averaged(self):
         rating1 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=5,
-            speed_rating=1,
+            athleticism_rating=1,
         )
         rating2 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=3,
-            speed_rating=2,
+            athleticism_rating=2,
         )
 
         ratings = Rating.objects.all()
@@ -389,22 +395,24 @@ class TestUtils(TestCase):
             ("Captain Iosue", "Lacy Iosue", 0): 1.5,
         }
 
-        self.assertEqual(rcal_dict, dict_to_rcal(ratings, min_date, rating_name="speed"))
+        self.assertEqual(
+            rcal_dict, dict_to_rcal(ratings, min_date, rating_name="athleticism")
+        )
 
-    def test_dict_to_rcal_speed_nonzero_nonaveraged(self):
+    def test_dict_to_rcal_athleticism_nonzero_nonaveraged(self):
         rating1 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=5,
-            speed_rating=1,
+            athleticism_rating=1,
         )
         rating2 = Rating.objects.create(
             ratee=self.ratee1,
             rater=self.rater1,
             date=date.today(),
             rating=3,
-            speed_rating=2,
+            athleticism_rating=2,
         )
 
         ratings = Rating.objects.all()
@@ -416,7 +424,9 @@ class TestUtils(TestCase):
 
         self.assertEqual(
             rcal_dict,
-            dict_to_rcal(ratings, min_date, rating_name="speed", returnAveraged=False),
+            dict_to_rcal(
+                ratings, min_date, rating_name="athleticism", returnAveraged=False
+            ),
         )
 
     def test_dict_to_rcal_decision_zero(self):

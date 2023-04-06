@@ -3,19 +3,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import (
-    Max,
-    Count,
-    Sum,
-    F,
-    Q,
-    Avg,
-    Subquery,
-    OuterRef,
-    DurationField,
-    IntegerField,
-    FloatField,
-)
+from django.db.models import Max, Count, Sum, F, Q, Avg, Subquery, OuterRef
 from django.db.models.aggregates import StdDev
 from django.db.models.functions import TruncDay, TruncDate, Coalesce
 from api.serializers import *

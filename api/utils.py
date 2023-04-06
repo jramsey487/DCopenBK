@@ -88,10 +88,16 @@ def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
 
         if rating_name == "overall":
             rating = rating.rating
-        elif rating_name == "speed":
-            rating = rating.speed_rating
+        elif rating_name == "athleticism":
+            rating = rating.athleticism_rating
+        elif rating_name == "rolling":
+            rating = rating.rolling_rating
+        elif rating_name == "awareness":
+            rating = rating.awareness_rating
         elif rating_name == "decision":
             rating = rating.decision_rating
+        elif rating_name == "effort":
+            rating = rating.effort_rating
         else:
             raise Exception(f"Unrecognized rating name {rating_name}")
 

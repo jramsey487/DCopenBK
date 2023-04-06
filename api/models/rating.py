@@ -10,8 +10,11 @@ class Rating(models.Model):
     rater = models.ForeignKey(Ballkid, on_delete=models.CASCADE, related_name="rater")
     date = models.DateField(default=datetime.today)
     rating = models.FloatField()
-    speed_rating = models.FloatField(null=True, blank=True)
+    athleticism_rating = models.FloatField(null=True, blank=True)
+    rolling_rating = models.FloatField(null=True, blank=True)
+    awareness_rating = models.FloatField(null=True, blank=True)
     decision_rating = models.FloatField(null=True, blank=True)
+    effort_rating = models.FloatField(null=True, blank=True)
     comments = models.TextField(default="", blank=True)
 
     def __str__(self):

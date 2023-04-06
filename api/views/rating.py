@@ -51,7 +51,6 @@ class AllRatings(generics.ListAPIView):
             "-date",
             "rater__last_name",
             "rater__first_name",
-            "comments",
         ).annotate(
             ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
             rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -97,8 +96,11 @@ class CreateRating(APIView):
                 ratee=Ballkid.objects.get(id=serializer.data["ratee"]),
                 date=serializer.data["date"],
                 rating=serializer.data["rating"],
-                speed_rating=serializer.data["speed_rating"],
+                athleticism_rating=serializer.data["athleticism_rating"],
+                rolling_rating=serializer.data["rolling_rating"],
+                awareness_rating=serializer.data["awareness_rating"],
                 decision_rating=serializer.data["decision_rating"],
+                effort_rating=serializer.data["effort_rating"],
                 comments=serializer.data["comments"],
             )
 
@@ -120,20 +122,24 @@ class CalibratedRatings(APIView):
     def get(self, request):
         MIN_RATING = 0.5
         MAX_RATING = 5
+        RATING_CATEGORIES = [
+            "overall",
+            "athleticism",
+            "rolling",
+            "awareness",
+            "decision",
+            "effort",
+        ]
 
+        cp_dict = {}
         ratings = Rating.objects.all()
-        overall_cp = calibrate(
-            ratings, "overall", min_rating=MIN_RATING, max_rating=MAX_RATING
-        )
-        speed_cp = calibrate(
-            ratings, "speed", min_rating=MIN_RATING, max_rating=MAX_RATING
-        )
-        decision_cp = calibrate(
-            ratings, "decision", min_rating=MIN_RATING, max_rating=MAX_RATING
-        )
+        for rating_name in RATING_CATEGORIES:
+            cp_dict[rating_name] = calibrate(
+                ratings, rating_name, min_rating=MIN_RATING, max_rating=MAX_RATING
+            )
 
         # Save calibration parameters for overall ratings only
-        save_calibration_parameters(overall_cp)
+        save_calibration_parameters(cp_dict["overall"])
 
         # Calibrate each rating to put together a list of calibrated ratings
         # to return
@@ -143,24 +149,45 @@ class CalibratedRatings(APIView):
                 "rater": rating.rater,
                 "ratee": rating.ratee,
                 "date": rating.date,
-                "rating": overall_cp.calibrate_rating(
+                "rating": cp_dict["overall"].calibrate_rating(
                     rating.rater.get_name(),
                     float(rating.rating),
                     clip_endpoints=(MIN_RATING, MAX_RATING),
                 ),
-                "speed_rating": speed_cp.calibrate_rating(
+                "athleticism_rating": cp_dict["athleticism"].calibrate_rating(
                     rating.rater.get_name(),
-                    float(rating.speed_rating),
+                    float(rating.athleticism_rating),
                     clip_endpoints=(MIN_RATING, MAX_RATING),
                 )
-                if rating.speed_rating is not None
+                if rating.athleticism_rating is not None
                 else None,
-                "decision_rating": decision_cp.calibrate_rating(
+                "rolling_rating": cp_dict["rolling"].calibrate_rating(
+                    rating.rater.get_name(),
+                    float(rating.rolling_rating),
+                    clip_endpoints=(MIN_RATING, MAX_RATING),
+                )
+                if rating.rolling_rating is not None
+                else None,
+                "awareness_rating": cp_dict["awareness"].calibrate_rating(
+                    rating.rater.get_name(),
+                    float(rating.awareness_rating),
+                    clip_endpoints=(MIN_RATING, MAX_RATING),
+                )
+                if rating.awareness_rating is not None
+                else None,
+                "decision_rating": cp_dict["decision"].calibrate_rating(
                     rating.rater.get_name(),
                     float(rating.decision_rating),
                     clip_endpoints=(MIN_RATING, MAX_RATING),
                 )
                 if rating.decision_rating is not None
+                else None,
+                "effort_rating": cp_dict["effort"].calibrate_rating(
+                    rating.rater.get_name(),
+                    float(rating.effort_rating),
+                    clip_endpoints=(MIN_RATING, MAX_RATING),
+                )
+                if rating.effort_rating is not None
                 else None,
                 "comments": rating.comments,
                 # Annotated values
@@ -181,7 +208,6 @@ class CalibratedRatings(APIView):
             key=lambda k: (
                 k["rater_name"].split(" ")[1],
                 k["rater_name"].split(" ")[0],
-                k["comments"],
             ),
         )
         postprocessed = sorted(postprocessed, key=lambda k: k["date"], reverse=True)
