@@ -1,11 +1,24 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Max, Value, Count, Sum, F, Q, Avg, OuterRef, Subquery
+from django.db.models import (
+    Max,
+    Value,
+    Count,
+    Sum,
+    F,
+    Q,
+    Avg,
+    Value,
+    Subquery,
+    OuterRef,
+    DurationField,
+    FloatField,
+)
 from django.db.models.aggregates import StdDev
-from django.db.models.functions import Concat, TruncDay, TruncDate
+from django.db.models.functions import TruncDay, TruncDate, Coalesce
 from api.serializers import *
 from api.models.ballkid import *
 from api.models.rating import *
@@ -13,6 +26,7 @@ from api.models.schedule import Court
 from api.utils import *
 from api.permissions import *
 from accounts.views import UpdateCaptainStatus
+from datetime import timedelta
 
 
 class BallkidsList(generics.ListAPIView):
@@ -347,11 +361,46 @@ class GetCourtLeaderboard(generics.ListAPIView):
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
-                court_duration=Sum("courtanalytics__duration"),
-                checkin_duration=Sum("checkinhistory__duration"),
-                stadium_duration=Sum(
-                    "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.STADIUM),
+                checkin_duration=Subquery(
+                    CheckinAnalytics.objects.filter(ballkid_id=OuterRef("id")).values(
+                        "duration"
+                    )
+                ),
+                court_duration=Coalesce(Sum("courtanalytics__duration"), timedelta()),
+                stadium_duration=Coalesce(
+                    Sum(
+                        "courtanalytics__duration",
+                        filter=Q(courtanalytics__court=Court.STADIUM),
+                    ),
+                    timedelta(),
+                ),
+                harris_duration=Coalesce(
+                    Sum(
+                        "courtanalytics__duration",
+                        filter=Q(courtanalytics__court=Court.HARRIS),
+                    ),
+                    timedelta(),
+                ),
+                grandstand_duration=Coalesce(
+                    Sum(
+                        "courtanalytics__duration",
+                        filter=Q(courtanalytics__court=Court.GRANDSTAND),
+                    ),
+                    timedelta(),
+                ),
+                four_duration=Coalesce(
+                    Sum(
+                        "courtanalytics__duration",
+                        filter=Q(courtanalytics__court=Court.FOUR),
+                    ),
+                    timedelta(),
+                ),
+                five_duration=Coalesce(
+                    Sum(
+                        "courtanalytics__duration",
+                        filter=Q(courtanalytics__court=Court.FIVE),
+                    ),
+                    timedelta(),
                 ),
             )
             .order_by("-court_duration")

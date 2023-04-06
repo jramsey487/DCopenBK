@@ -5,7 +5,6 @@ from api.models.rating import *
 
 
 class BallkidSerializer(serializers.ModelSerializer):
-    ballkid_name = serializers.CharField(max_length=60, required=False)
     # Checkin leaderboard fields
     checkin_duration = serializers.DurationField(required=False)
     checkin_days = serializers.IntegerField(required=False)

@@ -380,7 +380,7 @@ export function getTimeFloat(timeStr) {
   var hour = 0;
   var minute = 0;
 
-  if (timeStr !== "" && timeStr !== null) {
+  if (timeStr !== "" && timeStr !== null && timeStr !== undefined) {
     const hourStr = timeStr.split(":")[0];
 
     if (hourStr.length > 2) {
