@@ -5,16 +5,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import (
     Max,
-    Value,
     Count,
     Sum,
     F,
     Q,
     Avg,
-    Value,
     Subquery,
     OuterRef,
     DurationField,
+    IntegerField,
     FloatField,
 )
 from django.db.models.aggregates import StdDev
@@ -362,9 +361,9 @@ class GetCourtLeaderboard(generics.ListAPIView):
             Ballkid.objects.filter(is_active=True)
             .annotate(
                 checkin_duration=Subquery(
-                    CheckinAnalytics.objects.filter(ballkid_id=OuterRef("id")).values(
-                        "duration"
-                    )
+                    Ballkid.objects.filter(id=OuterRef("id"))
+                    .annotate(Sum("checkinhistory__duration"))
+                    .values("checkinhistory__duration__sum"),
                 ),
                 court_duration=Coalesce(Sum("courtanalytics__duration"), timedelta()),
                 stadium_duration=Coalesce(

@@ -6,7 +6,7 @@ import { getAuthHeader, getTimeStr, getTimeFloat, Icons } from "../Utils";
 
 export default function CourtLeaderboard(props) {
   const [ballkids, setBallkids] = useState([]);
-  const [showAdjusted, setShowAdjusted] = useState(false);
+  // const [showAdjusted, setShowAdjusted] = useState(false);
   const [showPercent, setShowPercent] = useState(false);
 
   const timeColWidth = 150;
@@ -153,14 +153,15 @@ export default function CourtLeaderboard(props) {
         Court Time Leaderboard
       </Typography>
 
-      <div className="sxs">
+      {/* <div className="sxs">
         <Typography variant="body1">Raw Court Time</Typography>
         <Switch
           checked={showAdjusted}
           onClick={(e) => setShowAdjusted(e.target.checked)}
         />
         <Typography variant="body1">Adjusted Court Time</Typography>
-      </div>
+      </div> */}
+
       <div className="sxs">
         <Typography variant="body1">Show as Time</Typography>
         <Switch
@@ -183,11 +184,11 @@ export default function CourtLeaderboard(props) {
         Note: % Time on Court = (Total time on court) / (Total time checked in).
         % Time on Stadium = (Total time on Stadium) / (Total time on court)
       </Typography>
-      <Typography variant="body1">
+      {/* <Typography variant="body1">
         Note: Raw court time takes into account rain delays and courts ending
         early. Adjusted court time additionally takes into account number of
         ballkids per team.
-      </Typography>
+      </Typography> */}
     </div>
   );
 }
