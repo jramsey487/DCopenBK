@@ -451,15 +451,17 @@ export function getTimeFloat(timeStr) {
 
 // Takes as input a float which represents the total duration in # hours
 // as a float. Outputs as {hours} hrs {minutes} mins
-export function getTimeStr(timeFloat) {
+export function getTimeStr(timeFloat, verbose = true) {
   if (timeFloat === null || isNaN(timeFloat)) {
     timeFloat = 0;
   }
 
   const hours = Math.floor(timeFloat);
-  const mins = parseInt((timeFloat % 1) * 60);
+  const mins = parseInt((timeFloat % 1) * 60).toLocaleString("en-US", {
+    minimumIntegerDigits: 2,
+  });
 
-  return hours + " hrs " + mins + " mins";
+  return verbose ? hours + " hrs " + mins + " mins" : hours + ":" + mins;
 }
 
 export function getToday() {

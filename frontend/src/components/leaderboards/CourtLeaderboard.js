@@ -1,20 +1,100 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Link, Switch } from "@mui/material";
+import {
+  Typography,
+  Link,
+  Switch,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Table,
+  TableCell,
+  TableBody,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
 import { getAuthHeader, getTimeStr, getTimeFloat, Icons } from "../Utils";
 
+function renderAverages(averages, showPercent) {
+  const courtTimes = {
+    "On Court": {
+      raw: averages["court_avg"],
+      percent: averages["court_avg"] / averages["checkin_avg"],
+    },
+    Stadium: {
+      raw: averages["stadium_avg"],
+      percent: averages["stadium_avg"] / averages["court_avg"],
+    },
+    Harris: {
+      raw: averages["harris_avg"],
+      percent: averages["harris_avg"] / averages["court_avg"],
+    },
+    Grandstand: {
+      raw: averages["grandstand_avg"],
+      percent: averages["grandstand_avg"] / averages["court_avg"],
+    },
+    "Court 4": {
+      raw: averages["four_avg"],
+      percent: averages["four_avg"] / averages["court_avg"],
+    },
+    "Court 5": {
+      raw: averages["five_avg"],
+      percent: averages["five_avg"] / averages["court_avg"],
+    },
+  };
+
+  return (
+    <TableContainer sx={{ mt: 1, mb: 3 }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell align="center"></TableCell>
+            {Object.keys(courtTimes).map((court) => (
+              <TableCell key={court} align="center">
+                {court}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell align="center" width="22%">
+              {showPercent ? "Average Percent" : "Average Time"}
+            </TableCell>
+            {Object.keys(courtTimes).map((court) => (
+              <TableCell key={court} align="center" width="13%">
+                {showPercent
+                  ? `${Number(
+                      (courtTimes[court]["percent"] * 100).toFixed(1)
+                    )}%`
+                  : getTimeStr(
+                      parseFloat(courtTimes[court]["raw"]) / 3600,
+                      false
+                    )}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
 export default function CourtLeaderboard(props) {
   const [ballkids, setBallkids] = useState([]);
+  const [averages, setAverages] = useState();
   // const [showAdjusted, setShowAdjusted] = useState(false);
   const [showPercent, setShowPercent] = useState(false);
 
-  const timeColWidth = 150;
+  const timeColWidth = 100;
 
   useEffect(() => {
     fetch("/api/get-court-leaderboard", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setBallkids(data));
+
+    fetch("/api/get-average-court-leaderboard", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setAverages(data));
   }, []);
 
   const columns = [
@@ -41,7 +121,7 @@ export default function CourtLeaderboard(props) {
     },
     {
       field: "time",
-      headerName: (showPercent ? "% " : "") + "Time on Court",
+      headerName: (showPercent ? "% " : "") + "On Court",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -51,13 +131,13 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
     {
       field: "stadium",
-      headerName: (showPercent ? "% " : "") + "Time on Stadium",
+      headerName: (showPercent ? "% " : "") + "Stadium",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -67,13 +147,13 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
     {
       field: "harris",
-      headerName: (showPercent ? "% " : "") + "Time on Harris",
+      headerName: (showPercent ? "% " : "") + "Harris",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -83,13 +163,13 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
     {
       field: "grandstand",
-      headerName: (showPercent ? "% " : "") + "Time on Grandstand",
+      headerName: (showPercent ? "% " : "") + "Grandstand",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -99,13 +179,13 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
     {
       field: "four",
-      headerName: (showPercent ? "% " : "") + "Time on Court 4",
+      headerName: (showPercent ? "% " : "") + "Court 4",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -114,13 +194,13 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
     {
       field: "five",
-      headerName: (showPercent ? "% " : "") + "Time on Court 5",
+      headerName: (showPercent ? "% " : "") + "Court 5",
       width: timeColWidth,
       valueGetter: (rowData) =>
         showPercent
@@ -129,9 +209,9 @@ export default function CourtLeaderboard(props) {
       valueFormatter: (obj) =>
         showPercent
           ? obj.value
-            ? `${Number((obj.value * 100).toFixed(2))}%`
+            ? `${Number((obj.value * 100).toFixed(1))}%`
             : "0%"
-          : getTimeStr(obj.value),
+          : getTimeStr(obj.value, false),
     },
   ];
 
@@ -171,6 +251,8 @@ export default function CourtLeaderboard(props) {
         <Typography variant="body1">Show as Percent</Typography>
       </div>
 
+      {averages !== undefined ? renderAverages(averages, showPercent) : ""}
+
       <div style={{ height: 500 }}>
         <DataGrid
           columns={columns}
@@ -181,8 +263,14 @@ export default function CourtLeaderboard(props) {
       </div>
 
       <Typography variant="body1" mt={2}>
-        Note: % Time on Court = (Total time on court) / (Total time checked in).
-        % Time on Stadium = (Total time on Stadium) / (Total time on court)
+        Note: % On Court = (Total time on any court) / (Total time checked in)
+      </Typography>
+      <Typography variant="body1">
+        Note: % [<em>Court Name </em>] = (Total time on [<em>Court Name </em>])
+        / (Total time on any court)
+      </Typography>
+      <Typography variant="body1">
+        Note: Time is represented in [<em>hrs </em>]:[<em>mins </em>]
       </Typography>
       {/* <Typography variant="body1">
         Note: Raw court time takes into account rain delays and courts ending

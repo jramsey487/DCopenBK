@@ -3,8 +3,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Max, Count, Sum, F, Q, Avg, Subquery, OuterRef
-from django.db.models.aggregates import StdDev
+from django.db.models import Max, Count, Sum, F, Q, Avg, Subquery, OuterRef, StdDev
 from django.db.models.functions import TruncDay, TruncDate, Coalesce
 from api.serializers import *
 from api.models.ballkid import *
@@ -390,6 +389,54 @@ class GetCourtLeaderboard(generics.ListAPIView):
             )
             .order_by("-court_duration")
         )
+
+
+class GetAverageCourtLeaderboard(APIView):
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        agg = (
+            Ballkid.objects.filter(is_active=True)
+            .annotate(
+                checkin_duration=Subquery(
+                    Ballkid.objects.filter(id=OuterRef("id"))
+                    .annotate(Sum("checkinhistory__duration"))
+                    .values("checkinhistory__duration__sum"),
+                ),
+                court_duration=Sum("courtanalytics__duration"),
+                stadium_duration=Sum(
+                    "courtanalytics__duration",
+                    filter=Q(courtanalytics__court=Court.STADIUM),
+                ),
+                harris_duration=Sum(
+                    "courtanalytics__duration",
+                    filter=Q(courtanalytics__court=Court.HARRIS),
+                ),
+                grandstand_duration=Sum(
+                    "courtanalytics__duration",
+                    filter=Q(courtanalytics__court=Court.GRANDSTAND),
+                ),
+                four_duration=Sum(
+                    "courtanalytics__duration",
+                    filter=Q(courtanalytics__court=Court.FOUR),
+                ),
+                five_duration=Sum(
+                    "courtanalytics__duration",
+                    filter=Q(courtanalytics__court=Court.FIVE),
+                ),
+            )
+            .aggregate(
+                checkin_avg=Avg("checkin_duration"),
+                court_avg=Avg("court_duration"),
+                stadium_avg=Avg("stadium_duration"),
+                harris_avg=Avg("harris_duration"),
+                grandstand_avg=Avg("grandstand_duration"),
+                four_avg=Avg("four_duration"),
+                five_avg=Avg("five_duration"),
+            )
+        )
+
+        return Response(agg, status=status.HTTP_200_OK)
 
 
 class GetBallkidCheckinHistory(APIView):

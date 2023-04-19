@@ -61,6 +61,11 @@ analytics_urls = [
         GetCourtLeaderboard.as_view(),
         name="get-court-leaderboard",
     ),
+    path(
+        "get-average-court-leaderboard",
+        GetAverageCourtLeaderboard.as_view(),
+        name="get-average-court-leaderboard",
+    ),
 ]
 
 # Tournament URLs
