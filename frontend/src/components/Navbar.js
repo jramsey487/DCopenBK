@@ -193,7 +193,7 @@ export default function Navbar(props) {
     },
   ];
 
-  const accountTab = {
+  const nonchairpersonAccountTab = {
     icon: <AccountCircle />,
     url: "/me",
     subtabs: [
@@ -202,17 +202,33 @@ export default function Navbar(props) {
       { label: "Logout", url: "/login" },
     ],
   };
+  const chairpersonAccountTab = {
+    icon: <AccountCircle />,
+    url: "/me",
+    subtabs: [
+      { label: "My Profile", url: "/me" },
+      { label: "Debug", url: "/debug" },
+      { label: "Tournament Settings", url: "/tournament-settings" },
+      { label: "Account Settings", url: "/settings" },
+      { label: "Logout", url: "/login" },
+    ],
+  };
 
+  var accountTab = {};
   var tabs = [];
+
   switch (group) {
     case "ballkid":
       tabs = ballkidTabs;
+      accountTab = nonchairpersonAccountTab;
       break;
     case "captain":
       tabs = captainTabs;
+      accountTab = nonchairpersonAccountTab;
       break;
     case "chairperson":
       tabs = chairpersonTabs;
+      accountTab = chairpersonAccountTab;
       break;
     default:
       break;
