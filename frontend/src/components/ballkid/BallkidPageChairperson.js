@@ -302,22 +302,22 @@ function RatingSection({ ballkid }) {
             View ratings by this captain
           </Button>
 
-          {params.reviewer_scale == null ? (
+          {params.rater_scale == null ? (
             ""
           ) : (
             <div>
               <Typography variant="body1">
-                Reviewer scale: {Number(params.reviewer_scale).toFixed(3)}
+                Reviewer scale: {Number(params.rater_scale).toFixed(3)}
               </Typography>
               <Typography variant="body1">
-                Reviewer offset: {Number(params.reviewer_offset).toFixed(3)}
+                Reviewer offset: {Number(params.rater_offset).toFixed(3)}
               </Typography>
 
               <RaterParamsChart
-                offset={params.reviewer_offset}
-                scale={params.reviewer_scale}
-                average_offset={average.reviewer_offset__avg}
-                average_scale={average.reviewer_scale__avg}
+                offset={params.rater_offset}
+                scale={params.rater_scale}
+                average_offset={average.rater_offset__avg}
+                average_scale={average.rater_scale__avg}
                 sx={{ mb: 2 }}
               />
             </div>
@@ -347,21 +347,20 @@ function RatingSection({ ballkid }) {
           View my ratings for this ballkid
         </Button>
 
-        {params.ballkid_improvement == null ? (
+        {params.ratee_improvement == null ? (
           ""
         ) : (
           <div>
             <Typography variant="body1">
-              Ballkid improvement:{" "}
-              {Number(params.ballkid_improvement).toFixed(3)}
+              Ballkid improvement: {Number(params.ratee_improvement).toFixed(3)}
             </Typography>
             <Typography variant="body1">
-              Ballkid offset: {Number(params.ballkid_offset).toFixed(3)}
+              Ballkid offset: {Number(params.ratee_offset).toFixed(3)}
             </Typography>
 
             <BallkidParamsChart
-              offset={params.ballkid_offset}
-              improvement={params.ballkid_improvement}
+              offset={params.ratee_offset}
+              improvement={params.ratee_improvement}
               sx={{ mb: 2 }}
             />
           </div>

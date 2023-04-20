@@ -357,8 +357,8 @@ class GetRatingsLeaderboard(generics.ListAPIView):
                 num_ratings=Count("rater"),
                 avg_rating=Avg("rater__rating"),
                 stdev_rating=StdDev("rater__rating"),
-                scale=F("calibrationparams__reviewer_scale"),
-                offset=F("calibrationparams__reviewer_offset"),
+                scale=F("calibrationparams__rater_scale"),
+                offset=F("calibrationparams__rater_offset"),
             )
             .order_by("-num_ratings")
         )

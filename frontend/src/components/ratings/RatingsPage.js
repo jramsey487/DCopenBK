@@ -64,7 +64,7 @@ export default function RatingsPage(props) {
           severity="warning"
           onClose={() => setShowCalibrationWarning(false)}
         >
-          Warning: May not be enough data for effective calibration
+          Warning: Potentially insufficient data for effective calibration!
         </Alert>
       </Collapse>
 

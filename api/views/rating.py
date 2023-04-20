@@ -8,7 +8,7 @@ from api.permissions import *
 from api.utils import *
 from api.models.ballkid import *
 from datetime import datetime
-import rcal
+from rcal import RcalWarning
 import warnings
 
 
@@ -33,10 +33,10 @@ def save_calibration_parameters(cp):
         cp, created = CalibrationParams.objects.update_or_create(
             ballkid=ballkid,
             defaults={
-                "ballkid_improvement": improvement,
-                "ballkid_offset": ballkid_offset,
-                "reviewer_scale": scale,
-                "reviewer_offset": offset,
+                "ratee_improvement": improvement,
+                "ratee_offset": ballkid_offset,
+                "rater_scale": scale,
+                "rater_offset": offset,
             },
         )
         cp.save()
@@ -142,7 +142,7 @@ class CalibratedRatings(APIView):
                 cp_dict[rating_name] = calibrate(
                     ratings, rating_name, min_rating=MIN_RATING, max_rating=MAX_RATING
                 )
-            if any((x.category == rcal.RcalWarning for x in caught_warnings)):
+            if any((x.category == RcalWarning for x in caught_warnings)):
                 all_warnings.append(rating_name)
 
         if all_warnings:
@@ -259,6 +259,6 @@ class GetAverageCalibrationParams(APIView):
 
     def get(self, request):
         avg_offset = CalibrationParams.objects.aggregate(
-            Avg("reviewer_offset"), Avg("reviewer_scale")
+            Avg("rater_offset"), Avg("rater_scale")
         )
         return Response(avg_offset)
