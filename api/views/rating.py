@@ -1,15 +1,69 @@
-from django.db.models import Value, Avg
+from django.db.models import Value, Avg, Count, Q
 from django.db.models.functions import Concat, Extract
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.serializers import *
 from api.permissions import *
-from api.utils import *
 from api.models.ballkid import *
+from api.utils import *
 from datetime import datetime
-from rcal import RcalWarning
+from rcal import RcalWarning, calibrate_parameters
 import warnings
+
+
+def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
+    """
+    Converts a Django queryset into the appropriate format for review calibration:
+        Queryset of Rating objects => dict of (captain, ballkid, day) : rating
+
+    Returns the minimum date and the averaged rcal dict format
+
+    NOTE THAT RATINGS OF 0 ARE CONSIDERED EMPTY AND ARE NOT INCLUDED
+    """
+
+    rcal_dict = {}
+    for rating in data:
+        key = (
+            rating.rater.get_name(),
+            rating.ratee.get_name(),
+            (rating.date - min_date).days,
+        )
+
+        if rating_name == "overall":
+            rating_val = rating.rating
+        elif rating_name == "athleticism":
+            rating_val = rating.athleticism_rating
+        elif rating_name == "rolling":
+            rating_val = rating.rolling_rating
+        elif rating_name == "awareness":
+            rating_val = rating.awareness_rating
+        elif rating_name == "decision":
+            rating_val = rating.decision_rating
+        elif rating_name == "effort":
+            rating_val = rating.effort_rating
+        else:
+            raise Exception(f"Unrecognized rating name {rating_name}")
+
+        if rating_val:
+            rcal_dict.setdefault(key, []).append(float(rating_val))
+
+    if not returnAveraged:
+        return rcal_dict
+
+    return {key: sum(val) / len(val) for key, val in rcal_dict.items()}
+
+
+def calibrate(ratings, rating_name="overall", min_rating=0.5, max_rating=5, stdev=2):
+    min_date = min([rating.date for rating in ratings])
+
+    train = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=True)
+    test = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=False)
+
+    cp = calibrate_parameters(train, rating_delta=(max_rating - min_rating))
+    cp.rescale_parameters(test, (min_rating, max_rating), ignore_outliers=stdev)
+
+    return cp
 
 
 def save_calibration_parameters(cp):
@@ -143,7 +197,7 @@ class CalibratedRatings(APIView):
                 )
             if any((x.category == RcalWarning for x in caught_warnings)):
                 all_warnings.append(rating_name)
-        print(all_warnings)
+        print("rcal warnings: ", all_warnings)
 
         # Save calibration parameters for overall ratings only
         save_calibration_parameters(cp_dict["overall"])
@@ -226,7 +280,7 @@ class CalibratedRatings(APIView):
             ),
         )
 
-        if all_warnings:
+        if "overall" in all_warnings:
             return Response(
                 RatingSerializer(postprocessed, many=True).data,
                 status=status.HTTP_206_PARTIAL_CONTENT,
@@ -257,3 +311,18 @@ class GetAverageCalibrationParams(APIView):
             Avg("rater_offset"), Avg("rater_scale")
         )
         return Response(avg_offset)
+
+
+class GetBallkidNumRatings(generics.ListAPIView):
+    permission_classes = [IsChairperson]
+    serializer_class = BallkidSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs.get("pk")
+        return Ballkid.objects.annotate(
+            num_ratings=Count("ratee"),
+            num_my_ratings=Count(
+                "ratee",
+                filter=Q(rater_id=pk),
+            ),
+        )

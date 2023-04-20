@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from rcal import calibrate_parameters
 
 
 def get_first_name(full_name):
@@ -66,61 +65,3 @@ def datetime_str_to_datetime(input_str, format_str="%Y-%m-%d %H:%M:%S"):
     time = splitted[1].split(".")[0]
 
     return datetime.strptime(f"{date} {time}", format_str)
-
-
-def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
-    """
-    Converts a Django queryset into the appropriate format for review calibration:
-        Queryset of Rating objects => dict of (captain, ballkid, day) : rating
-
-    Returns the minimum date and the averaged rcal dict format
-
-    NOTE THAT RATINGS OF 0 ARE CONSIDERED EMPTY AND ARE NOT INCLUDED
-    """
-
-    rcal_dict = {}
-    for rating in data:
-        key = (
-            rating.rater.get_name(),
-            rating.ratee.get_name(),
-            (rating.date - min_date).days,
-        )
-
-        if rating_name == "overall":
-            rating = rating.rating
-        elif rating_name == "athleticism":
-            rating = rating.athleticism_rating
-        elif rating_name == "rolling":
-            rating = rating.rolling_rating
-        elif rating_name == "awareness":
-            rating = rating.awareness_rating
-        elif rating_name == "decision":
-            rating = rating.decision_rating
-        elif rating_name == "effort":
-            rating = rating.effort_rating
-        else:
-            raise Exception(f"Unrecognized rating name {rating_name}")
-
-        if rating is not None and rating > 0:
-            if key not in rcal_dict:
-                rcal_dict[key] = []
-
-            rcal_dict[key].append(float(rating))
-
-    if not returnAveraged:
-        return rcal_dict
-
-    averaged_rcal_dict = {key: sum(val) / len(val) for key, val in rcal_dict.items()}
-    return averaged_rcal_dict
-
-
-def calibrate(ratings, rating_name="overall", min_rating=0.5, max_rating=5, stdev=2):
-    min_date = min([rating.date for rating in ratings])
-
-    train = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=True)
-    test = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=False)
-
-    cp = calibrate_parameters(train, rating_delta=(max_rating - min_rating))
-    cp.rescale_parameters(test, (min_rating, max_rating), ignore_outliers=stdev)
-
-    return cp
