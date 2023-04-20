@@ -170,35 +170,35 @@ class UpdateCaptainStatusTest(APITestCase):
     def test_no_change(self):
         self.assertEqual(3, User.objects.count())
         self.assertEqual(1, self.ballkid_user.groups.count())
-        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+        self.assertEqual("ballkid", self.ballkid_user.groups.first().name)
 
         data = {"first_name": "Andrea", "last_name": "Iosue", "is_captain": False}
         response = self.client.patch(self.url, data, format="json")
 
         self.assertEqual(1, self.ballkid_user.groups.count())
-        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+        self.assertEqual("ballkid", self.ballkid_user.groups.first().name)
 
     def test_promote_to_captain(self):
         self.assertEqual(3, User.objects.count())
         self.assertEqual(1, self.ballkid_user.groups.count())
-        self.assertEqual("ballkid", self.ballkid_user.groups.all()[0].name)
+        self.assertEqual("ballkid", self.ballkid_user.groups.first().name)
 
         data = {"first_name": "Andrea", "last_name": "Iosue", "is_captain": True}
         response = self.client.patch(self.url, data, format="json")
 
         self.assertEqual(1, self.ballkid_user.groups.count())
-        self.assertEqual("captain", self.ballkid_user.groups.all()[0].name)
+        self.assertEqual("captain", self.ballkid_user.groups.first().name)
 
     def test_demote_from_captain(self):
         self.assertEqual(3, User.objects.count())
         self.assertEqual(1, self.captain_user.groups.count())
-        self.assertEqual("captain", self.captain_user.groups.all()[0].name)
+        self.assertEqual("captain", self.captain_user.groups.first().name)
 
         data = {"first_name": "Joe", "last_name": "Iosue", "is_captain": False}
         response = self.client.patch(self.url, data, format="json")
 
         self.assertEqual(1, self.captain_user.groups.count())
-        self.assertEqual("ballkid", self.captain_user.groups.all()[0].name)
+        self.assertEqual("ballkid", self.captain_user.groups.first().name)
 
 
 # class PasswordResetTest(APITestCase):

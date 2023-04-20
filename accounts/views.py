@@ -28,7 +28,7 @@ class GetTokenView(ObtainAuthToken):
         return Response(
             {
                 "token": token.key,
-                "group": user.groups.all()[0].name,
+                "group": user.groups.first().name,
                 "ballkid_id": ballkid.id if ballkid is not None else "",
             },
             status=status.HTTP_200_OK,

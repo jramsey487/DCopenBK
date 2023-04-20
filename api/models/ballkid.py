@@ -125,34 +125,46 @@ class Ballkid(models.Model):
             else:
                 histories = CaptainHistory.objects.filter(ballkid=self)
 
+            # For each history between ballkid and captain
             for history in histories:
                 other_id = history.ballkid_id if updateAsCaptain else history.captain_id
-                end_time = history.end if history.end else now
 
                 if other_id not in durations:
                     durations[other_id] = timedelta()
                 if other_id not in counts:
                     counts[other_id] = 0
 
+                # Boolean to indicate whether there was any shift that had positive
+                # overlap. If so, increment the count of number of histories between
+                # ballkid and captain
                 overlapping = False
 
                 # TODO: make this more efficient by filtering shifts further
                 shifts = Schedule.objects.filter(team=history.team)
+                # For each shift, check if there is any overlapping time between the
+                # start and end of the CaptainHistory and the start and end of a shift
                 for shift in shifts:
                     overlap = calc_overlapping_time(
                         history.start,
                         history.end if history.end else now,
                         shift.start,
-                        shift.end if shift.end else now,
+                        shift.end if shift.end else shift.start + timedelta(hours=1),
                     )
                     durations[other_id] += overlap
                     if overlap:
                         overlapping = True
 
+                # If any overlap with a shift, increment count of number of histories
+                # between ballkid and captain
                 if overlapping:
                     counts[other_id] += 1
 
-            for other_id in durations.keys():
+            for other_id, duration in durations.items():
+                # If no overlapping times between (ballkid, captain) pair,
+                # then continue and do not create a CaptainAnalytics entry
+                if not duration:
+                    continue
+
                 if updateAsCaptain:
                     analytic, _ = CaptainAnalytics.objects.get_or_create(
                         ballkid_id=other_id, captain=self
@@ -242,7 +254,7 @@ class Ballkid(models.Model):
         else:
             histories = CheckinHistory.objects.filter(ballkid=self)
             if len(histories) > 0:
-                history = histories.order_by("-checkin")[0]
+                history = histories.order_by("-checkin").first()
                 history.checkout = now
                 if history.checkout < history.checkin:
                     raise Exception(
@@ -273,7 +285,7 @@ class Ballkid(models.Model):
         # ballkid was previously unassigned, skip
         histories = TeamHistory.objects.filter(ballkid=self)
         if self.current_team != 0 and len(histories) > 0:
-            history = histories.order_by("-start")[0]
+            history = histories.order_by("-start").first()
             # Note: this might silently break if history.end if already filled in for whatever reason!
             history.end = now
 
@@ -324,7 +336,7 @@ class Ballkid(models.Model):
                 )
                 if len(captain_histories) == 0:
                     continue
-                history = captain_histories.order_by("-start")[0]
+                history = captain_histories.order_by("-start").first()
 
                 # If this most recent entry has empty end, then update end and duration
                 if history.end is None:
@@ -364,7 +376,7 @@ class Ballkid(models.Model):
                     )
                     if len(ballkid_histories) == 0:
                         continue
-                    history = ballkid_histories.order_by("-start")[0]
+                    history = ballkid_histories.order_by("-start").first()
 
                     # If this most recent entry has empty end, then log end and duration
                     if history.end is None:
@@ -432,7 +444,7 @@ class Ballkid(models.Model):
                 if len(histories) == 0:
                     continue
 
-                history = histories.order_by("-start")[0]
+                history = histories.order_by("-start").first()
                 # TODO: this might silently break if history.end if already filled in for whatever reason!
                 history.end = now
                 history.save()

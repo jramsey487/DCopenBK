@@ -52,22 +52,18 @@ class TestBallkidModel(TestCase):
     def test_set_field_promote_to_captain_unassigned(self):
         self.ballkid2.set_field("current_team", 3)
         self.assertEqual(0, len(CaptainHistory.objects.all()))
-        self.assertEqual(0, len(CaptainAnalytics.objects.all()))
 
         self.ballkid2.set_field("current_team", 0)
         self.ballkid2.set_field("is_captain", True)
         self.ballkid2.set_field("current_team", 3)
         self.assertEqual(1, len(CaptainHistory.objects.all()))
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
     def test_set_field_promote_to_captain_assigned(self):
         self.ballkid2.set_field("current_team", 3)
         self.assertEqual(0, len(CaptainHistory.objects.all()))
-        self.assertEqual(0, len(CaptainAnalytics.objects.all()))
 
         self.ballkid2.set_field("is_captain", True)
         self.assertEqual(1, len(CaptainHistory.objects.all()))
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
     def test_set_field_demote_from_captain_unassigned_none(self):
         self.ballkid2.set_field("current_team", 3)
@@ -85,12 +81,10 @@ class TestBallkidModel(TestCase):
         self.ballkid2.set_field("current_team", 3)
         self.ballkid2.set_field("is_captain", True)
         self.assertEqual(1, len(CaptainHistory.objects.all()))
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
         self.ballkid2.set_field("current_team", 0)
         self.ballkid2.set_field("is_captain", False)
         self.assertEqual(1, len(CaptainHistory.objects.all()))
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
     def test_set_field_demote_from_captain_assigned(self):
         self.ballkid2.set_field("is_captain", True)
@@ -98,13 +92,11 @@ class TestBallkidModel(TestCase):
         self.assertEqual(1, len(CaptainHistory.objects.all()))
         history = CaptainHistory.objects.first()
         self.assertIsNone(history.end)
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
         self.ballkid2.set_field("is_captain", False)
         self.assertEqual(1, len(CaptainHistory.objects.all()))
         history = CaptainHistory.objects.first()
         self.assertIsNotNone(history.end)
-        self.assertEqual(1, len(CaptainAnalytics.objects.all()))
 
     def test_get_preferred_position_switch(self):
         self.assertEqual(Position.N, self.ballkid.get_preferred_position())

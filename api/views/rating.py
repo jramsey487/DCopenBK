@@ -8,6 +8,8 @@ from api.permissions import *
 from api.utils import *
 from api.models.ballkid import *
 from datetime import datetime
+import rcal
+import warnings
 
 
 def save_calibration_parameters(cp):
@@ -133,9 +135,19 @@ class CalibratedRatings(APIView):
 
         cp_dict = {}
         ratings = Rating.objects.all()
+
+        all_warnings = []
         for rating_name in RATING_CATEGORIES:
-            cp_dict[rating_name] = calibrate(
-                ratings, rating_name, min_rating=MIN_RATING, max_rating=MAX_RATING
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                cp_dict[rating_name] = calibrate(
+                    ratings, rating_name, min_rating=MIN_RATING, max_rating=MAX_RATING
+                )
+            if any((x.category == rcal.RcalWarning for x in caught_warnings)):
+                all_warnings.append(rating_name)
+
+        if all_warnings:
+            print(
+                f"May not be enough data for effective calibration of the following rating categories: {tuple(all_warnings)}"
             )
 
         # Save calibration parameters for overall ratings only

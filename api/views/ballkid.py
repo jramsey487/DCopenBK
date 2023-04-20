@@ -296,10 +296,14 @@ class GetCheckinDuration(APIView):
     permission_classes = [IsChairpersonOrSelf]
 
     def get(self, request, pk):
-        ballkid = Ballkid.objects.filter(id=pk).annotate(
-            checkin_duration=Sum("checkinhistory__duration"),
-            checkin_days=Count(TruncDate("checkinhistory__checkin"), distinct=True),
-        )[0]
+        ballkid = (
+            Ballkid.objects.filter(id=pk)
+            .annotate(
+                checkin_duration=Sum("checkinhistory__duration"),
+                checkin_days=Count(TruncDate("checkinhistory__checkin"), distinct=True),
+            )
+            .first()
+        )
         return Response(BallkidSerializer(ballkid).data)
 
 
@@ -472,9 +476,7 @@ class GetCaptainAnalytics(APIView):
     def get(self, request, pk):
         ballkid = get_object_or_404(Ballkid, id=pk)
         ballkid.recalc_captain_analytics()
-        analytics = (
-            CaptainAnalytics.objects.all().filter(ballkid_id=pk).order_by("-duration")
-        )
+        analytics = CaptainAnalytics.objects.filter(ballkid_id=pk).order_by("-duration")
         return Response(CaptainAnalyticsSerializer(analytics, many=True).data)
 
 

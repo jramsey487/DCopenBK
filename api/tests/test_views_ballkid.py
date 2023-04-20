@@ -107,7 +107,7 @@ class TestCreateBallkidView(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(Ballkid.objects.all()))
 
-        ballkid = Ballkid.objects.all()[0]
+        ballkid = Ballkid.objects.first()
         self.assertEqual(20, ballkid.age)
         self.assertEqual("Back/Net", ballkid.preferred_position)
         self.assertTrue(ballkid.is_captain)
@@ -117,7 +117,7 @@ class TestCreateBallkidView(APITestCase):
     def test_existing_ballkid(self):
         Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
         self.assertEqual(1, len(Ballkid.objects.all()))
-        ballkid = Ballkid.objects.all()[0]
+        ballkid = Ballkid.objects.first()
         self.assertEqual(0, ballkid.age)
         self.assertEqual("Back", ballkid.preferred_position)
         self.assertFalse(ballkid.is_captain)
