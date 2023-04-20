@@ -134,8 +134,23 @@ class Ballkid(models.Model):
                 if other_id not in counts:
                     counts[other_id] = 0
 
-                durations[other_id] += end_time - history.start
-                counts[other_id] += 1
+                overlapping = False
+
+                # TODO: make this more efficient by filtering shifts further
+                shifts = Schedule.objects.filter(team=history.team)
+                for shift in shifts:
+                    overlap = calc_overlapping_time(
+                        history.start,
+                        history.end if history.end else now,
+                        shift.start,
+                        shift.end if shift.end else now,
+                    )
+                    durations[other_id] += overlap
+                    if overlap:
+                        overlapping = True
+
+                if overlapping:
+                    counts[other_id] += 1
 
             for other_id in durations.keys():
                 if updateAsCaptain:
@@ -259,12 +274,13 @@ class Ballkid(models.Model):
         histories = TeamHistory.objects.filter(ballkid=self)
         if self.current_team != 0 and len(histories) > 0:
             history = histories.order_by("-start")[0]
+            # Note: this might silently break if history.end if already filled in for whatever reason!
             history.end = now
+
             if history.end < history.start:
                 raise Exception(
                     f"End time {history.end} is before start time {history.start}"
                 )
-
             history.duration = history.end - history.start
             history.save()
 
@@ -300,10 +316,11 @@ class Ballkid(models.Model):
                 is_captain=True, current_team=self.current_team
             ).exclude(id=self.id)
 
-            # For each captain, find the most recent CaptainHistory entry for (ballkid, captain)
+            # For each captain, find the most recent CaptainHistory entry for
+            # (ballkid, captain, team) tuple
             for captain in prev_captains:
                 captain_histories = CaptainHistory.objects.filter(
-                    ballkid=self, captain=captain
+                    ballkid=self, captain=captain, team=self.current_team
                 )
                 if len(captain_histories) == 0:
                     continue
@@ -327,7 +344,9 @@ class Ballkid(models.Model):
         if value:
             new_captains = Ballkid.objects.filter(is_captain=True, current_team=value)
             for captain in new_captains:
-                CaptainHistory.objects.create(ballkid=self, captain=captain, start=now)
+                CaptainHistory.objects.create(
+                    ballkid=self, captain=captain, start=now, team=value
+                )
 
         # If the ballkid is also a captain, then need to update all other ballkids when leaving
         # Team A and joining Team B.
@@ -341,7 +360,7 @@ class Ballkid(models.Model):
                 # For each ballkid, find the most recent CaptainHistory entry
                 for ballkid in ballkids:
                     ballkid_histories = CaptainHistory.objects.filter(
-                        captain=self, ballkid=ballkid
+                        captain=self, ballkid=ballkid, team=self.current_team
                     )
                     if len(ballkid_histories) == 0:
                         continue
@@ -359,13 +378,15 @@ class Ballkid(models.Model):
                         history.duration = history.end - history.start
                         history.save()
 
-            # If the ballkid is assigned to a new team (not unassigned), then create
-            # new rows in CaptainHistory to track time with the captain for each person
-            # on the new team
+            # If the ballkid (who is also a captain) is assigned to a new team (not unassigned),
+            # then create new rows in CaptainHistory to track time with the captain for each
+            # person on the new team
             if value:
                 new_ballkids = Ballkid.objects.filter(current_team=value)
                 for ballkid in new_ballkids:
-                    history = CaptainHistory(ballkid=ballkid, captain=self, start=now)
+                    history = CaptainHistory.objects.create(
+                        ballkid=ballkid, captain=self, start=now, team=value
+                    )
                     history.save()
 
     def handle_captain_history_captain(self, value, now=None):
@@ -399,10 +420,20 @@ class Ballkid(models.Model):
             # If getting promoted to be a captain, create a CaptainHistory entry
             # for each ballkid on the team
             if value:
-                CaptainHistory.objects.create(ballkid=ballkid, captain=self, start=now)
+                CaptainHistory.objects.create(
+                    ballkid=ballkid, captain=self, start=now, team=self.current_team
+                )
             # If getting demoted from a captain, add end for all CaptainHistory entries
+            # which do not already have an end
             else:
-                history = CaptainHistory.objects.get(ballkid=ballkid, captain=self)
+                histories = CaptainHistory.objects.filter(
+                    ballkid=ballkid, captain=self, team=self.current_team
+                )
+                if len(histories) == 0:
+                    continue
+
+                history = histories.order_by("-start")[0]
+                # TODO: this might silently break if history.end if already filled in for whatever reason!
                 history.end = now
                 history.save()
 
@@ -585,6 +616,7 @@ class CaptainHistory(models.Model):
     start = models.DateTimeField(default=datetime.now)
     end = models.DateTimeField(null=True)
     duration = models.DurationField(default=timedelta)
+    team = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.ballkid.get_name()} had captain {self.captain.get_name()} on starting at {self.start}"

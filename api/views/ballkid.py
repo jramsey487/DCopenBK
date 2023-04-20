@@ -317,6 +317,7 @@ class GetCheckinLeaderboard(generics.ListAPIView):
             .order_by("-checkin_duration")
         )
 
+
 class GetAverageCheckinLeaderboard(APIView):
     permission_classes = [IsChairperson]
 
