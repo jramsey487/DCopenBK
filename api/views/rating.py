@@ -15,11 +15,10 @@ import warnings
 def save_calibration_parameters(cp):
     improvements = cp.improvement_rates()
     ballkid_offsets = cp.person_offsets()
-
     scales = cp.reviewer_scales()
     offsets = cp.reviewer_offsets()
-    keys = set().union(improvements, scales)
 
+    keys = improvements.keys() | scales.keys()
     for name in keys:
         improvement = improvements.get(name)
         ballkid_offset = ballkid_offsets.get(name)
@@ -144,11 +143,7 @@ class CalibratedRatings(APIView):
                 )
             if any((x.category == RcalWarning for x in caught_warnings)):
                 all_warnings.append(rating_name)
-
-        if all_warnings:
-            print(
-                f"May not be enough data for effective calibration of the following rating categories: {tuple(all_warnings)}"
-            )
+        print(all_warnings)
 
         # Save calibration parameters for overall ratings only
         save_calibration_parameters(cp_dict["overall"])
@@ -231,7 +226,7 @@ class CalibratedRatings(APIView):
             ),
         )
 
-        if "overall" in all_warnings:
+        if all_warnings:
             return Response(
                 RatingSerializer(postprocessed, many=True).data,
                 status=status.HTTP_206_PARTIAL_CONTENT,
