@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Button,
   Grid,
   Typography,
-  Autocomplete,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,11 +21,8 @@ import {
 
 export default function RatingDialog({ open, setOpen, ballkid }) {
   const raterId = getSessionStorage("ballkid_id");
+  const ratee = ballkid.first_name + " " + ballkid.last_name;
 
-  const [ratee, setRatee] = useState({
-    label: ballkid.first_name + " " + ballkid.last_name,
-    id: ballkid.id,
-  });
   const [date, setDate] = useState(getToday());
   const [rating, setRating] = useState(null);
   const [comments, setComments] = useState("");
@@ -38,19 +34,6 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-
-  // TODO: pass this in so that it doesn't result in an api call for every single button
-  const [ballkids, setBallkids] = useState([]);
-  useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setBallkids(data));
-  }, []);
-
-  const ballkidsList = ballkids.map((ballkid) => ({
-    label: ballkid.first_name + " " + ballkid.last_name,
-    id: ballkid.id,
-  }));
 
   const handleClose = () => {
     setOpen(false);
@@ -83,24 +66,13 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
 
           <Grid item xs={12}>
             <div className="sxs">
-              <Autocomplete
-                disablePortal
-                openOnFocus
+              <TextField
                 sx={{ width: 250 }}
-                options={ballkidsList}
+                variant="standard"
+                label="Ratee"
                 value={ratee}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                onChange={(e, newVal) => {
-                  setRatee(newVal);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="standard"
-                    label="Ratee"
-                    required
-                  />
-                )}
+                required
+                disabled
               />
               <LocalizationProvider dateAdapter={AdapterLuxon}>
                 <DatePicker
@@ -172,6 +144,7 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
           </Grid>
         </Grid>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button
