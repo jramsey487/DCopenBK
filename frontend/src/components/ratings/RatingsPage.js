@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Switch, Link, Collapse, Alert } from "@mui/material";
-import { getAuthHeader, RatingsGrid } from "../Utils";
+import { getAuthHeader } from "../Utils";
+import RatingsGrid from "./RatingsGrid";
 import { useSearchParams } from "react-router-dom";
 
 export default function RatingsPage(props) {

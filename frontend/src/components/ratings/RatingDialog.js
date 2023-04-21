@@ -7,17 +7,32 @@ import {
   DialogActions,
   DialogContent,
   TextField,
+  Rating,
 } from "@mui/material";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import {
-  Alerts,
-  getAuthHeader,
-  getToday,
-  getSessionStorage,
-  RatingAndLabel,
-} from "../Utils";
+import { Alerts, getAuthHeader, getToday, getSessionStorage } from "../Utils";
+
+export function RatingAndLabel({ label, rating, setRating }) {
+  return (
+    <Grid
+      item
+      className="sxs"
+      sx={{ mt: 1, mb: 0.5, mx: 3 }}
+      style={{ maxWidth: "350px" }}
+    >
+      <Typography variant="subtitle2" sx={{ mx: 1 }}>
+        {label}
+      </Typography>
+      <Rating
+        precision={0.5}
+        value={rating}
+        onChange={(e, newVal) => setRating(newVal)}
+      />
+    </Grid>
+  );
+}
 
 export default function RatingDialog({ open, setOpen, ballkid }) {
   const raterId = getSessionStorage("ballkid_id");

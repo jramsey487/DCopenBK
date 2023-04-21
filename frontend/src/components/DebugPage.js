@@ -14,7 +14,8 @@ import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { Alerts, getAuthHeader, RatingAndLabel } from "./Utils";
+import { Alerts, getAuthHeader } from "./Utils";
+import { RatingAndLabel } from "./ratings/RatingDialog";
 
 function CreateBallkid(props) {
   const [firstName, setFirstName] = useState("");
