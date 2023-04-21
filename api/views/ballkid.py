@@ -37,8 +37,8 @@ class BallkidsList(generics.ListAPIView):
         )
 
         if not pk:
-            return ballkids 
-        
+            return ballkids
+
         return ballkids.annotate(
             num_ratings=Count("ratee"),
             have_rated=Exists(
@@ -75,8 +75,8 @@ class BallkidsSortedList(generics.ListAPIView):
         )
 
         if not pk:
-            return ballkids 
-        
+            return ballkids
+
         return ballkids.annotate(
             num_ratings=Count("ratee"),
             have_rated=Exists(

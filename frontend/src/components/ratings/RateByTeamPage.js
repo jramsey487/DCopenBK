@@ -25,7 +25,9 @@ function Team(props) {
           {positions.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
+
               <Typography variant="subtitle1">{position}s:</Typography>
+
               {props.assigned.map((ballkid) =>
                 ballkid.current_team === props.team &&
                 ballkid.position === position ? (
@@ -37,7 +39,12 @@ function Team(props) {
                       &thinsp;
                       <Icons ballkid={ballkid} margin={0} />
                     </div>
-                    <RatingButton ballkid={ballkid} />
+
+                    {ballkid.id === getSessionStorage("ballkid_id") ? (
+                      ""
+                    ) : (
+                      <RatingButton ballkid={ballkid} />
+                    )}
                   </div>
                 ) : (
                   ""

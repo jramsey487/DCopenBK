@@ -56,19 +56,23 @@ function renderBallkids(ballkids, gridLayout) {
                     <Icons ballkid={ballkid} margin={0} />
                   </div>
 
-                  <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
-                    <RatingButton ballkid={ballkid} />
-                    {isChairperson ? (
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ mt: gridLayout ? 0.5 : 0 }}
-                      >
-                        Total ratings: {ballkid.num_ratings}
-                      </Typography>
-                    ) : (
-                      ""
-                    )}
-                  </Box>
+                  {ballkid.id === getSessionStorage("ballkid_id") ? (
+                    ""
+                  ) : (
+                    <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
+                      <RatingButton ballkid={ballkid} />
+                      {isChairperson ? (
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mt: gridLayout ? 0.5 : 0 }}
+                        >
+                          Total ratings: {ballkid.num_ratings}
+                        </Typography>
+                      ) : (
+                        ""
+                      )}
+                    </Box>
+                  )}
                 </div>
               </CardContent>
             </CardActionArea>

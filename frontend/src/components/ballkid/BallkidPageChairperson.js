@@ -31,7 +31,7 @@ import {
   Shortcut,
 } from "@mui/icons-material";
 import RatingDialog from "../ratings/RatingDialog";
-import { Icons, getAuthHeader } from "../Utils";
+import { Icons, getAuthHeader, getSessionStorage } from "../Utils";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
@@ -456,6 +456,7 @@ function ActiveOverflowMenu(props) {
       >
         <MoreVert />
       </IconButton>
+
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -463,17 +464,22 @@ function ActiveOverflowMenu(props) {
           setAnchorEl(null);
         }}
       >
-        <MenuItem
-          onClick={(e) => {
-            setAnchorEl(null);
-            setOpen(true);
-          }}
-        >
-          <ListItemIcon>
-            <RateReview />
-          </ListItemIcon>
-          <ListItemText>Give Rating</ListItemText>
-        </MenuItem>
+        {ballkid.id === getSessionStorage("ballkid_id") ? (
+          ""
+        ) : (
+          <MenuItem
+            onClick={(e) => {
+              setAnchorEl(null);
+              setOpen(true);
+            }}
+          >
+            <ListItemIcon>
+              <RateReview />
+            </ListItemIcon>
+            <ListItemText>Give Rating</ListItemText>
+          </MenuItem>
+        )}
+
         <MenuItem
           onClick={(e) => {
             setAnchorEl(null);

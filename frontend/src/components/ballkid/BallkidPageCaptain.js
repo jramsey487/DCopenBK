@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Grid, Box, Button, Link } from "@mui/material";
 import { Shortcut } from "@mui/icons-material";
-import { Icons, getAuthHeader, RatingButton } from "../Utils";
+import {
+  Icons,
+  getAuthHeader,
+  RatingButton,
+  getSessionStorage,
+} from "../Utils";
 
 export default function BallkidPageCaptain(props) {
   const [ballkid, setBallkid] = useState(null);
@@ -30,7 +35,11 @@ export default function BallkidPageCaptain(props) {
           <Icons ballkid={ballkid} margin={0} />
         </div>
 
-        <RatingButton ballkid={ballkid} />
+        {ballkid.id === getSessionStorage("ballkid_id") ? (
+          ""
+        ) : (
+          <RatingButton ballkid={ballkid} />
+        )}
       </div>
 
       <Grid container>
