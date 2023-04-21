@@ -18,6 +18,8 @@ import {
 } from "../Utils";
 
 function renderBallkids(ballkids, gridLayout) {
+  const isChairperson = getSessionStorage("group") === "chairperson";
+
   return ballkids.length === 0 ? (
     <Typography variant="body1">There are no ballkids to rate.</Typography>
   ) : (
@@ -53,11 +55,14 @@ function renderBallkids(ballkids, gridLayout) {
                     &thinsp;
                     <Icons ballkid={ballkid} margin={0} />
                   </div>
+
                   <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
                     <RatingButton ballkid={ballkid} />
-                    {getSessionStorage("group") === "chairperson" &&
-                    gridLayout ? (
-                      <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                    {isChairperson ? (
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mt: gridLayout ? 0.5 : 0 }}
+                      >
                         Total ratings: {ballkid.num_ratings}
                       </Typography>
                     ) : (
