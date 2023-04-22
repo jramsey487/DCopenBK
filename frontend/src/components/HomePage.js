@@ -31,7 +31,6 @@ import Leaderboards from "./leaderboards/Leaderboards";
 import CheckinLeaderboard from "./leaderboards/CheckinLeaderboard";
 import RatingsLeaderboard from "./leaderboards/RatingsLeaderboard";
 import CourtLeaderboard from "./leaderboards/CourtLeaderboard";
-import MatchLeaderboard from "./leaderboards/MatchLeaderboard";
 
 import { useToken, getSessionStorage } from "./Utils";
 
@@ -48,7 +47,6 @@ function chairpersonRoutes(setToken) {
       <Route path="/leaderboards/checkin" element={<CheckinLeaderboard />} />
       <Route path="/leaderboards/ratings" element={<RatingsLeaderboard />} />
       <Route path="/leaderboards/court" element={<CourtLeaderboard />} />
-      <Route path="/leaderboards/match" element={<MatchLeaderboard />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
       <Route path="/me" element={<MyProfile />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />

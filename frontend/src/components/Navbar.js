@@ -188,7 +188,6 @@ export default function Navbar(props) {
         { label: "Check-in", url: "/leaderboards/checkin" },
         { label: "Ratings", url: "/leaderboards/ratings" },
         { label: "Court Time", url: "/leaderboards/court" },
-        { label: "Match Type", url: "/leaderboards/match" },
       ],
     },
   ];

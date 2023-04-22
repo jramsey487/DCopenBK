@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography, Link } from "@mui/material";
-import { Beenhere, Place, RateReview, Wc } from "@mui/icons-material";
+import { Beenhere, Place, RateReview } from "@mui/icons-material";
 
 export default function Leaderboards(props) {
   return (
@@ -27,13 +27,6 @@ export default function Leaderboards(props) {
         <Place color="primary" /> &emsp;
         <Typography variant="h6" component={Link} href="/leaderboards/court">
           Court Time
-        </Typography>
-      </div>
-
-      <div className="sxs">
-        <Wc color="primary" /> &emsp;
-        <Typography variant="h6" component={Link} href="/leaderboards/match">
-          Match Type
         </Typography>
       </div>
     </div>
