@@ -38,7 +38,7 @@ export default function BallkidPageCaptain(props) {
         {ballkid.id === getSessionStorage("ballkid_id") ? (
           ""
         ) : (
-          <RatingButton ballkid={ballkid} />
+          <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
         )}
       </div>
 

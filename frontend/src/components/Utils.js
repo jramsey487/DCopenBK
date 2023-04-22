@@ -78,12 +78,17 @@ export function Alerts(props) {
   );
 }
 
-export function RatingButton({ ballkid }) {
+export function RatingButton({ ballkid, setUpdated }) {
   const [open, setOpen] = useState(false);
 
   return (
     <div>
-      <RatingDialog open={open} setOpen={setOpen} ballkid={ballkid} />
+      <RatingDialog
+        open={open}
+        setOpen={setOpen}
+        ballkid={ballkid}
+        setUpdated={setUpdated}
+      />
 
       <Button
         variant={ballkid.have_rated ? "outlined" : "contained"}

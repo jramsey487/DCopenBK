@@ -43,7 +43,10 @@ function Team(props) {
                     {ballkid.id === getSessionStorage("ballkid_id") ? (
                       ""
                     ) : (
-                      <RatingButton ballkid={ballkid} />
+                      <RatingButton
+                        ballkid={ballkid}
+                        setUpdated={props.setUpdated}
+                      />
                     )}
                   </div>
                 ) : (
@@ -61,6 +64,7 @@ function Team(props) {
 export default function RateByTeamPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [updated, setUpdated] = useState(false);
   const pk = getSessionStorage("ballkid_id");
 
   useEffect(() => {
@@ -77,8 +81,9 @@ export default function RateByTeamPage(props) {
 
     fetch("/api/calc-num-teams", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]));
-  }, [pk]);
+      .then((data) => setTeams(data["teams"]))
+      .then(() => setUpdated(false));
+  }, [pk, updated]);
 
   return (
     <div className="page">
@@ -90,7 +95,12 @@ export default function RateByTeamPage(props) {
       ) : (
         <Grid container spacing={2}>
           {teams.map((team) => (
-            <Team key={team} team={team} assigned={assigned} />
+            <Team
+              key={team}
+              team={team}
+              assigned={assigned}
+              setUpdated={setUpdated}
+            />
           ))}
         </Grid>
       )}

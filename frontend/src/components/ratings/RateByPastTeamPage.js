@@ -18,7 +18,7 @@ import {
 } from "../Utils";
 import { MARGINS } from "../Consts";
 
-function renderBallkid(ballkid, gridLayout) {
+function renderBallkid(ballkid, gridLayout, setUpdated) {
   return (
     <Grid
       item
@@ -48,7 +48,7 @@ function renderBallkid(ballkid, gridLayout) {
                 <Icons ballkid={ballkid} margin={0} />
               </div>
               <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
-                <RatingButton ballkid={ballkid} />
+                <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
               </Box>
             </div>
           </CardContent>
@@ -61,6 +61,7 @@ function renderBallkid(ballkid, gridLayout) {
 export default function RateByPastTeamPage(props) {
   const [ballkids, setBallkids] = useState([]);
   const [pastTeams, setPastTeams] = useState({});
+  const [updated, setUpdated] = useState(false);
   const [gridLayout, setGridLayout] = useState(
     getSessionStorage("gridLayout") ?? true
   );
@@ -74,8 +75,9 @@ export default function RateByPastTeamPage(props) {
 
     fetch("/api/get-past-teams/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setPastTeams(data));
-  }, [pk]);
+      .then((data) => setPastTeams(data))
+      .then(() => setUpdated(false));
+  }, [pk, updated]);
 
   return (
     <div className="page">
@@ -99,7 +101,8 @@ export default function RateByPastTeamPage(props) {
               {pastTeams[key].map((ballkidId) =>
                 renderBallkid(
                   ballkids.find((ballkid) => ballkid.id === ballkidId),
-                  gridLayout
+                  gridLayout,
+                  setUpdated
                 )
               )}
             </Grid>

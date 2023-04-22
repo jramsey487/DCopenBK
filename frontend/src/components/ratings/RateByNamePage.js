@@ -17,7 +17,7 @@ import {
   getSessionStorage,
 } from "../Utils";
 
-function renderBallkids(ballkids, gridLayout) {
+function renderBallkids(ballkids, gridLayout, setUpdated) {
   const isChairperson = getSessionStorage("group") === "chairperson";
 
   return ballkids.length === 0 ? (
@@ -56,23 +56,24 @@ function renderBallkids(ballkids, gridLayout) {
                     <Icons ballkid={ballkid} margin={0} />
                   </div>
 
-                  {ballkid.id === getSessionStorage("ballkid_id") ? (
-                    ""
-                  ) : (
-                    <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
-                      <RatingButton ballkid={ballkid} />
-                      {isChairperson ? (
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ mt: gridLayout ? 0.5 : 0 }}
-                        >
-                          Total ratings: {ballkid.num_ratings}
-                        </Typography>
-                      ) : (
-                        ""
-                      )}
-                    </Box>
-                  )}
+                  <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
+                    {ballkid.id === getSessionStorage("ballkid_id") ? (
+                      ""
+                    ) : (
+                      <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
+                    )}
+
+                    {isChairperson ? (
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mt: gridLayout ? 0.5 : 0 }}
+                      >
+                        Total ratings: {ballkid.num_ratings}
+                      </Typography>
+                    ) : (
+                      ""
+                    )}
+                  </Box>
                 </div>
               </CardContent>
             </CardActionArea>
@@ -85,6 +86,8 @@ function renderBallkids(ballkids, gridLayout) {
 
 export default function RateByNamePage(props) {
   const [ballkids, setBallkids] = useState([]);
+  const [updated, setUpdated] = useState(false);
+
   const [gridLayout, setGridLayout] = useState(
     getSessionStorage("gridLayout") ?? true
   );
@@ -94,8 +97,9 @@ export default function RateByNamePage(props) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => setBallkids(data));
-  }, []);
+      .then((data) => setBallkids(data))
+      .then(() => setUpdated(false));
+  }, [updated]);
 
   return (
     <div className="page">
@@ -105,7 +109,7 @@ export default function RateByNamePage(props) {
         </Typography>
         <LayoutButtons gridLayout={gridLayout} setGridLayout={setGridLayout} />
       </div>
-      {renderBallkids(ballkids, gridLayout)}
+      {renderBallkids(ballkids, gridLayout, setUpdated)}
     </div>
   );
 }

@@ -447,7 +447,12 @@ function ActiveOverflowMenu(props) {
 
   return (
     <div>
-      <RatingDialog open={open} setOpen={setOpen} ballkid={props.ballkid} />
+      <RatingDialog
+        open={open}
+        setOpen={setOpen}
+        ballkid={props.ballkid}
+        setUpdated={props.setUpdated}
+      />
 
       <IconButton
         onClick={(e) => {

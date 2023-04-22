@@ -34,9 +34,8 @@ export function RatingAndLabel({ label, rating, setRating }) {
   );
 }
 
-export default function RatingDialog({ open, setOpen, ballkid }) {
+export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
   const raterId = getSessionStorage("ballkid_id");
-  const ratee = ballkid.first_name + " " + ballkid.last_name;
 
   const [date, setDate] = useState(getToday());
   const [rating, setRating] = useState(null);
@@ -85,7 +84,7 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
                 sx={{ width: 250 }}
                 variant="standard"
                 label="Ratee"
-                value={ratee}
+                value={ballkid.first_name + " " + ballkid.last_name}
                 required
                 disabled
               />
@@ -169,7 +168,7 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
               headers: getAuthHeader(),
               body: JSON.stringify({
                 rater: raterId,
-                ratee: ratee.id,
+                ratee: ballkid.id,
                 date: date,
                 rating: rating,
                 athleticism_rating: athleticismRating,
@@ -181,6 +180,7 @@ export default function RatingDialog({ open, setOpen, ballkid }) {
               }),
             }).then((response) => {
               if (response.ok) {
+                setUpdated(true);
                 setSuccessMsg("Rating submitted!");
                 setTimeout(() => {
                   setOpen(false);
