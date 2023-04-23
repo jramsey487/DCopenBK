@@ -7,6 +7,7 @@ import {
   CardActionArea,
   Grid,
   Box,
+  Switch,
 } from "@mui/material";
 import { AspectRatio } from "@mui/joy";
 import {
@@ -19,7 +20,9 @@ import {
 import { MARGINS } from "../Consts";
 
 function renderBallkid(ballkid, gridLayout, setUpdated) {
-  return (
+  return ballkid === undefined || ballkid === null ? (
+    ""
+  ) : (
     <Grid
       item
       key={ballkid.id}
@@ -60,18 +63,25 @@ function renderBallkid(ballkid, gridLayout, setUpdated) {
 
 export default function RateByPastTeamPage(props) {
   const [ballkids, setBallkids] = useState([]);
+  const [unratedBallkids, setUnratedBallkids] = useState([]);
   const [pastTeams, setPastTeams] = useState({});
   const [updated, setUpdated] = useState(false);
+  const [showAll, setShowAll] = useState(true);
+
   const [gridLayout, setGridLayout] = useState(
     getSessionStorage("gridLayout") ?? true
   );
-
   const pk = getSessionStorage("ballkid_id");
 
   useEffect(() => {
     fetch("/api/list/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setBallkids(data));
+      .then((data) => {
+        setBallkids(data);
+        setUnratedBallkids(
+          data.filter((ballkid) => !ballkid.have_rated && ballkid.id !== pk)
+        );
+      });
 
     fetch("/api/get-past-teams/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -88,19 +98,30 @@ export default function RateByPastTeamPage(props) {
         <LayoutButtons gridLayout={gridLayout} setGridLayout={setGridLayout} />
       </div>
 
+      <div className="sxs">
+        <Typography variant="body1">Show All Ballkids</Typography>
+        <Switch
+          checked={!showAll}
+          onClick={(e) => setShowAll(!e.target.checked)}
+        />
+        <Typography variant="body1">Show Ballkids to Rate</Typography>
+      </div>
+
       {Object.keys(pastTeams).length === 0 ? (
         <Typography>There are no past teams to show.</Typography>
       ) : (
-        Object.keys(pastTeams).map((key) => (
-          <div key={key}>
+        Object.keys(pastTeams).map((date) => (
+          <div key={date}>
             <Typography variant="h5" sx={MARGINS}>
-              {key}
+              {date}
             </Typography>
 
             <Grid container spacing={gridLayout ? 2 : 1}>
-              {pastTeams[key].map((ballkidId) =>
+              {pastTeams[date].map((ballkidId) =>
                 renderBallkid(
-                  ballkids.find((ballkid) => ballkid.id === ballkidId),
+                  (showAll ? ballkids : unratedBallkids).find(
+                    (ballkid) => ballkid.id === ballkidId
+                  ),
                   gridLayout,
                   setUpdated
                 )
