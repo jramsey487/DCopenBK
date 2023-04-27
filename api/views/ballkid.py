@@ -24,6 +24,9 @@ from api.utils import *
 from api.permissions import *
 from accounts.views import UpdateCaptainStatus
 from datetime import timedelta
+import logging
+
+logger = logging.getLogger("api.ballkid")
 
 
 class BallkidsList(generics.ListAPIView):
@@ -35,15 +38,17 @@ class BallkidsList(generics.ListAPIView):
         ballkids = Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
             "last_name", "first_name"
         )
+        logger.info(f"[BallkidsList] pk: {pk}; ballkids: {ballkids}")
 
-        if not pk:
-            return ballkids
-
-        return ballkids.annotate(
-            num_ratings=Count("ratee"),
-            have_rated=Exists(
-                Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
-            ),
+        return (
+            ballkids
+            if not pk
+            else ballkids.annotate(
+                num_ratings=Count("ratee"),
+                have_rated=Exists(
+                    Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
+                ),
+            )
         )
 
 

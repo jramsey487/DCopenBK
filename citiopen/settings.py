@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from environs import Env
-
 import os
+import logging
 
 env = Env()
 env.read_env()
@@ -205,3 +205,53 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGGING = {
+    "version": 1,  # The version number of our log
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname} | {module}] {message} @ {pathname} : {lineno} : {funcName}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "simple": {
+            "format": "{levelname} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "infoFile": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/info.log",
+            "formatter": "simple",
+        },
+        "warningFile": {
+            "level": "WARNING",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/warning.log",
+            "formatter": "verbose",
+        },
+        "djangoFile": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/django.log",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "api.ballkid": {
+            "handlers": ["infoFile", "warningFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django": {
+            "handlers": ["djangoFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
