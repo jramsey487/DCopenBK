@@ -78,15 +78,17 @@ class BallkidsSortedList(generics.ListAPIView):
                 "-num_years_experience",
             )
         )
+        logger.info(f"[BallkidsSortedList] pk: {pk}; ballkids: {ballkids}")
 
-        if not pk:
-            return ballkids
-
-        return ballkids.annotate(
-            num_ratings=Count("ratee"),
-            have_rated=Exists(
-                Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
-            ),
+        return (
+            ballkids
+            if not pk
+            else ballkids.annotate(
+                num_ratings=Count("ratee"),
+                have_rated=Exists(
+                    Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
+                ),
+            )
         )
 
 
@@ -117,18 +119,21 @@ class CreateBallkid(APIView):
             }
             if "image" in data.keys() and data["image"] == "":
                 data["image"] = "api/static/img/none.jpg"
+            logger.info(f"[CreateBallkid] data: {data}")
 
             ballkid, created = Ballkid.objects.get_or_create(
                 first_name=serializer.data["first_name"],
                 last_name=serializer.data["last_name"],
                 defaults=data,
             )
+            logger.info(f"[CreateBallkid] ballkid: {ballkid}; created: {created}")
 
             ballkid.validate()
             ballkid.save()
 
             return Response(BallkidSerializer(ballkid).data)
 
+        logger.warning(f"[CreateBallkid] serializer errors: {serializer.errors}")
         return Response(
             {"Invalid serializer": f"Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
@@ -154,6 +159,8 @@ class UpdateBallkid(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
+            logger.info(f"[UpdateBallkid] serializer data: {serializer.data}")
+
             # Get ballkid with the corresponding first and last names
             first_name = serializer.data["first_name"]
             last_name = serializer.data["last_name"]
@@ -179,6 +186,7 @@ class UpdateBallkid(APIView):
 
             return Response(BallkidSerializer(ballkid).data)
 
+        logger.warning(f"[UpdateBallkid] serializer errors: {serializer.errors}")
         return Response(
             {"Invalid serializer": "Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,

@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from api.utils import calc_overlapping_time
 from api.models.schedule import Schedule, Court
 from django.contrib.auth.models import User
+import logging
+
+logger = logging.getLogger("api.ballkid")
 
 
 class Position(models.TextChoices):
@@ -491,6 +494,10 @@ class Ballkid(models.Model):
         Raises:
         Exception if the field string is not recognized / supported
         """
+        logger.info(
+            f"Updating ballkid {self.get_name()} field {field} with value {value}"
+        )
+
         if field == "is_checked_in":
             self.handle_checkin_history(value)
             self.is_checked_in = value
