@@ -9,6 +9,7 @@ from api.models.ballkid import *
 from api.utils import *
 from datetime import datetime
 from rcal import RcalWarning, calibrate_parameters
+import networkx as nx
 import warnings
 
 
@@ -54,16 +55,51 @@ def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
     return {key: sum(val) / len(val) for key, val in rcal_dict.items()}
 
 
+def remove_nonoverlapping_reviewers(data):
+    """
+    Takes in review data. Outputs (new_data, excluded). new_data is the data
+    that results in the largest connected graph of reviewers. excluded is the
+    set of reviewers removed from the data in order to make new_data connected.
+    """
+    graph = {}
+    for (r, p, d) in data:
+        graph.setdefault(p, set()).add(r)
+
+    g = nx.Graph()
+    for v in graph.values():
+        for i in v:
+            for j in v:
+                g.add_edge(i, j)
+
+    # get largest connected component
+    con = nx.connected_components(g)
+    if not con:
+        return {}, {r for (r, p, d) in data}
+
+    con = max(con, key=len)
+
+    new_data = {(r, p, d): y for ((r, p, d), y) in data.items() if r in con}
+    excluded = set(g.nodes).difference(con)
+
+    return new_data, excluded
+
+
 def calibrate(ratings, rating_name="overall", min_rating=0.5, max_rating=5, stdev=2):
     min_date = min([rating.date for rating in ratings])
 
     train = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=True)
     test = dict_to_rcal(ratings, min_date, rating_name, returnAveraged=False)
 
+    train, excluded = remove_nonoverlapping_reviewers(train)
+    test, _ = remove_nonoverlapping_reviewers(test)
+
     cp = calibrate_parameters(train, rating_delta=(max_rating - min_rating))
     cp.rescale_parameters(test, (min_rating, max_rating), ignore_outliers=stdev)
 
-    return cp
+    cp.set_reviewer_offsets({r: 0 for r in excluded})
+    cp.set_reviewer_scales({r: 1 for r in excluded})
+
+    return cp, excluded
 
 
 def save_calibration_parameters(cp):
@@ -160,7 +196,7 @@ class CreateRating(APIView):
             )
 
             # Update calibration parameters
-            cp = calibrate(Rating.objects.all())
+            cp, _ = calibrate(Rating.objects.all())
             save_calibration_parameters(cp)
 
             return Response(RatingSerializer(rating).data)
@@ -186,18 +222,17 @@ class CalibratedRatings(APIView):
             "effort",
         ]
 
-        cp_dict = {}
+        cp_dict, excluded = {}, {}
         ratings = Rating.objects.all()
 
-        all_warnings = []
+        all_warnings = set()
         for rating_name in RATING_CATEGORIES:
             with warnings.catch_warnings(record=True) as caught_warnings:
-                cp_dict[rating_name] = calibrate(
+                cp_dict[rating_name], excluded[rating_name] = calibrate(
                     ratings, rating_name, min_rating=MIN_RATING, max_rating=MAX_RATING
                 )
             if any((x.category == RcalWarning for x in caught_warnings)):
-                all_warnings.append(rating_name)
-        print("rcal warnings: ", all_warnings)
+                all_warnings.add(rating_name)
 
         # Save calibration parameters for overall ratings only
         save_calibration_parameters(cp_dict["overall"])
@@ -280,16 +315,17 @@ class CalibratedRatings(APIView):
             ),
         )
 
-        if "overall" in all_warnings:
-            return Response(
-                RatingSerializer(postprocessed, many=True).data,
-                status=status.HTTP_206_PARTIAL_CONTENT,
-            )
+        if "overall" in all_warnings: 
+            s = status.HTTP_204_NO_CONTENT
+        elif excluded['overall']: 
+            s = status.HTTP_206_PARTIAL_CONTENT
+        else: 
+            s = status.HTTP_200_OK
 
         return Response(
             RatingSerializer(postprocessed, many=True).data,
-            status=status.HTTP_200_OK,
-        )
+            status=s
+            )
 
 
 class GetCalibrationParams(generics.RetrieveAPIView):

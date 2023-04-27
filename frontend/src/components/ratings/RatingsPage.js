@@ -9,7 +9,7 @@ export default function RatingsPage(props) {
 
   const [calibrated, setCalibrated] = useState([]);
   const [showCalibrated, setShowCalibrated] = useState(false);
-  const [calibrationWarning, setCalibrationWarning] = useState(false);
+  const [calibrationWarning, setCalibrationWarning] = useState();
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
 
   const [rateeName, setRateeName] = useState();
@@ -46,8 +46,14 @@ export default function RatingsPage(props) {
 
     fetch("/api/calibrated-ratings", { headers: getAuthHeader() })
       .then((response) => {
-        if (response.status === 206) {
-          setCalibrationWarning(true);
+        if (response.status === 204) {
+          setCalibrationWarning(
+            "Warning: Potentially insufficient data for effective calibration."
+          );
+        } else if (response.status === 206) {
+          setCalibrationWarning(
+            "Warning: Potentially insufficient data for effective calibration of one or more reviewers."
+          );
         }
         return response.json();
       })
@@ -60,12 +66,12 @@ export default function RatingsPage(props) {
         View Ratings
       </Typography>
 
-      <Collapse in={showCalibrationWarning && calibrationWarning}>
+      <Collapse in={showCalibrationWarning && calibrationWarning !== null}>
         <Alert
           severity="warning"
           onClose={() => setShowCalibrationWarning(false)}
         >
-          Warning: Potentially insufficient data for effective calibration.
+          {calibrationWarning}
         </Alert>
       </Collapse>
 
