@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Link } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
-import { getAuthHeader } from "../Utils";
-import { EventSeat } from "@mui/icons-material";
+import { Icons, getAuthHeader } from "../Utils";
 
 export default function BallkidLeaderboard(props) {
   const [ballkids, setBallkids] = useState([]);
@@ -31,11 +30,8 @@ export default function BallkidLeaderboard(props) {
           <Link href={`/ballkid/${rowData.row.id}`}>
             {rowData.row.ballkid.first_name} {rowData.row.ballkid.last_name}
           </Link>
-          {rowData.row.ballkid.is_chairperson ? (
-            <EventSeat sx={{ color: "purple", ml: 1 }} />
-          ) : (
-            ""
-          )}
+          &thinsp;
+          <Icons ballkid={rowData.row.ballkid} margin={0} />
         </div>
       ),
     },
