@@ -192,10 +192,12 @@ USE_I18N = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-if DEBUG:
-    STATICFILES_DIRS = [BASE_DIR / "static"]
-else:
-    STATIC_ROOT = BASE_DIR / "static"
+STATICFILES_DIRS = [BASE_DIR / "build/static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# if DEBUG:
+#     STATICFILES_DIRS = [BASE_DIR / "static"]
+# else:
+#     STATIC_ROOT = BASE_DIR / "static"
 # STATICFILES_DIRS = [BASE_DIR / "build/static"]
 # STATICFILES_DIRS = [BASE_DIR / "static"]  # new
 # STATIC_ROOT = BASE_DIR / "staticfiles"  # new
