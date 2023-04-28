@@ -206,6 +206,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+LOG_DIR = BASE_DIR / "logs"
+if not os.path.exists(LOG_DIR):
+    os.mkdir(LOG_DIR)
+
 LOGGING = {
     "version": 1,  # The version number of our log
     "disable_existing_loggers": False,
@@ -224,19 +228,19 @@ LOGGING = {
         "infoFile": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/info.log",
+            "filename": LOG_DIR / "info.log",
             "formatter": "simple",
         },
         "warningFile": {
             "level": "WARNING",
             "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/warning.log",
+            "filename": LOG_DIR / "warning.log",
             "formatter": "verbose",
         },
         "djangoFile": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/django.log",
+            "filename": LOG_DIR / "django.log",
         },
         "console": {
             "class": "logging.StreamHandler",
