@@ -149,9 +149,11 @@ function ScheduleTable(props) {
         <Table style={{ tableLayout: "fixed" }}>
           <TableHead>
             <TableRow>
-              <TableCell align="center">Time</TableCell>
+              <TableCell align="center" width="20px">
+                Time
+              </TableCell>
               {courts.map((court) => (
-                <TableCell key={court} align="center">
+                <TableCell key={court} align="center" width="50px">
                   {court}
                 </TableCell>
               ))}

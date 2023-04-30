@@ -111,7 +111,7 @@ export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
 
           <div className="justify">
             <RatingAndLabel
-              label={"Overall"}
+              label={"Overall*"}
               rating={rating}
               setRating={setRating}
             />

@@ -78,9 +78,9 @@ export default function ArchivedBallkidList(props) {
             <Grid
               item
               key={ballkid.id}
-              xs={gridLayout ? 4 : 12}
-              sm={gridLayout ? 3 : 12}
-              md={gridLayout ? 2 : 12}
+              xs={gridLayout ? 6 : 12}
+              sm={gridLayout ? 4 : 12}
+              md={gridLayout ? 3 : 12}
               lg={gridLayout ? 2 : 12}
               xl={gridLayout ? 1 : 12}
             >

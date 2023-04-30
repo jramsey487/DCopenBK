@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useMediaQuery } from "react-responsive";
 import {
   Card,
   CardContent,
@@ -21,9 +20,6 @@ export default function BallkidList(props) {
   const [gridLayout, setGridLayout] = useState(
     getSessionStorage("gridLayout") ?? true
   );
-
-  const isMobile = useMediaQuery({ query: "(max-width: 1000px)" });
-  console.log(isMobile);
 
   useEffect(() => {
     fetch("/api/list", { headers: getAuthHeader() })
@@ -47,9 +43,9 @@ export default function BallkidList(props) {
           <Grid
             item
             key={ballkid.id}
-            xs={gridLayout ? 4 : 12}
-            sm={gridLayout ? 3 : 12}
-            md={gridLayout ? 2 : 12}
+            xs={gridLayout ? 6 : 12}
+            sm={gridLayout ? 4 : 12}
+            md={gridLayout ? 3 : 12}
             lg={gridLayout ? 2 : 12}
             xl={gridLayout ? 1 : 12}
           >
