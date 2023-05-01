@@ -12,23 +12,34 @@ import {
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Alerts, getAuthHeader, getToday, getSessionStorage } from "../Utils";
+import {
+  Alerts,
+  getAuthHeader,
+  getToday,
+  getSessionStorage,
+  useIsMobile,
+} from "../Utils";
 
 export function RatingAndLabel({ label, rating, setRating }) {
+  const isMobile = useIsMobile();
+
   return (
     <Grid
       item
-      className="sxs"
-      sx={{ mt: 1, mb: 0.5, mx: 3 }}
-      style={{ maxWidth: "350px" }}
+      className={isMobile ? "justify" : "sxs"}
+      sx={{ mt: 1, mb: 0.5, mx: isMobile ? 1 : 2 }}
     >
-      <Typography variant="subtitle2" sx={{ mx: 1 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{ ml: isMobile ? 3 : 0, mx: isMobile ? 0 : 2 }}
+      >
         {label}
       </Typography>
       <Rating
         precision={0.5}
         value={rating}
         onChange={(e, newVal) => setRating(newVal)}
+        sx={{ mr: isMobile ? 3 : 0 }}
       />
     </Grid>
   );
@@ -36,6 +47,7 @@ export function RatingAndLabel({ label, rating, setRating }) {
 
 export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
   const raterId = getSessionStorage("ballkid_id");
+  const isMobile = useIsMobile();
 
   const [date, setDate] = useState(getToday());
   const [rating, setRating] = useState(null);
@@ -59,7 +71,6 @@ export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
       <DialogContent>
         <Grid
           container
-          spacing={2}
           alignItems="center"
           direction="column"
           justifyContent="center"
@@ -73,84 +84,93 @@ export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
             />
           </Grid>
           <Grid item xs={12}>
-            <Typography component="h4" variant="h4">
+            <Typography component="h4" variant="h4" sx={{ my: 1 }}>
               Give Rating
             </Typography>
           </Grid>
 
-          <Grid item xs={12}>
-            <div className="sxs">
-              <TextField
-                sx={{ width: 250 }}
-                variant="standard"
-                label="Ratee"
-                value={ballkid.first_name + " " + ballkid.last_name}
-                required
-                disabled
-              />
-              <LocalizationProvider dateAdapter={AdapterLuxon}>
-                <DatePicker
-                  renderInput={(props) => (
-                    <TextField
-                      sx={{ mx: 2 }}
-                      required={true}
-                      variant="standard"
-                      {...props}
-                    />
-                  )}
-                  label="Date"
-                  value={date}
-                  mask={"__/__/____"}
-                  onChange={(newVal) => {
-                    setDate(newVal.toLocaleString());
-                  }}
-                />
-              </LocalizationProvider>
-            </div>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              sx={{ minWidth: 250, my: 0.5, mx: 1 }}
+              variant="standard"
+              label="Ratee"
+              value={ballkid.first_name + " " + ballkid.last_name}
+              required
+              disabled
+            />
           </Grid>
 
-          <div className="justify">
-            <RatingAndLabel
-              label={"Overall*"}
-              rating={rating}
-              setRating={setRating}
-            />
-            <RatingAndLabel
-              label={"Athleticism"}
-              rating={athleticismRating}
-              setRating={setAthleticismRating}
-            />
-          </div>
-          <div className="justify">
-            <RatingAndLabel
-              label={"Rolling"}
-              rating={rollingRating}
-              setRating={setRollingRating}
-            />
-            <RatingAndLabel
-              label={"Awareness"}
-              rating={awarenessRating}
-              setRating={setAwarenessRating}
-            />
-          </div>
-          <div className="justify">
-            <RatingAndLabel
-              label={"Decision-making"}
-              rating={decisionRating}
-              setRating={setDecisionRating}
-            />
-            <RatingAndLabel
-              label={"Effort"}
-              rating={effortRating}
-              setRating={setEffortRating}
-            />
-          </div>
+          <Grid item xs={12} sm={6}>
+            <LocalizationProvider dateAdapter={AdapterLuxon}>
+              <DatePicker
+                renderInput={(props) => (
+                  <TextField
+                    sx={{ my: 0.5, mx: 1 }}
+                    required={true}
+                    variant="standard"
+                    {...props}
+                  />
+                )}
+                label="Date"
+                value={date}
+                mask={"__/__/____"}
+                onChange={(newVal) => {
+                  setDate(newVal.toLocaleString());
+                }}
+              />
+            </LocalizationProvider>
+          </Grid>
+
+          <Grid container>
+            <Grid item xs={12} sm={5.5}>
+              <RatingAndLabel
+                label={"Overall*"}
+                rating={rating}
+                setRating={setRating}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6.5}>
+              <RatingAndLabel
+                label={"Athleticism"}
+                rating={athleticismRating}
+                setRating={setAthleticismRating}
+              />
+            </Grid>
+            <Grid item xs={12} sm={5.5}>
+              <RatingAndLabel
+                label={"Rolling"}
+                rating={rollingRating}
+                setRating={setRollingRating}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6.5}>
+              <RatingAndLabel
+                label={"Awareness"}
+                rating={awarenessRating}
+                setRating={setAwarenessRating}
+              />
+            </Grid>
+            <Grid item xs={12} sm={5.5}>
+              <RatingAndLabel
+                label={"Effort"}
+                rating={effortRating}
+                setRating={setEffortRating}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6.5}>
+              <RatingAndLabel
+                label={"Decision-making"}
+                rating={decisionRating}
+                setRating={setDecisionRating}
+              />
+            </Grid>
+          </Grid>
 
           <Grid item xs={12}>
             <TextField
               label="Comments"
               variant="standard"
-              sx={{ width: 400 }}
+              sx={{ width: isMobile ? 250 : 400 }}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               multiline
