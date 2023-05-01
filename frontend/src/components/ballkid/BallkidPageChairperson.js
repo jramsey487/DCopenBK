@@ -19,6 +19,7 @@ import {
   Table,
   Link,
 } from "@mui/material";
+import { AspectRatio } from "@mui/joy";
 import {
   MoreVert,
   Dangerous,
@@ -306,7 +307,7 @@ function RatingSection({ ballkid, isMobile }) {
       {!ballkid.is_captain ? (
         ""
       ) : (
-        <Grid item xs={12} md={7} lg={6} sx={{ mx: 1 }}>
+        <Grid item xs={12} lg={6} sx={{ mx: 1 }}>
           <Button
             size="small"
             variant="outlined"
@@ -344,7 +345,7 @@ function RatingSection({ ballkid, isMobile }) {
         </Grid>
       )}
 
-      <Grid item xs={12} md={4.5} lg={5.5} sx={{ mx: 1 }}>
+      <Grid item xs={12} lg={5.5} sx={{ mx: 1 }}>
         <Button
           size="small"
           variant="outlined"
@@ -689,7 +690,9 @@ export default function BallkidPageChairperson(props) {
 
       <Grid container>
         <Grid item xs={12} sm={4} md={3} lg={2}>
-          <Box width="95%" component="img" src={"../" + ballkid.image} />
+          <AspectRatio ratio="1/1">
+            <Box width="95%" component="img" src={"../" + ballkid.image} />
+          </AspectRatio>
         </Grid>
 
         <Grid item xs={12} sm={8} md={9} lg={10}>

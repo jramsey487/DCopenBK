@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Grid, Box } from "@mui/material";
+import { AspectRatio } from "@mui/joy";
 import { Icons, getAuthHeader } from "../Utils";
 
 export default function BallkidPage(props) {
@@ -30,7 +31,9 @@ export default function BallkidPage(props) {
 
       <Grid container>
         <Grid item xs={12} sm={4} md={3} lg={2}>
-          <Box width="95%" component="img" src={"../" + ballkid.image} />
+          <AspectRatio ratio="1/1">
+            <Box width="95%" component="img" src={"../" + ballkid.image} />
+          </AspectRatio>
         </Grid>
 
         <Grid item xs={12} sm={8} md={9} lg={10}>
