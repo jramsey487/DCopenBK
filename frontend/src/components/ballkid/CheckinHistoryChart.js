@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat, getTimeStr, getDays } from "../Utils";
+import { getTimeFloat, getTimeStr, getDays, useIsMobile } from "../Utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
@@ -59,6 +59,7 @@ export function CheckinHistoryChart({ histories, totalTime }) {
 
   const days = getDays();
   const labels = days.map((day) => day.toDateString());
+  const isMobile = useIsMobile();
 
   const options = {
     plugins: {
@@ -114,13 +115,19 @@ export function CheckinHistoryChart({ histories, totalTime }) {
         Total time checked in: {getTimeStr(getTimeFloat(totalTime))}
       </Typography>
 
-      <Bar options={options} data={data} />
-      <Typography variant="body2">
-        Note: The check-in history chart only displays a ballkid's first
-        segment, in the event of a ballkid checking in and out multiples times
-        in a day. The total time checked in statistic is fully accurate
-        (incorporates all segments).
-      </Typography>
+      {isMobile ? (
+        ""
+      ) : (
+        <div>
+          <Bar options={options} data={data} />
+          <Typography variant="body2">
+            Note: The check-in history chart only displays a ballkid's first
+            segment, in the event of a ballkid checking in and out multiples
+            times in a day. The total time checked in statistic is fully
+            accurate (incorporates all segments).
+          </Typography>
+        </div>
+      )}
     </div>
   );
 }

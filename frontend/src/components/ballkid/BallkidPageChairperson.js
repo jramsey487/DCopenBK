@@ -31,16 +31,36 @@ import {
   Shortcut,
 } from "@mui/icons-material";
 import RatingDialog from "../ratings/RatingDialog";
-import { Icons, getAuthHeader, getSessionStorage } from "../Utils";
+import { Icons, getAuthHeader, getSessionStorage, useIsMobile } from "../Utils";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
 import { RaterParamsChart } from "./RaterParamsChart";
 import { BallkidParamsChart } from "./BallkidParamsChart";
 
-function renderHeader(ballkid, setUpdated) {
+function renderHeader(ballkid, setUpdated, isMobile) {
+  const overflowMenu =
+    (ballkid.is_cut === "true") | !ballkid.is_active ? (
+      <InactiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
+    ) : (
+      <ActiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
+    );
+
+  const headerStatus =
+    ballkid.is_cut === "true" ? (
+      <Typography variant="h5" color="error">
+        Cut
+      </Typography>
+    ) : !ballkid.is_active ? (
+      <Typography variant="h5" color="error">
+        Inactive
+      </Typography>
+    ) : (
+      renderCheckin(ballkid, setUpdated, isMobile)
+    );
+
   return (
-    <div className="justify">
+    <div className={isMobile ? "" : "justify"}>
       <div className="sxs">
         <Typography variant="h4">
           {ballkid.first_name} {ballkid.last_name}
@@ -48,30 +68,20 @@ function renderHeader(ballkid, setUpdated) {
         &ensp;
         <Icons ballkid={ballkid} margin={0} />
         &ensp;
-        {(ballkid.is_cut === "true") | !ballkid.is_active ? (
-          <InactiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
-        ) : (
-          <ActiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
-        )}
+        {overflowMenu}
       </div>
-      {ballkid.is_cut === "true" ? (
-        <Typography variant="h5" color="error">
-          Cut
-        </Typography>
-      ) : !ballkid.is_active ? (
-        <Typography variant="h5" color="error">
-          Inactive
-        </Typography>
-      ) : (
-        renderCheckin(ballkid, setUpdated)
-      )}
+      {headerStatus}
     </div>
   );
 }
 
-function renderCheckin(ballkid, setUpdated) {
+function renderCheckin(ballkid, setUpdated, isMobile) {
   return (
-    <Box textAlign="center">
+    <Box
+      textAlign="center"
+      className={isMobile ? "justify" : ""}
+      sx={{ my: isMobile ? 1 : 0 }}
+    >
       <Typography
         variant="h6"
         color={ballkid.is_checked_in ? "success.main" : "error"}
@@ -101,17 +111,19 @@ function renderCheckin(ballkid, setUpdated) {
   );
 }
 
-function renderPreferredPosition(ballkid, setUpdated) {
+function renderPreferredPosition(ballkid, setUpdated, isMobile) {
   const positions = new Set(["Back", "Net", "Back/Net", "Net/Back"]);
   positions.delete(ballkid.preferred_position);
 
   return (
-    <div className="justify">
+    <div className={isMobile ? "" : "justify"}>
       <Typography variant="body1">
         Preferred position: {ballkid.preferred_position}
       </Typography>
       <div className="sxs">
-        <Typography variant="body1">Change to: &emsp;</Typography>
+        <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
+          Change to: &emsp;
+        </Typography>
         {[...positions].map((newPosition) => (
           <Button
             key={newPosition}
@@ -140,17 +152,19 @@ function renderPreferredPosition(ballkid, setUpdated) {
   );
 }
 
-function renderPosition(ballkid, setUpdated) {
+function renderPosition(ballkid, setUpdated, isMobile) {
   const newPosition = ballkid.position === "Back" ? "Net" : "Back";
 
   return (
-    <div className="justify">
+    <div className={isMobile ? "" : "justify"}>
       <Typography variant="body1">Position: {ballkid.position}</Typography>
       {ballkid.current_team === 0 ? (
         ""
       ) : (
         <div className="sxs">
-          <Typography variant="body1">Change to: &emsp;</Typography>
+          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
+            Change to: &emsp;
+          </Typography>
           <Button
             size="small"
             sx={{ m: 0.2 }}
@@ -203,9 +217,9 @@ function renderTeamButton(ballkid, buttonString, teamNum, setUpdated) {
   );
 }
 
-function renderTeam(ballkid, teams, setUpdated) {
+function renderTeam(ballkid, teams, setUpdated, isMobile) {
   return (
-    <div className="justify">
+    <div className={isMobile ? "" : "justify"}>
       <Typography variant="body1">
         Current Team:{" "}
         {ballkid.current_team === 0 ? "Unassigned" : ballkid.current_team}
@@ -214,7 +228,9 @@ function renderTeam(ballkid, teams, setUpdated) {
         ""
       ) : (
         <div className="sxs">
-          <Typography variant="body1">Change to: &emsp;</Typography>
+          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
+            Change to: &emsp;
+          </Typography>
           {teams.map((team) =>
             team === ballkid.current_team
               ? ""
@@ -262,7 +278,7 @@ function renderPreviousFinals(finals) {
   );
 }
 
-function RatingSection({ ballkid }) {
+function RatingSection({ ballkid, isMobile }) {
   const [params, setParams] = useState({});
   const [average, setAverage] = useState({});
 
@@ -312,14 +328,17 @@ function RatingSection({ ballkid }) {
               <Typography variant="body1">
                 Reviewer offset: {Number(params.rater_offset).toFixed(3)}
               </Typography>
-
-              <RaterParamsChart
-                offset={params.rater_offset}
-                scale={params.rater_scale}
-                average_offset={average.rater_offset__avg}
-                average_scale={average.rater_scale__avg}
-                sx={{ mb: 2 }}
-              />
+              {isMobile ? (
+                ""
+              ) : (
+                <RaterParamsChart
+                  offset={params.rater_offset}
+                  scale={params.rater_scale}
+                  average_offset={average.rater_offset__avg}
+                  average_scale={average.rater_scale__avg}
+                  sx={{ mb: 2 }}
+                />
+              )}
             </div>
           )}
         </Grid>
@@ -357,12 +376,15 @@ function RatingSection({ ballkid }) {
             <Typography variant="body1">
               Ballkid offset: {Number(params.ratee_offset).toFixed(3)}
             </Typography>
-
-            <BallkidParamsChart
-              offset={params.ratee_offset}
-              improvement={params.ratee_improvement}
-              sx={{ mb: 2 }}
-            />
+            {isMobile ? (
+              ""
+            ) : (
+              <BallkidParamsChart
+                offset={params.ratee_offset}
+                improvement={params.ratee_improvement}
+                sx={{ mb: 2 }}
+              />
+            )}
           </div>
         )}
       </Grid>
@@ -625,6 +647,7 @@ export default function BallkidPageChairperson(props) {
 
   const [totalTime, setTotalTime] = useState("");
 
+  const isMobile = useIsMobile();
   const { pk } = useParams();
 
   useEffect(() => {
@@ -662,20 +685,20 @@ export default function BallkidPageChairperson(props) {
     ""
   ) : (
     <div className="page">
-      {renderHeader(ballkid, setUpdated)}
+      {renderHeader(ballkid, setUpdated, isMobile)}
 
       <Grid container>
-        <Grid item xs={4} md={3} lg={2}>
+        <Grid item xs={12} sm={4} md={3} lg={2}>
           <Box width="95%" component="img" src={"../" + ballkid.image} />
         </Grid>
 
-        <Grid item xs={8} md={9} lg={10}>
+        <Grid item xs={12} sm={8} md={9} lg={10}>
           <Typography variant="h6"> Info:</Typography>
           <Typography variant="body1"> Age: {ballkid.age} </Typography>
           <Typography variant="body1">
             Years experience: {ballkid.num_years_experience}
           </Typography>
-          {renderPreferredPosition(ballkid, setUpdated)}
+          {renderPreferredPosition(ballkid, setUpdated, isMobile)}
           <br />
 
           {(ballkid.is_cut === "true") | !ballkid.is_active ? (
@@ -683,8 +706,8 @@ export default function BallkidPageChairperson(props) {
           ) : (
             <div>
               <Typography variant="h6"> Current Info: </Typography>
-              {renderPosition(ballkid, setUpdated)}
-              {renderTeam(ballkid, teams, setUpdated)}
+              {renderPosition(ballkid, setUpdated, isMobile)}
+              {renderTeam(ballkid, teams, setUpdated, isMobile)}
               <br />
             </div>
           )}
@@ -697,7 +720,7 @@ export default function BallkidPageChairperson(props) {
       </Grid>
       <br />
 
-      <RatingSection ballkid={ballkid} />
+      <RatingSection ballkid={ballkid} isMobile={isMobile} />
 
       {!ballkid.is_active ? (
         ""
@@ -712,13 +735,20 @@ export default function BallkidPageChairperson(props) {
             <CheckinHistoryChart histories={checkins} totalTime={totalTime} />
           </Grid>
 
-          <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-            <CourtHistoryChart histories={courts} />
-          </Grid>
-
-          <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-            <CaptainHistoryChart histories={captains} />
-          </Grid>
+          {isMobile ? (
+            ""
+          ) : (
+            <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
+              <CourtHistoryChart histories={courts} />
+            </Grid>
+          )}
+          {isMobile ? (
+            ""
+          ) : (
+            <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
+              <CaptainHistoryChart histories={captains} />
+            </Grid>
+          )}
           {/* <MatchHistoryChart histories={matches} /> */}
         </Grid>
       )}
