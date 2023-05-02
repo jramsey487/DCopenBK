@@ -46,12 +46,16 @@ export function RaterParamsChart({
           display: true,
           text: "Raw Rating (stars)",
         },
+        min: 0.5,
+        max: 5,
       },
       y: {
         title: {
           display: true,
           text: "Calibrated Rating (stars)",
         },
+        min: 0.5,
+        max: 5,
       },
     },
   };
@@ -60,11 +64,10 @@ export function RaterParamsChart({
     datasets: [
       {
         label: "Captain",
+
         data: [
-          { x: 0.5, y: 0.5 },
-          { x: Math.max((0.5 - offset) / scale, 0.5), y: 0.5 },
-          { x: Math.min((5 - offset) / scale, 5), y: 5 },
-          { x: 5, y: 5 },
+          { x: 0.5, y: scale * 0.5 + offset },
+          { x: 5, y: scale * 5 + offset },
         ],
         borderColor: "rgb(255, 99, 132)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
@@ -72,10 +75,8 @@ export function RaterParamsChart({
       {
         label: "Average",
         data: [
-          { x: 0.5, y: 0.5 },
-          { x: Math.max((0.5 - average_offset) / average_scale, 0.5), y: 0.5 },
-          { x: Math.min((5 - average_offset) / average_scale, 5), y: 5 },
-          { x: 5, y: 5 },
+          { x: 0.5, y: average_scale * 0.5 + average_offset },
+          { x: 5, y: average_scale * 5 + average_offset },
         ],
         borderColor: "rgb(53, 162, 235)",
         backgroundColor: "rgba(53, 162, 235, 0.5)",

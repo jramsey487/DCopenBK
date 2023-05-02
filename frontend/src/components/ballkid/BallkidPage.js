@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Typography, Grid, Box } from "@mui/material";
 import { AspectRatio } from "@mui/joy";
-import { Icons, getAuthHeader } from "../Utils";
+import { Icons, getAuthHeader, useIsMobile } from "../Utils";
 
 export default function BallkidPage(props) {
   const [ballkid, setBallkid] = useState(null);
   const [updated, setUpdated] = useState(false);
 
+  const isMobile = useIsMobile();
   const { pk } = useParams();
 
   useEffect(() => {
@@ -30,7 +31,14 @@ export default function BallkidPage(props) {
       </div>
 
       <Grid container>
-        <Grid item xs={12} sm={4} md={3} lg={2}>
+        <Grid
+          item
+          xs={12}
+          sm={4}
+          md={3}
+          lg={2}
+          sx={{ pr: 2, pl: isMobile ? 2 : 0, mb: 1 }}
+        >
           <AspectRatio ratio="1/1">
             <Box width="95%" component="img" src={"../" + ballkid.image} />
           </AspectRatio>

@@ -13,7 +13,7 @@ import {
   TableBody,
 } from "@mui/material";
 import { Shortcut } from "@mui/icons-material";
-import { getAuthHeader, getSessionStorage, useIsMobile } from "../Utils";
+import { getAuthHeader, getSessionStorage, useIsMobile, Icons } from "../Utils";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
@@ -116,9 +116,13 @@ export default function MyProfile(props) {
     ""
   ) : (
     <div className="page">
-      <Typography variant="h4">
-        {ballkid.first_name} {ballkid.last_name}
-      </Typography>
+      <div className="sxs">
+        <Typography variant="h4">
+          {ballkid.first_name} {ballkid.last_name}
+        </Typography>
+        &ensp;
+        <Icons ballkid={ballkid} margin={0} />
+      </div>
 
       <Grid container>
         <Grid item xs={12} sm={4} md={3} lg={2}>

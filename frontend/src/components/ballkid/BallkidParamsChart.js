@@ -67,8 +67,7 @@ export function BallkidParamsChart({ offset, improvement }) {
         label: "Ballkid",
         data: days.map((day, index) => ({
           x: day,
-          // clip at .5 and 5, but add some padding.
-          y: Math.min(Math.max(improvement * index + offset, 0.525), 4.975),
+          y: improvement * index + offset,
         })),
         borderColor: "rgb(255, 99, 132)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
