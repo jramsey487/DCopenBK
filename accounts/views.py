@@ -18,7 +18,11 @@ class GetTokenView(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
-            data=request.data, context={"request": request}
+            data={
+                key: value.lower() if key == "username" else value
+                for key, value in request.data.items()
+            },
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -28,7 +32,7 @@ class GetTokenView(ObtainAuthToken):
         return Response(
             {
                 "token": token.key,
-                "group": user.groups.first().name,
+                "group": user.groups.first().name if user.groups.first() else "",
                 "ballkid_id": ballkid.id if ballkid is not None else "",
             },
             status=status.HTTP_200_OK,

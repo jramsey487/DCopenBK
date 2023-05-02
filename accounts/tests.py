@@ -13,9 +13,6 @@ class AccountsTest(APITestCase):
             "testuser", "test@example.com", "testpassword"
         )
 
-        # URL for creating an account.
-        self.create_url = reverse("register")
-
     def test_create_user(self):
         """
         Ensure we can create a new user and a valid token is created with it.
@@ -28,7 +25,7 @@ class AccountsTest(APITestCase):
             "password": "somepassword",
             "password2": "somepassword",
         }
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
         user = User.objects.latest("id")
 
         self.assertEqual(User.objects.count(), 2)
@@ -45,7 +42,7 @@ class AccountsTest(APITestCase):
         Ensure user is not created for password lengths less than 8.
         """
         data = {"username": "foobar", "email": "foobarbaz@example.com", "password": "foo"}
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -53,7 +50,7 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_password(self):
         data = {"username": "foobar", "email": "foobarbaz@example.com", "password": ""}
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -65,7 +62,7 @@ class AccountsTest(APITestCase):
             "email": "foobarbaz@example.com",
             "password": "foobar",
         }
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -73,7 +70,7 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_username(self):
         data = {"username": "", "email": "foobarbaz@example.com", "password": "foobar"}
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -85,7 +82,7 @@ class AccountsTest(APITestCase):
             "email": "user@example.com",
             "password": "testuser",
         }
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -97,7 +94,7 @@ class AccountsTest(APITestCase):
             "email": "test@example.com",
             "password": "testuser",
         }
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -105,7 +102,7 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_invalid_email(self):
         data = {"username": "foobarbaz", "email": "testing", "passsword": "foobarbaz"}
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -113,11 +110,53 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_email(self):
         data = {"username": "foobar", "email": "", "password": "foobarbaz"}
-        response = self.client.post(self.create_url, data, format="json")
+        response = self.client.post(reverse("register"), data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data["email"]), 1)
+
+    def test_login_existing_user(self):
+        data = {
+            "username": "testuser",
+            "password": "testpassword",
+        }
+        response = self.client.post(reverse("get-token"), data, format="json")
+        self.assertTrue("token" in response.json())
+        self.assertIsNotNone(response.json()["token"])
+
+    def test_login_existing_user_wrong_password(self):
+        data = {
+            "username": "testuser",
+            "password": "password",
+        }
+        response = self.client.post(reverse("get-token"), data, format="json")
+        self.assertFalse("token" in response.json())
+
+    def test_login_existing_user_capitalized_user(self):
+        data = {
+            "username": "Testuser",
+            "password": "testpassword",
+        }
+        response = self.client.post(reverse("get-token"), data, format="json")
+        self.assertTrue("token" in response.json())
+        self.assertIsNotNone(response.json()["token"])
+
+    def test_login_existing_user_capitalized_password(self):
+        data = {
+            "username": "testuser",
+            "password": "Testpassword",
+        }
+        response = self.client.post(reverse("get-token"), data, format="json")
+        self.assertFalse("token" in response.json())
+
+    def test_login_user_not_found(self):
+        data = {
+            "username": "user",
+            "password": "testpassword",
+        }
+        response = self.client.post(reverse("get-token"), data, format="json")
+        self.assertFalse("token" in response.json())
 
 
 class UpdateCaptainStatusTest(APITestCase):
