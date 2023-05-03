@@ -25,6 +25,8 @@ class CalibrationParams(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     ratee_improvement = models.FloatField(blank=True, null=True)
     ratee_offset = models.FloatField(blank=True, null=True)
+    ratee_calibrated_avg = models.FloatField(blank=True, null=True)
+    ratee_calibrated_stdev = models.FloatField(blank=True, null=True)
     rater_scale = models.FloatField(blank=True, null=True)
     rater_offset = models.FloatField(blank=True, null=True)
 

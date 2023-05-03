@@ -11,6 +11,7 @@ from datetime import datetime
 from rcal import RcalWarning, calibrate_parameters
 import networkx as nx
 import warnings
+import statistics
 
 
 def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
@@ -107,11 +108,13 @@ def calibrate(ratings, rating_name="overall", min_rating=0.5, max_rating=5, stde
     return cp, excluded
 
 
-def save_calibration_parameters(cp):
+def save_calibration_parameters(cp, calibrated=None):
     improvements = cp.improvement_rates()
     ballkid_offsets = cp.person_offsets()
     scales = cp.reviewer_scales()
     offsets = cp.reviewer_offsets()
+
+    print(calibrated)
 
     keys = improvements.keys() | scales.keys()
     for name in keys:
@@ -124,15 +127,35 @@ def save_calibration_parameters(cp):
             first_name=get_first_name(name), last_name=get_last_name(name)
         )
 
-        cp, created = CalibrationParams.objects.update_or_create(
-            ballkid=ballkid,
-            defaults={
-                "ratee_improvement": improvement,
-                "ratee_offset": ballkid_offset,
-                "rater_scale": scale,
-                "rater_offset": offset,
-            },
-        )
+        if calibrated:
+            ratee_calibrated = [val for key, val in calibrated.items() if key[1] == name]
+            calibrated_avg = statistics.mean(ratee_calibrated)
+            calibrated_stdev = (
+                statistics.stdev(ratee_calibrated) if len(ratee_calibrated) > 1 else None
+            )
+
+            cp, created = CalibrationParams.objects.update_or_create(
+                ballkid=ballkid,
+                defaults={
+                    "ratee_improvement": improvement,
+                    "ratee_offset": ballkid_offset,
+                    "ratee_calibrated_avg": calibrated_avg,
+                    "ratee_calibrated_stdev": calibrated_stdev,
+                    "rater_scale": scale,
+                    "rater_offset": offset,
+                },
+            )
+
+        else:
+            cp, created = CalibrationParams.objects.update_or_create(
+                ballkid=ballkid,
+                defaults={
+                    "ratee_improvement": improvement,
+                    "ratee_offset": ballkid_offset,
+                    "rater_scale": scale,
+                    "rater_offset": offset,
+                },
+            )
         cp.save()
 
 
@@ -239,8 +262,17 @@ class CalibratedRatings(APIView):
             if any((x.category == RcalWarning for x in caught_warnings)):
                 all_warnings.add(rating_name)
 
+        calibrated = {
+            (rating.id, rating.ratee.get_name()): cp_dict["overall"].calibrate_rating(
+                rating.rater.get_name(),
+                float(rating.rating),
+                clip_endpoints=(MIN_RATING, MAX_RATING),
+            )
+            for rating in ratings
+        }
+
         # Save calibration parameters for overall ratings only
-        save_calibration_parameters(cp_dict["overall"])
+        save_calibration_parameters(cp_dict["overall"], calibrated)
 
         # Calibrate each rating to put together a list of calibrated ratings
         # to return
@@ -250,11 +282,7 @@ class CalibratedRatings(APIView):
                 "rater": rating.rater,
                 "ratee": rating.ratee,
                 "date": rating.date,
-                "rating": cp_dict["overall"].calibrate_rating(
-                    rating.rater.get_name(),
-                    float(rating.rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                ),
+                "rating": calibrated[(rating.id, rating.ratee.get_name())],
                 "athleticism_rating": cp_dict["athleticism"].calibrate_rating(
                     rating.rater.get_name(),
                     float(rating.athleticism_rating),

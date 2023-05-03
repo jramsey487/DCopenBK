@@ -10,10 +10,11 @@ class BallkidSerializer(serializers.ModelSerializer):
     checkin_days = serializers.IntegerField(required=False)
     # Rating leaderboard fields
     num_ratings = serializers.IntegerField(required=False)
-    avg_rating = serializers.FloatField(required=False)
-    stdev_rating = serializers.FloatField(required=False)
+    raw_avg = serializers.FloatField(required=False)
+    raw_stdev = serializers.FloatField(required=False)
+    calibrated_avg = serializers.FloatField(required=False)
+    calibrated_stdev = serializers.FloatField(required=False)
     scale = serializers.FloatField(required=False)
-    improvement = serializers.FloatField(required=False)
     offset = serializers.FloatField(required=False)
     # Court leaderboard fields
     court_duration = serializers.DurationField(required=False)

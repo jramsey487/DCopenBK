@@ -46,33 +46,29 @@ export default function BallkidLeaderboard(props) {
       field: "avgRating",
       headerName: "Average",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.avg_rating,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.raw_avg,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "stdevRating",
       headerName: "Standard Deviation",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.stdev_rating,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.raw_stdev,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "offset",
-      headerName: "Calibration Offset",
+      headerName: "Calibrated Average",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.offset,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.calibrated_avg,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "improvement",
-      headerName: "Calibration Improvement",
+      headerName: "Calibrated St. Dev.",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.improvement,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.calibrated_stdev,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
   ];
 

@@ -403,8 +403,8 @@ class GetCaptainLeaderboard(generics.ListAPIView):
             .filter(Q(is_captain=True) | Q(is_chairperson=True))
             .annotate(
                 num_ratings=Count("rater"),
-                avg_rating=Avg("rater__rating"),
-                stdev_rating=StdDev("rater__rating"),
+                raw_avg=Avg("rater__rating"),
+                raw_stdev=StdDev("rater__rating"),
                 scale=F("calibrationparams__rater_scale"),
                 offset=F("calibrationparams__rater_offset"),
             )
@@ -421,10 +421,10 @@ class GetBallkidLeaderboard(generics.ListAPIView):
             Ballkid.objects.filter(is_active=True)
             .annotate(
                 num_ratings=Count("ratee"),
-                avg_rating=Avg("ratee__rating"),
-                stdev_rating=StdDev("ratee__rating"),
-                offset=F("calibrationparams__ratee_offset"),
-                improvement=F("calibrationparams__ratee_improvement"),
+                raw_avg=Avg("ratee__rating"),
+                raw_stdev=StdDev("ratee__rating"),
+                calibrated_avg=F("calibrationparams__ratee_calibrated_avg"),
+                calibrated_stdev=F("calibrationparams__ratee_calibrated_stdev"),
             )
             .order_by("last_name", "first_name")
         )

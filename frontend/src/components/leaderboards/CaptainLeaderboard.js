@@ -49,33 +49,29 @@ export default function CaptainLeaderboard(props) {
       field: "avgRating",
       headerName: "Average",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.avg_rating,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.raw_avg,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "stdevRating",
       headerName: "Standard Deviation",
       width: 150,
-      valueGetter: (rowData) => rowData.row.ballkid.stdev_rating,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueGetter: (rowData) => rowData.row.ballkid.raw_stdev,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "scale",
       headerName: "Calibration Scale",
       width: 150,
       valueGetter: (rowData) => rowData.row.ballkid.scale,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "offset",
       headerName: "Calibration Offset",
       width: 150,
       valueGetter: (rowData) => rowData.row.ballkid.offset,
-      valueFormatter: (obj) =>
-        obj.value === null ? "" : Number(obj.value.toFixed(3)),
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
   ];
 
