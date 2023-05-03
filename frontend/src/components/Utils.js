@@ -19,13 +19,9 @@ export function Icons({ ballkid, margin }) {
 
   return (
     <Icon sx={{ mb: margin }}>
-      {ballkid.is_chairperson ? <EventSeat sx={{ color: "purple" }} /> : ""}
-      {ballkid.is_captain ? <Star sx={{ color: "orange" }} /> : ""}
-      {ballkid.num_years_experience === 0 ? (
-        <Circle sx={{ color: "green" }} />
-      ) : (
-        ""
-      )}
+      {ballkid.is_chairperson && <EventSeat sx={{ color: "purple" }} />}
+      {ballkid.is_captain && <Star sx={{ color: "orange" }} />}
+      {ballkid.num_years_experience === 0 && <Circle sx={{ color: "green" }} />}
     </Icon>
   );
 }

@@ -9,12 +9,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Tabs,
+  Tab,
+  Box,
 } from "@mui/material";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { Alerts, getAuthHeader } from "../Utils";
+import { Alerts, getAuthHeader, useIsMobile } from "../Utils";
 import { RatingAndLabel } from "../ratings/RatingDialog";
 
 function CreateBallkid(props) {
@@ -30,13 +33,7 @@ function CreateBallkid(props) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -47,7 +44,7 @@ function CreateBallkid(props) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Ballkid
+          Create Ballkid
         </Typography>
       </Grid>
       <Grid item xs={12}>
@@ -55,17 +52,16 @@ function CreateBallkid(props) {
           id="first-name"
           label="First Name"
           variant="standard"
-          sx={{ mx: 2 }}
-          required={true}
+          required
           onChange={(e) => setFirstName(e.target.value)}
         />
-
+      </Grid>
+      <Grid item xs={12}>
         <TextField
           id="last-name"
           label="Last Name"
           variant="standard"
-          sx={{ mx: 2 }}
-          required={true}
+          required
           onChange={(e) => setLastName(e.target.value)}
         />
       </Grid>
@@ -74,32 +70,27 @@ function CreateBallkid(props) {
           id="age"
           label="Age"
           variant="standard"
-          sx={{ mx: 2 }}
           type="number"
-          required={true}
+          required
           onChange={(e) => setAge(parseInt(e.target.value))}
         />
+      </Grid>
+      <Grid item xs={12}>
         <TextField
           id="num-years-experience"
           label="# Years Experience"
           variant="standard"
-          sx={{ mx: 2 }}
           type="number"
           onChange={(e) => setNumYearsExperience(parseInt(e.target.value))}
         />
       </Grid>
       <Grid item xs={12}>
-        <FormControl
-          component="fieldset"
-          style={{ minWidth: 200 }}
-          required={true}
-        >
+        <FormControl component="fieldset" style={{ minWidth: 250 }} required>
           <InputLabel>Preferred Position</InputLabel>
           <Select
             label="Preferred Position"
             defaultValue=""
             variant="standard"
-            sx={{ mx: 2 }}
             onChange={(e) => setPreferredPosition(e.target.value)}
           >
             <MenuItem value={"Back"}>Back</MenuItem>
@@ -108,14 +99,14 @@ function CreateBallkid(props) {
             <MenuItem value={"Net/Back"}>Net/Back</MenuItem>
           </Select>
         </FormControl>
-
+      </Grid>
+      <Grid item xs={12}>
         <FormControl component="fieldset" style={{ minWidth: 200 }}>
           <InputLabel>Is Captain?</InputLabel>
           <Select
             label="Is Captain"
             defaultValue=""
             variant="standard"
-            sx={{ mx: 2 }}
             onChange={(e) => setIsCaptain(e.target.value)}
           >
             <MenuItem value={true}>Yes</MenuItem>
@@ -182,14 +173,7 @@ function CreateCheckinHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -200,7 +184,7 @@ function CreateCheckinHistory({ ballkidsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Check-in History
+          Create Check-in History
         </Typography>
       </Grid>
 
@@ -229,12 +213,7 @@ function CreateCheckinHistory({ ballkidsList }) {
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Check-in Time"
             value={checkin}
@@ -245,11 +224,12 @@ function CreateCheckinHistory({ ballkidsList }) {
             }}
           />
         </LocalizationProvider>
+      </Grid>
+
+      <Grid item xs={12}>
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
-            renderInput={(props) => (
-              <TextField sx={{ mx: 2 }} variant="standard" {...props} />
-            )}
+            renderInput={(props) => <TextField variant="standard" {...props} />}
             label="Check-out Time"
             value={checkout}
             // disableMaskedInput
@@ -302,14 +282,7 @@ function CreateTeamHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -320,15 +293,15 @@ function CreateTeamHistory({ ballkidsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Team History
+          Create Team History
         </Typography>
       </Grid>
 
-      <Grid item xs={12} className="sxs">
+      <Grid item xs={12}>
         <Autocomplete
           disablePortal
           openOnFocus
-          sx={{ width: 300, mx: 2 }}
+          sx={{ width: 300 }}
           options={ballkidsList}
           value={ballkid}
           onChange={(e, newVal) => {
@@ -344,6 +317,9 @@ function CreateTeamHistory({ ballkidsList }) {
             />
           )}
         />
+      </Grid>
+
+      <Grid item xs={12}>
         <TextField
           id="team"
           label="Team"
@@ -359,12 +335,7 @@ function CreateTeamHistory({ ballkidsList }) {
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Start Time"
             value={start}
@@ -375,12 +346,12 @@ function CreateTeamHistory({ ballkidsList }) {
             }}
           />
         </LocalizationProvider>
+      </Grid>
 
+      <Grid item xs={12}>
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
-            renderInput={(props) => (
-              <TextField sx={{ mx: 2 }} variant="standard" {...props} />
-            )}
+            renderInput={(props) => <TextField variant="standard" {...props} />}
             label="End Time"
             value={end}
             // disableMaskedInput
@@ -436,14 +407,7 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -454,7 +418,7 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Captain History
+          Create Captain History
         </Typography>
       </Grid>
 
@@ -462,7 +426,7 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
         <Autocomplete
           disablePortal
           openOnFocus
-          sx={{ width: 300, mx: 2 }}
+          sx={{ width: 300 }}
           options={ballkidsList}
           value={ballkid}
           onChange={(e, newVal) => {
@@ -478,10 +442,13 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
             />
           )}
         />
+      </Grid>
+
+      <Grid item xs={12}>
         <Autocomplete
           disablePortal
           openOnFocus
-          sx={{ width: 300, mx: 2 }}
+          sx={{ width: 300 }}
           options={captainsList}
           value={captain}
           onChange={(e, newVal) => {
@@ -503,12 +470,7 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Start Time"
             value={start}
@@ -519,12 +481,12 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
             }}
           />
         </LocalizationProvider>
+      </Grid>
 
+      <Grid item xs={12}>
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
-            renderInput={(props) => (
-              <TextField sx={{ mx: 2 }} variant="standard" {...props} />
-            )}
+            renderInput={(props) => <TextField variant="standard" {...props} />}
             label="End Time"
             value={end}
             // disableMaskedInput
@@ -570,192 +532,6 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
   );
 }
 
-function CreateRating({ ballkidsList, captainsList }) {
-  const [ratee, setRatee] = useState(null);
-  const [rater, setRater] = useState(null);
-  const [date, setDate] = useState(null);
-  const [rating, setRating] = useState(null);
-  const [athleticismRating, setAthleticismRating] = useState(null);
-  const [rollingRating, setRollingRating] = useState(null);
-  const [awarenessRating, setAwarenessRating] = useState(null);
-  const [decisionRating, setDecisionRating] = useState(null);
-  const [effortRating, setEffortRating] = useState(null);
-  const [comments, setComments] = useState("");
-
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Add Rating
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12} className="sxs">
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300, mx: 2 }}
-          options={ballkidsList}
-          value={ratee}
-          onChange={(e, newVal) => {
-            setRatee(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField {...params} variant="standard" label="Ratee" required />
-          )}
-        />
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300, mx: 2 }}
-          options={captainsList}
-          value={rater}
-          onChange={(e, newVal) => {
-            setRater(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField {...params} variant="standard" label="Rater" required />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DatePicker
-            renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
-            )}
-            label="Date"
-            value={date}
-            mask={"__/__/____"}
-            onChange={(newValue) => {
-              setDate(newValue.toLocaleString());
-            }}
-          />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <div className="sxs">
-          <RatingAndLabel
-            label={"Overall"}
-            rating={rating}
-            setRating={setRating}
-          />
-          <RatingAndLabel
-            label={"Athleticism"}
-            rating={athleticismRating}
-            setRating={setAthleticismRating}
-          />
-        </div>
-        <div className="sxs">
-          <RatingAndLabel
-            label={"Rolling"}
-            rating={rollingRating}
-            setRating={setRollingRating}
-          />
-          <RatingAndLabel
-            label={"Awareness"}
-            rating={awarenessRating}
-            setRating={setAwarenessRating}
-          />
-        </div>
-        <div className="sxs">
-          <RatingAndLabel
-            label={"Decision-making"}
-            rating={decisionRating}
-            setRating={setDecisionRating}
-          />
-          <RatingAndLabel
-            label={"Effort"}
-            rating={effortRating}
-            setRating={setEffortRating}
-          />
-        </div>
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          label="Comments"
-          variant="standard"
-          sx={{ width: 400 }}
-          value={comments}
-          onChange={(e) => setComments(e.target.value)}
-          multiline
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-rating", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                rater: rater.id,
-                ratee: ratee.id,
-                date: date,
-                rating: rating,
-                athleticism_rating: athleticismRating,
-                rolling_rating: rollingRating,
-                awareness_rating: awarenessRating,
-                decision_rating: decisionRating,
-                effort_rating: effortRating,
-                comments: comments,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Rating submitted!");
-                setRater(null);
-                setRatee(null);
-                setComments("");
-                setRating(null);
-                setDate(null);
-                setAthleticismRating(null);
-                setRollingRating(null);
-                setAwarenessRating(null);
-                setDecisionRating(null);
-                setEffortRating(null);
-              } else {
-                setErrorMsg("Error submitting rating.");
-              }
-            });
-          }}
-        >
-          Create Rating
-        </Button>
-      </Grid>
-    </Grid>
-  );
-}
-
 function CreateFinalsHistory({ ballkidsList }) {
   const [ballkid, setBallkid] = useState(null);
   const [year, setYear] = useState("");
@@ -765,14 +541,7 @@ function CreateFinalsHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -783,15 +552,15 @@ function CreateFinalsHistory({ ballkidsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Finals History
+          Create Finals History
         </Typography>
       </Grid>
 
-      <Grid item xs={12} className="sxs">
+      <Grid item xs={12}>
         <Autocomplete
           disablePortal
           openOnFocus
-          sx={{ width: 300, mx: 2 }}
+          sx={{ width: 300 }}
           options={ballkidsList}
           value={ballkid}
           onChange={(e, newVal) => {
@@ -809,27 +578,23 @@ function CreateFinalsHistory({ ballkidsList }) {
         />
       </Grid>
 
-      <Grid item xs={12} className="sxs">
+      <Grid item xs={12}>
         <TextField
-          sx={{ mx: 2 }}
           variant="standard"
           value={year}
-          required={true}
+          required
           label="Year"
           onChange={(e) => setYear(e.target.value)}
         />
+      </Grid>
 
-        <FormControl
-          component="fieldset"
-          style={{ minWidth: 200 }}
-          required={true}
-        >
+      <Grid item xs={12}>
+        <FormControl component="fieldset" style={{ minWidth: 200 }} required>
           <InputLabel>Match Type</InputLabel>
           <Select
             label="Match Type"
             variant="standard"
             value={matchType}
-            sx={{ mx: 2 }}
             onChange={(e) => setMatchType(e.target.value)}
           >
             <MenuItem value={"Men's Singles"}>Men's Singles</MenuItem>
@@ -882,14 +647,7 @@ function CreateCutHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -900,7 +658,7 @@ function CreateCutHistory({ ballkidsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Add Cut History
+          Create Cut History
         </Typography>
       </Grid>
 
@@ -908,7 +666,7 @@ function CreateCutHistory({ ballkidsList }) {
         <Autocomplete
           disablePortal
           openOnFocus
-          sx={{ width: 300, mx: 2 }}
+          sx={{ width: 300 }}
           options={ballkidsList}
           value={ballkid}
           onChange={(e, newVal) => {
@@ -924,14 +682,15 @@ function CreateCutHistory({ ballkidsList }) {
             />
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <FormControl component="fieldset" style={{ minWidth: 200 }} required>
           <InputLabel>Self-cut?</InputLabel>
           <Select
             label="Self-Cut"
             value={selfCut}
             variant="standard"
-            sx={{ mx: 2 }}
             onChange={(e) => setSelfCut(e.target.value)}
           >
             <MenuItem value={true}>Yes</MenuItem>
@@ -940,25 +699,21 @@ function CreateCutHistory({ ballkidsList }) {
         </FormControl>
       </Grid>
 
-      <Grid item xs={12} className="sxs">
+      <Grid item xs={12}>
         <TextField
-          sx={{ mx: 2 }}
           variant="standard"
-          required={true}
+          required
           value={year}
           label="Year"
           onChange={(e) => setYear(e.target.value)}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DatePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Furthest Day"
             value={furthestDay}
@@ -1002,6 +757,191 @@ function CreateCutHistory({ ballkidsList }) {
   );
 }
 
+function CreateRating({ ballkidsList, captainsList }) {
+  const [ratee, setRatee] = useState(null);
+  const [rater, setRater] = useState(null);
+  const [date, setDate] = useState(null);
+  const [rating, setRating] = useState(null);
+  const [athleticismRating, setAthleticismRating] = useState(null);
+  const [rollingRating, setRollingRating] = useState(null);
+  const [awarenessRating, setAwarenessRating] = useState(null);
+  const [decisionRating, setDecisionRating] = useState(null);
+  const [effortRating, setEffortRating] = useState(null);
+  const [comments, setComments] = useState("");
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const isMobile = useIsMobile();
+
+  return (
+    <Grid container spacing={2} sx={{ mx: 3 }}>
+      <Grid item xs={12}>
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography component="h4" variant="h4">
+          Create Rating
+        </Typography>
+      </Grid>
+
+      <Grid item xs={12} className="sxs">
+        <Autocomplete
+          disablePortal
+          openOnFocus
+          sx={{ width: 300 }}
+          options={ballkidsList}
+          value={ratee}
+          onChange={(e, newVal) => {
+            setRatee(newVal);
+          }}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField {...params} variant="standard" label="Ratee" required />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <Autocomplete
+          disablePortal
+          openOnFocus
+          sx={{ width: 300 }}
+          options={captainsList}
+          value={rater}
+          onChange={(e, newVal) => {
+            setRater(newVal);
+          }}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField {...params} variant="standard" label="Rater" required />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <LocalizationProvider dateAdapter={AdapterLuxon}>
+          <DatePicker
+            renderInput={(props) => (
+              <TextField variant="standard" required {...props} />
+            )}
+            label="Date"
+            value={date}
+            mask={"__/__/____"}
+            onChange={(newValue) => {
+              setDate(newValue.toLocaleString());
+            }}
+          />
+        </LocalizationProvider>
+      </Grid>
+
+      <Grid container sx={{ mt: 3 }}>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Overall*"}
+            rating={rating}
+            setRating={setRating}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Athleticism"}
+            rating={athleticismRating}
+            setRating={setAthleticismRating}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Rolling"}
+            rating={rollingRating}
+            setRating={setRollingRating}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Awareness"}
+            rating={awarenessRating}
+            setRating={setAwarenessRating}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Effort"}
+            rating={effortRating}
+            setRating={setEffortRating}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <RatingAndLabel
+            label={"Decision-making"}
+            rating={decisionRating}
+            setRating={setDecisionRating}
+          />
+        </Grid>
+      </Grid>
+
+      <Grid item xs={12}>
+        <TextField
+          label="Comments"
+          variant="standard"
+          sx={{ width: isMobile ? 250 : 400 }}
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          multiline
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={(e) => {
+            fetch("/api/create-rating", {
+              method: "POST",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                rater: rater.id,
+                ratee: ratee.id,
+                date: date,
+                rating: rating,
+                athleticism_rating: athleticismRating,
+                rolling_rating: rollingRating,
+                awareness_rating: awarenessRating,
+                decision_rating: decisionRating,
+                effort_rating: effortRating,
+                comments: comments,
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setSuccessMsg("Rating submitted!");
+                setRater(null);
+                setRatee(null);
+                setComments("");
+                setRating(null);
+                setDate(null);
+                setAthleticismRating(null);
+                setRollingRating(null);
+                setAwarenessRating(null);
+                setDecisionRating(null);
+                setEffortRating(null);
+              } else {
+                setErrorMsg("Error submitting rating.");
+              }
+            });
+          }}
+        >
+          Create Rating
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
 function UpdateShift() {
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
@@ -1022,14 +962,7 @@ function UpdateShift() {
   }));
 
   return (
-    <Grid
-      container
-      sx={{ mt: 7 }}
-      spacing={2}
-      alignItems="center"
-      direction="column"
-      justifyContent="center"
-    >
+    <Grid container spacing={2} sx={{ mx: 3 }}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -1064,12 +997,7 @@ function UpdateShift() {
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required={true}
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Shift Start Time"
             value={start}
@@ -1080,15 +1008,13 @@ function UpdateShift() {
             }}
           />
         </LocalizationProvider>
+      </Grid>
+
+      <Grid item xs={12}>
         <LocalizationProvider dateAdapter={AdapterLuxon}>
           <DateTimePicker
             renderInput={(props) => (
-              <TextField
-                sx={{ mx: 2 }}
-                variant="standard"
-                required
-                {...props}
-              />
+              <TextField variant="standard" required {...props} />
             )}
             label="Shift End Time"
             value={end}
@@ -1136,6 +1062,7 @@ function UpdateShift() {
 export default function DebugPage(props) {
   const [ballkids, setBallkids] = useState([]);
   const [captains, setCaptains] = useState([]);
+  const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     fetch("/api/list", { headers: getAuthHeader() })
@@ -1161,22 +1088,59 @@ export default function DebugPage(props) {
     id: ballkid.id,
   }));
 
+  const mapped = {
+    "Create Ballkid": <CreateBallkid />,
+    "Create Checkin History": (
+      <CreateCheckinHistory ballkidsList={ballkidsList} />
+    ),
+    "Create Team History": <CreateTeamHistory ballkidsList={ballkidsList} />,
+    "Create Captain History": (
+      <CreateCaptainHistory
+        ballkidsList={ballkidsList}
+        captainsList={captainsList}
+      />
+    ),
+    "Create Finals History": (
+      <CreateFinalsHistory ballkidsList={ballkidsList} />
+    ),
+    "Create Cut History": <CreateCutHistory ballkidsList={ballkidsList} />,
+    "Create Rating": (
+      <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
+    ),
+    "Update Shift": <UpdateShift />,
+    "Bulk Create Ballkid": <UpdateShift />,
+    "Bulk Create Rating": <UpdateShift />,
+  };
+
   return (
     <div className="page">
-      <div className="content">
-        <CreateBallkid />
-        <CreateCheckinHistory ballkidsList={ballkidsList} />
-        <CreateTeamHistory ballkidsList={ballkidsList} />
-        <CreateCaptainHistory
-          ballkidsList={ballkidsList}
-          captainsList={captainsList}
-        />
-        <CreateFinalsHistory ballkidsList={ballkidsList} />
-        <CreateCutHistory ballkidsList={ballkidsList} />
-        <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
+      <Box
+        sx={{
+          flexGrow: 1,
+          bgcolor: "background.paper",
+          display: "flex",
+          height: 400,
+          width: "95%",
+        }}
+      >
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={tabIndex}
+          onChange={(e, newVal) => setTabIndex(newVal)}
+          sx={{ borderRight: 1, borderColor: "divider", minWidth: 250 }}
+        >
+          {Object.keys(mapped).map((label, index) => (
+            <Tab key={index} label={label} />
+          ))}
+        </Tabs>
 
-        <UpdateShift />
-      </div>
+        {Object.keys(mapped).map((label, index) => (
+          <div key={index} hidden={tabIndex !== index}>
+            {tabIndex === index && mapped[label]}
+          </div>
+        ))}
+      </Box>
     </div>
   );
 }
