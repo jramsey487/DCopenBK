@@ -122,22 +122,6 @@ export function getDays() {
   return days;
 }
 
-// export function getTimeFloat(str) {
-//   var timeStr, days;
-//   if (str.includes(" ")) {
-//     timeStr = str.split(" ")[1];
-//     days = parseInt(str.split(" ")[0]);
-//   } else {
-//     timeStr = str;
-//     days = 0;
-//   }
-
-//   const hours = parseInt(timeStr.split(":")[0]);
-//   const minutes = parseInt(timeStr.split(":")[1]);
-
-//   return 24 * days + hours + minutes / 60;
-// }
-
 // Converts datetime string into human readable format. Assumes format of:
 // {days} {hours}:{minutes}:{seconds}.{milliseconds} OR
 // {hours}:{minutes}:{seconds}.{milliseconds}. Returns as float of # hours

@@ -13,14 +13,13 @@ import {
   Tab,
   Box,
 } from "@mui/material";
+import { TaskAlt, UploadFile } from "@mui/icons-material";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { Alerts, getAuthHeader, useIsMobile } from "../Utils";
+import { Alerts, getAuthHeader, useIsMobile, getToken } from "../Utils";
 import { RatingAndLabel } from "../ratings/RatingDialog";
-import { TaskAlt, UploadFile } from "@mui/icons-material";
-import { getToken } from "../Utils";
 
 function CreateBallkid(props) {
   const [firstName, setFirstName] = useState("");
@@ -1061,7 +1060,7 @@ function UpdateShift() {
   );
 }
 
-function BulkCreateBallkids() {
+function BulkCreation({ type }) {
   const [file, setFile] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -1079,7 +1078,7 @@ function BulkCreateBallkids() {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Bulk Create Ballkids
+          Bulk Create {type.charAt(0).toUpperCase() + type.slice(1)}
         </Typography>
       </Grid>
 
@@ -1112,21 +1111,21 @@ function BulkCreateBallkids() {
             const formData = new FormData();
             formData.append("file", file);
 
-            fetch("/api/bulk-create-ballkids", {
+            fetch(`/api/bulk-create-${type}`, {
               method: "POST",
               headers: { Authorization: "Token " + getToken() },
               body: formData,
             }).then((response) => {
               if (response.ok) {
-                setSuccessMsg("Ballkids bulk created!");
+                setSuccessMsg(`Bulk created ${type}!`);
                 setFile(null);
               } else {
-                setErrorMsg("Error bulk creating ballkids.");
+                setErrorMsg(`Error bulk creating ${type}.`);
               }
             });
           }}
         >
-          Bulk Create Ballkids
+          Bulk Create {type}
         </Button>
       </Grid>
     </Grid>
@@ -1182,9 +1181,9 @@ export default function DebugPage(props) {
       <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
     ),
     "Update Shift": <UpdateShift />,
-    "Bulk Create Users": <BulkCreateBallkids />,
-    "Bulk Create Ballkids": <BulkCreateBallkids />,
-    "Bulk Create Ratings": <BulkCreateBallkids />,
+    "Bulk Create Users": <BulkCreation type="users" />,
+    "Bulk Create Ballkids": <BulkCreation type="ballkids" />,
+    "Bulk Create Ratings": <BulkCreation type="ratings" />,
   };
 
   return (
