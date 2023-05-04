@@ -5,9 +5,6 @@ import {
   Autocomplete,
   Typography,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
   Tabs,
   Tab,
@@ -24,9 +21,9 @@ import { RatingAndLabel } from "../ratings/RatingDialog";
 function CreateBallkid(props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [age, setAge] = useState(0);
-  const [preferredPosition, setPreferredPosition] = useState("Back");
-  const [numYearsExperience, setNumYearsExperience] = useState(0);
+  const [age, setAge] = useState("");
+  const [preferredPosition, setPreferredPosition] = useState("");
+  const [numYearsExperience, setNumYearsExperience] = useState("");
   const [image, setImage] = useState("");
   const [isCaptain, setIsCaptain] = useState(false);
 
@@ -50,7 +47,7 @@ function CreateBallkid(props) {
       </Grid>
       <Grid item xs={12}>
         <TextField
-          id="first-name"
+          value={firstName}
           label="First Name"
           variant="standard"
           required
@@ -59,7 +56,7 @@ function CreateBallkid(props) {
       </Grid>
       <Grid item xs={12}>
         <TextField
-          id="last-name"
+          value={lastName}
           label="Last Name"
           variant="standard"
           required
@@ -68,7 +65,7 @@ function CreateBallkid(props) {
       </Grid>
       <Grid item xs={12}>
         <TextField
-          id="age"
+          value={age}
           label="Age"
           variant="standard"
           type="number"
@@ -78,7 +75,7 @@ function CreateBallkid(props) {
       </Grid>
       <Grid item xs={12}>
         <TextField
-          id="num-years-experience"
+          value={numYearsExperience}
           label="# Years Experience"
           variant="standard"
           type="number"
@@ -86,39 +83,39 @@ function CreateBallkid(props) {
         />
       </Grid>
       <Grid item xs={12}>
-        <FormControl component="fieldset" style={{ minWidth: 250 }} required>
-          <InputLabel>Preferred Position</InputLabel>
-          <Select
-            label="Preferred Position"
-            defaultValue=""
-            variant="standard"
-            onChange={(e) => setPreferredPosition(e.target.value)}
-          >
-            <MenuItem value={"Back"}>Back</MenuItem>
-            <MenuItem value={"Net"}>Net</MenuItem>
-            <MenuItem value={"Back/Net"}>Back/Net</MenuItem>
-            <MenuItem value={"Net/Back"}>Net/Back</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          select
+          label="Preferred Position"
+          value={preferredPosition}
+          variant="standard"
+          style={{ minWidth: 250 }}
+          required
+          onChange={(e) => setPreferredPosition(e.target.value)}
+        >
+          <MenuItem value={"Back"}>Back</MenuItem>
+          <MenuItem value={"Net"}>Net</MenuItem>
+          <MenuItem value={"Back/Net"}>Back/Net</MenuItem>
+          <MenuItem value={"Net/Back"}>Net/Back</MenuItem>
+        </TextField>
       </Grid>
       <Grid item xs={12}>
-        <FormControl component="fieldset" style={{ minWidth: 200 }}>
-          <InputLabel>Is Captain?</InputLabel>
-          <Select
-            label="Is Captain"
-            defaultValue=""
-            variant="standard"
-            onChange={(e) => setIsCaptain(e.target.value)}
-          >
-            <MenuItem value={true}>Yes</MenuItem>
-            <MenuItem value={false}>No</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          select
+          label="Is Captain"
+          value={isCaptain}
+          variant="standard"
+          style={{ minWidth: 200 }}
+          required
+          onChange={(e) => setIsCaptain(e.target.value)}
+        >
+          <MenuItem value={true}>Yes</MenuItem>
+          <MenuItem value={false}>No</MenuItem>
+        </TextField>
       </Grid>
 
       <Grid item xs={12}>
         <TextField
-          id="image"
+          value={image}
           label="Image Link"
           variant="standard"
           onChange={(e) => setImage(e.target.value)}
@@ -159,6 +156,109 @@ function CreateBallkid(props) {
           }}
         >
           Create Ballkid
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
+function CreateUser(props) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [group, setGroup] = useState("ballkid");
+  const [email, setEmail] = useState("");
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  return (
+    <Grid container spacing={2} sx={{ mx: 3 }}>
+      <Grid item xs={12}>
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography component="h4" variant="h4">
+          Create User
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          label="First Name"
+          variant="standard"
+          required
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          label="Last Name"
+          variant="standard"
+          value={lastName}
+          required
+          onChange={(e) => setLastName(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          select
+          label="Permissions Group"
+          value={group}
+          variant="standard"
+          style={{ minWidth: 250 }}
+          required
+          onChange={(e) => setGroup(e.target.value)}
+        >
+          <MenuItem value={"ballkid"}>Ballkid</MenuItem>
+          <MenuItem value={"captain"}>Captain</MenuItem>
+          <MenuItem value={"chairperson"}>Chairperson</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          label="Email"
+          variant="standard"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={(e) => {
+            fetch("/accounts/register", {
+              method: "POST",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                group: group,
+                email: email,
+                password: "password",
+                password2: "password",
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setSuccessMsg("User created!");
+              } else {
+                setErrorMsg("Error creating user.");
+              }
+              setFirstName("");
+              setLastName("");
+              setGroup("ballkid");
+              setEmail("");
+            });
+          }}
+        >
+          Create User
         </Button>
       </Grid>
     </Grid>
@@ -590,20 +690,20 @@ function CreateFinalsHistory({ ballkidsList }) {
       </Grid>
 
       <Grid item xs={12}>
-        <FormControl component="fieldset" style={{ minWidth: 200 }} required>
-          <InputLabel>Match Type</InputLabel>
-          <Select
-            label="Match Type"
-            variant="standard"
-            value={matchType}
-            onChange={(e) => setMatchType(e.target.value)}
-          >
-            <MenuItem value={"Men's Singles"}>Men's Singles</MenuItem>
-            <MenuItem value={"Men's Doubles"}>Men's Doubles</MenuItem>
-            <MenuItem value={"Women's Singles"}>Women's Singles</MenuItem>
-            <MenuItem value={"Women's Doubles"}>Women's Doubles</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          select
+          label="Match Type"
+          value={matchType}
+          variant="standard"
+          style={{ minWidth: 200 }}
+          required
+          onChange={(e) => setMatchType(e.target.value)}
+        >
+          <MenuItem value={"Men's Singles"}>Men's Singles</MenuItem>
+          <MenuItem value={"Men's Doubles"}>Men's Doubles</MenuItem>
+          <MenuItem value={"Women's Singles"}>Women's Singles</MenuItem>
+          <MenuItem value={"Women's Doubles"}>Women's Doubles</MenuItem>
+        </TextField>
       </Grid>
 
       <Grid item xs={12}>
@@ -686,18 +786,18 @@ function CreateCutHistory({ ballkidsList }) {
       </Grid>
 
       <Grid item xs={12}>
-        <FormControl component="fieldset" style={{ minWidth: 200 }} required>
-          <InputLabel>Self-cut?</InputLabel>
-          <Select
-            label="Self-Cut"
-            value={selfCut}
-            variant="standard"
-            onChange={(e) => setSelfCut(e.target.value)}
-          >
-            <MenuItem value={true}>Yes</MenuItem>
-            <MenuItem value={false}>No</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          select
+          label="Self-Cut"
+          value={selfCut}
+          variant="standard"
+          style={{ minWidth: 150 }}
+          required
+          onChange={(e) => setSelfCut(e.target.value)}
+        >
+          <MenuItem value={true}>Yes</MenuItem>
+          <MenuItem value={false}>No</MenuItem>
+        </TextField>
       </Grid>
 
       <Grid item xs={12}>
@@ -1163,6 +1263,7 @@ export default function DebugPage(props) {
 
   const mapped = {
     "Create Ballkid": <CreateBallkid />,
+    "Create User": <CreateUser />,
     "Create Checkin History": (
       <CreateCheckinHistory ballkidsList={ballkidsList} />
     ),

@@ -11,6 +11,9 @@ from django.views.decorators.csrf import csrf_exempt
 from accounts.serializers import *
 from api.permissions import IsChairperson
 from api.models.ballkid import Ballkid
+import logging
+
+logger = logging.getLogger("accounts")
 
 
 class GetTokenView(ObtainAuthToken):
@@ -79,21 +82,33 @@ class RegisterUserView(APIView):
     Registers the user.
     """
 
+    # TODO: Consider limiting this to chairpeople
     permission_classes = [AllowAny]
     serializer_class = UserSerializer
     model = User
 
     def post(self, request, format="json"):
+        first_name = request.data.get("first_name", "")
+        last_name = request.data.get("last_name", "")
+        if first_name != "" and last_name != "":
+            request.data["username"] = f"{first_name.lower()}.{last_name.lower()}"
+
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
+                group_name = request.data.get("group", None)
+                if group_name:
+                    group = Group.objects.get(name=group_name)
+                    user.groups.add(group)
+
                 token = Token.objects.create(user=user)
                 json = serializer.data
                 json["token"] = token.key
 
                 return Response(json, status=status.HTTP_201_CREATED)
 
+        logger.warn(f"[RegisterUser] serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

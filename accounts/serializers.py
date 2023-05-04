@@ -9,9 +9,7 @@ from djoser.serializers import TokenCreateSerializer
 class UserSerializer(serializers.ModelSerializer):
     MAX_LENGTH = 32
 
-    email = serializers.EmailField(
-        required=True, validators=[UniqueValidator(queryset=User.objects.all())]
-    )
+    email = serializers.EmailField(required=True)
     username = serializers.CharField(
         max_length=MAX_LENGTH, validators=[UniqueValidator(queryset=User.objects.all())]
     )

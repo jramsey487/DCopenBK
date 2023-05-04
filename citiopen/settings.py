@@ -254,6 +254,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
+        "accounts": {
+            "handlers": ["infoFile", "warningFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
         "django": {
             "handlers": ["djangoFile"],
             "level": "INFO",
