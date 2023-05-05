@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+
 import { Typography } from "@mui/material";
 
 export default function GamePage(props) {
@@ -20,6 +21,7 @@ export default function GamePage(props) {
         <Typography variant="h3" sx={{ my: 2 }}>
           Game
         </Typography>
+        {/* <script src="https://jtiosue.github.io/pages/computerscience/media/flappybird.js"></script> */}
         <div align="center" id="game">
           <canvas id="canvas"></canvas>
         </div>

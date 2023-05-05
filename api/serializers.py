@@ -38,9 +38,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class CheckinAnalyticsSerializer(serializers.ModelSerializer):
-    ballkid_name = serializers.CharField(max_length=60, required=False)
-    num_days = serializers.IntegerField(required=False)
-
     class Meta:
         model = CheckinAnalytics
         fields = "__all__"

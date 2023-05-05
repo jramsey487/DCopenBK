@@ -87,17 +87,22 @@ class Ballkid(models.Model):
         if now is None:
             now = datetime.now()
 
+        duration = timedelta()
+        days = set()
+
         # TODO: make this more efficient by caching the result and only
         # updating based on the most recent history
-
         histories = CheckinHistory.objects.all().filter(ballkid_id=self.id)
-        duration = timedelta()
         for history in histories:
             end_time = history.checkout if history.checkout else now
             duration += end_time - history.checkin
 
+            day = datetime.strftime(history.checkin, "%Y-%m-%d")
+            days.add(day)
+
         analytic, created = CheckinAnalytics.objects.get_or_create(ballkid_id=self.id)
         analytic.duration = duration
+        analytic.num_days = len(days)
         analytic.save()
 
     def recalc_captain_analytics(self, now=None):
@@ -613,9 +618,10 @@ class CutHistory(models.Model):
 class CheckinAnalytics(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     duration = models.DurationField(default=timedelta)
+    num_days = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.ballkid.get_name()} with total checkin time {self.duration}"
+        return f"{self.ballkid.get_name()} with total checkin time {self.duration} and total checkin days {self.num_days}"
 
 
 class CheckinHistory(models.Model):
