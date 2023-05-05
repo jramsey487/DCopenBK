@@ -1282,8 +1282,8 @@ export default function DebugPage(props) {
       <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
     ),
     "Update Shift": <UpdateShift />,
-    "Bulk Create Users": <BulkCreation type="users" />,
     "Bulk Create Ballkids": <BulkCreation type="ballkids" />,
+    "Bulk Create Users": <BulkCreation type="users" />,
     "Bulk Create Ratings": <BulkCreation type="ratings" />,
   };
 

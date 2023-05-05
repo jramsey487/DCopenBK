@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User, Group
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -157,7 +159,37 @@ class BulkCreateUsers(APIView):
     permission_classes = [IsChairperson]
 
     def post(self, request):
-        pass
+        file = request.FILES["file"]
+        reader = csv.DictReader(io.StringIO(file.read().decode("utf-8")))
+
+        users = []
+        for line in reader:
+            first_name = line["first_name"]
+            last_name = line["last_name"]
+
+            user = User(
+                username=f"{first_name.lower()}.{last_name.lower()}",
+                first_name=first_name,
+                last_name=last_name,
+                email=line["email"],
+                password=make_password("password"),
+            )
+            user.save()
+
+            group = Group.objects.get(name=line["group"])
+            user.groups.add(group)
+            users.append(user)
+
+            ballkid = Ballkid.objects.filter(
+                is_active=True, first_name=first_name, last_name=last_name
+            ).first()
+            ballkid.user = user
+            ballkid.save()
+
+        return Response(
+            {"Success": f"Bulk created users {users}"},
+            status=status.HTTP_200_OK,
+        )
 
 
 class BulkCreateBallkids(APIView):
