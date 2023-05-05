@@ -230,49 +230,53 @@ function Unassigned(props) {
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
-  return props.unassigned.length === 0 ? (
-    ""
-  ) : (
+  return (
     <div>
       <Typography variant="h5" sx={{ mt: 2, mb: 2 }}>
         Unassigned
       </Typography>
-      <TableContainer
-        component={Paper}
-        ref={dropRef}
-        elevation={isOver ? 10 : 1}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Preferred Position</TableCell>
-              <TableCell align="right">Assign To Team</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {props.unassigned.map((ballkid) => (
-              <TableRow key={ballkid.id}>
-                <TableCell component="th" scope="row">
-                  {<DraggableBallkidAndIcon ballkid={ballkid} />}
-                </TableCell>
-                <TableCell>{ballkid.preferred_position}</TableCell>
-                <TableCell align="right">
-                  {props.teams.map((team) =>
-                    renderAssignButton(ballkid, team, team, props.setUpdated)
-                  )}
-                  {renderAssignButton(
-                    ballkid,
-                    "New Team",
-                    props.teams.length + 1,
-                    props.setUpdated
-                  )}
-                </TableCell>
+      {props.unassigned.length === 0 ? (
+        <Typography variant="body1">
+          There are currently no checked in ballkids who are unassigned.
+        </Typography>
+      ) : (
+        <TableContainer
+          component={Paper}
+          ref={dropRef}
+          elevation={isOver ? 10 : 1}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Preferred Position</TableCell>
+                <TableCell align="right">Assign To Team</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {props.unassigned.map((ballkid) => (
+                <TableRow key={ballkid.id}>
+                  <TableCell component="th" scope="row">
+                    {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                  </TableCell>
+                  <TableCell>{ballkid.preferred_position}</TableCell>
+                  <TableCell align="right">
+                    {props.teams.map((team) =>
+                      renderAssignButton(ballkid, team, team, props.setUpdated)
+                    )}
+                    {renderAssignButton(
+                      ballkid,
+                      "New Team",
+                      props.teams.length + 1,
+                      props.setUpdated
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </div>
   );
 }
