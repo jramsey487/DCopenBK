@@ -16,6 +16,9 @@ ballkid_urls = [
     path("archived-list", BallkidsArchivedList.as_view(), name="archived-list"),
     path("create-ballkid", CreateBallkid.as_view(), name="create-ballkid"),
     path("get-ballkid/<int:pk>", GetBallkid.as_view(), name="get-ballkid"),
+    path(
+        "get-ballkid/<int:pk>/<int:me>", GetBallkid.as_view(), name="get-ballkid-ratings"
+    ),
     path("update-ballkid", UpdateBallkid.as_view(), name="update-ballkid"),
     path("checkout-all", CheckoutAll.as_view(), name="checkout-all"),
     path("cut-all", CutAll.as_view(), name="cut-all"),

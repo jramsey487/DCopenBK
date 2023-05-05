@@ -86,7 +86,6 @@ class AccountsTest(APITestCase):
         }
         response = self.client.post(reverse("register"), data, format="json")
         user = User.objects.latest("id")
-        print(User.objects.all())
 
         self.assertEqual(User.objects.count(), 2)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

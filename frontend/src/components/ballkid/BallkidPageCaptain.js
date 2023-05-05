@@ -19,7 +19,9 @@ export default function BallkidPageCaptain(props) {
   const { pk } = useParams();
 
   useEffect(() => {
-    fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-ballkid/${pk}/${getSessionStorage("ballkid_id")}`, {
+      headers: getAuthHeader(),
+    })
       .then((response) => response.json())
       .then((data) => setBallkid(data))
       .then(() => setUpdated(false));

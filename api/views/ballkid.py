@@ -143,7 +143,21 @@ class CreateBallkid(APIView):
 class GetBallkid(generics.RetrieveAPIView):
     serializer_class = BallkidSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Ballkid.objects.all()
+
+    def get_queryset(self):
+        me = self.kwargs.get("me")
+        ballkids = Ballkid.objects.all()
+
+        return (
+            ballkids
+            if not me
+            else ballkids.annotate(
+                num_ratings=Count("ratee"),
+                have_rated=Exists(
+                    Rating.objects.filter(rater_id=me, ratee_id=OuterRef("id"))
+                ),
+            )
+        )
 
 
 class UpdateBallkid(APIView):

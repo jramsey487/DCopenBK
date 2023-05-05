@@ -173,17 +173,23 @@ class Ballkid(models.Model):
                 if not duration:
                     continue
 
-                print(self.id, durations)
+                logger.info(
+                    f"[recalc-captain-analytics] For ballkid {self.id} updating as captain {updateAsCaptain} with other ballkid/captain durations of {durations}"
+                )
 
                 if updateAsCaptain:
-                    print(other_id, self.id)
-                    analytic, _ = CaptainAnalytics.objects.get_or_create(
+                    analytic, created = CaptainAnalytics.objects.get_or_create(
                         ballkid_id=other_id, captain=self
                     )
+                    logger.info(
+                        f"[recalc-captain-analytics] For (ballkid {other_id}, captain {self.id}), created {created} analytic {analytic}"
+                    )
                 else:
-                    print(self.id, other_id)
-                    analytic, _ = CaptainAnalytics.objects.get_or_create(
+                    analytic, created = CaptainAnalytics.objects.get_or_create(
                         ballkid=self, captain_id=other_id
+                    )
+                    logger.info(
+                        f"[recalc-captain-analytics] For (ballkid {self.id}, captain {other_id}), created {created} analytic {analytic}"
                     )
                 analytic.duration = durations[other_id]
                 analytic.count = counts[other_id]
