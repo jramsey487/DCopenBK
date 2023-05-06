@@ -10,12 +10,7 @@ import {
   Box,
 } from "@mui/material";
 import { AspectRatio } from "@mui/joy";
-import {
-  Icons,
-  LayoutButtons,
-  getAuthHeader,
-  getSessionStorage,
-} from "../Utils";
+import { Icons, LayoutButtons, getAuthHeader, getLocalStorage } from "../Utils";
 
 function renderUnarchiveButton(firstName, lastName, setUpdated) {
   return (
@@ -48,7 +43,7 @@ function renderUnarchiveButton(firstName, lastName, setUpdated) {
 export default function ArchivedBallkidList(props) {
   const [archived, setArchived] = useState([]);
   const [gridLayout, setGridLayout] = useState(
-    getSessionStorage("gridLayout") ?? true
+    getLocalStorage("gridLayout") ?? true
   );
   const [updated, setUpdated] = useState(false);
 

@@ -52,7 +52,6 @@ class Ballkid(models.Model):
         max_length=100, default="api/static/img/none.jpg", blank=True
     )
     num_years_experience = models.IntegerField(default=0)
-    # years_worked = ArrayField(ArrayField(models.IntegerField(default=0)))
     is_captain = models.BooleanField(default=False)
     is_chairperson = models.BooleanField(default=False)
     preferred_position = models.CharField(
@@ -496,7 +495,6 @@ class Ballkid(models.Model):
             time=now,
             furthest_day=now.strftime("%A"),
             is_cut=value,
-            num_years_experience=self.num_years_experience,
         )
         history.save()
 
@@ -606,7 +604,6 @@ class FinalsHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     year = models.IntegerField()
     match_type = models.CharField(max_length=20, choices=MATCH_TYPE.choices)
-    num_years_experience = models.IntegerField(default=0)
 
     class Meta:
         unique_together = (
@@ -624,7 +621,6 @@ class CutHistory(models.Model):
     furthest_day = models.CharField(max_length=10, choices=DAY_OF_WEEK.choices)
     furthest_date = models.DateField(null=True)
     self_cut = models.BooleanField(default=False)
-    num_years_experience = models.IntegerField(default=0)
 
     class Meta:
         unique_together = (

@@ -7,7 +7,7 @@ import {
   Icons,
   getAuthHeader,
   RatingButton,
-  getSessionStorage,
+  getLocalStorage,
   useIsMobile,
 } from "../Utils";
 
@@ -19,7 +19,7 @@ export default function BallkidPageCaptain(props) {
   const { pk } = useParams();
 
   useEffect(() => {
-    fetch(`/api/get-ballkid/${pk}/${getSessionStorage("ballkid_id")}`, {
+    fetch(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`, {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
@@ -40,7 +40,7 @@ export default function BallkidPageCaptain(props) {
           <Icons ballkid={ballkid} margin={0} />
         </div>
 
-        {ballkid.id === getSessionStorage("ballkid_id") ? (
+        {ballkid.id === getLocalStorage("ballkid_id") ? (
           ""
         ) : (
           <RatingButton

@@ -15,12 +15,12 @@ import {
   LayoutButtons,
   getAuthHeader,
   RatingButton,
-  getSessionStorage,
+  getLocalStorage,
   useIsMobile,
 } from "../Utils";
 
 function renderBallkids(ballkids, gridLayout, setUpdated, isMobile) {
-  const isChairperson = getSessionStorage("group") === "chairperson";
+  const isChairperson = getLocalStorage("group") === "chairperson";
 
   return ballkids.length === 0 ? (
     <Typography variant="body1">There are no ballkids to rate.</Typography>
@@ -59,7 +59,7 @@ function renderBallkids(ballkids, gridLayout, setUpdated, isMobile) {
                   </div>
 
                   <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
-                    {ballkid.id === getSessionStorage("ballkid_id") ? (
+                    {ballkid.id === getLocalStorage("ballkid_id") ? (
                       ""
                     ) : (
                       <RatingButton
@@ -97,10 +97,10 @@ export default function RateByNamePage(props) {
   const [updated, setUpdated] = useState(false);
 
   const [gridLayout, setGridLayout] = useState(
-    getSessionStorage("gridLayout") ?? true
+    getLocalStorage("gridLayout") ?? true
   );
   const isMobile = useIsMobile();
-  const pk = getSessionStorage("ballkid_id");
+  const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch("/api/list/" + pk, {

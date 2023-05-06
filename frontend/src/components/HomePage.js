@@ -34,7 +34,7 @@ import CourtLeaderboard from "./leaderboards/CourtLeaderboard";
 import BallkidLeaderboard from "./leaderboards/BallkidLeaderboard";
 import TournamentSettings from "./settings/TournamentSettings";
 
-import { useToken, getSessionStorage } from "./Utils";
+import { useToken, getLocalStorage } from "./Utils";
 import GamePage from "./settings/GamePage";
 
 function chairpersonRoutes(setToken) {
@@ -121,7 +121,7 @@ function loggedOutRoutes(setToken) {
 
 export default function HomePage(props) {
   const { token, setToken } = useToken();
-  const group = getSessionStorage("group");
+  const group = getLocalStorage("group");
 
   return !token ? (
     <Router>

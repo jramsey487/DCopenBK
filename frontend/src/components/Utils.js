@@ -53,7 +53,7 @@ export function LayoutButtons({ gridLayout, setGridLayout }) {
           }}
           onClick={(e) => {
             setGridLayout(isGridButton);
-            setSessionStorage("gridLayout", isGridButton);
+            setLocalStorage("gridLayout", isGridButton);
           }}
         >
           {isGridButton ? <GridView /> : <List />}
@@ -123,7 +123,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile }) {
 
 export function renderBallkidFinalsHistory(finals) {
   return (
-    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 2 }}>
+    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 3 }}>
       {/* <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}> */}
       <Typography variant="h6">Previous Years' Finals:</Typography>
@@ -135,7 +135,6 @@ export function renderBallkidFinalsHistory(finals) {
             <TableRow>
               <TableCell align="center">Year</TableCell>
               <TableCell align="center">Match Type</TableCell>
-              <TableCell align="center"># Years Experience</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -143,9 +142,6 @@ export function renderBallkidFinalsHistory(finals) {
               <TableRow key={final.id}>
                 <TableCell align="center">{final.year}</TableCell>
                 <TableCell align="center">{final.match_type}</TableCell>
-                <TableCell align="center">
-                  {final.num_years_experience}
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -159,8 +155,7 @@ export function renderBallkidFinalsHistory(finals) {
 
 export function renderBallkidCutHistory(cuts) {
   return (
-    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 2 }}>
-      {" "}
+    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 3 }}>
       <Typography variant="h6">Cut History:</Typography>
       <TableContainer>
         <Table size="small">
@@ -169,7 +164,6 @@ export function renderBallkidCutHistory(cuts) {
               <TableCell align="center">Year</TableCell>
               <TableCell align="center">Furthest Day</TableCell>
               <TableCell align="center">Self-cut?</TableCell>
-              <TableCell align="center"># Years Experience</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -180,7 +174,6 @@ export function renderBallkidCutHistory(cuts) {
                 <TableCell align="center">
                   {cut.self_cut ? "Yes" : "No"}
                 </TableCell>
-                <TableCell align="center">{cut.num_years_experience}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -253,18 +246,17 @@ export function getToday() {
   return mm + "/" + dd + "/" + yyyy;
 }
 
-export function getSessionStorage(key) {
-  const valString = sessionStorage.getItem(key);
+export function getLocalStorage(key) {
+  const valString = localStorage.getItem(key);
   return JSON.parse(valString);
 }
 
-export function setSessionStorage(key, val) {
-  sessionStorage.setItem(key, JSON.stringify(val));
+export function setLocalStorage(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
 }
 
 export function getToken() {
-  const tokenString = sessionStorage.getItem("token");
-  return JSON.parse(tokenString);
+  return getLocalStorage("token");
 }
 
 export function getAuthHeader() {
@@ -276,13 +268,13 @@ export function getAuthHeader() {
 
 export function useToken() {
   const getToken = () => {
-    const tokenString = sessionStorage.getItem("token");
+    const tokenString = localStorage.getItem("token");
     return JSON.parse(tokenString);
   };
   const [token, setToken] = useState(getToken());
 
   const saveToken = (userToken) => {
-    sessionStorage.setItem("token", JSON.stringify(userToken));
+    localStorage.setItem("token", JSON.stringify(userToken));
     setToken(userToken);
   };
 

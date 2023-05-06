@@ -25,7 +25,7 @@ import {
   ExpandMore,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { getSessionStorage, setSessionStorage, useIsMobile } from "./Utils";
+import { getLocalStorage, setLocalStorage, useIsMobile } from "./Utils";
 
 const ballkidTabs = [
   { label: "By Name", url: "/" },
@@ -148,9 +148,9 @@ function DesktopNavbarItem(props) {
   const handleLogout = () => {
     handleClose();
     setToken("");
-    setSessionStorage("group", "");
-    setSessionStorage("ballkid_id", "");
-    setSessionStorage("username", "");
+    setLocalStorage("group", "");
+    setLocalStorage("ballkid_id", "");
+    setLocalStorage("username", "");
   };
 
   const enterButton = (e) => {
@@ -310,7 +310,7 @@ function MobileNavbar({ tabs, accountTab }) {
 }
 
 export default function Navbar(props) {
-  const group = getSessionStorage("group");
+  const group = getLocalStorage("group");
   const isMobile = useIsMobile();
 
   var accountTab = {};

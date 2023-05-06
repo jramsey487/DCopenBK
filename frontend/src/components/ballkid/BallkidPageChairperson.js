@@ -29,7 +29,7 @@ import RatingDialog from "../ratings/RatingDialog";
 import {
   Icons,
   getAuthHeader,
-  getSessionStorage,
+  getLocalStorage,
   renderBallkidCutHistory,
   renderBallkidFinalsHistory,
   useIsMobile,
@@ -461,7 +461,7 @@ function ActiveOverflowMenu(props) {
           setAnchorEl(null);
         }}
       >
-        {ballkid.id === getSessionStorage("ballkid_id") ? (
+        {ballkid.id === getLocalStorage("ballkid_id") ? (
           ""
         ) : (
           <MenuItem

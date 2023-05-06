@@ -3,7 +3,7 @@ import { Typography, Grid, Box, Button, Link } from "@mui/material";
 import { Shortcut } from "@mui/icons-material";
 import {
   getAuthHeader,
-  getSessionStorage,
+  getLocalStorage,
   useIsMobile,
   Icons,
   renderBallkidCutHistory,
@@ -51,7 +51,7 @@ export default function MyProfile(props) {
   const [updated, setUpdated] = useState(false);
 
   const isMobile = useIsMobile();
-  const pk = getSessionStorage("ballkid_id");
+  const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() })

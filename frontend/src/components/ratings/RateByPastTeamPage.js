@@ -15,7 +15,7 @@ import {
   LayoutButtons,
   getAuthHeader,
   RatingButton,
-  getSessionStorage,
+  getLocalStorage,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 
@@ -69,9 +69,9 @@ export default function RateByPastTeamPage(props) {
   const [showAll, setShowAll] = useState(true);
 
   const [gridLayout, setGridLayout] = useState(
-    getSessionStorage("gridLayout") ?? true
+    getLocalStorage("gridLayout") ?? true
   );
-  const pk = getSessionStorage("ballkid_id");
+  const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch("/api/list/" + pk, { headers: getAuthHeader() })

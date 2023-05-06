@@ -113,11 +113,14 @@ class CreateCutHistory(APIView):
 
     def post(self, request, format=None):
         ballkid = Ballkid.objects.get(id=request.data["ballkid_id"])
-        furthest_day = datetime.strptime(request.data["furthest_day"], "%m/%d/%Y").date()
+        day = datetime.strptime(request.data["furthest_day"], "%m/%d/%Y")
+        furthest_date = day.date()
+        furthest_day = datetime.strftime(day, "%A")
 
         history = CutHistory.objects.create(
             ballkid=ballkid,
             year=request.data["year"],
+            furthest_date=furthest_date,
             furthest_day=furthest_day,
             self_cut=request.data["self_cut"],
         )
@@ -183,7 +186,7 @@ class BulkCreateUsers(APIView):
             ballkid = Ballkid.objects.filter(
                 is_active=True, first_name=first_name, last_name=last_name
             ).first()
-            if ballkid: 
+            if ballkid:
                 ballkid.user = user
                 ballkid.save()
 

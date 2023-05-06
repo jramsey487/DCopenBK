@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Grid, Typography, TextField, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { Alerts, handleChange, setSessionStorage } from "../Utils";
+import { Alerts, handleChange, setLocalStorage } from "../Utils";
 
 function submitPassword(state, setSuccessMsg, setErrorMsg, setToken, navigate) {
   fetch("/accounts/get-token", {
@@ -26,9 +26,9 @@ function submitPassword(state, setSuccessMsg, setErrorMsg, setToken, navigate) {
     })
     .then((data) => {
       setToken(data?.token ?? "");
-      setSessionStorage("username", state?.username ?? "");
-      setSessionStorage("ballkid_id", data?.ballkid_id ?? "");
-      setSessionStorage("group", data?.group ?? "");
+      setLocalStorage("username", state?.username ?? "");
+      setLocalStorage("ballkid_id", data?.ballkid_id ?? "");
+      setLocalStorage("group", data?.group ?? "");
       console.log(data);
     })
     .catch((error) => {});

@@ -10,12 +10,7 @@ import {
   Button,
 } from "@mui/material";
 import { AspectRatio } from "@mui/joy";
-import {
-  Icons,
-  LayoutButtons,
-  getAuthHeader,
-  getSessionStorage,
-} from "../Utils";
+import { Icons, LayoutButtons, getAuthHeader, getLocalStorage } from "../Utils";
 import { MARGINS } from "../Consts";
 
 function renderCheckinButton(firstName, lastName, isCheckedIn, setUpdated) {
@@ -131,7 +126,7 @@ export default function CheckinPage(props) {
   const [checkedIn, setCheckedIn] = useState([]);
   const [checkedOut, setCheckedOut] = useState([]);
   const [gridLayout, setGridLayout] = useState(
-    getSessionStorage("gridLayout") ?? true
+    getLocalStorage("gridLayout") ?? true
   );
   const [updated, setUpdated] = useState(false);
 

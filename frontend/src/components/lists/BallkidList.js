@@ -8,17 +8,12 @@ import {
   Grid,
 } from "@mui/material";
 import { AspectRatio } from "@mui/joy";
-import {
-  Icons,
-  LayoutButtons,
-  getAuthHeader,
-  getSessionStorage,
-} from "../Utils";
+import { Icons, LayoutButtons, getAuthHeader, getLocalStorage } from "../Utils";
 
 export default function BallkidList(props) {
   const [ballkids, setBallkids] = useState([]);
   const [gridLayout, setGridLayout] = useState(
-    getSessionStorage("gridLayout") ?? true
+    getLocalStorage("gridLayout") ?? true
   );
 
   useEffect(() => {

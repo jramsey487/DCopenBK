@@ -16,7 +16,7 @@ import {
   Alerts,
   getAuthHeader,
   getToday,
-  getSessionStorage,
+  getLocalStorage,
   useIsMobile,
 } from "../Utils";
 
@@ -46,7 +46,7 @@ export function RatingAndLabel({ label, rating, setRating }) {
 }
 
 export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
-  const raterId = getSessionStorage("ballkid_id");
+  const raterId = getLocalStorage("ballkid_id");
   const isMobile = useIsMobile();
 
   const [date, setDate] = useState(getToday());

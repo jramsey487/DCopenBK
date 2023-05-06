@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Typography } from "@mui/material";
-import { getAuthHeader, getSessionStorage } from "../Utils";
+import { getAuthHeader, getLocalStorage } from "../Utils";
 import RatingsGrid from "./RatingsGrid";
 import { useSearchParams } from "react-router-dom";
 
 export default function MyRatingsPage(props) {
   const [ratings, setRatings] = useState([]);
-  const ballkidId = getSessionStorage("ballkid_id");
+  const ballkidId = getLocalStorage("ballkid_id");
 
   const [rateeName, setRateeName] = useState();
 
