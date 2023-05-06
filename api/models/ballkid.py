@@ -649,7 +649,7 @@ class CheckinHistory(models.Model):
 
 
 class CheckinAnalytics(models.Model):
-    ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE, unique=True)
+    ballkid = models.OneToOneField(Ballkid, on_delete=models.CASCADE)
     duration = models.DurationField(default=timedelta)
     num_days = models.IntegerField(default=0)
 
