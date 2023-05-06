@@ -135,6 +135,7 @@ export function renderBallkidFinalsHistory(finals) {
             <TableRow>
               <TableCell align="center">Year</TableCell>
               <TableCell align="center">Match Type</TableCell>
+              <TableCell align="center"># Years Experience</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -142,6 +143,9 @@ export function renderBallkidFinalsHistory(finals) {
               <TableRow key={final.id}>
                 <TableCell align="center">{final.year}</TableCell>
                 <TableCell align="center">{final.match_type}</TableCell>
+                <TableCell align="center">
+                  {final.num_years_experience}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

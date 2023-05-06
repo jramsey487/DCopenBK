@@ -841,13 +841,13 @@ function CreateCutHistory({ ballkidsList }) {
               }),
             }).then((response) => {
               if (response.ok) {
-                setSuccessMsg("Rating submitted!");
+                setSuccessMsg("Cut history created!");
                 setBallkid(null);
                 setYear("");
                 setFurthestDay(null);
                 setSelfCut(false);
               } else {
-                setErrorMsg("Error submitting rating.");
+                setErrorMsg("Error creating cut history.");
               }
             });
           }}
