@@ -489,15 +489,20 @@ class Ballkid(models.Model):
         if self.is_cut == value:
             return
 
-        history = CutHistory.objects.create(
-            ballkid=self,
-            year=now.year,
-            furthest_date=now.strftime("%Y-%m-%d"),
-            furthest_day=now.strftime("%A"),
-            is_cut=value,
-            self_cut=self_cut,
-        )
-        history.save()
+        if value:
+            history = CutHistory.objects.create(
+                ballkid=self,
+                year=now.year,
+                furthest_date=now.strftime("%Y-%m-%d"),
+                furthest_day=now.strftime("%A"),
+                self_cut=self_cut,
+            )
+            logger.info(f"[handle_cut_history] Creating cut history {history}")
+            history.save()
+        else:
+            history = CutHistory.objects.get(ballkid=self, year=now.year)
+            logger.info(f"[handle_cut_history] Deleting cut history {history}")
+            history.delete()
 
     def set_field(self, field, value):
         """
@@ -619,13 +624,18 @@ class FinalsHistory(models.Model):
 class CutHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     year = models.IntegerField()
-    is_cut = models.BooleanField(default=False)
     furthest_day = models.CharField(max_length=10, choices=DAY_OF_WEEK.choices)
     furthest_date = models.DateField(null=True)
     self_cut = models.BooleanField(default=False)
 
+    class Meta:
+        unique_together = (
+            "ballkid",
+            "year",
+        )
+
     def __str__(self):
-        return f"{self.ballkid.get_name()} made it to {self.furthest_day} in {self.year} (self-cut: {self.self_cut})"
+        return f"{self.ballkid.get_name()} cut after {self.furthest_day} in {self.year} (self-cut: {self.self_cut})"
 
 
 class CheckinHistory(models.Model):

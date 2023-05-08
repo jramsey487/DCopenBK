@@ -760,7 +760,7 @@ function CreateCutHistory({ ballkidsList }) {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Create Cut History
+          Create/Update Cut History
         </Typography>
       </Grid>
 
@@ -841,18 +841,18 @@ function CreateCutHistory({ ballkidsList }) {
               }),
             }).then((response) => {
               if (response.ok) {
-                setSuccessMsg("Cut history created!");
+                setSuccessMsg("Cut history created/updated!");
                 setBallkid(null);
                 setYear("");
                 setFurthestDay(null);
                 setSelfCut(false);
               } else {
-                setErrorMsg("Error creating cut history.");
+                setErrorMsg("Error creating/updating cut history.");
               }
             });
           }}
         >
-          Create Cut History
+          Create/Update Cut History
         </Button>
       </Grid>
     </Grid>
@@ -1242,7 +1242,7 @@ export default function DebugPage(props) {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
+    fetch("/api/all-list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
         setBallkids(data);
@@ -1266,7 +1266,7 @@ export default function DebugPage(props) {
   }));
 
   const mapped = {
-    "Create Ballkid": <CreateBallkid />,
+    "Create/Update Ballkid": <CreateBallkid />,
     "Create User": <CreateUser />,
     "Create Checkin History": (
       <CreateCheckinHistory ballkidsList={ballkidsList} />
@@ -1278,10 +1278,12 @@ export default function DebugPage(props) {
         captainsList={captainsList}
       />
     ),
-    "Create Finals History": (
+    "Create/Update Finals History": (
       <CreateFinalsHistory ballkidsList={ballkidsList} />
     ),
-    "Create Cut History": <CreateCutHistory ballkidsList={ballkidsList} />,
+    "Create/Update Cut History": (
+      <CreateCutHistory ballkidsList={ballkidsList} />
+    ),
     "Create Rating": (
       <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
     ),

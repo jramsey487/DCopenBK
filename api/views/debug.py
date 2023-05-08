@@ -117,12 +117,14 @@ class CreateCutHistory(APIView):
         furthest_date = day.date()
         furthest_day = datetime.strftime(day, "%A")
 
-        history = CutHistory.objects.create(
+        history, _ = CutHistory.objects.update_or_create(
             ballkid=ballkid,
             year=request.data["year"],
-            furthest_date=furthest_date,
-            furthest_day=furthest_day,
-            self_cut=request.data["self_cut"],
+            defaults={
+                "furthest_date": furthest_date,
+                "furthest_day": furthest_day,
+                "self_cut": request.data["self_cut"],
+            },
         )
 
         return Response(CutHistorySerializer(history).data)
