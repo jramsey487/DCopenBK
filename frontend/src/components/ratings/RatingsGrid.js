@@ -1,8 +1,31 @@
 import React, { useState, useRef } from "react";
-import { Rating, Paper, Link, Popper, Box, Typography } from "@mui/material";
+import {
+  Rating,
+  Paper,
+  Link,
+  Popper,
+  Box,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  Button,
+  IconButton,
+} from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { getLocalStorage, getAuthHeader, Alerts } from "../Utils";
+import { Delete } from "@mui/icons-material";
 
 export default function RatingsGrid(props) {
+  const [open, setOpen] = useState(false);
+  const [deleteRatingId, setDeleteRatingId] = useState();
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const group = getLocalStorage("group");
+
   // Note that a lot of this has been slimmed down from the code sandbox. If
   // this stops working in the future, try adding code back in from:
   // https://codesandbox.io/s/bjupl?file=/demo.js:0-67.
@@ -76,7 +99,31 @@ export default function RatingsGrid(props) {
   const ratingColWidth = 125;
   const commentsColWidth = 350;
 
-  const columns = [
+  var columns =
+    group !== "chairperson"
+      ? []
+      : [
+          {
+            field: "delete",
+            headerName: "Delete",
+            sortable: false,
+            // type: "button",
+            width: 70,
+            renderCell: (rowData) => (
+              <IconButton
+                onClick={() => {
+                  setDeleteRatingId(rowData.id);
+                  setOpen(true);
+                }}
+              >
+                <Delete />
+              </IconButton>
+            ),
+          },
+        ];
+
+  columns = [
+    ...columns,
     {
       field: "date",
       headerName: "Date",
@@ -240,29 +287,76 @@ export default function RatingsGrid(props) {
   }));
 
   return (
-    <div style={{ height: 500 }}>
-      <DataGrid
-        columns={columns}
-        rows={rows}
-        pageSize={25}
-        density="compact"
-        components={{
-          Toolbar: GridToolbar,
-        }}
-        initialState={{
-          filter: {
-            filterModel: {
-              items: [
-                {
-                  columnField: rateeName === "" ? "rater" : "ratee",
-                  operatorValue: "contains",
-                  value: rateeName === "" ? raterName : rateeName,
-                },
-              ],
+    <div>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{"Confirm Rating Deletion"}</DialogTitle>
+        <DialogContent>
+          <Alerts
+            successMsg={successMsg}
+            errorMsg={errorMsg}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+
+          <DialogContentText>
+            Deleting a rating permanently erases all content in the rating,
+            including the overall score, scores in each of the rating
+            subcategories, and all comments. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() =>
+              fetch("/api/delete-rating/" + deleteRatingId, {
+                method: "DELETE",
+                headers: getAuthHeader(),
+              }).then((response) => {
+                if (response.ok) {
+                  setSuccessMsg("Rating deleted!");
+                  setTimeout(() => {
+                    setDeleteRatingId(null);
+                    setOpen(false);
+                    setSuccessMsg("");
+                    props.setUpdated(true);
+                  }, 2000);
+                } else {
+                  setErrorMsg("Error deleting rating.");
+                }
+              })
+            }
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <div style={{ height: 500 }}>
+        <DataGrid
+          columns={columns}
+          rows={rows}
+          pageSize={25}
+          density="compact"
+          components={{
+            Toolbar: GridToolbar,
+          }}
+          initialState={{
+            filter: {
+              filterModel: {
+                items: [
+                  {
+                    columnField: rateeName === "" ? "rater" : "ratee",
+                    operatorValue: "contains",
+                    value: rateeName === "" ? raterName : rateeName,
+                  },
+                ],
+              },
             },
-          },
-        }}
-      />
+          }}
+        />
+      </div>
     </div>
   );
 }

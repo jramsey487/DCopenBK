@@ -15,6 +15,8 @@ export default function RatingsPage(props) {
   const [rateeName, setRateeName] = useState();
   const [raterName, setRaterName] = useState();
 
+  const [updated, setUpdated] = useState(false);
+
   // eslint-disable-next-line no-unused-vars
   const [searchParams, setSearchParams] = useSearchParams();
   const ratee_id = searchParams.get("ratee");
@@ -57,8 +59,9 @@ export default function RatingsPage(props) {
         }
         return response.json();
       })
-      .then((data) => setCalibrated(data));
-  }, [ratee_id, rater_id]);
+      .then((data) => setCalibrated(data))
+      .then(() => setUpdated(false));
+  }, [ratee_id, rater_id, updated]);
 
   return (
     <div className="page">
@@ -94,6 +97,7 @@ export default function RatingsPage(props) {
           ratings={showCalibrated ? calibrated : ratings}
           rateeName={rateeName}
           raterName={raterName}
+          setUpdated={setUpdated}
         />
       )}
 

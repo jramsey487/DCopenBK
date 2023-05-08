@@ -10,15 +10,13 @@ export default function MyRatingsPage(props) {
 
   const [rateeName, setRateeName] = useState();
 
+  const [updated, setUpdated] = useState(false);
+
   // eslint-disable-next-line no-unused-vars
   const [searchParams, setSearchParams] = useSearchParams();
   const ratee_id = searchParams.get("ratee");
 
   useEffect(() => {
-    fetch("/api/my-ratings/" + ballkidId, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setRatings(data));
-
     if (ratee_id) {
       fetch("/api/get-ballkid/" + ratee_id, { headers: getAuthHeader() })
         .then((response) => response.json())
@@ -26,7 +24,12 @@ export default function MyRatingsPage(props) {
     } else {
       setRateeName("");
     }
-  }, [ballkidId, ratee_id]);
+
+    fetch("/api/my-ratings/" + ballkidId, { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setRatings(data))
+      .then(() => setUpdated(false));
+  }, [ballkidId, ratee_id, updated]);
 
   return (
     <div className="page">
@@ -37,7 +40,11 @@ export default function MyRatingsPage(props) {
       {rateeName == null ? (
         ""
       ) : (
-        <RatingsGrid ratings={ratings} rateeName={rateeName} />
+        <RatingsGrid
+          ratings={ratings}
+          rateeName={rateeName}
+          setUpdated={setUpdated}
+        />
       )}
     </div>
   );

@@ -114,8 +114,6 @@ def save_calibration_parameters(cp, calibrated=None):
     scales = cp.reviewer_scales()
     offsets = cp.reviewer_offsets()
 
-    print(calibrated)
-
     keys = improvements.keys() | scales.keys()
     for name in keys:
         improvement = improvements.get(name)
@@ -377,3 +375,13 @@ class GetAverageCalibrationParams(APIView):
             Avg("rater_offset"), Avg("rater_scale")
         )
         return Response(avg_offset)
+
+
+class DeleteRating(APIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsChairperson]
+
+    def delete(self, request, pk, format=None):
+        rating = Rating.objects.get(pk=pk)
+        rating.delete()
+        return Response(status=status.HTTP_200_OK)
