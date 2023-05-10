@@ -337,16 +337,16 @@ class CalibratedRatings(APIView):
         postprocessed = sorted(
             postprocessed,
             key=lambda k: (
-                k["rater_name"].split(" ")[0],
                 k["rater_name"].split(" ")[1],
+                k["rater_name"].split(" ")[0],
             ),
         )
         postprocessed = sorted(postprocessed, key=lambda k: k["date"], reverse=True)
         postprocessed = sorted(
             postprocessed,
             key=lambda k: (
-                k["ratee_name"].split(" ")[0],
                 k["ratee_name"].split(" ")[1],
+                k["ratee_name"].split(" ")[0],
             ),
         )
 

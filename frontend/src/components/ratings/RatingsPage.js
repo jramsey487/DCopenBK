@@ -9,7 +9,7 @@ export default function RatingsPage(props) {
 
   const [calibrated, setCalibrated] = useState([]);
   const [showCalibrated, setShowCalibrated] = useState(false);
-  const [calibrationWarning, setCalibrationWarning] = useState();
+  const [calibrationWarning, setCalibrationWarning] = useState("");
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
 
   const [rateeName, setRateeName] = useState();
@@ -69,7 +69,7 @@ export default function RatingsPage(props) {
         View Ratings
       </Typography>
 
-      <Collapse in={showCalibrationWarning && calibrationWarning !== null}>
+      <Collapse in={showCalibrationWarning && calibrationWarning !== ""}>
         <Alert
           severity="warning"
           onClose={() => setShowCalibrationWarning(false)}
