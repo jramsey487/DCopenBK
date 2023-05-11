@@ -124,6 +124,17 @@ def save_calibration_parameters(cp, calibrated=None):
         ballkid = Ballkid.objects.get(
             first_name=get_first_name(name), last_name=get_last_name(name)
         )
+        num_ratee_ratings = Rating.objects.filter(ratee=ballkid).count()
+        num_rater_ratings = Rating.objects.filter(rater=ballkid).count()
+
+        default_vals = {
+            "ratee_improvement": improvement,
+            "ratee_offset": ballkid_offset,
+            "rater_scale": scale,
+            "rater_offset": offset,
+            "num_ratee_ratings": num_ratee_ratings,
+            "num_rater_ratings": num_rater_ratings,
+        }
 
         if calibrated:
             ratee_calibrated = [val for key, val in calibrated.items() if key[1] == name]
@@ -137,24 +148,15 @@ def save_calibration_parameters(cp, calibrated=None):
             cp, created = CalibrationParams.objects.update_or_create(
                 ballkid=ballkid,
                 defaults={
-                    "ratee_improvement": improvement,
-                    "ratee_offset": ballkid_offset,
+                    **default_vals,
                     "ratee_calibrated_avg": calibrated_avg,
                     "ratee_calibrated_stdev": calibrated_stdev,
-                    "rater_scale": scale,
-                    "rater_offset": offset,
                 },
             )
 
         else:
             cp, created = CalibrationParams.objects.update_or_create(
-                ballkid=ballkid,
-                defaults={
-                    "ratee_improvement": improvement,
-                    "ratee_offset": ballkid_offset,
-                    "rater_scale": scale,
-                    "rater_offset": offset,
-                },
+                ballkid=ballkid, defaults=default_vals
             )
         cp.save()
 

@@ -256,9 +256,7 @@ function RatingSection({ ballkid, isMobile }) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => {
-        setParams(data);
-      });
+      .then((data) => setParams(data));
 
     fetch("/api/average-calibration-parameters", {
       headers: getAuthHeader(),
@@ -284,7 +282,7 @@ function RatingSection({ ballkid, isMobile }) {
             endIcon={<Shortcut />}
             sx={{ my: 1 }}
           >
-            View ratings by this captain
+            View {params["num_rater_ratings"]} ratings by this captain
           </Button>
 
           {params.rater_scale == null ? (
@@ -322,7 +320,7 @@ function RatingSection({ ballkid, isMobile }) {
           endIcon={<Shortcut />}
           sx={{ my: 1, mr: 1 }}
         >
-          View ratings for this ballkid
+          View {params["num_ratee_ratings"]} ratings for this ballkid
         </Button>
         <Button
           size="small"
