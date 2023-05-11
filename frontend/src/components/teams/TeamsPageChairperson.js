@@ -19,7 +19,14 @@ import {
   Switch,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { getAuthHeader, Icons, Alerts } from "../Utils";
+import {
+  getAuthHeader,
+  Icons,
+  Alerts,
+  SearchAndFilter,
+  filterBallkids,
+} from "../Utils";
+import { MARGINS } from "../Consts";
 
 function DraggableBallkidAndIcon(props) {
   const ballkid = props.ballkid;
@@ -106,7 +113,7 @@ function renderBallkidsOnTeam(assigned, teamNum, position, setUpdated) {
   );
 }
 
-export function Team(props) {
+export function Team({ team, assigned, setUpdated }) {
   const positions = ["Back", "Net"];
 
   const [{ isOver }, dropRef] = useDrop({
@@ -118,11 +125,11 @@ export function Team(props) {
         body: JSON.stringify({
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
-          current_team: props.team,
+          current_team: team,
         }),
       })
         .then((response) => response.json())
-        .then(() => props.setUpdated(true)),
+        .then(() => setUpdated(true)),
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
@@ -131,7 +138,17 @@ export function Team(props) {
       <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
         <CardContent>
           <div className="justify">
-            <Typography variant="h6">Team {props.team}</Typography>
+            <div className="sxs">
+              <Typography variant="h6">Team {team}</Typography>
+              <Typography variant="subtitle1">
+                &ensp; (
+                {
+                  assigned.filter((ballkid) => ballkid.current_team === team)
+                    .length
+                }
+                )
+              </Typography>
+            </div>
             <Button
               size="small"
               onClick={(e) => {
@@ -139,11 +156,11 @@ export function Team(props) {
                   method: "PATCH",
                   headers: getAuthHeader(),
                   body: JSON.stringify({
-                    current_team: props.team,
+                    current_team: team,
                   }),
                 })
                   .then((response) => response.json())
-                  .then(() => props.setUpdated(true));
+                  .then(() => setUpdated(true));
               }}
             >
               Clear
@@ -153,12 +170,7 @@ export function Team(props) {
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
               <Typography variant="subtitle1">{position}s:</Typography>
-              {renderBallkidsOnTeam(
-                props.assigned,
-                props.team,
-                position,
-                props.setUpdated
-              )}
+              {renderBallkidsOnTeam(assigned, team, position, setUpdated)}
             </div>
           ))}
         </CardContent>
@@ -212,7 +224,10 @@ function renderAssignButton(ballkid, buttonString, teamNum, setUpdated) {
   );
 }
 
-function Unassigned(props) {
+function Unassigned({ unassigned, teams, setUpdated }) {
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterGroup, setFilterGroup] = useState();
+
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
     drop: (ballkid) =>
@@ -226,62 +241,79 @@ function Unassigned(props) {
         }),
       })
         .then((response) => response.json())
-        .then(() => props.setUpdated(true)),
+        .then(() => setUpdated(true)),
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
   return (
     <div>
-      <Typography variant="h5" sx={{ mt: 2, mb: 2 }}>
-        Unassigned
-      </Typography>
-      {props.unassigned.length === 0 ? (
+      <div className="sxs">
+        <Typography variant="h5" sx={MARGINS}>
+          Unassigned
+        </Typography>
+        <Typography variant="h6" sx={MARGINS}>
+          &ensp; (
+          {filterBallkids(unassigned, searchKeyword, filterGroup).length})
+        </Typography>
+      </div>
+
+      {unassigned.length === 0 ? (
         <Typography variant="body1">
           There are currently no checked in ballkids who are unassigned.
         </Typography>
       ) : (
-        <TableContainer
-          component={Paper}
-          ref={dropRef}
-          elevation={isOver ? 10 : 1}
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Preferred Position</TableCell>
-                <TableCell align="right">Assign To Team</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {props.unassigned.map((ballkid) => (
-                <TableRow key={ballkid.id}>
-                  <TableCell component="th" scope="row">
-                    {<DraggableBallkidAndIcon ballkid={ballkid} />}
-                  </TableCell>
-                  <TableCell>{ballkid.preferred_position}</TableCell>
-                  <TableCell align="right">
-                    {props.teams.map((team) =>
-                      renderAssignButton(ballkid, team, team, props.setUpdated)
-                    )}
-                    {renderAssignButton(
-                      ballkid,
-                      "New Team",
-                      props.teams.length + 1,
-                      props.setUpdated
-                    )}
-                  </TableCell>
+        <div>
+          <SearchAndFilter
+            setSearchKeyword={setSearchKeyword}
+            filterGroup={filterGroup}
+            setFilterGroup={setFilterGroup}
+          />
+
+          <TableContainer
+            component={Paper}
+            ref={dropRef}
+            elevation={isOver ? 10 : 1}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Preferred Position</TableCell>
+                  <TableCell align="right">Assign To Team</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filterBallkids(unassigned, searchKeyword, filterGroup).map(
+                  (ballkid) => (
+                    <TableRow key={ballkid.id}>
+                      <TableCell component="th" scope="row">
+                        {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                      </TableCell>
+                      <TableCell>{ballkid.preferred_position}</TableCell>
+                      <TableCell align="right">
+                        {teams.map((team) =>
+                          renderAssignButton(ballkid, team, team, setUpdated)
+                        )}
+                        {renderAssignButton(
+                          ballkid,
+                          "New Team",
+                          teams.length + 1,
+                          setUpdated
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
       )}
     </div>
   );
 }
 
-function Header(props) {
+function Header() {
   const [showTeams, setShowTeams] = useState(null);
   const showMessage = "Teams are now visible to ballkids and captains.";
   const hideMessage = "Teams are now hidden from ballkids and captains.";
