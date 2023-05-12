@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  CardActionArea,
-  Grid,
-  Box,
-  Switch,
-} from "@mui/material";
-import { AspectRatio } from "@mui/joy";
+
+import Typography from "@mui/material/Typography";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardMedia from "@mui/material/CardMedia";
+import CardActionArea from "@mui/material/CardActionArea";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Switch from "@mui/material/Switch";
+
+import AspectRatio from "@mui/joy/AspectRatio";
+
 import {
   Icons,
   LayoutButtons,

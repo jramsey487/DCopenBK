@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Link } from "@mui/material";
+
+import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
+
 import { DataGrid } from "@mui/x-data-grid";
 
 import { Icons, getAuthHeader } from "../Utils";

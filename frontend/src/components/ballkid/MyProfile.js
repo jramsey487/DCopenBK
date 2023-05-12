@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Grid, Box, Button, Link } from "@mui/material";
-import { Shortcut } from "@mui/icons-material";
+
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
+
+import Shortcut from "@mui/icons-material/Shortcut";
+import AspectRatio from "@mui/joy/AspectRatio";
+
 import {
   getAuthHeader,
   getLocalStorage,
@@ -97,8 +105,17 @@ export default function MyProfile(props) {
         <Icons ballkid={ballkid} margin={0} />
       </div>
       <Grid container>
-        <Grid item xs={12} sm={4} md={3} lg={2}>
-          <Box width="95%" component="img" src={"../" + ballkid.image} />
+        <Grid
+          item
+          xs={12}
+          sm={4}
+          md={3}
+          lg={2}
+          sx={{ pr: 2, pl: isMobile ? 2 : 0, mb: 1 }}
+        >
+          <AspectRatio ratio="1/1">
+            <Box width="95%" component="img" src={"../" + ballkid.image} />
+          </AspectRatio>
         </Grid>
 
         <Grid item xs={12} sm={8} md={9} lg={10}>

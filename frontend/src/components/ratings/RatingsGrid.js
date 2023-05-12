@@ -1,22 +1,23 @@
 import React, { useState, useRef } from "react";
-import {
-  Rating,
-  Paper,
-  Link,
-  Popper,
-  Box,
-  Typography,
-  Dialog,
-  DialogActions,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  Button,
-  IconButton,
-} from "@mui/material";
+
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
+import Rating from "@mui/material/Rating";
+
+import Delete from "@mui/icons-material/Delete";
+
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { getLocalStorage, getAuthHeader, Alerts } from "../Utils";
-import { Delete } from "@mui/icons-material";
 
 export default function RatingsGrid(props) {
   const [open, setOpen] = useState(false);

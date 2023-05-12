@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import {
-  Typography,
-  Link,
-  Switch,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Table,
-  TableCell,
-  TableBody,
-} from "@mui/material";
+
+import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
+import Switch from "@mui/material/Switch";
+import Table from "@mui/material/Table";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
+import TableBody from "@mui/material/TableBody";
+
 import { DataGrid } from "@mui/x-data-grid";
 
 import { getAuthHeader, getTimeStr, getTimeFloat, Icons } from "../Utils";

@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Typography, Grid, Box, Button, Link } from "@mui/material";
-import { Shortcut } from "@mui/icons-material";
-import { AspectRatio } from "@mui/joy";
+
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
+
+import Shortcut from "@mui/icons-material/Shortcut";
+import AspectRatio from "@mui/joy/AspectRatio";
+
 import {
   Icons,
   getAuthHeader,

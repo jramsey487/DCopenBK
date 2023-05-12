@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Typography, Grid, Box } from "@mui/material";
-import { AspectRatio } from "@mui/joy";
+
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+
+import AspectRatio from "@mui/joy/AspectRatio";
 import { Icons, getAuthHeader, useIsMobile } from "../Utils";
 
 export default function BallkidPage(props) {

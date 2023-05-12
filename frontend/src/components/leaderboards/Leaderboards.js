@@ -1,6 +1,12 @@
 import React from "react";
-import { Typography, Link } from "@mui/material";
-import { Beenhere, Place, RateReview, ThumbsUpDown } from "@mui/icons-material";
+
+import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
+
+import Beenhere from "@mui/icons-material/Beenhere";
+import Place from "@mui/icons-material/Place";
+import RateReview from "@mui/icons-material/RateReview";
+import ThumbsUpDown from "@mui/icons-material/ThumbsUpDown";
 
 export default function Leaderboards(props) {
   return (

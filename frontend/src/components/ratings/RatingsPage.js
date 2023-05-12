@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Switch, Link, Collapse, Alert } from "@mui/material";
+import { useSearchParams } from "react-router-dom";
+
+import Typography from "@mui/material/Typography";
+import Switch from "@mui/material/Switch";
+import Link from "@mui/material/Link";
+import Collapse from "@mui/material/Collapse";
+import Alert from "@mui/material/Alert";
+
 import { getAuthHeader } from "../Utils";
 import RatingsGrid from "./RatingsGrid";
-import { useSearchParams } from "react-router-dom";
 
 export default function RatingsPage(props) {
   const [ratings, setRatings] = useState([]);

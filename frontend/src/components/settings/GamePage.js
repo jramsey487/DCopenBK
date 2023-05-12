@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { Typography } from "@mui/material";
+import Typography from "@mui/material/Typography";
 
 export default function GamePage(props) {
   useEffect(() => {
