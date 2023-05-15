@@ -1,58 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
 import Switch from "@mui/material/Switch";
 import Link from "@mui/material/Link";
 import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 
 import { getAuthHeader } from "../Utils";
 import RatingsGrid from "./RatingsGrid";
 
 export default function RatingsPage(props) {
   const [ratings, setRatings] = useState([]);
+  const [year, setYear] = useState(new Date().getFullYear());
 
   const [calibrated, setCalibrated] = useState([]);
   const [showCalibrated, setShowCalibrated] = useState(false);
   const [calibrationWarning, setCalibrationWarning] = useState("");
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
 
-  const [rateeName, setRateeName] = useState();
-  const [raterName, setRaterName] = useState();
-
   const [updated, setUpdated] = useState(false);
 
-  // eslint-disable-next-line no-unused-vars
-  const [searchParams, setSearchParams] = useSearchParams();
-  const ratee_id = searchParams.get("ratee");
-  const rater_id = searchParams.get("rater");
-
   useEffect(() => {
-    fetch("/api/ratings", { headers: getAuthHeader() })
+    fetch(`/api/ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setRatings(data));
 
-    if (ratee_id) {
-      fetch("/api/get-ballkid/" + ratee_id, { headers: getAuthHeader() })
-        .then((response) => response.json())
-        .then((data) => {
-          setRateeName(data.first_name + " " + data.last_name);
-          setRaterName("");
-        });
-    } else if (rater_id) {
-      fetch("/api/get-ballkid/" + rater_id, { headers: getAuthHeader() })
-        .then((response) => response.json())
-        .then((data) => {
-          setRaterName(data.first_name + " " + data.last_name);
-          setRateeName("");
-        });
-    } else {
-      setRateeName("");
-      setRaterName("");
-    }
-
-    fetch("/api/calibrated-ratings", { headers: getAuthHeader() })
+    fetch(`/api/calibrated-ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => {
         if (response.status === 204) {
           setCalibrationWarning(
@@ -67,13 +42,24 @@ export default function RatingsPage(props) {
       })
       .then((data) => setCalibrated(data))
       .then(() => setUpdated(false));
-  }, [ratee_id, rater_id, updated]);
+  }, [year, updated]);
 
   return (
     <div className="page">
       <Typography variant="h4" sx={{ mb: 2 }}>
         View Ratings
       </Typography>
+
+      <Box className="sxs" sx={{ mb: 2 }}>
+        <Typography variant="body1">Showing ratings for: &thinsp;</Typography>
+        <TextField
+          variant="standard"
+          value={year}
+          type="number"
+          sx={{ mx: 2, maxWidth: "100px" }}
+          onChange={(e) => setYear(e.target.value)}
+        />
+      </Box>
 
       <Collapse in={showCalibrationWarning && calibrationWarning !== ""}>
         <Alert
@@ -96,16 +82,10 @@ export default function RatingsPage(props) {
         <Typography variant="body1">Calibrated Ratings</Typography>
       </div>
 
-      {(rateeName == null) | (raterName == null) ? (
-        ""
-      ) : (
-        <RatingsGrid
-          ratings={showCalibrated ? calibrated : ratings}
-          rateeName={rateeName}
-          raterName={raterName}
-          setUpdated={setUpdated}
-        />
-      )}
+      <RatingsGrid
+        ratings={showCalibrated ? calibrated : ratings}
+        setUpdated={setUpdated}
+      />
 
       <Typography variant="body2" sx={{ mt: 1 }}>
         For more information on how calibration is done, see{" "}

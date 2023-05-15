@@ -170,7 +170,7 @@ class RatingsList(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        current_year = datetime.strftime(datetime.now(), "%Y")
+        current_year = self.kwargs.get("year")
 
         return (
             Rating.objects.annotate(
@@ -200,15 +200,14 @@ class MyRatings(generics.ListAPIView):
         current_year = datetime.strftime(datetime.now(), "%Y")
 
         return (
-            Rating.objects.filter(rater_id=pk)
-            .annotate(
+            Rating.objects.annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
                 year=Extract("date", "year"),
                 month=Extract("date", "month"),
                 day=Extract("date", "day"),
             )
-            .filter(year=current_year)
+            .filter(rater_id=pk, year=current_year)
             .order_by("ratee__last_name", "ratee__first_name", "-date")
         )
 
@@ -253,7 +252,7 @@ class CreateRating(APIView):
 class CalibratedRatings(APIView):
     permission_classes = [IsChairperson]
 
-    def get(self, request):
+    def get(self, request, year):
         MIN_RATING = 0.5
         MAX_RATING = 5
         RATING_CATEGORIES = [
@@ -344,6 +343,7 @@ class CalibratedRatings(APIView):
                 "day": rating.date.day,
             }
             for rating in ratings
+            if rating.date.year == year
         ]
 
         # Chain multiple sorts to allow for one of them to be reversed but not the rest.

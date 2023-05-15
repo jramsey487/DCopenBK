@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
 
@@ -8,30 +7,16 @@ import RatingsGrid from "./RatingsGrid";
 
 export default function MyRatingsPage(props) {
   const [ratings, setRatings] = useState([]);
-  const ballkidId = getLocalStorage("ballkid_id");
-
-  const [rateeName, setRateeName] = useState();
-
   const [updated, setUpdated] = useState(false);
 
-  // eslint-disable-next-line no-unused-vars
-  const [searchParams, setSearchParams] = useSearchParams();
-  const ratee_id = searchParams.get("ratee");
+  const ballkidId = getLocalStorage("ballkid_id");
 
   useEffect(() => {
-    if (ratee_id) {
-      fetch("/api/get-ballkid/" + ratee_id, { headers: getAuthHeader() })
-        .then((response) => response.json())
-        .then((data) => setRateeName(data.first_name + " " + data.last_name));
-    } else {
-      setRateeName("");
-    }
-
-    fetch("/api/my-ratings/" + ballkidId, { headers: getAuthHeader() })
+    fetch(`/api/my-ratings/${ballkidId}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setRatings(data))
       .then(() => setUpdated(false));
-  }, [ballkidId, ratee_id, updated]);
+  }, [ballkidId, updated]);
 
   return (
     <div className="page">
@@ -39,15 +24,7 @@ export default function MyRatingsPage(props) {
         View My Ratings
       </Typography>
 
-      {rateeName == null ? (
-        ""
-      ) : (
-        <RatingsGrid
-          ratings={ratings}
-          rateeName={rateeName}
-          setUpdated={setUpdated}
-        />
-      )}
+      <RatingsGrid ratings={ratings} setUpdated={setUpdated} />
     </div>
   );
 }

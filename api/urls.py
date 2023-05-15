@@ -97,8 +97,12 @@ tournament_urls = [
 rating_urls = [
     path("create-rating", CreateRating.as_view(), name="create-rating"),
     path("delete-rating/<int:pk>", DeleteRating.as_view(), name="delete-rating"),
-    path("ratings", RatingsList.as_view(), name="ratings"),
-    path("calibrated-ratings", CalibratedRatings.as_view(), name="calibrated-ratings"),
+    path("ratings/<int:year>", RatingsList.as_view(), name="ratings"),
+    path(
+        "calibrated-ratings/<int:year>",
+        CalibratedRatings.as_view(),
+        name="calibrated-ratings",
+    ),
     path("my-ratings/<int:pk>", MyRatings.as_view(), name="my-ratings"),
     path(
         "calibration-parameters/<int:pk>",

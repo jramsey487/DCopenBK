@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -19,13 +20,18 @@ import Delete from "@mui/icons-material/Delete";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { getLocalStorage, getAuthHeader, Alerts } from "../Utils";
 
-export default function RatingsGrid(props) {
+export default function RatingsGrid({ ratings, setUpdated }) {
   const [open, setOpen] = useState(false);
   const [deleteRatingId, setDeleteRatingId] = useState();
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const group = getLocalStorage("group");
+
+  // eslint-disable-next-line no-unused-vars
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rateeId = searchParams.get("ratee");
+  const raterId = searchParams.get("rater");
 
   // Note that a lot of this has been slimmed down from the code sandbox. If
   // this stops working in the future, try adding code back in from:
@@ -93,10 +99,6 @@ export default function RatingsGrid(props) {
     );
   };
 
-  const ratings = props?.ratings;
-  const rateeName = props.rateeName ?? "";
-  const raterName = props.raterName ?? "";
-
   const ratingColWidth = 125;
   const commentsColWidth = 350;
 
@@ -108,7 +110,6 @@ export default function RatingsGrid(props) {
             field: "delete",
             headerName: "Delete",
             sortable: false,
-            // type: "button",
             width: 70,
             renderCell: (rowData) => (
               <IconButton
@@ -161,6 +162,18 @@ export default function RatingsGrid(props) {
         </Link>
       ),
       valueGetter: (rowData) => rowData.row.rater_name,
+    },
+    {
+      field: "rateeId",
+      headerName: "Ratee ID",
+      valueGetter: (rowData) => rowData.row.ratee,
+      hide: true,
+    },
+    {
+      field: "raterId",
+      headerName: "Rater ID",
+      valueGetter: (rowData) => rowData.row.rater,
+      hide: true,
     },
     {
       field: "rating",
@@ -321,7 +334,7 @@ export default function RatingsGrid(props) {
                     setDeleteRatingId(null);
                     setOpen(false);
                     setSuccessMsg("");
-                    props.setUpdated(true);
+                    setUpdated(true);
                   }, 2000);
                 } else {
                   setErrorMsg("Error deleting rating.");
@@ -348,9 +361,9 @@ export default function RatingsGrid(props) {
               filterModel: {
                 items: [
                   {
-                    columnField: rateeName === "" ? "rater" : "ratee",
+                    columnField: rateeId === null ? "raterId" : "rateeId",
                     operatorValue: "contains",
-                    value: rateeName === "" ? raterName : rateeName,
+                    value: rateeId === null ? raterId : rateeId,
                   },
                 ],
               },
