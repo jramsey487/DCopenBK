@@ -68,7 +68,7 @@ def remove_nonoverlapping_reviewers(data):
     set of reviewers removed from the data in order to make new_data connected.
     """
     graph = {}
-    for (r, p, d) in data:
+    for r, p, d in data:
         graph.setdefault(p, set()).add(r)
 
     g = nx.Graph()
@@ -165,23 +165,29 @@ def save_calibration_parameters(cp, calibrated=None):
         cp.save()
 
 
-class AllRatings(generics.ListAPIView):
+class RatingsList(generics.ListAPIView):
     serializer_class = RatingSerializer
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        return Rating.objects.order_by(
-            "ratee__last_name",
-            "ratee__first_name",
-            "-date",
-            "rater__last_name",
-            "rater__first_name",
-        ).annotate(
-            ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
-            rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
-            year=Extract("date", "year"),
-            month=Extract("date", "month"),
-            day=Extract("date", "day"),
+        current_year = datetime.strftime(datetime.now(), "%Y")
+
+        return (
+            Rating.objects.annotate(
+                ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
+                rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
+                year=Extract("date", "year"),
+                month=Extract("date", "month"),
+                day=Extract("date", "day"),
+            )
+            .filter(year=current_year)
+            .order_by(
+                "ratee__last_name",
+                "ratee__first_name",
+                "-date",
+                "rater__last_name",
+                "rater__first_name",
+            )
         )
 
 
@@ -191,9 +197,10 @@ class MyRatings(generics.ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
+        current_year = datetime.strftime(datetime.now(), "%Y")
+
         return (
             Rating.objects.filter(rater_id=pk)
-            .order_by("ratee__last_name", "ratee__first_name", "-date")
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -201,6 +208,8 @@ class MyRatings(generics.ListAPIView):
                 month=Extract("date", "month"),
                 day=Extract("date", "day"),
             )
+            .filter(year=current_year)
+            .order_by("ratee__last_name", "ratee__first_name", "-date")
         )
 
 
