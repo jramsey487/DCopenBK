@@ -255,6 +255,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
+        "api.rating": {
+            "handlers": ["infoFile", "warningFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
         "accounts": {
             "handlers": ["infoFile", "warningFile"],
             "level": "INFO",

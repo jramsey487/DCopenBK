@@ -1,5 +1,6 @@
 from django.db.models import Value, Avg, F
 from django.db.models.functions import Concat
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -12,6 +13,9 @@ from rcal import RcalWarning, calibrate_parameters
 import networkx as nx
 import warnings
 import statistics
+import logging
+
+logger = logging.getLogger("api.rating")
 
 
 def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
@@ -33,7 +37,9 @@ def dict_to_rcal(data, min_date, rating_name="overall", returnAveraged=True):
         mapped_date = days_per_bucket * ((rating.date - min_date).days // days_per_bucket)
         key = (
             rating.rater.get_name(),
-            rating.ratee.get_name(),
+            rating.ratee.get_name()
+            if rating.date.year == get_current_year()
+            else f"{rating.ratee.get_name()}{rating.date.year}",
             mapped_date,
         )
 
@@ -109,6 +115,8 @@ def calibrate(ratings, rating_name="overall", min_rating=0.5, max_rating=5, stde
 
 
 def save_calibration_parameters(cp, calibrated=None):
+    current_year = get_current_year()
+
     improvements = cp.improvement_rates()
     ballkid_offsets = cp.person_offsets()
     scales = cp.reviewer_scales()
@@ -121,13 +129,25 @@ def save_calibration_parameters(cp, calibrated=None):
         scale = scales.get(name)
         offset = offsets.get(name)
 
-        ballkid = Ballkid.objects.get(
-            first_name=get_first_name(name), last_name=get_last_name(name)
-        )
-        num_ratee_ratings = Rating.objects.filter(ratee=ballkid).count()
-        num_rater_ratings = Rating.objects.filter(rater=ballkid).count()
+        try:
+            ballkid = Ballkid.objects.get(
+                first_name=get_first_name(name), last_name=get_last_name(name)
+            )
+        except ObjectDoesNotExist:
+            logger.warning(f"Could not find ballkid {name}")
+            continue
+
+        num_ratee_ratings = Rating.objects.filter(
+            ratee=ballkid, date__year=current_year
+        ).count()
+        num_rater_ratings = Rating.objects.filter(
+            rater=ballkid, date__year=current_year
+        ).count()
         num_raters = (
-            Rating.objects.filter(ratee=ballkid).values_list("rater").distinct().count()
+            Rating.objects.filter(ratee=ballkid, date__year=current_year)
+            .values_list("rater")
+            .distinct()
+            .count()
         )
 
         default_vals = {
