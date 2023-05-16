@@ -1,5 +1,5 @@
-from django.db.models import Value, Avg, Count, Q, Subquery, OuterRef, Exists
-from django.db.models.functions import Concat, Extract
+from django.db.models import Value, Avg, F
+from django.db.models.functions import Concat
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -173,14 +173,14 @@ class RatingsList(generics.ListAPIView):
         current_year = self.kwargs.get("year")
 
         return (
-            Rating.objects.annotate(
+            Rating.objects.filter(date__year=current_year)
+            .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
-                year=Extract("date", "year"),
-                month=Extract("date", "month"),
-                day=Extract("date", "day"),
+                year=F("date__year"),
+                month=F("date__month"),
+                day=F("date__day"),
             )
-            .filter(year=current_year)
             .order_by(
                 "ratee__last_name",
                 "ratee__first_name",
@@ -200,14 +200,14 @@ class MyRatings(generics.ListAPIView):
         current_year = datetime.strftime(datetime.now(), "%Y")
 
         return (
-            Rating.objects.annotate(
+            Rating.objects.filter(rater_id=pk, date__year=current_year)
+            .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
-                year=Extract("date", "year"),
-                month=Extract("date", "month"),
-                day=Extract("date", "day"),
+                year=F("date__year"),
+                month=F("date__month"),
+                day=F("date__day"),
             )
-            .filter(rater_id=pk, year=current_year)
             .order_by("ratee__last_name", "ratee__first_name", "-date")
         )
 

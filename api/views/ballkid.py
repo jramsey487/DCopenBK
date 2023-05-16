@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,12 +11,11 @@ from django.db.models import (
     F,
     Q,
     Avg,
-    Subquery,
     OuterRef,
     StdDev,
     Exists,
 )
-from django.db.models.functions import TruncDay, TruncDate, Coalesce
+from django.db.models.functions import TruncDay, Coalesce
 from api.serializers import *
 from api.models.ballkid import *
 from api.models.rating import *
@@ -35,6 +35,8 @@ class BallkidsList(generics.ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
+        current_year = datetime.strftime(datetime.now(), "%Y")
+
         ballkids = Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
             "last_name", "first_name"
         )
@@ -44,9 +46,13 @@ class BallkidsList(generics.ListAPIView):
             ballkids
             if not pk
             else ballkids.annotate(
-                num_ratings=Count("ratee"),
+                num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
                 have_rated=Exists(
-                    Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
+                    Rating.objects.filter(
+                        rater_id=pk,
+                        ratee_id=OuterRef("id"),
+                        date__year=current_year,
+                    )
                 ),
             )
         )
@@ -70,6 +76,8 @@ class BallkidsSortedList(generics.ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
+        current_year = datetime.strftime(datetime.now(), "%Y")
+
         ballkids = (
             Ballkid.objects.all()
             .filter(is_active=True, is_cut=False)
@@ -84,9 +92,13 @@ class BallkidsSortedList(generics.ListAPIView):
             ballkids
             if not pk
             else ballkids.annotate(
-                num_ratings=Count("ratee"),
+                num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
                 have_rated=Exists(
-                    Rating.objects.filter(rater_id=pk, ratee_id=OuterRef("id"))
+                    Rating.objects.filter(
+                        rater_id=pk,
+                        ratee_id=OuterRef("id"),
+                        date__year=current_year,
+                    )
                 ),
             )
         )
@@ -146,15 +158,21 @@ class GetBallkid(generics.RetrieveAPIView):
 
     def get_queryset(self):
         me = self.kwargs.get("me")
+        current_year = datetime.strftime(datetime.now(), "%Y")
+
         ballkids = Ballkid.objects.all()
 
         return (
             ballkids
             if not me
             else ballkids.annotate(
-                num_ratings=Count("ratee"),
+                num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
                 have_rated=Exists(
-                    Rating.objects.filter(rater_id=me, ratee_id=OuterRef("id"))
+                    Rating.objects.filter(
+                        rater_id=me,
+                        ratee_id=OuterRef("id"),
+                        date__year=current_year,
+                    )
                 ),
             )
         )
