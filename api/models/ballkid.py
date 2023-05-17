@@ -77,7 +77,7 @@ class Ballkid(models.Model):
     )
     comments = models.TextField(default="", blank=True)
 
-    # TODO: consider adding this in the future but need to 
+    # TODO: consider adding this in the future but need to
     # figure out how to make it play nicely with update
     # class Meta:
     #     unique_together = (
@@ -498,19 +498,23 @@ class Ballkid(models.Model):
             return
 
         if value:
-            history = CutHistory.objects.create(
+            history, created = CutHistory.objects.update_or_create(
                 ballkid=self,
                 year=now.year,
-                furthest_date=now.strftime("%Y-%m-%d"),
-                furthest_day=now.strftime("%A"),
-                self_cut=self_cut,
+                defaults={
+                    "furthest_date": now.strftime("%Y-%m-%d"),
+                    "furthest_day": now.strftime("%A"),
+                    "self_cut": self_cut,
+                },
             )
-            logger.info(f"[handle_cut_history] Creating cut history {history}")
-            history.save()
+            logger.info(f"[handle_cut_history] Created {created} cut history {history}")
         else:
-            history = CutHistory.objects.get(ballkid=self, year=now.year)
-            logger.info(f"[handle_cut_history] Deleting cut history {history}")
-            history.delete()
+            num_deleted, elems = CutHistory.objects.filter(
+                ballkid=self, year=now.year
+            ).delete()
+            logger.info(
+                f"[handle_cut_history] Deleted {num_deleted} cut history entries: {elems}"
+            )
 
     def set_field(self, field, value):
         """
