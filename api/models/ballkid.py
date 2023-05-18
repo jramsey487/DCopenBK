@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime, timedelta
 from api.utils import calc_overlapping_time
-from api.models.schedule import Schedule, Court
+from api.models.schedule import Schedule, COURT
 from django.contrib.auth.models import User
 from api.utils import *
 import logging
@@ -100,7 +100,7 @@ class Ballkid(models.Model):
 
         # TODO: make this more efficient by caching the result and only
         # updating based on the most recent history
-        histories = CheckinHistory.objects.all().filter(ballkid_id=self.id)
+        histories = CheckinHistory.objects.filter(ballkid_id=self.id)
         for history in histories:
             end_time = history.checkout if history.checkout else now
             duration += end_time - history.checkin
@@ -720,7 +720,7 @@ class TeamHistory(models.Model):
 
 class CourtAnalytics(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
-    court = models.CharField(max_length=10, choices=Court.choices)
+    court = models.CharField(max_length=10, choices=COURT.choices)
     count = models.IntegerField(default=0)
     duration = models.DurationField(default=timedelta)
 

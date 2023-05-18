@@ -39,7 +39,7 @@ class CreateSchedule(APIView):
         num_teams = request.data["num_teams"]
         num_hours = request.data["num_hours"]
         num_courts = request.data["num_courts"]
-        courts = [x[0] for x in Court.choices][:num_courts]
+        courts = [x[0] for x in COURT.choices][:num_courts]
 
         team_index = 0
         for hour_index in range(num_hours):
@@ -74,7 +74,7 @@ class AddHour(APIView):
         max_hour = shifts.aggregate(max=Max("start"))["max"]
         next_hour = max_hour + timedelta(hours=1)
 
-        for court in Court.choices:
+        for court in COURT.choices:
             shift = Schedule(
                 start=next_hour,
                 court=court[0],

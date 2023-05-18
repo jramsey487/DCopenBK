@@ -42,9 +42,7 @@ analytics_urls = [
         GetCheckinDuration.as_view(),
         name="get-checkin-duration",
     ),
-    path(
-        "get-checkins/<int:pk>", GetBallkidCheckinHistory.as_view(), name="get-checkins"
-    ),
+    path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
     path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),
     path("get-courts/<int:pk>", GetCourtAnalytics.as_view(), name="get-courts"),

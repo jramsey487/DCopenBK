@@ -19,7 +19,7 @@ from django.db.models.functions import TruncDay, Coalesce
 from api.serializers import *
 from api.models.ballkid import *
 from api.models.rating import *
-from api.models.schedule import Court
+from api.models.schedule import COURT
 from api.utils import *
 from api.permissions import *
 from accounts.views import UpdateCaptainStatus
@@ -363,7 +363,7 @@ class GetPastTeams(APIView):
         return Response(date_to_ballkids, status=status.HTTP_200_OK)
 
 
-class GetBallkidCheckinHistory(APIView):
+class GetCheckinHistory(APIView):
     permission_classes = [IsChairpersonOrSelf]
 
     def get(self, request, pk):
@@ -397,7 +397,7 @@ class GetCourtAnalytics(APIView):
     def get(self, request, pk):
         ballkid = get_object_or_404(Ballkid, id=pk)
         ballkid.recalc_court_analytics()
-        analytics = CourtAnalytics.objects.all().filter(ballkid_id=pk)
+        analytics = CourtAnalytics.objects.filter(ballkid_id=pk).order_by("-duration")
         return Response(CourtAnalyticsSerializer(analytics, many=True).data)
 
 
@@ -491,35 +491,35 @@ class GetCourtLeaderboard(generics.ListAPIView):
                 stadium_duration=Coalesce(
                     Sum(
                         "courtanalytics__duration",
-                        filter=Q(courtanalytics__court=Court.STADIUM),
+                        filter=Q(courtanalytics__court=COURT.STADIUM),
                     ),
                     timedelta(),
                 ),
                 harris_duration=Coalesce(
                     Sum(
                         "courtanalytics__duration",
-                        filter=Q(courtanalytics__court=Court.HARRIS),
+                        filter=Q(courtanalytics__court=COURT.HARRIS),
                     ),
                     timedelta(),
                 ),
                 grandstand_duration=Coalesce(
                     Sum(
                         "courtanalytics__duration",
-                        filter=Q(courtanalytics__court=Court.GRANDSTAND),
+                        filter=Q(courtanalytics__court=COURT.GRANDSTAND),
                     ),
                     timedelta(),
                 ),
                 four_duration=Coalesce(
                     Sum(
                         "courtanalytics__duration",
-                        filter=Q(courtanalytics__court=Court.FOUR),
+                        filter=Q(courtanalytics__court=COURT.FOUR),
                     ),
                     timedelta(),
                 ),
                 five_duration=Coalesce(
                     Sum(
                         "courtanalytics__duration",
-                        filter=Q(courtanalytics__court=Court.FIVE),
+                        filter=Q(courtanalytics__court=COURT.FIVE),
                     ),
                     timedelta(),
                 ),
@@ -542,23 +542,23 @@ class GetAverageCourtLeaderboard(APIView):
                 court_duration=Sum("courtanalytics__duration"),
                 stadium_duration=Sum(
                     "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.STADIUM),
+                    filter=Q(courtanalytics__court=COURT.STADIUM),
                 ),
                 harris_duration=Sum(
                     "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.HARRIS),
+                    filter=Q(courtanalytics__court=COURT.HARRIS),
                 ),
                 grandstand_duration=Sum(
                     "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.GRANDSTAND),
+                    filter=Q(courtanalytics__court=COURT.GRANDSTAND),
                 ),
                 four_duration=Sum(
                     "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.FOUR),
+                    filter=Q(courtanalytics__court=COURT.FOUR),
                 ),
                 five_duration=Sum(
                     "courtanalytics__duration",
-                    filter=Q(courtanalytics__court=Court.FIVE),
+                    filter=Q(courtanalytics__court=COURT.FIVE),
                 ),
             )
             .aggregate(

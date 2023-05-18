@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.db.models import Max
 from django.contrib.auth.models import User, Group
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient, force_authenticate
+from rest_framework.test import APITestCase, APIClient
 from api.models.ballkid import Ballkid, MATCH_TYPE, POSITION, CUT_STATUS
 from api.models.rating import Rating
 from api.serializers import BallkidSerializer
@@ -1097,15 +1097,3 @@ class TestClearTeamView(APITestCase):
         self.assertEqual(POSITION.B, self.ballkid3.finals_position)
         self.assertEqual("", self.ballkid1.finals_team)
         self.assertEqual("", self.ballkid3.finals_team)
-
-
-class TestCalcTotalTimeView(APITestCase):
-    pass
-
-
-class TestCheckinHistoryView(APITestCase):
-    pass
-
-
-class TestCaptainAnalyticsView(APITestCase):
-    pass

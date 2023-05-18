@@ -4,7 +4,7 @@ from datetime import datetime
 from api.utils import *
 
 
-class Court(models.TextChoices):
+class COURT(models.TextChoices):
     STADIUM = "Stadium"
     HARRIS = "Harris"
     GRANDSTAND = "Grandstand"
@@ -16,7 +16,7 @@ class Schedule(models.Model):
     start = models.DateTimeField(default=datetime.now)
     end = models.DateTimeField(blank=True, null=True)
     team = models.IntegerField(default=0)
-    court = models.CharField(max_length=10, choices=Court.choices)
+    court = models.CharField(max_length=10, choices=COURT.choices)
 
     def get_day_str(self):
         return datetime.strftime(self.start, HYPHEN_YEAR_MONTH_DAY_FORMAT_STR)
