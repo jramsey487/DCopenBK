@@ -110,7 +110,7 @@ class Ballkid(models.Model):
 
         analytic, created = CheckinAnalytics.objects.get_or_create(ballkid_id=self.id)
         analytic.duration = duration
-        analytic.num_days = len(days)
+        analytic.count = len(days)
         analytic.save()
 
     def recalc_captain_analytics(self, now=None):
@@ -665,10 +665,10 @@ class CheckinHistory(models.Model):
 class CheckinAnalytics(models.Model):
     ballkid = models.OneToOneField(Ballkid, on_delete=models.CASCADE)
     duration = models.DurationField(default=timedelta)
-    num_days = models.IntegerField(default=0)
+    count = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.ballkid.get_name()} with total checkin time {self.duration} and total checkin days {self.num_days}"
+        return f"{self.ballkid.get_name()} with total checkin time {self.duration} and total checkin days {self.count}"
 
 
 class CaptainHistory(models.Model):

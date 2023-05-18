@@ -413,7 +413,7 @@ class GetCheckinLeaderboard(generics.ListAPIView):
             Ballkid.objects.filter(is_active=True)
             .annotate(
                 checkin_duration=F("checkinanalytics__duration"),
-                checkin_days=F("checkinanalytics__num_days"),
+                checkin_days=F("checkinanalytics__count"),
             )
             .order_by("-checkin_duration")
         )
@@ -428,7 +428,7 @@ class GetAverageCheckinLeaderboard(APIView):
 
         averages = Ballkid.objects.filter(is_active=True).aggregate(
             checkin_avg=Avg("checkinanalytics__duration"),
-            days_avg=Avg("checkinanalytics__num_days"),
+            days_avg=Avg("checkinanalytics__count"),
         )
 
         return Response(averages, status=status.HTTP_200_OK)

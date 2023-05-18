@@ -155,7 +155,7 @@ class TestGetCutHistory(APITestCase):
 class TestGetPastTeams(APITestCase):
     def setUp(self):
         self.client = setup_testing_client()
-        self.captain_client = setup_testing_client(name='captain')
+        self.captain_client = setup_testing_client(name="captain")
 
         self.ballkid1 = Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
         self.ballkid2 = Ballkid.objects.create(first_name="Andrea", last_name="Losue")
@@ -586,7 +586,7 @@ class TestGetCheckinDuration(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual("00:00:00", response.data["duration"])
-        self.assertEqual(0, response.data["num_days"])
+        self.assertEqual(0, response.data["count"])
 
     def test_mult_ballkids_mult_histories(self):
         history1 = CheckinHistory.objects.create(
@@ -621,7 +621,7 @@ class TestGetCheckinDuration(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual("15:00:00", response.data["duration"])
-        self.assertEqual(2, response.data["num_days"])
+        self.assertEqual(2, response.data["count"])
 
     def test_mult_ballkids_mult_histories_past_midnight_more_than_24_hrs(self):
         history1 = CheckinHistory.objects.create(
@@ -656,7 +656,7 @@ class TestGetCheckinDuration(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual("1 01:00:00", response.data["duration"])
-        self.assertEqual(2, response.data["num_days"])
+        self.assertEqual(2, response.data["count"])
 
 
 class TestGetCaptainAnalytics(APITestCase):
@@ -1142,6 +1142,21 @@ class TestGetCheckinLeaderboard(APITestCase):
     def setUp(self):
         self.client = setup_testing_client()
 
+        self.ballkid1 = Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
+        self.ballkid2 = Ballkid.objects.create(first_name="Andrea", last_name="Losue")
+        self.ballkid3 = Ballkid.objects.create(first_name="Joe", last_name="Losue")
+        self.ballkid4 = Ballkid.objects.create(
+            first_name="Joseph", last_name="Iosue", is_active=False
+        )
 
-    def test_something(self):
-        pass
+    def test_nohistories(self):
+        response = self.client.get(
+            reverse("get-checkin-leaderboard"),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(3, CheckinAnalytics.objects.count())
+        for analytic in CheckinAnalytics.objects.all():
+            self.assertEqual(0, analytic.count)
+            self.assertEqual(timedelta(), analytic.duration)
