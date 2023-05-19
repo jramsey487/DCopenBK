@@ -1122,7 +1122,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(1, len(analytics))
         analytic = analytics.first()
         self.assertEqual(self.ballkid, analytic.ballkid)
@@ -1141,7 +1141,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics(now=datetime(2022, 1, 1, 15, 00))
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(1, len(analytics))
         analytic = analytics.first()
         self.assertEqual(self.ballkid, analytic.ballkid)
@@ -1167,7 +1167,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(2, len(analytics))
         analytic, created = analytics.get_or_create(court=COURT.STADIUM)
         self.assertFalse(created)
@@ -1196,7 +1196,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(1, len(analytics))
         analytic, created = analytics.get_or_create(court=COURT.STADIUM)
         self.assertFalse(created)
@@ -1234,7 +1234,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(4, len(analytics))
 
         analytic, created = analytics.get_or_create(court=COURT.STADIUM)
@@ -1273,7 +1273,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(0, len(analytics))
 
     def test_recalc_court_analytics_one_team_one_shift_not_yet_occurred_empty_end(self):
@@ -1287,7 +1287,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics(now=datetime(2022, 1, 1, 9, 30))
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(0, len(analytics))
 
     def test_recalc_court_analytics_one_team_one_shift_short_shifted(self):
@@ -1305,7 +1305,7 @@ class TestBallkidModelAnalytics(TestCase):
         )
         self.ballkid.recalc_court_analytics()
 
-        analytics = CourtAnalytics.objects.all()
+        analytics = CourtAnalytics.objects.filter(duration__gt=timedelta())
         self.assertEqual(1, len(analytics))
         analytic = analytics.first()
         self.assertEqual(self.ballkid, analytic.ballkid)

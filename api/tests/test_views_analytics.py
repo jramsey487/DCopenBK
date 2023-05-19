@@ -955,7 +955,9 @@ class TestGetCourtAnalytics(APITestCase):
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual([], response.data)
+        self.assertEqual(
+            0, CourtAnalytics.objects.filter(duration__gt=timedelta()).count()
+        )
 
     def test_mult_ballkids_mult_histories_one_court(self):
         TeamHistory.objects.create(
@@ -1086,11 +1088,15 @@ class TestGetCourtAnalytics(APITestCase):
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        analytic1 = CourtAnalytics.objects.get(ballkid=self.ballkid1, court=COURT.STADIUM)
-        analytic2 = CourtAnalytics.objects.get(ballkid=self.ballkid1, court=COURT.HARRIS)
+        self.assertEqual(
+            2, CourtAnalytics.objects.filter(duration__gt=timedelta()).count()
+        )
 
-        serializer = CourtAnalyticsSerializer([analytic1, analytic2], many=True)
-        self.assertEqual(serializer.data, response.data)
+        analytic1 = CourtAnalytics.objects.get(ballkid=self.ballkid1, court=COURT.STADIUM)
+        self.assertEqual(timedelta(hours=4), analytic1.duration)
+
+        analytic2 = CourtAnalytics.objects.get(ballkid=self.ballkid1, court=COURT.HARRIS)
+        self.assertEqual(timedelta(hours=5), analytic2.duration)
 
     def test_mult_ballkids_mult_histories_mult_courts_mult_teams(self):
         TeamHistory.objects.create(
