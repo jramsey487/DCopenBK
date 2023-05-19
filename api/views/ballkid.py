@@ -439,13 +439,19 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
+        current_year = get_current_year()
+
         return (
             Ballkid.objects.filter(is_active=True)
             .filter(Q(is_captain=True) | Q(is_chairperson=True))
             .annotate(
-                num_ratings=Count("rater"),
-                raw_avg=Avg("rater__rating"),
-                raw_stdev=StdDev("rater__rating"),
+                num_ratings=Count("rater", filter=Q(rater__date__year=current_year)),
+                raw_avg=Coalesce(
+                    Avg("rater__rating", filter=Q(rater__date__year=current_year)), 0.0
+                ),
+                raw_stdev=Coalesce(
+                    StdDev("rater__rating", filter=Q(rater__date__year=current_year)), 0.0
+                ),
                 scale=F("calibrationparams__rater_scale"),
                 offset=F("calibrationparams__rater_offset"),
             )
@@ -458,12 +464,18 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
+        current_year = get_current_year()
+
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
-                num_ratings=Coalesce(Count("ratee"), 0),
-                raw_avg=Coalesce(Avg("ratee__rating"), 0.0),
-                raw_stdev=Coalesce(StdDev("ratee__rating"), 0.0),
+                num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
+                raw_avg=Coalesce(
+                    Avg("ratee__rating", filter=Q(ratee__date__year=current_year)), 0.0
+                ),
+                raw_stdev=Coalesce(
+                    StdDev("ratee__rating", filter=Q(ratee__date__year=current_year)), 0.0
+                ),
                 calibrated_avg=Coalesce(
                     F("calibrationparams__ratee_calibrated_avg"), 0.0
                 ),
@@ -471,7 +483,7 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
                     F("calibrationparams__ratee_calibrated_stdev"), 0.0
                 ),
             )
-            .order_by("-calibrated_avg")
+            .order_by("-calibrated_avg", "-raw_avg")
         )
 
 
@@ -482,6 +494,7 @@ class GetCourtLeaderboard(generics.ListAPIView):
     def get_queryset(self):
         for ballkid in Ballkid.objects.filter(is_active=True):
             ballkid.recalc_court_analytics()
+            ballkid.recalc_checkin_analytics()
 
         return (
             Ballkid.objects.filter(is_active=True)
@@ -534,6 +547,7 @@ class GetAverageCourtLeaderboard(APIView):
     def get(self, request):
         for ballkid in Ballkid.objects.filter(is_active=True):
             ballkid.recalc_court_analytics()
+            ballkid.recalc_checkin_analytics()
 
         averages = (
             Ballkid.objects.filter(is_active=True)
@@ -562,13 +576,13 @@ class GetAverageCourtLeaderboard(APIView):
                 ),
             )
             .aggregate(
-                checkin_avg=Avg("checkin_duration"),
-                court_avg=Avg("court_duration"),
-                stadium_avg=Avg("stadium_duration"),
-                harris_avg=Avg("harris_duration"),
-                grandstand_avg=Avg("grandstand_duration"),
-                four_avg=Avg("four_duration"),
-                five_avg=Avg("five_duration"),
+                checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
+                court_avg=Coalesce(Avg("court_duration"), timedelta()),
+                stadium_avg=Coalesce(Avg("stadium_duration"), timedelta()),
+                harris_avg=Coalesce(Avg("harris_duration"), timedelta()),
+                grandstand_avg=Coalesce(Avg("grandstand_duration"), timedelta()),
+                four_avg=Coalesce(Avg("four_duration"), timedelta()),
+                five_avg=Coalesce(Avg("five_duration"), timedelta()),
             )
         )
 

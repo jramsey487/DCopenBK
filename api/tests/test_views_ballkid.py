@@ -7,6 +7,7 @@ from api.models.ballkid import Ballkid, MATCH_TYPE, POSITION, CUT_STATUS
 from api.models.rating import Rating
 from api.serializers import BallkidSerializer
 from api.tests.utils import *
+from datetime import datetime, timedelta
 
 
 class TestBallkidListView(APITestCase):
@@ -40,6 +41,9 @@ class TestBallkidListView(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer.data, response.data)
 
+    def test_all_list(self):
+        pass
+
     def test_sorted_list(self):
         response = self.client.get(reverse("sorted-list"))
         ballkids = [self.ballkid2, self.ballkid1, self.ballkid3]
@@ -71,6 +75,18 @@ class TestBallkidListView(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer.data, response.data)
+
+    def test_list_ratings(self):
+        pass
+
+    def test_list_ratings_excludes_prev_years(self):
+        pass
+
+    def test_sorted_list_ratings(self):
+        pass
+
+    def test_sorted_list_ratings_excludes_prev_years(self):
+        pass
 
 
 class TestCreateBallkidView(APITestCase):
@@ -192,6 +208,36 @@ class TestGetBallkidView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_exists_ratings(self):
+        response = self.client.get(
+            reverse(
+                "get-ballkid-ratings",
+                kwargs={"pk": self.ballkid1.id, "me": self.captain1.id},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(True, response.data["have_rated"])
+        self.assertEqual(2, response.data["num_ratings"])
+
+        response = self.client.get(
+            reverse(
+                "get-ballkid-ratings",
+                kwargs={"pk": self.ballkid2.id, "me": self.captain2.id},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(False, response.data["have_rated"])
+        self.assertEqual(0, response.data["num_ratings"])
+
+    def test_exists_ratings_exclude_prev_years(self):
+        Rating.objects.create(
+            rater=self.captain2,
+            ratee=self.ballkid1,
+            rating=5,
+            date=datetime.today() - timedelta(days=365),
+        )
+
         response = self.client.get(
             reverse(
                 "get-ballkid-ratings",

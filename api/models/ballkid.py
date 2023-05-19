@@ -108,10 +108,9 @@ class Ballkid(models.Model):
             day = datetime.strftime(history.start, HYPHEN_YEAR_MONTH_DAY_FORMAT_STR)
             days.add(day)
 
-        analytic, created = CheckinAnalytics.objects.get_or_create(ballkid_id=self.id)
-        analytic.duration = duration
-        analytic.count = len(days)
-        analytic.save()
+        analytic, created = CheckinAnalytics.objects.update_or_create(
+            ballkid_id=self.id, defaults={"duration": duration, "count": len(days)}
+        )
 
     def recalc_captain_analytics(self, now=None):
         """
@@ -204,8 +203,8 @@ class Ballkid(models.Model):
                 analytic.save()
 
     def recalc_court_analytics(self, now=None):
-        counts = {}
-        times = {}
+        counts = {court: 0 for court, _ in COURT.choices}
+        times = {court: timedelta() for court, _ in COURT.choices}
 
         if now is None:
             now = datetime.now()
@@ -232,23 +231,16 @@ class Ballkid(models.Model):
                 # ONLY if there is non-zero overlapping time, then log the court to the
                 # ballkid's CourtAnalytics (counts and durations)
                 if overlapping:
-                    if court not in counts:
-                        counts[court] = 0
-                    if court not in times:
-                        times[court] = timedelta()
-
                     counts[court] += 1
                     times[court] += overlapping
 
         # Create or update the row in CourtAnalytics for the (ballkid, court) pair
         for court in counts:
-            analytic, created = CourtAnalytics.objects.get_or_create(
-                ballkid_id=self.id, court=court
+            analytic, created = CourtAnalytics.objects.update_or_create(
+                ballkid_id=self.id,
+                court=court,
+                defaults={"count": counts[court], "duration": times[court]},
             )
-            analytic.count = counts[court]
-            analytic.duration = times[court]
-            analytic.save()
-
             logger.info(
                 f"[recalc-court-analytics] For ballkid {self.id}, created {created} analytic {analytic}"
             )
