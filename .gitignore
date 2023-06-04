@@ -1,3 +1,7 @@
+static/
+staticfiles/
+build/
+
 *.pyc
 .DS_Store
 __pycache__/
