@@ -32,8 +32,8 @@ function isSameDay(checkin, date) {
 
 function getCheckinTime(history, date) {
   for (const shift of history) {
-    if (isSameDay(shift["checkin"], date)) {
-      return getTimeFloat(shift["checkin"].toString().split("T")[1]);
+    if (isSameDay(shift["start"], date)) {
+      return getTimeFloat(shift["start"].toString().split("T")[1]);
     }
   }
   return 0;
@@ -41,7 +41,7 @@ function getCheckinTime(history, date) {
 
 function getCheckinDuration(history, date) {
   for (const shift of history) {
-    if (isSameDay(shift["checkin"], date)) {
+    if (isSameDay(shift["start"], date)) {
       if (shift["duration"] !== "00:00:00") {
         return getTimeFloat(shift["duration"]);
       }
