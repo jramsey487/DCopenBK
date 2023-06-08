@@ -21,6 +21,8 @@ env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+BACKEND_DIR = BASE_DIR  # rename variable for clarity
+FRONTEND_DIR = BASE_DIR / "frontend"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -42,6 +44,12 @@ CSRF_TRUSTED_ORIGINS = ["https://citiopenballkids.fly.dev"]
 # Application definition
 
 INSTALLED_APPS = [
+    # Third-party apps
+    "rest_framework",
+    "rest_framework.authtoken",
+    "whitenoise.runserver_nostatic",
+    "djoser",
+    "import_export",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -49,16 +57,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third-party apps
-    "rest_framework",
-    "rest_framework.authtoken",
-    "whitenoise.runserver_nostatic",
-    "djoser",
-    "import_export",
     # Local apps
     "api.apps.ApiConfig",
     "accounts.apps.AccountsConfig",
-    "build",
+    # "build",
 ]
 
 REST_FRAMEWORK = {
@@ -71,8 +73,8 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -86,7 +88,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # "DIRS": [],
-        "DIRS": [BASE_DIR / "build"],
+        "DIRS": [FRONTEND_DIR / "build"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -192,9 +194,10 @@ USE_I18N = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "build/static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [FRONTEND_DIR / "build/static"]
+# STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR / "static"
 # if DEBUG:
 #     STATICFILES_DIRS = [BASE_DIR / "static"]
 # else:
@@ -203,6 +206,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # STATICFILES_DIRS = [BASE_DIR / "static"]  # new
 # STATIC_ROOT = BASE_DIR / "staticfiles"  # new
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+WHITENOISE_ROOT = FRONTEND_DIR / "build/root"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
