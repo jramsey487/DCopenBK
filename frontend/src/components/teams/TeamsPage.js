@@ -10,7 +10,7 @@ import Link from "@mui/material/Link";
 import { getAuthHeader, Icons } from "../Utils";
 
 function Team(props) {
-  const positions = ["Back", "Net"];
+  const positions = ["Net", "Back"];
 
   return (
     <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>

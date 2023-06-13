@@ -115,7 +115,7 @@ function renderBallkidsOnTeam(assigned, teamNum, position, setUpdated) {
 }
 
 export function Team({ team, assigned, setUpdated }) {
-  const positions = ["Back", "Net"];
+  const positions = ["Net", "Back"];
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",

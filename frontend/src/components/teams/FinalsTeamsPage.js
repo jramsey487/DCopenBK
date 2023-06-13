@@ -11,7 +11,7 @@ import { getAuthHeader, Icons } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 
 function Team(props) {
-  const positions = ["Back", "Net"];
+  const positions = ["Net", "Back"];
 
   return (
     <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
