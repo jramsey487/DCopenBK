@@ -37,7 +37,7 @@ class CreateSchedule(APIView):
         num_teams = request.data["num_teams"]
         num_hours = request.data["num_hours"]
         num_courts = request.data["num_courts"]
-        courts = [x[0] for x in COURT.choices][:num_courts]
+        courts = NUM_COURTS_TO_COURTS[num_courts]
 
         team_index = 0
         for hour_index in range(num_hours):

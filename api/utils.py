@@ -2,6 +2,14 @@ from datetime import datetime, timedelta
 
 DEFAULT_IMAGE_FILE = "static/img/none.jpg"
 
+NUM_COURTS_TO_COURTS = {
+    5: ["Stadium", "Court 4", "Harris", "Court 5", "Grandstand"],
+    4: ["Stadium", "Court 4", "Harris", "Grandstand"],
+    3: ["Stadium", "Harris", "Grandstand"],
+    2: ["Stadium", "Harris"],
+    1: ["Stadium"],
+}
+
 HYPHEN_YEAR_MONTH_DAY_FORMAT_STR = "%Y-%m-%d"
 SLASH_MONTH_DAY_YEAR_FORMAT_STR = "%m/%d/%Y"
 WEEKDAY_MONTH_DAY_FORMAT_STR = "%a, %b %-d"

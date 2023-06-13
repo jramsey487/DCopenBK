@@ -20,7 +20,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { getAuthHeader, getToday } from "../Utils";
 
-function CreateSchedule(props) {
+function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);
   const [numTeams, setNumTeams] = useState(10);
   const [startHour, setStartHour] = useState("12:00");
@@ -103,7 +103,7 @@ function CreateSchedule(props) {
                 method: "POST",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
-                  day: props.date,
+                  day: date,
                   start_hour: startHour,
                   num_courts: numCourts,
                   num_hours: numHours,
@@ -111,7 +111,7 @@ function CreateSchedule(props) {
                 }),
               })
                 .then((response) => response.json())
-                .then((data) => props.setUpdated(true));
+                .then((data) => setUpdated(true));
             }}
           >
             Create Schedule
@@ -129,8 +129,7 @@ function dayHourToStr(day_hour) {
   return hour + suffix;
 }
 
-function ScheduleTable(props) {
-  const shifts = props.shifts;
+function ScheduleTable({ shifts, date, setUpdated }) {
   const hourCourtToTeam = Object.assign(
     {},
     ...shifts.map((shift) => ({
@@ -184,14 +183,14 @@ function ScheduleTable(props) {
                           method: "PATCH",
                           headers: getAuthHeader(),
                           body: JSON.stringify({
-                            day: props.date,
+                            day: date,
                             hour: hour,
                             court: court,
                             team: e.target.value,
                           }),
                         })
                           .then((response) => response.json())
-                          .then((data) => props.setUpdated(true))
+                          .then((data) => setUpdated(true))
                       }
                     />
                   </TableCell>
@@ -208,12 +207,12 @@ function ScheduleTable(props) {
             method: "POST",
             headers: getAuthHeader(),
             body: JSON.stringify({
-              day: props.date,
+              day: date,
               num_courts: courts.length,
             }),
           })
             .then((response) => response.json())
-            .then((data) => props.setUpdated(true));
+            .then((data) => setUpdated(true));
         }}
       >
         <Add />

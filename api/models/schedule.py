@@ -6,10 +6,10 @@ from api.utils import *
 
 class COURT(models.TextChoices):
     STADIUM = "Stadium"
-    HARRIS = "Harris"
-    GRANDSTAND = "Grandstand"
     FOUR = "Court 4"
+    HARRIS = "Harris"
     FIVE = "Court 5"
+    GRANDSTAND = "Grandstand"
 
 
 class Schedule(models.Model):

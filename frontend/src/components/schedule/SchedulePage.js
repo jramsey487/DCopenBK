@@ -22,8 +22,7 @@ function dayHourToStr(day_hour) {
   return hour + suffix;
 }
 
-function ScheduleTable(props) {
-  const shifts = props.shifts;
+function ScheduleTable({ shifts }) {
   const hourCourtToTeam = Object.assign(
     {},
     ...shifts.map((shift) => ({
@@ -75,15 +74,13 @@ function ScheduleTable(props) {
 
 export default function SchedulePage(props) {
   const [shifts, setShifts] = useState([]);
-  const [updated, setUpdated] = useState(false);
   const [date, setDate] = useState(getToday());
 
   useEffect(() => {
     fetch("/api/get-schedule?day=" + date, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setShifts(data))
-      .then(() => setUpdated(false));
-  }, [date, updated]);
+      .then((data) => setShifts(data));
+  }, [date]);
 
   return (
     <div className="page">
@@ -110,7 +107,7 @@ export default function SchedulePage(props) {
       {shifts.length === 0 ? (
         <Typography variant="body1">No schedule found.</Typography>
       ) : (
-        <ScheduleTable shifts={shifts} date={date} setUpdated={setUpdated} />
+        <ScheduleTable shifts={shifts} />
       )}
     </div>
   );
