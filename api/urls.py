@@ -9,6 +9,7 @@ ballkid_urls = [
     path("list", BallkidsList.as_view(), name="list"),
     path("list/<int:pk>", BallkidsList.as_view(), name="list-ratings"),
     path("all-list", AllBallkidsList.as_view(), name="all-list"),
+    path("all-sorted-list", AllBallkidsSortedList.as_view(), name="all-sorted-list"),
     path("sorted-list", BallkidsSortedList.as_view(), name="sorted-list"),
     path(
         "sorted-list/<int:pk>", BallkidsSortedList.as_view(), name="sorted-list-ratings"

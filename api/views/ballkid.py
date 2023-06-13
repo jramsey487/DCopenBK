@@ -70,6 +70,18 @@ class AllBallkidsList(generics.ListAPIView):
         )
 
 
+class AllBallkidsSortedList(generics.ListAPIView):
+    serializer_class = BallkidSerializer
+    permission_classes = [IsChairperson]
+
+    def get_queryset(self):
+        return (
+            Ballkid.objects.all()
+            .filter(is_active=True)
+            .order_by("is_captain", "num_years_experience", "last_name", "first_name")
+        )
+
+
 class BallkidsSortedList(generics.ListAPIView):
     serializer_class = BallkidSerializer
     permission_classes = [IsAuthenticated]
@@ -81,10 +93,7 @@ class BallkidsSortedList(generics.ListAPIView):
         ballkids = (
             Ballkid.objects.all()
             .filter(is_active=True, is_cut=False)
-            .order_by(
-                "-is_captain",
-                "-num_years_experience",
-            )
+            .order_by("-is_captain", "-num_years_experience", "last_name", "first_name")
         )
         logger.info(f"[BallkidsSortedList] pk: {pk}; ballkids: {ballkids}")
 

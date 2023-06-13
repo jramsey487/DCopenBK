@@ -380,7 +380,7 @@ export default function CutPage(props) {
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
 
   useEffect(() => {
-    fetch("/api/all-list", { headers: getAuthHeader() })
+    fetch("/api/all-sorted-list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
         setActive(data.filter((ballkid) => !ballkid.is_cut));
