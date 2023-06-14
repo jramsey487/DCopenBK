@@ -396,7 +396,9 @@ class GetCaptainAnalytics(APIView):
     def get(self, request, pk):
         ballkid = get_object_or_404(Ballkid, id=pk)
         ballkid.recalc_captain_analytics()
-        analytics = CaptainAnalytics.objects.filter(ballkid_id=pk).order_by("-duration")
+        analytics = CaptainAnalytics.objects.filter(
+            ballkid_id=pk, duration__gte=timedelta(minutes=30)
+        ).order_by("-duration")
         return Response(CaptainAnalyticsSerializer(analytics, many=True).data)
 
 

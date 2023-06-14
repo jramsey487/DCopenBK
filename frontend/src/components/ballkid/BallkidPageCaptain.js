@@ -83,7 +83,7 @@ export default function BallkidPageCaptain(props) {
           </Typography>
           <br />
 
-          {(ballkid.is_cut === "true") | !ballkid.is_active ? (
+          {ballkid.is_cut | !ballkid.is_active ? (
             ""
           ) : (
             <div>

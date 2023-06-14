@@ -27,6 +27,12 @@ import ReportOff from "@mui/icons-material/ReportOff";
 import Shortcut from "@mui/icons-material/Shortcut";
 
 import RatingDialog from "../ratings/RatingDialog";
+import { CheckinHistoryChart } from "./CheckinHistoryChart";
+import { CaptainHistoryChart } from "./CaptainHistoryChart";
+import { CourtHistoryChart } from "./CourtHistoryChart";
+import { RaterParamsChart } from "./RaterParamsChart";
+import { BallkidParamsChart } from "./BallkidParamsChart";
+
 import {
   Icons,
   getAuthHeader,
@@ -34,12 +40,9 @@ import {
   renderBallkidCutHistory,
   renderBallkidFinalsHistory,
   useIsMobile,
+  getTimeFloat,
+  getTimeStr,
 } from "../Utils";
-import { CheckinHistoryChart } from "./CheckinHistoryChart";
-import { CaptainHistoryChart } from "./CaptainHistoryChart";
-import { CourtHistoryChart } from "./CourtHistoryChart";
-import { RaterParamsChart } from "./RaterParamsChart";
-import { BallkidParamsChart } from "./BallkidParamsChart";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
   NUM_RATINGS_WARNING_THRESHOLD,
@@ -696,7 +699,7 @@ export default function BallkidPageChairperson(props) {
           {renderPreferredPosition(ballkid, setUpdated, isMobile)}
           <br />
 
-          {(ballkid.is_cut === "true") | !ballkid.is_active ? (
+          {ballkid.is_cut | !ballkid.is_active ? (
             ""
           ) : (
             <div>
@@ -706,6 +709,7 @@ export default function BallkidPageChairperson(props) {
               <br />
             </div>
           )}
+
           {!ballkid.is_active ? (
             ""
           ) : (
@@ -715,37 +719,42 @@ export default function BallkidPageChairperson(props) {
       </Grid>
       <br />
 
-      <RatingSection ballkid={ballkid} isMobile={isMobile} />
-
       {!ballkid.is_active ? (
         ""
       ) : (
-        <Grid container>
-          <Grid item xs={12}>
-            <br />
-            <Typography variant="h6">Analytics:</Typography>
-          </Grid>
+        <div>
+          <RatingSection ballkid={ballkid} isMobile={isMobile} />
 
-          <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-            <CheckinHistoryChart histories={checkins} totalTime={totalTime} />
-          </Grid>
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Analytics:
+          </Typography>
+          <Typography variant="body1">
+            Total time checked in: {getTimeStr(getTimeFloat(totalTime))}
+          </Typography>
 
           {isMobile ? (
             ""
           ) : (
-            <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CourtHistoryChart histories={courts} />
+            <Grid container>
+              <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
+                <CheckinHistoryChart
+                  histories={checkins}
+                  totalTime={totalTime}
+                />
+              </Grid>
+
+              <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
+                <CourtHistoryChart histories={courts} />
+              </Grid>
+
+              <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
+                <CaptainHistoryChart histories={captains} />
+              </Grid>
+
+              {/* <MatchHistoryChart histories={matches} /> */}
             </Grid>
           )}
-          {isMobile ? (
-            ""
-          ) : (
-            <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CaptainHistoryChart histories={captains} />
-            </Grid>
-          )}
-          {/* <MatchHistoryChart histories={matches} /> */}
-        </Grid>
+        </div>
       )}
 
       <Grid container>

@@ -58,7 +58,7 @@ export default function BallkidPage(props) {
             Preferred position: {ballkid.preferred_position}
           </Typography>
           <br />
-          {(ballkid.is_cut === "true") | !ballkid.is_active ? (
+          {ballkid.is_cut | !ballkid.is_active ? (
             ""
           ) : (
             <div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Typography } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -57,5 +58,13 @@ export function CaptainHistoryChart(props) {
       },
     ],
   };
-  return <Bar options={options} data={data} />;
+  return (
+    <div>
+      <Bar options={options} data={data} />
+      <Typography variant="body2">
+        Note: The captain history chart only displays captains with at least 30
+        minutes of total time with this ballkid.
+      </Typography>
+    </div>
+  );
 }

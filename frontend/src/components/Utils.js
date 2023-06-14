@@ -22,7 +22,7 @@ import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
 
 import RatingDialog from "./ratings/RatingDialog";
-import { END_DATE, START_DATE, ICON_DICT } from "./Consts";
+import { END_DATE, START_DATE, ICON_DICT, MARGINS } from "./Consts";
 
 export function Icons({ ballkid, margin }) {
   if (!ballkid.is_captain && ballkid.num_years_experience > 0) {
@@ -234,12 +234,9 @@ export function filterBallkids(ballkids, searchKeyword, filterGroup) {
 
 export function renderBallkidFinalsHistory(finals) {
   return (
-    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 3 }}>
-      {/* <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}> */}
+    <Grid item xs={12} sm={6.5} sx={MARGINS}>
       <Typography variant="h6">Previous Years' Finals:</Typography>
-      {/* </AccordionSummary>
-        <AccordionDetails> */}
+
       <TableContainer>
         <Table size="small">
           <TableHead>
@@ -258,16 +255,15 @@ export function renderBallkidFinalsHistory(finals) {
           </TableBody>
         </Table>
       </TableContainer>
-      {/* </AccordionDetails>
-      </Accordion> */}
     </Grid>
   );
 }
 
 export function renderBallkidCutHistory(cuts) {
   return (
-    <Grid item xs={12} sm={6} md={4} sx={{ my: 1, px: 3 }}>
+    <Grid item xs={12} sm={6.5} sx={MARGINS}>
       <Typography variant="h6">Cut History:</Typography>
+
       <TableContainer>
         <Table size="small">
           <TableHead>
