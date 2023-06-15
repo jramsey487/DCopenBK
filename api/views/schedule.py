@@ -89,13 +89,8 @@ class UpdateSchedule(APIView):
 
     def patch(self, request, format=None):
         try:
-            day = request.data["day"]
             hour = request.data["hour"]
-            start = datetime.strptime(
-                f"{day} {hour}", f"{SLASH_MONTH_DAY_YEAR_FORMAT_STR} %I%p"
-            )
-            if "am" in hour.lower():
-                start += timedelta(days=1)
+            start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
 
             court = request.data["court"]
             team = 0 if request.data["team"] == "" else int(request.data["team"])

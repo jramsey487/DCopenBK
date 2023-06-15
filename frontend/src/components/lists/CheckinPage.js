@@ -182,18 +182,21 @@ export default function CheckinPage(props) {
             {filterBallkids(checkedIn, searchKeyword, filterGroup).length})
           </Typography>
         </Grid>
+
         {checkedIn.length > 0 && (
           <Grid item sx={MARGINS}>
             {renderCheckoutAllButton(setUpdated)}
           </Grid>
         )}
       </Grid>
+
       {renderBallkids(
         filterBallkids(checkedIn, searchKeyword, filterGroup),
         true,
         gridLayout,
         setUpdated
       )}
+
       <Grid item className="sxs">
         <Typography variant="h5" sx={MARGINS}>
           Checked Out
@@ -203,6 +206,7 @@ export default function CheckinPage(props) {
           {filterBallkids(checkedOut, searchKeyword, filterGroup).length})
         </Typography>
       </Grid>
+
       {renderBallkids(
         filterBallkids(checkedOut, searchKeyword, filterGroup),
         false,

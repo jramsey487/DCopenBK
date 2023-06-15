@@ -1,23 +1,16 @@
 import React, { useState, useEffect } from "react";
 
 import Typography from "@mui/material/Typography";
-import Table from "@mui/material/Table";
-import TableContainer from "@mui/material/TableContainer";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-
-import Add from "@mui/icons-material/Add";
 
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+
+import { ScheduleTable } from "./ScheduleTable";
 import { getAuthHeader, getToday } from "../Utils";
 
 function CreateSchedule({ date, setUpdated }) {
@@ -122,105 +115,6 @@ function CreateSchedule({ date, setUpdated }) {
   );
 }
 
-function dayHourToStr(day_hour) {
-  const military_hour = parseInt(day_hour.slice(11, 13));
-  const suffix = military_hour >= 12 ? "pm" : "am";
-  const hour = ((military_hour + 11) % 12) + 1;
-  return hour + suffix;
-}
-
-function ScheduleTable({ shifts, date, setUpdated }) {
-  const hourCourtToTeam = Object.assign(
-    {},
-    ...shifts.map((shift) => ({
-      [dayHourToStr(shift["start"]) + "-" + shift["court"]]: shift["team"],
-    }))
-  );
-  const hours = shifts
-    .map((shift) => dayHourToStr(shift["start"]))
-    .filter((v, i, a) => a.indexOf(v) === i);
-  const courts = shifts
-    .map((shift) => shift["court"])
-    .filter((v, i, a) => a.indexOf(v) === i);
-
-  return (
-    <div>
-      <TableContainer>
-        <Table style={{ tableLayout: "fixed" }}>
-          <TableHead>
-            <TableRow>
-              <TableCell align="center" width="20px">
-                Time
-              </TableCell>
-              {courts.map((court) => (
-                <TableCell key={court} align="center" width="50px">
-                  {court}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {hours.map((hour) => (
-              <TableRow key={hour}>
-                <TableCell align="center">{hour}</TableCell>
-                {courts.map((court) => (
-                  <TableCell key={court} align="center">
-                    <TextField
-                      variant="standard"
-                      defaultValue={
-                        hourCourtToTeam[hour + "-" + court] > 0
-                          ? hourCourtToTeam[hour + "-" + court]
-                          : ""
-                      }
-                      InputProps={{
-                        inputProps: {
-                          style: { textAlign: "center" },
-                        },
-                      }}
-                      style={{ width: 25 }}
-                      onChange={(e) =>
-                        fetch("/api/update-schedule", {
-                          method: "PATCH",
-                          headers: getAuthHeader(),
-                          body: JSON.stringify({
-                            day: date,
-                            hour: hour,
-                            court: court,
-                            team: e.target.value,
-                          }),
-                        })
-                          .then((response) => response.json())
-                          .then((data) => setUpdated(true))
-                      }
-                    />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <IconButton
-        sx={{ mt: 1 }}
-        onClick={(e) => {
-          fetch("/api/add-hour", {
-            method: "POST",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              day: date,
-              num_courts: courts.length,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => setUpdated(true));
-        }}
-      >
-        <Add />
-      </IconButton>
-    </div>
-  );
-}
-
 export default function SchedulePageChairperson(props) {
   const [shifts, setShifts] = useState([]);
   const [updated, setUpdated] = useState(false);
@@ -258,7 +152,12 @@ export default function SchedulePageChairperson(props) {
       {shifts.length === 0 ? (
         <CreateSchedule date={date} setUpdated={setUpdated} />
       ) : (
-        <ScheduleTable shifts={shifts} date={date} setUpdated={setUpdated} />
+        <ScheduleTable
+          shifts={shifts}
+          date={date}
+          readOnly={false}
+          setUpdated={setUpdated}
+        />
       )}
     </div>
   );

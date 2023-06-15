@@ -290,6 +290,16 @@ export function renderBallkidCutHistory(cuts) {
   );
 }
 
+// Converts a time of format
+// [year]-[month]-[day]T[24hour]:[minute]:[seconds]
+// into [12hour][am/pm]
+export function dayHourToStr(day_hour) {
+  const military_hour = parseInt(day_hour.slice(11, 13));
+  const suffix = military_hour >= 12 ? "pm" : "am";
+  const hour = ((military_hour + 11) % 12) + 1;
+  return hour + suffix;
+}
+
 export function getDays() {
   // Note that these dates are 0-indexed!!
   const startDate = new Date(START_DATE);
@@ -344,13 +354,34 @@ export function getTimeStr(timeFloat, verbose = true) {
   return verbose ? hours + " hrs " + mins + " mins" : hours + ":" + mins;
 }
 
-export function getToday() {
+// Checks if the shift start time string in the format
+// [year]-[month]-[day]T[24hour]:[minute]:[seconds]
+// is occurring right now
+export function isCurrentHour(hour) {
+  const shiftDate = hour.substring(0, 10);
+  const shiftHour = parseInt(hour.substring(11, 14));
+
+  const nowDate = getToday("hyphen");
+  const nowHours = new Date().getHours();
+
+  return shiftHour === nowHours && shiftDate === nowDate;
+}
+
+// Returns today as a string of the format:
+// slash: [month]/[day]/[year]
+// hyphen: [year]-[month]-[day]
+// No other formats are recognized.
+export function getToday(format = "slash") {
   const today = new Date();
   const dd = String(today.getDate()).padStart(2, "0");
   const mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
   const yyyy = today.getFullYear();
 
-  return mm + "/" + dd + "/" + yyyy;
+  if (format === "slash") {
+    return `${mm}/${dd}/${yyyy}`;
+  } else if (format === "hyphen") {
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }
 
 export function getLocalStorage(key) {
