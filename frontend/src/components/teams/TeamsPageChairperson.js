@@ -27,6 +27,8 @@ import {
   SearchAndFilter,
   filterBallkids,
   HideShowToggle,
+  isCurrentHour,
+  dayHourToStr,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 
@@ -119,8 +121,14 @@ function renderBallkidsOnTeam(assigned, teamNum, position, setUpdated) {
   );
 }
 
-export function Team({ team, assigned, setUpdated }) {
+export function Team({ team, assigned, nextShifts, setUpdated }) {
   const positions = ["Net", "Back"];
+
+  const hasAnotherShift = nextShifts.length > 0;
+  const isCurrentlyOn =
+    hasAnotherShift && isCurrentHour(nextShifts[0]["start"]);
+  const court = hasAnotherShift ? nextShifts[0]["court"] : "";
+  const time = hasAnotherShift ? dayHourToStr(nextShifts[0]["start"]) : "";
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -155,6 +163,7 @@ export function Team({ team, assigned, setUpdated }) {
                 )
               </Typography>
             </div>
+
             <Button
               size="small"
               onClick={(e) => {
@@ -172,6 +181,15 @@ export function Team({ team, assigned, setUpdated }) {
               Clear
             </Button>
           </div>
+
+          <Typography variant="subtitle2">
+            {!hasAnotherShift
+              ? "No more shifts"
+              : isCurrentlyOn
+              ? `Currently on: ${court}`
+              : `On at ${time}: ${court}`}
+          </Typography>
+
           {positions.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
@@ -198,14 +216,15 @@ export function Team({ team, assigned, setUpdated }) {
   );
 }
 
-function renderTeams(assigned, teams, setUpdated) {
+function renderTeams(assigned, teams, nextShifts, setUpdated) {
   return assigned.length > 0 ? (
     <Grid container spacing={2}>
       {teams.map((team) => (
         <Team
           key={team}
           team={team}
-          assigned={assigned}
+          assigned={assigned.filter((ballkid) => ballkid.current_team === team)}
+          nextShifts={nextShifts.filter((shift) => shift.team === team)}
           setUpdated={setUpdated}
         />
       ))}
@@ -359,8 +378,9 @@ function Header() {
 export default function TeamsPageChairperson(props) {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
-  const [updated, setUpdated] = useState(false);
+  const [nextShifts, setNextShifts] = useState({});
   const [teams, setTeams] = useState([]);
+  const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
     fetch("/api/sorted-list", { headers: getAuthHeader() })
@@ -382,14 +402,18 @@ export default function TeamsPageChairperson(props) {
 
     fetch("/api/calc-num-teams", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]))
+      .then((data) => setTeams(data["teams"]));
+
+    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setNextShifts(data))
       .then(() => setUpdated(false));
   }, [updated]);
 
   return (
     <div className="page">
       <Header />
-      {renderTeams(assigned, teams, setUpdated)}
+      {renderTeams(assigned, teams, nextShifts, setUpdated)}
       <Unassigned
         unassigned={unassigned}
         teams={teams}

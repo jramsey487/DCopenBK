@@ -34,6 +34,7 @@ schedule_urls = [
     path("add-hour", AddHour.as_view(), name="add-hour"),
     path("update-schedule", UpdateSchedule.as_view(), name="update-schedule"),
     path("update-shift", UpdateShift.as_view(), name="update-shift"),
+    path("get-next-shifts", GetNextShifts.as_view(), name="get-next-shifts"),
 ]
 
 # Analytics URLs

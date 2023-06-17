@@ -111,6 +111,18 @@ class UpdateSchedule(APIView):
             )
 
 
+class GetNextShifts(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        # TODO: maybe change this to filter to unique teams
+        threshold = datetime.now() - timedelta(hours=1)
+        shifts = (
+            Schedule.objects.exclude(team=0).filter(start__gt=threshold).order_by("start")
+        )
+        return Response(ScheduleSerializer(shifts, many=True).data)
+
+
 class GetTournament(APIView):
     permission_classes = [IsChairpersonOrAuthenticatedReadOnly]
 

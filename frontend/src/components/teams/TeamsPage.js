@@ -8,24 +8,35 @@ import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 
-import { getAuthHeader, Icons } from "../Utils";
+import { getAuthHeader, Icons, isCurrentHour } from "../Utils";
+import { dayHourToStr } from "../Utils";
 
-function Team({ team, assigned }) {
+function Team({ team, assigned, nextShifts }) {
   const positions = ["Net", "Back"];
+
+  const hasAnotherShift = nextShifts.length > 0;
+  const isCurrentlyOn =
+    hasAnotherShift && isCurrentHour(nextShifts[0]["start"]);
+  const court = hasAnotherShift ? nextShifts[0]["court"] : "";
+  const time = hasAnotherShift ? dayHourToStr(nextShifts[0]["start"]) : "";
 
   return (
     <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          <div className="sxs">
-            <Typography variant="h6">Team {team}</Typography>
-            <Typography variant="subtitle1" sx={{ ml: 1 }}>
-              (
-              {
-                assigned.filter((ballkid) => ballkid.current_team === team)
-                  .length
-              }
-              )
+          <div className="justify">
+            <div className="sxs">
+              <Typography variant="h6">Team {team}</Typography>
+              <Typography variant="subtitle1" sx={{ ml: 1 }}>
+                ({assigned.length})
+              </Typography>
+            </div>
+            <Typography variant="subtitle2">
+              {!hasAnotherShift
+                ? "No more shifts"
+                : isCurrentlyOn
+                ? `Currently on: ${court}`
+                : `On at ${time}: ${court}`}
             </Typography>
           </div>
 
@@ -37,11 +48,8 @@ function Team({ team, assigned }) {
                 <Typography variant="subtitle2" sx={{ ml: 1 }}>
                   (
                   {
-                    assigned.filter(
-                      (ballkid) =>
-                        ballkid.current_team === team &&
-                        ballkid.position === position
-                    ).length
+                    assigned.filter((ballkid) => ballkid.position === position)
+                      .length
                   }
                   )
                 </Typography>
@@ -76,6 +84,7 @@ function Team({ team, assigned }) {
 export default function TeamsPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [nextShifts, setNextShifts] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
 
   useEffect(() => {
@@ -100,6 +109,10 @@ export default function TeamsPage(props) {
     })
       .then((response) => response.json())
       .then((data) => setShowTeams(data["show_teams"]));
+
+    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setNextShifts(data));
   }, []);
 
   return (
@@ -110,7 +123,14 @@ export default function TeamsPage(props) {
       {assigned.length > 0 && showTeams ? (
         <Grid container spacing={2}>
           {teams.map((team) => (
-            <Team key={team} team={team} assigned={assigned} />
+            <Team
+              key={team}
+              team={team}
+              assigned={assigned.filter(
+                (ballkid) => ballkid.current_team === team
+              )}
+              nextShifts={nextShifts.filter((shift) => shift.team === team)}
+            />
           ))}
         </Grid>
       ) : (
