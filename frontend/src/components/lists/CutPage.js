@@ -92,12 +92,7 @@ function CutStatusSection({ section, active, setUpdated }) {
             <div className="sxs">
               <Typography variant="h6">{section}</Typography>
               <Typography variant="subtitle1">
-                &ensp; (
-                {
-                  active.filter((ballkid) => ballkid.cut_status === section)
-                    .length
-                }
-                )
+                &ensp; ({active.length})
               </Typography>
             </div>
             <Button
@@ -123,7 +118,17 @@ function CutStatusSection({ section, active, setUpdated }) {
           {positions.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
-              <Typography variant="subtitle1">{position}s:</Typography>
+              <div className="sxs">
+                <Typography variant="subtitle1">{position}s</Typography>
+                <Typography variant="subtitle2" sx={{ ml: 1 }}>
+                  (
+                  {
+                    active.filter((ballkid) => ballkid.position === position)
+                      .length
+                  }
+                  )
+                </Typography>
+              </div>
               {renderBallkidsInSection(active, section, position, setUpdated)}
             </div>
           ))}
@@ -405,7 +410,7 @@ export default function CutPage(props) {
           <CutStatusSection
             key={section}
             section={section}
-            active={active}
+            active={active.filter((ballkid) => ballkid.cut_status === section)}
             setUpdated={setUpdated}
           />
         ))}

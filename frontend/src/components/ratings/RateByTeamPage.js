@@ -30,18 +30,35 @@ function Team({ team, assigned, nextShifts, setUpdated }) {
       >
         <CardContent>
           <div className="justify">
-            <Typography variant="h6">Team {team}</Typography>
+            <div className="sxs">
+              <Typography variant="h6">Team {team}</Typography>
+              <Typography variant="subtitle1" sx={{ ml: 1 }}>
+                ({assigned.length})
+              </Typography>
+            </div>
+
             <CourtAssignment nextShifts={nextShifts} />
           </div>
           {positions.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
 
-              <Typography variant="subtitle1">{position}s:</Typography>
+              <div className="sxs">
+                <Typography variant="subtitle1">{position}s</Typography>
+                <Typography variant="subtitle2" sx={{ ml: 1 }}>
+                  (
+                  {
+                    assigned.filter((ballkid) => ballkid.position === position)
+                      .length
+                  }
+                  )
+                </Typography>
+              </div>
 
               {assigned.map((ballkid) =>
-                ballkid.current_team === team &&
-                ballkid.position === position ? (
+                ballkid.position !== position ? (
+                  ""
+                ) : (
                   <div className="justify" key={`ballkid${ballkid.id}`}>
                     <div className="sxs">
                       <Link
@@ -61,8 +78,6 @@ function Team({ team, assigned, nextShifts, setUpdated }) {
                       <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
                     )}
                   </div>
-                ) : (
-                  ""
                 )
               )}
             </div>
