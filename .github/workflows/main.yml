@@ -34,8 +34,6 @@ jobs:
           pip install -r requirements.txt
           pip install -e git+https://github.com/jtiosue/rcal.git#egg=rcal
       - name: Run migrations
-        run: |
-          python manage.py migrate
+        run: python manage.py migrate
       - name: Run tests
-        run: |
-          python manage.py test
+        run: python manage.py test
