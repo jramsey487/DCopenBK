@@ -25,6 +25,9 @@ jobs:
       - name: Run deploy prep script
         run: sh deploy.sh
 
+      - name: Build backend
+        run: python manage.py collectstatic --no-input
+
       - name: Deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
