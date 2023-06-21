@@ -1,3 +1,6 @@
+# 0. Activate virtual environment
+source env/bin/activate
+
 # 1. Build the frontend
 cd frontend
 npm run build
