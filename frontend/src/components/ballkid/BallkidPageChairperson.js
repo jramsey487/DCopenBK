@@ -635,7 +635,7 @@ export default function BallkidPageChairperson(props) {
   const { pk } = useParams();
 
   useEffect(() => {
-    fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-ballkid/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setBallkid(data));
 
@@ -643,27 +643,27 @@ export default function BallkidPageChairperson(props) {
       .then((response) => response.json())
       .then((data) => setTeams(data["teams"]));
 
-    fetch("/api/get-finals-history/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-finals-history/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setFinals(data));
 
-    fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-cut-history/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCuts(data));
 
-    fetch("/api/get-captains/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-captains/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCaptains(data));
 
-    fetch("/api/get-courts/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-courts/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCourts(data));
 
-    fetch("/api/get-checkins/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-checkins/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setCheckins(data));
 
-    fetch("/api/get-checkin-duration/" + pk, { headers: getAuthHeader() })
+    fetch(`/api/get-checkin-duration/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setTotalTime(data["duration"]))
       .then(() => setUpdated(false));

@@ -154,7 +154,6 @@ class Ballkid(models.Model):
                 # ballkid and captain
                 overlapping = False
 
-                # TODO: make this more efficient by filtering shifts further
                 shifts = Schedule.objects.filter(team=history.team)
                 # For each shift, check if there is any overlapping time between the
                 # start and end of the CaptainHistory and the start and end of a shift
@@ -210,17 +209,19 @@ class Ballkid(models.Model):
             now = datetime.now()
 
         # Get all team histories for this ballkid
-        histories = TeamHistory.objects.all().filter(ballkid_id=self.id)
+        histories = TeamHistory.objects.filter(ballkid_id=self.id)
 
         for history in histories:
-            # TODO: make this more efficient by filtering on the day of the shift
-            # while being flexible enough for times after midnight
-
-            # Find all associated shifts of the ballkid's team
-            shifts = Schedule.objects.all().filter(team=history.team)
+            # Find all associated shifts of the ballkid's team, filtered to only shifts which have
+            # overlap with the history. Note that this should theoretically improve performance but
+            # for some reason does not so extra filters are commented out.
+            shifts = Schedule.objects.filter(
+                team=history.team,
+                # start__gte=history.start - timedelta(hours=1),
+                # start__lte=history.end if history.end else now,
+            )
 
             for shift in shifts:
-                court = shift.court
                 overlapping = calc_overlapping_time(
                     history.start,
                     history.end if history.end else now,
@@ -231,8 +232,8 @@ class Ballkid(models.Model):
                 # ONLY if there is non-zero overlapping time, then log the court to the
                 # ballkid's CourtAnalytics (counts and durations)
                 if overlapping:
-                    counts[court] += 1
-                    times[court] += overlapping
+                    counts[shift.court] += 1
+                    times[shift.court] += overlapping
 
         # Create or update the row in CourtAnalytics for the (ballkid, court) pair
         for court in counts:
@@ -557,7 +558,6 @@ class Ballkid(models.Model):
             raise Exception(f"Unrecognized field {field}")
 
         self.save()
-        self.recalc_analytics()
 
     def get_name(self):
         """
