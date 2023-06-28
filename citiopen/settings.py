@@ -227,7 +227,7 @@ LOGGING = {
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "simple": {
-            "format": "{levelname} {module} {message}",
+            "format": "{asctime} {levelname} {module} {message}",
             "style": "{",
         },
     },
@@ -248,6 +248,7 @@ LOGGING = {
             "level": "INFO",
             "class": "logging.FileHandler",
             "filename": LOG_DIR / "django.log",
+            "formatter": "verbose",
         },
         "console": {
             "class": "logging.StreamHandler",
