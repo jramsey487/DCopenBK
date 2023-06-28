@@ -265,6 +265,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
+        "api.utils": {
+            "handlers": ["infoFile", "warningFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
         "accounts": {
             "handlers": ["infoFile", "warningFile"],
             "level": "INFO",

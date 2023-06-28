@@ -134,7 +134,9 @@ def save_calibration_parameters(cp, calibrated=None):
                 first_name=get_first_name(name), last_name=get_last_name(name)
             )
         except ObjectDoesNotExist:
-            logger.warning(f"Could not find ballkid {name}")
+            logger.warning(
+                f"{datetime.now()} [save_calibration_params] Could not find ballkid {name}"
+            )
             continue
 
         num_ratee_ratings = Rating.objects.filter(
