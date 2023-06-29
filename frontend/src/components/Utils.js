@@ -127,7 +127,7 @@ export function SearchBox({ setSearchKeyword }) {
       variant="outlined"
       fullWidth
       sx={{ py: 1 }}
-      placeholder="Search by ballkid name..."
+      placeholder="Search by name..."
       onChange={(e) => setSearchKeyword(e.target.value)}
     />
   );
@@ -137,7 +137,7 @@ export function SearchAndFilter({
   setSearchKeyword,
   filterGroup,
   setFilterGroup,
-  filters = ["captain", "rookie", "chairperson"],
+  filters = ["captain", "rookie", "chairperson", "back", "net"],
 }) {
   return (
     <Grid item xs={12} className="justify">
@@ -246,7 +246,9 @@ export function filterBallkids(ballkids, searchKeyword, filterGroup) {
       (!filterGroup ||
         (filterGroup === "rookie" && ballkid.num_years_experience === 0) ||
         (filterGroup === "captain" && ballkid.is_captain) ||
-        (filterGroup === "chairperson" && ballkid.is_chairperson))
+        (filterGroup === "chairperson" && ballkid.is_chairperson) ||
+        (filterGroup === "back" && ballkid.preferred_position !== "Net") ||
+        (filterGroup === "net" && ballkid.preferred_position !== "Back"))
   );
 }
 
