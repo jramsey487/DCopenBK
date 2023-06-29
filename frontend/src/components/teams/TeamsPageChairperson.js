@@ -144,7 +144,7 @@ export function Team({ team, assigned, nextShifts, setUpdated }) {
   });
 
   return (
-    <Grid item xs={12} sm={6} md={6} lg={4} xl={3} ref={dropRef}>
+    <Grid item xs={12} sm={6} md={6} lg={6} xl={3} ref={dropRef}>
       <Card
         sx={{ mb: 2, backgroundColor: isCurrentlyOn ? ON_COURT_GREEN : "" }}
         elevation={isOver ? 10 : 1}
@@ -363,7 +363,7 @@ function Header() {
 export default function TeamsPageChairperson(props) {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
-  const [nextShifts, setNextShifts] = useState({});
+  const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);
   const [updated, setUpdated] = useState(false);
 
@@ -398,7 +398,14 @@ export default function TeamsPageChairperson(props) {
   return (
     <div className="page">
       <Grid container className="justify-top">
-        <Grid item md={7} lg={7.5} xl={8} sx={{ pr: 3 }} alignItems="top">
+        <Grid
+          item
+          md={7}
+          lg={7.5}
+          xl={8}
+          sx={{ pr: 3 }}
+          style={{ maxHeight: "85vh", overflow: "auto" }}
+        >
           <Header />
           {renderTeams(assigned, teams, nextShifts, setUpdated)}
         </Grid>
@@ -410,7 +417,7 @@ export default function TeamsPageChairperson(props) {
           lg={4}
           xl={3.5}
           sx={{ pl: 3 }}
-          style={{ maxHeight: "100vh", overflow: "auto" }}
+          style={{ maxHeight: "85vh", overflow: "auto" }}
         >
           <Unassigned
             unassigned={unassigned}

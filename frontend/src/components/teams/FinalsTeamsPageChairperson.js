@@ -81,7 +81,7 @@ function Team({ team, assigned, setUpdated }) {
   });
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2} ref={dropRef}>
+    <Grid item xs={12} sm={6} md={6} lg={6} xl={3} ref={dropRef}>
       <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
         <CardContent>
           <div className="justify">
@@ -361,13 +361,36 @@ export default function FinalsTeamsPageChairperson(props) {
 
   return (
     <div className="page">
-      <Header />
-      {renderTeams(assigned, teams, setUpdated)}
-      <Unassigned
-        unassigned={unassigned}
-        teams={teams}
-        setUpdated={setUpdated}
-      />
+      <Grid container className="justify-top">
+        <Grid
+          item
+          md={6}
+          lg={7.5}
+          xl={8}
+          sx={{ pr: 3 }}
+          style={{ maxHeight: "85vh", overflow: "auto" }}
+        >
+          <Header />
+          {renderTeams(assigned, teams, setUpdated)}
+        </Grid>
+
+        <Divider orientation="vertical" variant="middle" flexItem />
+
+        <Grid
+          item
+          md={5.5}
+          lg={4}
+          xl={3.5}
+          sx={{ pl: 3 }}
+          style={{ maxHeight: "85vh", overflow: "auto" }}
+        >
+          <Unassigned
+            unassigned={unassigned}
+            teams={teams}
+            setUpdated={setUpdated}
+          />
+        </Grid>
+      </Grid>
     </div>
   );
 }
