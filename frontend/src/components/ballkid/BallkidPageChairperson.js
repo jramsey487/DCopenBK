@@ -228,27 +228,35 @@ function renderTeamButton(ballkid, buttonString, teamNum, setUpdated) {
 function renderTeam(ballkid, teams, setUpdated, isMobile) {
   return (
     <div className={isMobile ? "" : "justify"}>
-      <Typography variant="body1">
+      <Typography variant="body1" sx={{ pr: 1 }}>
         Current Team:{" "}
         {ballkid.current_team === 0 ? "Unassigned" : ballkid.current_team}
       </Typography>
       {!ballkid.is_checked_in ? (
         ""
       ) : (
-        <div className="sxs">
-          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
-            Change to: &emsp;
+        <Box className="sxs" sx={{ maxWidth: "100%" }}>
+          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0, pr: 1 }}>
+            Change to:
           </Typography>
-          {teams.map((team) =>
-            team === ballkid.current_team
+
+          <Box>
+            {teams.map((team) =>
+              team === ballkid.current_team
+                ? ""
+                : renderTeamButton(ballkid, team, team, setUpdated)
+            )}
+            {renderTeamButton(
+              ballkid,
+              "New Team",
+              teams.length + 1,
+              setUpdated
+            )}
+            {ballkid.current_team === 0
               ? ""
-              : renderTeamButton(ballkid, team, team, setUpdated)
-          )}
-          {renderTeamButton(ballkid, "New Team", teams.length + 1, setUpdated)}
-          {ballkid.current_team === 0
-            ? ""
-            : renderTeamButton(ballkid, "Unassign", 0, setUpdated)}
-        </div>
+              : renderTeamButton(ballkid, "Unassign", 0, setUpdated)}
+          </Box>
+        </Box>
       )}
     </div>
   );
