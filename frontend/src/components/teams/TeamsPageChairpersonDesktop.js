@@ -1,261 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { Link as RouterLink } from "react-router-dom";
+import { useDrop } from "react-dnd";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import Button from "@mui/material/Button";
-import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 
-import Close from "@mui/icons-material/Close";
-import SwapVert from "@mui/icons-material/SwapVert";
-
+import { getAuthHeader, SearchAndFilter, filterBallkids } from "../Utils";
+import { MARGINS } from "../Consts";
 import {
-  getAuthHeader,
-  Icons,
-  Alerts,
-  SearchAndFilter,
-  filterBallkids,
-  HideShowToggle,
-  isCurrentHour,
-  CourtAssignment,
-} from "../Utils";
-import { MARGINS, ON_COURT_GREEN } from "../Consts";
-
-function DraggableBallkidAndIcon(props) {
-  const ballkid = props.ballkid;
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "ballkid",
-    item: { ...ballkid },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }));
-
-  return (
-    <div
-      ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-    >
-      <div className="sxs">
-        <Link
-          variant="body2"
-          component={RouterLink}
-          to={`/ballkid/${ballkid.id}`}
-        >
-          {ballkid.first_name} {ballkid.last_name}
-        </Link>
-        &thinsp;
-        <Icons ballkid={ballkid} margin={0} />
-      </div>
-    </div>
-  );
-}
-
-function renderBallkidsOnTeam(assigned, teamNum, position, setUpdated) {
-  return (
-    <div>
-      {assigned.map((ballkid) =>
-        ballkid.current_team === teamNum && ballkid.position === position ? (
-          <div key={`ballkid${ballkid.id}`} className="justify">
-            {<DraggableBallkidAndIcon ballkid={ballkid} />}
-            <div className="sxs">
-              {!ballkid.preferred_position.includes("/") ? (
-                ""
-              ) : (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={(e) => {
-                    fetch("/api/update-ballkid", {
-                      method: "PATCH",
-                      headers: getAuthHeader(),
-                      body: JSON.stringify({
-                        first_name: ballkid.first_name,
-                        last_name: ballkid.last_name,
-                        position: ballkid.position === "Back" ? "Net" : "Back",
-                      }),
-                    })
-                      .then((response) => response.json())
-                      .then(() => setUpdated(true));
-                  }}
-                >
-                  <SwapVert />
-                </Button>
-              )}
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  fetch("/api/update-ballkid", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      first_name: ballkid.first_name,
-                      last_name: ballkid.last_name,
-                      current_team: 0,
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                <Close />
-              </IconButton>
-            </div>
-          </div>
-        ) : (
-          ""
-        )
-      )}
-    </div>
-  );
-}
-
-export function Team({ team, assigned, nextShifts, isNewTeam, setUpdated }) {
-  const positions = ["Net", "Back"];
-  const isCurrentlyOn =
-    nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
-
-  const [{ isOver }, dropRef] = useDrop({
-    accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          current_team: team,
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
-  });
-
-  return (
-    <Grid item xs={12} sm={12} md={6} lg={4} xl={3} ref={dropRef}>
-      <Card
-        sx={{
-          mb: 1,
-          backgroundColor: isCurrentlyOn ? ON_COURT_GREEN : "",
-          borderWidth: isNewTeam ? 1 : 0,
-          borderStyle: "dashed",
-          borderColor: "gray",
-        }}
-        elevation={isOver ? 10 : 1}
-      >
-        {isNewTeam ? (
-          <CardContent>
-            <Typography variant="h6">
-              {isNewTeam ? "New Team" : `Team ${team}`}
-            </Typography>
-          </CardContent>
-        ) : (
-          <CardContent>
-            <div className="justify">
-              <div className="sxs">
-                <Typography variant="h6">Team {team}</Typography>
-                <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                  ({assigned.length})
-                </Typography>
-              </div>
-
-              <Button
-                size="small"
-                onClick={(e) => {
-                  fetch("/api/clear-team", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      current_team: team,
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                Clear
-              </Button>
-            </div>
-
-            <div className="justify">
-              <CourtAssignment nextShifts={nextShifts} />
-              {/* <Button
-                // variant="outlined"
-                size="small"
-                color="error"
-                onClick={() => {
-                  fetch("/api/checkout-all", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                Check Out All
-              </Button> */}
-            </div>
-
-            {positions.map((position) => (
-              <div key={position}>
-                <Divider sx={{ my: 1 }} />
-                <div className="sxs">
-                  <Typography variant="subtitle1">{position}s</Typography>
-                  <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                    (
-                    {
-                      assigned.filter(
-                        (ballkid) => ballkid.position === position
-                      ).length
-                    }
-                    )
-                  </Typography>
-                </div>
-                {renderBallkidsOnTeam(assigned, team, position, setUpdated)}
-              </div>
-            ))}
-          </CardContent>
-        )}
-      </Card>
-    </Grid>
-  );
-}
-
-function renderTeams(assigned, teams, nextShifts, setUpdated) {
-  return assigned.length > 0 ? (
-    <Grid container spacing={2}>
-      {teams.map((team) => (
-        <Team
-          key={team}
-          team={team}
-          assigned={assigned.filter((ballkid) => ballkid.current_team === team)}
-          nextShifts={nextShifts.filter((shift) => shift.team === team)}
-          isNewTeam={false}
-          setUpdated={setUpdated}
-        />
-      ))}
-      <Team
-        team={parseInt(teams.slice(-1)) + 1}
-        assigned={[]}
-        nextShifts={[]}
-        isNewTeam={true}
-        setUpdated={setUpdated}
-      />
-    </Grid>
-  ) : (
-    <Typography variant="body1">
-      There are currently no teams assigned.
-    </Typography>
-  );
-}
+  DraggableBallkidAndIcon,
+  Teams,
+  Header,
+} from "./TeamsPageChairpersonUtils";
 
 function Unassigned({ unassigned, setUpdated }) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -343,30 +100,6 @@ function Unassigned({ unassigned, setUpdated }) {
   );
 }
 
-function Header() {
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  return (
-    <div>
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
-      />
-      <div className="justify" style={{ marginBottom: 10 }}>
-        <Typography variant="h4">Current Teams</Typography>
-        <HideShowToggle
-          teamType=""
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </div>
-    </div>
-  );
-}
-
 export default function TeamsPageChairpersonDesktop(props) {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
@@ -394,11 +127,7 @@ export default function TeamsPageChairpersonDesktop(props) {
 
     fetch("/api/calc-num-teams", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then(
-        (data) => setTeams(data["teams"])
-        // setTeams([...data["teams"], parseInt(data["teams"].slice(-1)) + 1])
-        // setTeams([...data["teams"], 0])
-      );
+      .then((data) => setTeams(data["teams"]));
 
     fetch("/api/get-next-shifts", { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -417,9 +146,13 @@ export default function TeamsPageChairpersonDesktop(props) {
           style={{ maxHeight: "85vh", overflow: "auto" }}
         >
           <Header />
-          {renderTeams(assigned, teams, nextShifts, setUpdated)}
+          <Teams
+            assigned={assigned}
+            teams={teams}
+            nextShifts={nextShifts}
+            setUpdated={setUpdated}
+          />
         </Grid>
-        {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
 
         <Grid
           item

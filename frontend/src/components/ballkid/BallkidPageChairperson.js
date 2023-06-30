@@ -203,7 +203,7 @@ function renderTeamButton(ballkid, buttonString, teamNum, setUpdated) {
   return (
     <Button
       key={teamNum}
-      sx={{ m: 0.2 }}
+      sx={{ m: 0.2, minWidth: 0 }}
       size="small"
       variant="outlined"
       onClick={(e) => {
