@@ -19,6 +19,7 @@ import {
   getLocalStorage,
   SearchAndFilter,
   filterBallkids,
+  CheckoutConfirmDialog,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 
@@ -115,23 +116,9 @@ function renderBallkids(ballkids, isCheckedIn, gridLayout, setUpdated) {
   );
 }
 
-function renderCheckoutAllButton(setUpdated) {
+function renderCheckoutAllButton(setOpen) {
   return (
-    <Button
-      variant="contained"
-      color="error"
-      onClick={() => {
-        fetch("/api/checkout-all", {
-          method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            checkout_group: "all",
-          }),
-        })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
-      }}
-    >
+    <Button variant="contained" color="error" onClick={() => setOpen(true)}>
       Check Out All
     </Button>
   );
@@ -142,6 +129,7 @@ export default function CheckinPage(props) {
   const [checkedOut, setCheckedOut] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
+  const [open, setOpen] = useState(false);
 
   const [gridLayout, setGridLayout] = useState(
     getLocalStorage("gridLayout") ?? true
@@ -162,6 +150,16 @@ export default function CheckinPage(props) {
 
   return (
     <div className="page">
+      <CheckoutConfirmDialog
+        message={`You are about to check out all ${
+          checkedIn.length
+        } checked in ballkid${checkedIn.length > 1 ? "s" : ""}.`}
+        group="all"
+        open={open}
+        setOpen={setOpen}
+        setUpdated={setUpdated}
+      />
+
       <div className="justify">
         <Typography variant="h4" sx={{ mb: 1 }}>
           Check-in
@@ -188,7 +186,7 @@ export default function CheckinPage(props) {
 
         {checkedIn.length > 0 && (
           <Grid item sx={MARGINS}>
-            {renderCheckoutAllButton(setUpdated)}
+            {renderCheckoutAllButton(setOpen)}
           </Grid>
         )}
       </Grid>

@@ -11,7 +11,12 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 
-import { getAuthHeader, SearchAndFilter, filterBallkids } from "../Utils";
+import {
+  getAuthHeader,
+  SearchAndFilter,
+  filterBallkids,
+  CheckoutConfirmDialog,
+} from "../Utils";
 import { MARGINS } from "../Consts";
 import {
   DraggableBallkidAndIcon,
@@ -49,6 +54,7 @@ function renderAssignButton(ballkid, buttonString, teamNum, setUpdated) {
 function Unassigned({ unassigned, teams, setUpdated }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
+  const [open, setOpen] = useState(false);
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -69,6 +75,16 @@ function Unassigned({ unassigned, teams, setUpdated }) {
 
   return (
     <div>
+      <CheckoutConfirmDialog
+        message={`You are about to check out all ${
+          unassigned.length
+        } unassigned ballkid${unassigned.length > 1 ? "s" : ""}.`}
+        group="unassigned"
+        open={open}
+        setOpen={setOpen}
+        setUpdated={setUpdated}
+      />
+
       <div className="justify">
         <div className="sxs">
           <Typography variant="h5" sx={MARGINS}>
@@ -80,9 +96,7 @@ function Unassigned({ unassigned, teams, setUpdated }) {
           </Typography>
         </div>
 
-        {unassigned.length === 0
-          ? ""
-          : renderCheckoutUnassignedButton(setUpdated)}
+        {unassigned.length === 0 ? "" : renderCheckoutUnassignedButton(setOpen)}
       </div>
 
       {unassigned.length === 0 ? (

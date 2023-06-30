@@ -22,6 +22,7 @@ import {
   isCurrentHour,
   CourtAssignment,
   useIsMobile,
+  CheckoutConfirmDialog,
 } from "../Utils";
 import { ON_COURT_GREEN, MARGINS } from "../Consts";
 
@@ -148,29 +149,15 @@ function renderClearButton(team, setUpdated) {
   );
 }
 
-function renderCheckoutTeamButton(team, setUpdated) {
+function renderCheckoutTeamButton(setOpen) {
   return (
-    <Button
-      size="small"
-      color="error"
-      onClick={() => {
-        fetch("/api/checkout-all", {
-          method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            checkout_group: team,
-          }),
-        })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
-      }}
-    >
+    <Button size="small" color="error" onClick={() => setOpen(true)}>
       Check Out All
     </Button>
   );
 }
 
-function renderTeamCardHeader(team, assigned, nextShifts, setUpdated) {
+function renderTeamCardHeader(team, assigned, nextShifts, setOpen, setUpdated) {
   return (
     <div>
       <div className="justify">
@@ -187,9 +174,7 @@ function renderTeamCardHeader(team, assigned, nextShifts, setUpdated) {
       <div className="justify">
         <CourtAssignment nextShifts={nextShifts} />
 
-        {assigned.length === 0
-          ? ""
-          : renderCheckoutTeamButton(team, setUpdated)}
+        {assigned.length === 0 ? "" : renderCheckoutTeamButton(setOpen)}
       </div>
     </div>
   );
@@ -199,6 +184,8 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
   const positions = ["Net", "Back"];
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
+
+  const [open, setOpen] = useState(false);
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -227,6 +214,16 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
       xl={3}
       ref={dropRef}
     >
+      <CheckoutConfirmDialog
+        message={`You are about to check out all ${assigned.length} ballkid${
+          assigned.length > 1 ? "s" : ""
+        } on Team ${team}.`}
+        group={team}
+        open={open}
+        setOpen={setOpen}
+        setUpdated={setUpdated}
+      />
+
       <Card
         sx={{
           mb: 1,
@@ -245,7 +242,13 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
           </CardContent>
         ) : (
           <CardContent>
-            {renderTeamCardHeader(team, assigned, nextShifts, setUpdated)}
+            {renderTeamCardHeader(
+              team,
+              assigned,
+              nextShifts,
+              setOpen,
+              setUpdated
+            )}
 
             {positions.map((position) => (
               <div key={position}>
@@ -276,24 +279,14 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
   );
 }
 
-export function renderCheckoutUnassignedButton(setUpdated) {
+export function renderCheckoutUnassignedButton(setOpen) {
   return (
     <Button
       variant="outlined"
       size="small"
       color="error"
       sx={MARGINS}
-      onClick={() => {
-        fetch("/api/checkout-all", {
-          method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            checkout_group: "unassigned",
-          }),
-        })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
-      }}
+      onClick={() => setOpen(true)}
     >
       Check Out All
     </Button>

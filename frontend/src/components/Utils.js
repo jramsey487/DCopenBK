@@ -16,6 +16,11 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Switch from "@mui/material/Switch";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContentText from "@mui/material/DialogContentText";
 
 import GridView from "@mui/icons-material/GridView";
 import List from "@mui/icons-material/List";
@@ -234,6 +239,63 @@ export function CourtAssignment({ nextShifts }) {
         ? `Currently on: ${court}`
         : `On at ${time}: ${court}`}
     </Typography>
+  );
+}
+
+export function CheckoutConfirmDialog({
+  message,
+  group,
+  open,
+  setOpen,
+  setUpdated,
+}) {
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  return (
+    <Dialog open={open} onClose={() => setOpen(false)}>
+      <DialogTitle>Confirm Checkout</DialogTitle>
+      <DialogContent>
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+
+        <DialogContentText>{message} Do you wish to proceed?</DialogContentText>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={() =>
+            fetch("/api/checkout-all", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                checkout_group: group,
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setSuccessMsg("Ballkids checked out!");
+                setTimeout(() => {
+                  setOpen(false);
+                  setSuccessMsg("");
+                  setUpdated(true);
+                }, 2000);
+              } else {
+                setErrorMsg("Error checking out ballkids.");
+              }
+            })
+          }
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 
