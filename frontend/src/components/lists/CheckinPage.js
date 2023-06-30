@@ -124,6 +124,9 @@ function renderCheckoutAllButton(setUpdated) {
         fetch("/api/checkout-all", {
           method: "PATCH",
           headers: getAuthHeader(),
+          body: JSON.stringify({
+            checkout_group: "all",
+          }),
         })
           .then((response) => response.json())
           .then(() => setUpdated(true));

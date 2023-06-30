@@ -170,7 +170,12 @@ class TestBallkidListView(APITestCase):
 
     def test_sorted_list_ratings_excludes_prev_years(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
-        Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid3, rating=5, date=datetime.today() - timedelta(days=365))
+        Rating.objects.create(
+            rater=self.ballkid2,
+            ratee=self.ballkid3,
+            rating=5,
+            date=datetime.today() - timedelta(days=365),
+        )
 
         response = self.client.get(
             reverse(
@@ -701,20 +706,20 @@ class TestCheckoutAllView(APITestCase):
         )
 
     def test_none_checked_in(self):
-        response = self.client.patch(self.url, {}, format="json")
+        response = self.client.patch(self.url, {"checkout_group": "all"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(0, len(Ballkid.objects.all().filter(is_checked_in=True)))
+        self.assertEqual(0, len(Ballkid.objects.filter(is_checked_in=True)))
 
     def test_some_checked_in(self):
         self.ballkid1.is_checked_in = True
         self.ballkid2.is_checked_in = True
         self.ballkid1.save()
         self.ballkid2.save()
-        self.assertEqual(2, len(Ballkid.objects.all().filter(is_checked_in=True)))
+        self.assertEqual(2, len(Ballkid.objects.filter(is_checked_in=True)))
 
-        response = self.client.patch(self.url, {}, format="json")
+        response = self.client.patch(self.url, {"checkout_group": "all"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(0, len(Ballkid.objects.all().filter(is_checked_in=True)))
+        self.assertEqual(0, len(Ballkid.objects.filter(is_checked_in=True)))
 
     def test_some_checked_in_unassign_team_reset_position(self):
         self.ballkid1.is_checked_in = True
@@ -727,7 +732,7 @@ class TestCheckoutAllView(APITestCase):
         self.ballkid2.save()
         self.assertEqual(2, len(Ballkid.objects.filter(is_checked_in=True)))
 
-        response = self.client.patch(self.url, {}, format="json")
+        response = self.client.patch(self.url, {"checkout_group": "all"}, format="json")
         self.ballkid1.refresh_from_db()
         self.ballkid2.refresh_from_db()
 
@@ -749,13 +754,57 @@ class TestCheckoutAllView(APITestCase):
         self.ballkid2.save()
         self.assertEqual(2, len(Ballkid.objects.filter(is_checked_in=True)))
 
-        response = self.client.patch(self.url, {}, format="json")
+        response = self.client.patch(self.url, {"checkout_group": "all"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(0, Ballkid.objects.filter(is_checked_in=True).count())
         self.assertEqual(MATCH_TYPE.MS, self.ballkid1.finals_team)
         self.assertEqual(MATCH_TYPE.WS, self.ballkid2.finals_team)
         self.assertEqual(POSITION.N, self.ballkid1.finals_position)
         self.assertEqual(POSITION.N, self.ballkid2.finals_position)
+
+    def test_checkout_unassigned(self):
+        self.ballkid1.is_checked_in = True
+        self.ballkid2.is_checked_in = True
+        self.ballkid3.is_checked_in = True
+        self.ballkid3.current_team = 1
+        self.ballkid1.save()
+        self.ballkid2.save()
+        self.ballkid3.save()
+        self.assertEqual(3, len(Ballkid.objects.filter(is_checked_in=True)))
+
+        response = self.client.patch(
+            self.url, {"checkout_group": "unassigned"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, len(Ballkid.objects.filter(is_checked_in=True)))
+
+    def test_checkout_nonempty_team(self):
+        self.ballkid1.is_checked_in = True
+        self.ballkid2.is_checked_in = True
+        self.ballkid3.is_checked_in = True
+        self.ballkid3.current_team = 1
+        self.ballkid1.save()
+        self.ballkid2.save()
+        self.ballkid3.save()
+        self.assertEqual(3, len(Ballkid.objects.filter(is_checked_in=True)))
+
+        response = self.client.patch(self.url, {"checkout_group": 1}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(2, len(Ballkid.objects.filter(is_checked_in=True)))
+
+    def test_checkout_empty_team(self):
+        self.ballkid1.is_checked_in = True
+        self.ballkid2.is_checked_in = True
+        self.ballkid3.is_checked_in = True
+        self.ballkid3.current_team = 1
+        self.ballkid1.save()
+        self.ballkid2.save()
+        self.ballkid3.save()
+        self.assertEqual(3, len(Ballkid.objects.filter(is_checked_in=True)))
+
+        response = self.client.patch(self.url, {"checkout_group": 2}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(3, len(Ballkid.objects.filter(is_checked_in=True)))
 
 
 class TestCutAllView(APITestCase):
@@ -1125,8 +1174,8 @@ class TestClearTeamView(APITestCase):
         self.assertEqual(1, self.ballkid1.current_team)
         self.assertEqual(1, self.ballkid2.current_team)
         self.assertEqual(0, self.ballkid3.current_team)
-        self.assertEqual(3, Ballkid.objects.all().filter(is_checked_in=True).count())
-        self.assertEqual(2, Ballkid.objects.all().filter(current_team__gt=0).count())
+        self.assertEqual(3, Ballkid.objects.filter(is_checked_in=True).count())
+        self.assertEqual(2, Ballkid.objects.filter(current_team__gt=0).count())
         self.assertEqual(
             1, Ballkid.objects.aggregate(num_teams=Max("current_team"))["num_teams"]
         )
@@ -1144,8 +1193,8 @@ class TestClearTeamView(APITestCase):
         self.ballkid2.refresh_from_db()
         self.ballkid3.refresh_from_db()
 
-        self.assertEqual(3, Ballkid.objects.all().filter(is_checked_in=True).count())
-        self.assertEqual(2, Ballkid.objects.all().filter(current_team__gt=0).count())
+        self.assertEqual(3, Ballkid.objects.filter(is_checked_in=True).count())
+        self.assertEqual(2, Ballkid.objects.filter(current_team__gt=0).count())
         self.assertEqual(
             1, Ballkid.objects.aggregate(num_teams=Max("current_team"))["num_teams"]
         )

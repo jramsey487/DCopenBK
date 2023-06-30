@@ -482,10 +482,31 @@ class CheckoutAll(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
-        queryset = Ballkid.objects.filter(is_checked_in=True)
-        logger.info(
-            f"{datetime.now()} [CheckoutAll] checking out all ballkids {queryset}"
-        )
+        group = request.data["checkout_group"]
+
+        if group == "all":
+            queryset = Ballkid.objects.filter(is_checked_in=True)
+            logger.info(
+                f"{datetime.now()} [CheckoutAll] checking out all ballkids: {queryset}"
+            )
+
+        elif group == "unassigned":
+            queryset = Ballkid.objects.filter(is_checked_in=True, current_team=0)
+            logger.info(
+                f"{datetime.now()} [CheckoutAll] checking out unassigned ballkids: {queryset}"
+            )
+
+        else:
+            try:
+                queryset = Ballkid.objects.filter(current_team=int(group))
+                logger.info(
+                    f"{datetime.now()} [CheckoutAll] checking out team {group} ballkids: {queryset}"
+                )
+
+            except Exception:
+                logger.warn(
+                    f"{datetime.now()} [CheckoutAll] Unrecognized checkout group {group}"
+                )
 
         for ballkid in queryset:
             ballkid.set_field("is_checked_in", False)

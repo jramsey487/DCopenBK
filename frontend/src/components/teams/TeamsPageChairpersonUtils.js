@@ -55,62 +55,140 @@ export function DraggableBallkidAndIcon(props) {
   );
 }
 
-function renderBallkidsOnTeam(assigned, teamNum, position, setUpdated) {
+function renderSwitchButton(ballkid, setUpdated) {
+  return (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={(e) => {
+        fetch("/api/update-ballkid", {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            first_name: ballkid.first_name,
+            last_name: ballkid.last_name,
+            position: ballkid.position === "Back" ? "Net" : "Back",
+          }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+      sx={{ minWidth: 0 }}
+    >
+      <SwapVert />
+    </Button>
+  );
+}
+
+function renderUnassignButton(ballkid, setUpdated) {
+  return (
+    <IconButton
+      size="small"
+      onClick={(e) => {
+        fetch("/api/update-ballkid", {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            first_name: ballkid.first_name,
+            last_name: ballkid.last_name,
+            current_team: 0,
+          }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+    >
+      <Close />
+    </IconButton>
+  );
+}
+
+function renderBallkidsOnTeam(ballkids, position, setUpdated) {
   return (
     <div>
-      {assigned.map((ballkid) =>
-        ballkid.current_team === teamNum && ballkid.position === position ? (
+      {ballkids.map((ballkid) =>
+        ballkid.position === position ? (
           <div key={`ballkid${ballkid.id}`} className="justify">
             {<DraggableBallkidAndIcon ballkid={ballkid} />}
+
             <div className="sxs">
-              {!ballkid.preferred_position.includes("/") ? (
-                ""
-              ) : (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={(e) => {
-                    fetch("/api/update-ballkid", {
-                      method: "PATCH",
-                      headers: getAuthHeader(),
-                      body: JSON.stringify({
-                        first_name: ballkid.first_name,
-                        last_name: ballkid.last_name,
-                        position: ballkid.position === "Back" ? "Net" : "Back",
-                      }),
-                    })
-                      .then((response) => response.json())
-                      .then(() => setUpdated(true));
-                  }}
-                  sx={{ minWidth: 0 }}
-                >
-                  <SwapVert />
-                </Button>
-              )}
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  fetch("/api/update-ballkid", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      first_name: ballkid.first_name,
-                      last_name: ballkid.last_name,
-                      current_team: 0,
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                <Close />
-              </IconButton>
+              {!ballkid.preferred_position.includes("/")
+                ? ""
+                : renderSwitchButton(ballkid, setUpdated)}
+
+              {renderUnassignButton(ballkid, setUpdated)}
             </div>
           </div>
         ) : (
           ""
         )
       )}
+    </div>
+  );
+}
+
+function renderClearButton(team, setUpdated) {
+  return (
+    <Button
+      size="small"
+      onClick={(e) => {
+        fetch("/api/clear-team", {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            current_team: team,
+          }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+    >
+      Clear
+    </Button>
+  );
+}
+
+function renderCheckoutTeamButton(team, setUpdated) {
+  return (
+    <Button
+      size="small"
+      color="error"
+      onClick={() => {
+        fetch("/api/checkout-all", {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            checkout_group: team,
+          }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+    >
+      Check Out All
+    </Button>
+  );
+}
+
+function renderTeamCardHeader(team, assigned, nextShifts, setUpdated) {
+  return (
+    <div>
+      <div className="justify">
+        <div className="sxs">
+          <Typography variant="h6">Team {team}</Typography>
+          <Typography variant="subtitle1" sx={{ ml: 1 }}>
+            ({assigned.length})
+          </Typography>
+        </div>
+
+        {renderClearButton(team, setUpdated)}
+      </div>
+
+      <div className="justify">
+        <CourtAssignment nextShifts={nextShifts} />
+
+        {renderCheckoutTeamButton(team, setUpdated)}
+      </div>
     </div>
   );
 }
@@ -155,7 +233,7 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
           borderStyle: "dashed",
           borderColor: "gray",
         }}
-        elevation={isOver ? 10 : 1}
+        elevation={isOver ? 10 : isNewTeam ? 0 : 1}
       >
         {isNewTeam ? (
           <CardContent>
@@ -165,50 +243,7 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
           </CardContent>
         ) : (
           <CardContent>
-            <div className="justify">
-              <div className="sxs">
-                <Typography variant="h6">Team {team}</Typography>
-                <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                  ({assigned.length})
-                </Typography>
-              </div>
-
-              <Button
-                size="small"
-                onClick={(e) => {
-                  fetch("/api/clear-team", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      current_team: team,
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                Clear
-              </Button>
-            </div>
-
-            <div className="justify">
-              <CourtAssignment nextShifts={nextShifts} />
-              {/* <Button
-                // variant="outlined"
-                size="small"
-                color="error"
-                onClick={() => {
-                  fetch("/api/checkout-all", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                Check Out All
-              </Button> */}
-            </div>
+            {renderTeamCardHeader(team, assigned, nextShifts, setUpdated)}
 
             {positions.map((position) => (
               <div key={position}>
@@ -225,7 +260,11 @@ function Team({ team, assigned, nextShifts, isMobile, isNewTeam, setUpdated }) {
                     )
                   </Typography>
                 </div>
-                {renderBallkidsOnTeam(assigned, team, position, setUpdated)}
+                {renderBallkidsOnTeam(
+                  assigned.filter((ballkid) => ballkid.current_team === team),
+                  position,
+                  setUpdated
+                )}
               </div>
             ))}
           </CardContent>

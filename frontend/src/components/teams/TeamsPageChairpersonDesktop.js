@@ -4,6 +4,7 @@ import { useDrop } from "react-dnd";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 
 import { getAuthHeader, SearchAndFilter, filterBallkids } from "../Utils";
@@ -44,14 +45,35 @@ function Unassigned({ unassigned, setUpdated }) {
       elevation={isOver ? 10 : 1}
       sx={{ pl: { xs: 0, sm: 3 }, ml: { xs: 0, sm: 3 } }}
     >
-      <div className="sxs">
-        <Typography variant="h5" sx={MARGINS}>
-          Unassigned
-        </Typography>
-        <Typography variant="h6" sx={MARGINS}>
-          &ensp; (
-          {filterBallkids(unassigned, searchKeyword, filterGroup).length})
-        </Typography>
+      <div className="justify">
+        <div className="sxs">
+          <Typography variant="h5" sx={MARGINS}>
+            Unassigned
+          </Typography>
+          <Typography variant="h6" sx={MARGINS}>
+            &ensp; (
+            {filterBallkids(unassigned, searchKeyword, filterGroup).length})
+          </Typography>
+        </div>
+        <Button
+          variant="outlined"
+          size="small"
+          color="error"
+          sx={MARGINS}
+          onClick={() => {
+            fetch("/api/checkout-all", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                checkout_group: "unassigned",
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          Check Out All
+        </Button>
       </div>
 
       <div>
