@@ -118,7 +118,16 @@ export function UnassignedDesktop({
               ) : (
                 <Grid container>
                   {ballkids.map((ballkid) => (
-                    <Grid key={ballkid.id} item sm={12} md={6} sx={{ px: 1 }}>
+                    <Grid
+                      key={ballkid.id}
+                      item
+                      xs={12}
+                      sm={6}
+                      md={6}
+                      lg={6}
+                      xl={4}
+                      sx={{ px: 1 }}
+                    >
                       {<DraggableBallkidAndIcon ballkid={ballkid} />}
                     </Grid>
                   ))}

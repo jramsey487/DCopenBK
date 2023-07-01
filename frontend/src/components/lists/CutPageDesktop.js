@@ -9,12 +9,6 @@ import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Table from "@mui/material/Table";
-import TableContainer from "@mui/material/TableContainer";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -24,7 +18,6 @@ import DialogContentText from "@mui/material/DialogContentText";
 
 import Clear from "@mui/icons-material/Clear";
 import Dangerous from "@mui/icons-material/Dangerous";
-import ReportOff from "@mui/icons-material/ReportOff";
 
 import {
   filterBallkids,
@@ -223,13 +216,7 @@ function ActiveSection({ active, setUpdated }) {
           Active Ballkids
         </Typography>
         <Typography variant="h6" sx={MARGINS}>
-          &ensp; (
-          {
-            filterBallkids(active, searchKeyword, filterGroup).filter(
-              (ballkid) => ballkid.cut_status === ""
-            ).length
-          }
-          )
+          &ensp; ({filterBallkids(active, searchKeyword, filterGroup).length})
         </Typography>
       </div>
 
@@ -246,7 +233,16 @@ function ActiveSection({ active, setUpdated }) {
       ) : (
         <Grid container>
           {filterBallkids(active, searchKeyword, filterGroup).map((ballkid) => (
-            <Grid key={ballkid.id} item sm={12} md={6} sx={{ px: 1 }}>
+            <Grid
+              key={ballkid.id}
+              item
+              xs={12}
+              sm={6}
+              md={6}
+              lg={6}
+              xl={4}
+              sx={{ px: 1 }}
+            >
               {<DraggableBallkidAndIcon ballkid={ballkid} />}
             </Grid>
           ))}
@@ -310,9 +306,6 @@ function ConfirmDialog({ section, message, open, setOpen, setUpdated }) {
 
 export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
-  const [cut, setCut] = useState([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState();
   const [updated, setUpdated] = useState(false);
 
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
@@ -320,10 +313,7 @@ export default function CutPageDesktop(props) {
   useEffect(() => {
     fetch("/api/all-sorted-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => {
-        setActive(data.filter((ballkid) => !ballkid.is_cut));
-        setCut(data.filter((ballkid) => ballkid.is_cut));
-      })
+      .then((data) => setActive(data.filter((ballkid) => !ballkid.is_cut)))
       .then(() => setUpdated(false));
   }, [updated]);
 
@@ -364,8 +354,7 @@ export default function CutPageDesktop(props) {
           style={{ maxHeight: "85vh", overflow: "auto" }}
         >
           <ActiveSection
-            active={filterBallkids(active, searchKeyword, filterGroup)}
-            sections={sections}
+            active={active.filter((ballkid) => ballkid.cut_status === "")}
             setUpdated={setUpdated}
           />
         </Grid>
