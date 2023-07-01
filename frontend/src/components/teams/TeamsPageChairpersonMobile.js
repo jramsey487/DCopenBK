@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useDrop } from "react-dnd";
 
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -56,23 +55,6 @@ function Unassigned({ unassigned, teams, setUpdated }) {
   const [filterGroup, setFilterGroup] = useState();
   const [open, setOpen] = useState(false);
 
-  const [{ isOver }, dropRef] = useDrop({
-    accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          current_team: 0,
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
-  });
-
   return (
     <div>
       <CheckoutConfirmDialog
@@ -111,11 +93,7 @@ function Unassigned({ unassigned, teams, setUpdated }) {
             setFilterGroup={setFilterGroup}
           />
 
-          <TableContainer
-            component={Paper}
-            ref={dropRef}
-            elevation={isOver ? 10 : 1}
-          >
+          <TableContainer component={Paper} elevation={1}>
             <Table>
               <TableHead>
                 <TableRow>

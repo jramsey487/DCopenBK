@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { Link as RouterLink } from "react-router-dom";
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -9,7 +7,6 @@ import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import Link from "@mui/material/Link";
 import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import TableBody from "@mui/material/TableBody";
@@ -19,100 +16,53 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 
 import Close from "@mui/icons-material/Close";
+import SwapVert from "@mui/icons-material/SwapVert";
 
 import {
   getAuthHeader,
-  Icons,
   Alerts,
   filterBallkids,
   SearchAndFilter,
   HideShowToggle,
+  DraggableBallkidAndIcon,
 } from "../Utils";
 import { MATCH_TYPES, MARGINS } from "../Consts";
-
-function DraggableBallkidAndIcon(props) {
-  const ballkid = props.ballkid;
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "ballkid",
-    item: { ...ballkid },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }));
-
-  return (
-    <div
-      ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-    >
-      <div className="sxs">
-        <Link
-          variant="body2"
-          component={RouterLink}
-          to={`/ballkid/${ballkid.id}`}
-        >
-          {ballkid.first_name} {ballkid.last_name}
-        </Link>
-        &thinsp;
-        <Icons ballkid={ballkid} margin={0} />
-      </div>
-    </div>
-  );
-}
 
 function Team({ team, assigned, setUpdated }) {
   const positions = ["Net", "Back"];
 
-  const [{ isOver }, dropRef] = useDrop({
-    accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          finals_team: team,
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
-  });
-
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2} ref={dropRef}>
-      <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
+    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+      <Card sx={{ mb: 2 }} elevation={1}>
         <CardContent>
           <div className="justify">
             <div className="sxs">
               <Typography variant="h6">{team}</Typography>
               <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                (
-                {
-                  assigned.filter((ballkid) => ballkid.finals_team === team)
-                    .length
-                }
-                )
+                ({assigned.length})
               </Typography>
             </div>
 
-            <Button
-              size="small"
-              onClick={(e) => {
-                fetch("/api/clear-team", {
-                  method: "PATCH",
-                  headers: getAuthHeader(),
-                  body: JSON.stringify({
-                    finals_team: team,
-                  }),
-                })
-                  .then((response) => response.json())
-                  .then(() => setUpdated(true));
-              }}
-            >
-              Clear
-            </Button>
+            {assigned.length === 0 ? (
+              ""
+            ) : (
+              <Button
+                size="small"
+                onClick={(e) => {
+                  fetch("/api/clear-team", {
+                    method: "PATCH",
+                    headers: getAuthHeader(),
+                    body: JSON.stringify({
+                      finals_team: team,
+                    }),
+                  })
+                    .then((response) => response.json())
+                    .then(() => setUpdated(true));
+                }}
+              >
+                Clear
+              </Button>
+            )}
           </div>
           {positions.map((position) => (
             <div key={position}>
@@ -166,8 +116,9 @@ function renderBallkidsOnTeam(assigned, team, position, setUpdated) {
                       .then((response) => response.json())
                       .then(() => setUpdated(true));
                   }}
+                  sx={{ minWidth: 0 }}
                 >
-                  Switch
+                  <SwapVert />
                 </Button>
               ) : (
                 ""
@@ -207,7 +158,7 @@ function renderTeams(assigned, teams, setUpdated) {
         <Team
           key={team}
           team={team}
-          assigned={assigned}
+          assigned={assigned.filter((ballkid) => ballkid.finals_team === team)}
           setUpdated={setUpdated}
         />
       ))}
@@ -245,23 +196,6 @@ function Unassigned({ unassigned, teams, setUpdated }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
 
-  const [{ isOver }, dropRef] = useDrop({
-    accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          finals_team: "",
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
-  });
-
   return unassigned.length === 0 ? (
     ""
   ) : (
@@ -282,11 +216,7 @@ function Unassigned({ unassigned, teams, setUpdated }) {
         setFilterGroup={setFilterGroup}
       />
 
-      <TableContainer
-        component={Paper}
-        ref={dropRef}
-        elevation={isOver ? 10 : 1}
-      >
+      <TableContainer component={Paper} elevation={1}>
         <Table>
           <TableHead>
             <TableRow>
