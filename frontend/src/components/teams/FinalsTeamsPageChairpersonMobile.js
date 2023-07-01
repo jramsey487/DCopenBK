@@ -33,7 +33,7 @@ function Team({ team, assigned, setUpdated }) {
 
   return (
     <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card sx={{ mb: 2 }} elevation={1}>
+      <Card sx={{ mb: 1 }} elevation={1}>
         <CardContent>
           <div className="justify">
             <div className="sxs">

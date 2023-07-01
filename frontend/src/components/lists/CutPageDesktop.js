@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { Link as RouterLink } from "react-router-dom";
+import { useDrop } from "react-dnd";
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -8,7 +7,6 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
-import Link from "@mui/material/Link";
 import IconButton from "@mui/material/IconButton";
 import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
@@ -30,40 +28,11 @@ import ReportOff from "@mui/icons-material/ReportOff";
 import {
   filterBallkids,
   getAuthHeader,
-  Icons,
   SearchAndFilter,
   Alerts,
+  DraggableBallkidAndIcon,
 } from "../Utils";
 import { CUT_STATUSES, MARGINS } from "../Consts";
-
-function DraggableBallkidAndIcon({ ballkid }) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "ballkid",
-    item: { ...ballkid },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }));
-
-  return (
-    <div
-      ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-    >
-      <div className="sxs">
-        <Link
-          variant="body2"
-          component={RouterLink}
-          to={`/ballkid/${ballkid.id}`}
-        >
-          {ballkid.first_name} {ballkid.last_name}
-        </Link>
-        &thinsp;
-        <Icons ballkid={ballkid} margin={0} />
-      </div>
-    </div>
-  );
-}
 
 function CutStatusSection({ section, active, setUpdated }) {
   const [open, setOpen] = useState(false);
@@ -453,7 +422,7 @@ function ConfirmDialog({ section, message, open, setOpen, setUpdated }) {
   );
 }
 
-export default function CutPage(props) {
+export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
   const [cut, setCut] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");

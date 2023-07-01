@@ -5,7 +5,8 @@ import BallkidPage from "./ballkid/BallkidPage";
 import TeamsPage from "./teams/TeamsPage";
 import TeamsPageChairpersonDesktop from "./teams/TeamsPageChairpersonDesktop";
 import TeamsPageChairpersonMobile from "./teams/TeamsPageChairpersonMobile";
-import CutPage from "./lists/CutPage";
+import CutPageMobile from "./lists/CutPageMobile";
+import CutPageDesktop from "./lists/CutPageDesktop";
 import Navbar from "./Navbar";
 import CheckinPage from "./lists/CheckinPage";
 import ArchivedBallkidList from "./lists/ArchivedBallkidList";
@@ -46,7 +47,10 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/archive" element={<ArchivedBallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageChairperson />} />
       <Route path="/checkin" element={<CheckinPage />} />
-      <Route path="/cut" element={<CutPage />} />
+      <Route
+        path="/cut"
+        element={isMobile ? <CutPageMobile /> : <CutPageDesktop />}
+      />
       <Route path="/debug" element={<DebugPage />} />
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/leaderboards/checkin" element={<CheckinLeaderboard />} />
