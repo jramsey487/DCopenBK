@@ -362,7 +362,7 @@ export default function RatingsGrid({ ratings, setUpdated }) {
                 items: [
                   {
                     columnField: rateeId === null ? "raterId" : "rateeId",
-                    operatorValue: "contains",
+                    operatorValue: "equals",
                     value: rateeId === null ? raterId : rateeId,
                   },
                 ],
