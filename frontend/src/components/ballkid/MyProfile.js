@@ -34,7 +34,7 @@ function RatingSection({ ballkid }) {
           size="small"
           variant="outlined"
           component={RouterLink}
-          to={`/ratings?rater=${ballkid.id}`}
+          to={"/my-ratings"}
           endIcon={<Shortcut />}
           sx={{ my: 1 }}
         >
