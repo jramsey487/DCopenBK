@@ -8,6 +8,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import Rating from "@mui/material/Rating";
+import Link from "@mui/material/Link";
 
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -191,7 +192,15 @@ export default function RatingDialog({ open, setOpen, ballkid, setUpdated }) {
             <Typography variant="body1">
               Note: Ratings are required to be between 0.5 and 5 stars. Zero
               star ratings are considered empty. Overall rating is required. All
-              other rating categories are optional.
+              other rating categories are optional. For information on how
+              ratings are calibrated across reviewers, see{" "}
+              <Link
+                target="_blank"
+                href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
+              >
+                here
+              </Link>
+              .
             </Typography>
           </Grid>
         </Grid>
