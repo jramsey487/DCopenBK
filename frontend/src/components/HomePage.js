@@ -22,7 +22,6 @@ import RatingsPage from "./ratings/RatingsPage";
 import MyRatingsPage from "./ratings/MyRatingsPage";
 import SchedulePageChairperson from "./schedule/SchedulePageChairperson";
 import RateByNamePage from "./ratings/RateByNamePage";
-import RateByTeamPage from "./ratings/RateByTeamPage";
 import RateByPastTeamPage from "./ratings/RateByPastTeamPage";
 import RouteNotFound from "./RouteNotFound";
 import BallkidPageCaptain from "./ballkid/BallkidPageCaptain";
@@ -36,6 +35,7 @@ import TournamentSettings from "./settings/TournamentSettings";
 import FinalsTeamsPageChairpersonMobile from "./teams/FinalsTeamsPageChairpersonMobile";
 import FinalsTeamsPageChairpersonDesktop from "./teams/FinalsTeamsPageChairpersonDesktop";
 import InactiveBallkidList from "./lists/InactiveBallkidList";
+import RateByCurrentTeamsPage from "./ratings/RateByCurrentTeamsPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 import GamePage from "./settings/GamePage";
@@ -61,7 +61,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/me" element={<MyProfile />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />
       <Route path="/rate-by-name" element={<RateByNamePage />} />
-      <Route path="/rate-by-team" element={<RateByTeamPage />} />
+      <Route path="/rate-by-team" element={<RateByCurrentTeamsPage />} />
       <Route path="/rate-by-past-team" element={<RateByPastTeamPage />} />
       <Route path="/ratings" element={<RatingsPage />} />
       <Route path="/schedule" element={<SchedulePageChairperson />} />
@@ -102,7 +102,7 @@ function captainRoutes(setToken) {
       <Route path="/me" element={<MyProfile />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />
       <Route path="/rate-by-name" element={<RateByNamePage />} />
-      <Route path="/rate-by-team" element={<RateByTeamPage />} />
+      <Route path="/rate-by-team" element={<RateByCurrentTeamsPage />} />
       <Route path="/rate-by-past-team" element={<RateByPastTeamPage />} />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/teams" element={<TeamsPage />} />

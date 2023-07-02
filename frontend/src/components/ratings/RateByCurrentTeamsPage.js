@@ -88,7 +88,7 @@ function Team({ team, assigned, nextShifts, setUpdated }) {
   );
 }
 
-export default function RateByTeamPage(props) {
+export default function RateByCurrentTeamsPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);

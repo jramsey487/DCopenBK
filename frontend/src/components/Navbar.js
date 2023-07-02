@@ -55,6 +55,7 @@ const captainTabs = [
     url: "/rate-by-name",
     subtabs: [
       { label: "Rate By Name", url: "/rate-by-name" },
+      { label: "Rate By Current Team", url: "/rate-by-team" },
       { label: "Rate By Past Teams", url: "/rate-by-past-team" },
       { label: "View My Ratings", url: "/my-ratings" },
     ],
