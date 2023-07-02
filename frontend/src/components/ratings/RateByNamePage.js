@@ -23,12 +23,29 @@ import {
   filterBallkids,
 } from "../Utils";
 
+function getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam) {
+  const pk = getLocalStorage("ballkid_id");
+
+  var ballkidsToRender = ballkids;
+  ballkidsToRender = !showUnrated
+    ? ballkidsToRender
+    : ballkidsToRender.filter(
+        (ballkid) => !ballkid.have_rated && ballkid.id !== pk
+      );
+  ballkidsToRender = !showTeam
+    ? ballkidsToRender
+    : ballkidsToRender.filter((ballkid) => ballkid.current_team === myTeam);
+
+  return ballkidsToRender;
+}
+
 function BallkidsSection({ ballkids, gridLayout, setUpdated }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
 
   const isMobile = useIsMobile();
   const isChairperson = getLocalStorage("group") === "chairperson";
+  const pk = getLocalStorage("ballkid_id");
 
   return ballkids.length === 0 ? (
     <Typography variant="body1">There are no ballkids to rate.</Typography>
@@ -109,8 +126,10 @@ function BallkidsSection({ ballkids, gridLayout, setUpdated }) {
 
 export default function RateByNamePage(props) {
   const [ballkids, setBallkids] = useState([]);
-  const [unratedBallkids, setUnratedBallkids] = useState([]);
-  const [showAll, setShowAll] = useState(true);
+  const [myTeam, setMyTeam] = useState();
+
+  const [showUnrated, setShowUnrated] = useState(false);
+  const [showTeam, setShowTeam] = useState(true);
   const [updated, setUpdated] = useState(false);
 
   const [gridLayout, setGridLayout] = useState(
@@ -125,9 +144,7 @@ export default function RateByNamePage(props) {
       .then((response) => response.json())
       .then((data) => {
         setBallkids(data);
-        setUnratedBallkids(
-          data.filter((ballkid) => !ballkid.have_rated && ballkid.id !== pk)
-        );
+        setMyTeam(data.filter((ballkid) => ballkid.id === pk)[0].current_team);
       })
       .then(() => setUpdated(false));
   }, [pk, updated]);
@@ -135,23 +152,36 @@ export default function RateByNamePage(props) {
   return (
     <div className="page">
       <div className="justify">
-        <Typography variant="h4" sx={{ mb: 1 }}>
-          Rate by Name
-        </Typography>
+        <div className="sxs">
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            Rate by Name
+          </Typography>
+        </div>
         <LayoutButtons gridLayout={gridLayout} setGridLayout={setGridLayout} />
       </div>
 
-      <div className="sxs">
-        <Typography variant="body1">Show All Ballkids</Typography>
-        <Switch
-          checked={!showAll}
-          onClick={(e) => setShowAll(!e.target.checked)}
-        />
-        <Typography variant="body1">Show Ballkids to Rate</Typography>
-      </div>
+      <Grid container>
+        <Grid item className="sxs" xs={12} md={6} lg={5} xl={4}>
+          <Typography variant="body1">Show All Ballkids</Typography>
+          <Switch
+            checked={showUnrated}
+            onClick={(e) => setShowUnrated(e.target.checked)}
+          />
+          <Typography variant="body1">Show Ballkids to Rate</Typography>
+        </Grid>
+
+        <Grid item className="sxs" xs={12} md={6} lg={5} xl={4}>
+          <Typography variant="body1">Show All Teams</Typography>
+          <Switch
+            checked={showTeam}
+            onClick={(e) => setShowTeam(e.target.checked)}
+          />
+          <Typography variant="body1">Show My Team Only</Typography>
+        </Grid>
+      </Grid>
 
       <BallkidsSection
-        ballkids={showAll ? ballkids : unratedBallkids}
+        ballkids={getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam)}
         gridLayout={gridLayout}
         setUpdated={setUpdated}
       />
