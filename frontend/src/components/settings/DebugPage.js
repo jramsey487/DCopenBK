@@ -619,9 +619,9 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
               }),
             }).then((response) => {
               if (response.ok) {
-                setSuccessMsg("Team history created!");
+                setSuccessMsg("Captain history created!");
               } else {
-                setErrorMsg("Error creating team history.");
+                setErrorMsg("Error creating captain history.");
               }
               setBallkid(null);
               setCaptain(null);

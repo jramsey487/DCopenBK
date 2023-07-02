@@ -36,8 +36,6 @@ class CreateCheckinHistory(APIView):
         else:
             history = CheckinHistory.objects.create(ballkid=ballkid, checkin=checkin)
 
-        ballkid.recalc_checkin_analytics()
-
         return Response(CheckinHistorySerializer(history).data)
 
 
@@ -62,9 +60,6 @@ class CreateTeamHistory(APIView):
             history = TeamHistory.objects.create(
                 ballkid=ballkid, start=start, team=request.data["team"]
             )
-
-        ballkid.recalc_court_analytics()
-        ballkid.recalc_captain_analytics()
 
         return Response(TeamHistorySerializer(history).data)
 
@@ -91,9 +86,6 @@ class CreateCaptainHistory(APIView):
             history = CaptainHistory.objects.create(
                 ballkid=ballkid, captain=captain, start=start
             )
-
-        ballkid.recalc_captain_analytics()
-        captain.recalc_captain_analytics()
 
         return Response(CaptainHistorySerializer(history).data)
 

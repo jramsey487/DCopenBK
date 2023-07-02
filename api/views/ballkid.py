@@ -354,10 +354,8 @@ class BallkidsInactiveList(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        return (
-            Ballkid.objects
-            .filter(Q(is_active=False) | Q(is_cut=True))
-            .order_by("last_name", "first_name")
+        return Ballkid.objects.filter(Q(is_active=False) | Q(is_cut=True)).order_by(
+            "last_name", "first_name"
         )
 
 
@@ -625,14 +623,19 @@ class GetPastTeams(APIView):
 
     def get(self, request, pk):
         # Get all the histories where this ballkid was a captain
+        thresholded = CaptainHistory.objects.filter(
+            captain_id=pk, duration__gte=timedelta(minutes=MIN_CAPTAIN_DURATION)
+        )
+        current = CaptainHistory.objects.filter(captain_id=pk, end=None)
+
         histories = (
-            CaptainHistory.objects.filter(
-                captain_id=pk, duration__gte=timedelta(minutes=MIN_CAPTAIN_DURATION)
-            )
+            (thresholded | current)
             .annotate(date=TruncDay("start"))
             .values("date", "ballkid_id")
             .order_by("-date", "ballkid__last_name", "ballkid__first_name")
         )
+
+        print(histories)
 
         logger.info(f"{datetime.now()} [GetPastTeams] pk: {pk}; histories {histories}")
 
