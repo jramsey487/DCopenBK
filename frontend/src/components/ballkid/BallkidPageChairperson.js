@@ -262,12 +262,19 @@ function renderTeam(ballkid, teams, setUpdated, isMobile) {
   );
 }
 
-function RatingSection({ ballkid, isMobile }) {
+function RatingSection({ ballkid }) {
   const [params, setParams] = useState({});
   const [average, setAverage] = useState({});
 
+  const pk = getLocalStorage("ballkid_id");
+  const ballkidGroup = ballkid.is_chairperson
+    ? "chairperson"
+    : ballkid.is_captain
+    ? "captain"
+    : "ballkid";
+
   useEffect(() => {
-    fetch("/api/calibration-parameters/" + ballkid.id, {
+    fetch(`/api/calibration-parameters/${ballkid.id}`, {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
@@ -297,7 +304,8 @@ function RatingSection({ ballkid, isMobile }) {
             endIcon={<Shortcut />}
             sx={{ my: 1 }}
           >
-            View all {params["num_rater_ratings"]} ratings by this captain
+            View all {params["num_rater_ratings"]} ratings by{" "}
+            {pk === ballkid.id ? "you" : `this ${ballkidGroup}`}
           </Button>
 
           {params.rater_scale == null ? (
@@ -323,56 +331,62 @@ function RatingSection({ ballkid, isMobile }) {
         </Grid>
       )}
 
-      <Grid item xs={12} lg={5.5} sx={{ mx: 1 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          component={RouterLink}
-          to={`/ratings?ratee=${ballkid.id}`}
-          endIcon={<Shortcut />}
-          sx={{ my: 1, mr: 1 }}
-        >
-          View all {params["num_ratee_ratings"]} ratings for this ballkid
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          component={RouterLink}
-          to={`/my-ratings?ratee=${ballkid.id}`}
-          endIcon={<Shortcut />}
-          sx={{ my: 1 }}
-        >
-          View my ratings for this ballkid
-        </Button>
+      {ballkidGroup === "chairperson" ? (
+        ""
+      ) : (
+        <Grid item xs={12} lg={5.5} sx={{ mx: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            component={RouterLink}
+            to={`/ratings?ratee=${ballkid.id}`}
+            endIcon={<Shortcut />}
+            sx={{ my: 1, mr: 1 }}
+          >
+            View all {params["num_ratee_ratings"]} ratings for this ballkid
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            component={RouterLink}
+            to={`/my-ratings?ratee=${ballkid.id}`}
+            endIcon={<Shortcut />}
+            sx={{ my: 1 }}
+          >
+            View my ratings for this ballkid
+          </Button>
 
-        {params.ratee_improvement == null ? (
-          ""
-        ) : (
-          <div>
-            {params["num_ratee_ratings"] >= NUM_RATINGS_WARNING_THRESHOLD &&
-            params["num_raters"] >= NUM_RATERS_WARNING_THRESHOLD ? (
-              ""
-            ) : (
-              <Alert severity="warning" sx={{ my: 1 }}>
-                Note: This ballkid only had {params["num_raters"]} rater(s) and
-                received a total of {params["num_ratee_ratings"]} rating(s).
-              </Alert>
-            )}
-            <Typography variant="body1">
-              Ballkid improvement: {Number(params.ratee_improvement).toFixed(3)}
-            </Typography>
-            <Typography variant="body1">
-              Ballkid offset: {Number(params.ratee_offset).toFixed(3)}
-            </Typography>
+          {params.ratee_improvement == null ? (
+            ""
+          ) : (
+            <div>
+              {params["num_ratee_ratings"] >= NUM_RATINGS_WARNING_THRESHOLD &&
+              params["num_raters"] >= NUM_RATERS_WARNING_THRESHOLD ? (
+                ""
+              ) : (
+                <Alert severity="warning" sx={{ my: 1 }}>
+                  Note: This ballkid only had {params["num_raters"]} rater(s)
+                  and received a total of {params["num_ratee_ratings"]}{" "}
+                  rating(s).
+                </Alert>
+              )}
+              <Typography variant="body1">
+                Ballkid improvement:{" "}
+                {Number(params.ratee_improvement).toFixed(3)}
+              </Typography>
+              <Typography variant="body1">
+                Ballkid offset: {Number(params.ratee_offset).toFixed(3)}
+              </Typography>
 
-            <BallkidParamsChart
-              offset={params.ratee_offset}
-              improvement={params.ratee_improvement}
-              sx={{ mb: 2 }}
-            />
-          </div>
-        )}
-      </Grid>
+              <BallkidParamsChart
+                offset={params.ratee_offset}
+                improvement={params.ratee_improvement}
+                sx={{ mb: 2 }}
+              />
+            </div>
+          )}
+        </Grid>
+      )}
     </Grid>
   );
 }
@@ -634,7 +648,8 @@ export default function BallkidPageChairperson(props) {
   const [totalTime, setTotalTime] = useState("");
 
   const isMobile = useIsMobile();
-  const { pk } = useParams();
+  var { pk } = useParams();
+  pk = pk ?? getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch(`/api/get-ballkid/${pk}`, { headers: getAuthHeader() })
@@ -724,7 +739,7 @@ export default function BallkidPageChairperson(props) {
         ""
       ) : (
         <div>
-          <RatingSection ballkid={ballkid} isMobile={isMobile} />
+          <RatingSection ballkid={ballkid} />
 
           <Typography variant="h6" sx={{ mt: 2 }}>
             Analytics:

@@ -59,7 +59,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/leaderboards/ballkid" element={<BallkidLeaderboard />} />
       <Route path="/leaderboards/court" element={<CourtLeaderboard />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
-      <Route path="/me" element={<MyProfile />} />
+      <Route path="/me" element={<BallkidPageChairperson />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />
       <Route path="/rate-by-name" element={<RateByNamePage />} />
       <Route path="/rate-by-team" element={<RateByCurrentTeamsPage />} />
