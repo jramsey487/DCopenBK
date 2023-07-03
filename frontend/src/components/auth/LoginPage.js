@@ -22,7 +22,7 @@ function submitPassword(state, setSuccessMsg, setErrorMsg, setToken, navigate) {
       if (response.ok) {
         setSuccessMsg("Logged in");
         if (window.location.pathname === "/login") {
-          navigate("/");
+          navigate("/teams");
         }
       } else {
         setErrorMsg("Incorrect password.");
