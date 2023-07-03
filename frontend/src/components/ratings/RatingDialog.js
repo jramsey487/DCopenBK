@@ -40,12 +40,8 @@ export function RatingAndLabel({ label, rating, setRating }) {
         precision={0.5}
         value={rating}
         onChange={(e, newVal) => setRating(newVal)}
+        size={isMobile ? "large" : ""}
         sx={{ mr: isMobile ? 3 : 0 }}
-        // onMouseDown={(e) => e.stopPropagation()}
-        // onClick={(e) => {
-        //   e.stopPropagation();
-        //   e.preventDefault();
-        // }}
       />
     </Grid>
   );
