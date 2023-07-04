@@ -4,10 +4,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
 from api.serializers import *
 from api.permissions import *
 from api.models.ballkid import *
 from api.utils import *
+from api.consts import *
+
 from datetime import datetime
 from rcal import RcalWarning, calibrate_parameters
 import networkx as nx
@@ -147,6 +150,12 @@ def save_calibration_parameters(cp, calibrated=None):
         f"{datetime.now()} [save_calibration_parameters] saving calibration params"
     )
 
+    if cp is None:
+        logger.info(
+            f"{datetime.now()} [save_calibration_parameters] cp object is None, returning early without saving"
+        )
+        return
+
     current_year = get_current_year()
 
     improvements = cp.improvement_rates()
@@ -224,6 +233,18 @@ def save_calibration_parameters(cp, calibrated=None):
             )
 
         cp.save()
+
+
+def get_postprocessed_rating(cp, rating, name):
+    if rating is None:
+        return None
+
+    if cp is None:
+        return float(rating)
+
+    return cp.calibrate_rating(
+        name, float(rating), clip_endpoints=(MIN_RATING, MAX_RATING)
+    )
 
 
 class RatingsList(generics.ListAPIView):
@@ -319,17 +340,6 @@ class CalibratedRatings(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request, year):
-        MIN_RATING = 0.5
-        MAX_RATING = 5
-        RATING_CATEGORIES = [
-            "overall",
-            "athleticism",
-            "rolling",
-            "awareness",
-            "decision",
-            "effort",
-        ]
-
         cp_dict, excluded = {}, {}
         ratings = Rating.objects.all()
 
@@ -347,16 +357,21 @@ class CalibratedRatings(APIView):
             if any((x.category == RcalWarning for x in caught_warnings)):
                 all_warnings.add(rating_name)
 
+                # If rcal warning was thrown for rating_name, then clear out cp_dict
+                # for that rating name and just return the untransformed rating for
+                # the rating category
+                cp_dict[rating_name] = None
+
         logger.warn(
             f"{datetime.now()} [CalibratedRatings] rating categories with warnings {all_warnings}"
         )
 
         # Get dict of all calibrated overall ratings for saving calibration params
         calibrated = {
-            (rating.id, rating.ratee.get_name()): cp_dict["overall"].calibrate_rating(
+            (rating.id, rating.ratee.get_name()): get_postprocessed_rating(
+                cp_dict["overall"],
+                rating.rating,
                 rating.rater.get_name(),
-                float(rating.rating),
-                clip_endpoints=(MIN_RATING, MAX_RATING),
             )
             for rating in ratings
         }
@@ -376,41 +391,31 @@ class CalibratedRatings(APIView):
                 "ratee": rating.ratee,
                 "date": rating.date,
                 "rating": calibrated[(rating.id, rating.ratee.get_name())],
-                "athleticism_rating": cp_dict["athleticism"].calibrate_rating(
+                "athleticism_rating": get_postprocessed_rating(
+                    cp_dict["athleticism"],
+                    rating.athleticism_rating,
                     rating.rater.get_name(),
-                    float(rating.athleticism_rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                )
-                if rating.athleticism_rating
-                else None,
-                "rolling_rating": cp_dict["rolling"].calibrate_rating(
+                ),
+                "rolling_rating": get_postprocessed_rating(
+                    cp_dict["rolling"],
+                    rating.rolling_rating,
                     rating.rater.get_name(),
-                    float(rating.rolling_rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                )
-                if rating.rolling_rating
-                else None,
-                "awareness_rating": cp_dict["awareness"].calibrate_rating(
+                ),
+                "awareness_rating": get_postprocessed_rating(
+                    cp_dict["awareness"],
+                    rating.awareness_rating,
                     rating.rater.get_name(),
-                    float(rating.awareness_rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                )
-                if rating.awareness_rating
-                else None,
-                "decision_rating": cp_dict["decision"].calibrate_rating(
+                ),
+                "decision_rating": get_postprocessed_rating(
+                    cp_dict["decision"],
+                    rating.decision_rating,
                     rating.rater.get_name(),
-                    float(rating.decision_rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                )
-                if rating.decision_rating
-                else None,
-                "effort_rating": cp_dict["effort"].calibrate_rating(
+                ),
+                "effort_rating": get_postprocessed_rating(
+                    cp_dict["effort"],
+                    rating.effort_rating,
                     rating.rater.get_name(),
-                    float(rating.effort_rating),
-                    clip_endpoints=(MIN_RATING, MAX_RATING),
-                )
-                if rating.effort_rating
-                else None,
+                ),
                 "comments": rating.comments,
                 # Annotated values
                 "rater_name": rating.rater.get_name(),
@@ -441,6 +446,7 @@ class CalibratedRatings(APIView):
                 k["ratee_name"].split(" ")[0],
             ),
         )
+
         # If an rcal warning was thrown for the overall rating category
         if "overall" in all_warnings:
             logger.warn(
@@ -461,6 +467,7 @@ class CalibratedRatings(APIView):
         logger.info(
             f"{datetime.now()} [CalibratedRatings] post-processed calibrated ratings {postprocessed} "
         )
+        print(all_warnings, s)
         return Response(RatingSerializer(postprocessed, many=True).data, status=s)
 
 
