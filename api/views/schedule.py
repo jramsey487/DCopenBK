@@ -3,9 +3,12 @@ from django.db.models import Max
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from api.serializers import *
 from rest_framework.permissions import IsAuthenticated
+
+from api.serializers import *
 from api.permissions import *
+from api.consts import *
+
 import logging
 
 logger = logging.getLogger("api.schedule")

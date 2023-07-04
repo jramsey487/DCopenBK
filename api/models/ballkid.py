@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from api.models.schedule import COURT
 from django.contrib.auth.models import User
 from api.utils import *
+from api.consts import *
 import logging
 
 logger = logging.getLogger("api.ballkid")
