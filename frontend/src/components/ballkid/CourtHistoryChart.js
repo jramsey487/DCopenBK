@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -37,15 +36,12 @@ function getAverageDurationFloat(averages, court) {
   return parseFloat(averages[courtNameToKey[court]]) / 3600;
 }
 
-export function CourtHistoryChart(props) {
+export function CourtHistoryChart({ pk }) {
   const [courts, setCourts] = useState([]);
   const [averages, setAverages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const isChairperson = getLocalStorage("group") === "chairperson";
-
-  var { pk } = useParams();
-  pk = pk ?? getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch(`/api/get-courts/${pk}`, { headers: getAuthHeader() })

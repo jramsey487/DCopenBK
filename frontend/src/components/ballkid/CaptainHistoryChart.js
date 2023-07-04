@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import {
   Chart as ChartJS,
@@ -9,13 +9,20 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat } from "../Utils";
+import { getTimeFloat, getAuthHeader } from "../Utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
-export function CaptainHistoryChart(props) {
-  const analytics = props.histories;
-  const labels = analytics.map(
+export function CaptainHistoryChart({ pk }) {
+  const [histories, setHistories] = useState([]);
+
+  useEffect(() => {
+    fetch(`/api/get-captains/${pk}`, { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setHistories(data));
+  }, [pk]);
+
+  const labels = histories.map(
     (analytic) =>
       analytic["captain"].first_name + " " + analytic["captain"].last_name
   );
@@ -53,7 +60,7 @@ export function CaptainHistoryChart(props) {
     datasets: [
       {
         label: "Time on Captain's Team",
-        data: analytics.map((analytic) => getTimeFloat(analytic["duration"])),
+        data: histories.map((analytic) => getTimeFloat(analytic["duration"])),
         backgroundColor: "rgb(240, 99, 132)",
       },
     ],

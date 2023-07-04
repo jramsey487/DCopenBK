@@ -790,8 +790,6 @@ export default function BallkidPageChairperson(props) {
 
   const [finals, setFinals] = useState([]);
   const [cuts, setCuts] = useState([]);
-  const [checkins, setCheckins] = useState([]);
-  const [captains, setCaptains] = useState([]);
 
   const isMobile = useIsMobile();
   var { pk } = useParams();
@@ -812,15 +810,7 @@ export default function BallkidPageChairperson(props) {
 
     fetch(`/api/get-cut-history/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setCuts(data));
-
-    fetch(`/api/get-captains/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCaptains(data));
-
-    fetch(`/api/get-checkins/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCheckins(data))
+      .then((data) => setCuts(data))
       .then(() => setUpdated(false));
   }, [updated, pk]);
 
@@ -887,15 +877,15 @@ export default function BallkidPageChairperson(props) {
 
           <Grid container>
             <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CheckinHistoryChart histories={checkins} />
+              <CheckinHistoryChart pk={pk} />
             </Grid>
 
             <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CourtHistoryChart />
+              <CourtHistoryChart pk={pk} />
             </Grid>
 
             <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-              <CaptainHistoryChart histories={captains} />
+              <CaptainHistoryChart pk={pk} />
             </Grid>
 
             {/* <MatchHistoryChart histories={matches} /> */}

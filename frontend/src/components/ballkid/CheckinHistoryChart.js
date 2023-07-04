@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import {
   Chart as ChartJS,
@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat, getDays } from "../Utils";
+import { getTimeFloat, getDays, getAuthHeader } from "../Utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
@@ -50,12 +50,20 @@ function getCheckinDuration(history, date) {
   return 0.1;
 }
 
-export function CheckinHistoryChart({ histories }) {
+export function CheckinHistoryChart({ pk }) {
   // Note that this only plots the first shift a ballkid is checked in for the day.
   // TODO: modify to capture if ballkid checks in, then out, then in, then out
   //
   // Also note that this only plots if the ballkid checks in before midnight.
   // TODO: modify to capture if ballkid checks in after midnight
+
+  const [histories, setHistories] = useState([]);
+
+  useEffect(() => {
+    fetch(`/api/get-checkins/${pk}`, { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setHistories(data));
+  }, [pk]);
 
   const days = getDays();
   const labels = days.map((day) => day.toDateString());

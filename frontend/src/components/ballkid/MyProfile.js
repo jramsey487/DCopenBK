@@ -49,9 +49,6 @@ export default function MyProfile(props) {
 
   const [finals, setFinals] = useState([]);
   const [cuts, setCuts] = useState([]);
-  const [checkins, setCheckins] = useState([]);
-  const [captains, setCaptains] = useState([]);
-  const [courts, setCourts] = useState([]);
 
   const [updated, setUpdated] = useState(false);
 
@@ -70,19 +67,8 @@ export default function MyProfile(props) {
 
     fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setCuts(data));
+      .then((data) => setCuts(data))
 
-    fetch("/api/get-captains/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCaptains(data));
-
-    fetch("/api/get-courts/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCourts(data));
-
-    fetch("/api/get-checkins/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCheckins(data))
       .then(() => setUpdated(false));
   }, [updated, pk]);
 
@@ -155,15 +141,15 @@ export default function MyProfile(props) {
 
             <Grid container>
               <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-                <CheckinHistoryChart histories={checkins} />
+                <CheckinHistoryChart pk={pk} />
               </Grid>
 
               <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-                <CourtHistoryChart histories={courts} />
+                <CourtHistoryChart pk={pk} />
               </Grid>
 
               <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-                <CaptainHistoryChart histories={captains} />
+                <CaptainHistoryChart pk={pk} />
               </Grid>
             </Grid>
           </div>
