@@ -344,7 +344,7 @@ function renderRatingsCaptainSection(ballkid, ballkidGroup, params, average) {
         endIcon={<Shortcut />}
         sx={{ my: 1 }}
       >
-        View all {params["num_rater_ratings"]} ratings by{" "}
+        View all {params.num_rater_ratings} ratings by{" "}
         {pk === ballkid.id ? "you" : `this ${ballkidGroup}`}
       </Button>
 
@@ -352,13 +352,13 @@ function renderRatingsCaptainSection(ballkid, ballkidGroup, params, average) {
         ""
       ) : (
         <div>
-          {/* <Typography variant="body1">
-            Reviewer average: {Number(params.rater_scale).toFixed(3)}
+          <Typography variant="body1">
+            Reviewer average: {Number(params.rater_raw_avg).toFixed(3)}
           </Typography>
           <Typography variant="body1">
             Reviewer standard deviation:{" "}
-            {Number(params.rater_offset).toFixed(3)}
-          </Typography> */}
+            {Number(params.rater_raw_stdev).toFixed(3)}
+          </Typography>
           <Typography variant="body1">
             Reviewer scale: {Number(params.rater_scale).toFixed(3)}
           </Typography>
@@ -390,7 +390,7 @@ function renderRatingsBallkidSection(ballkid, params) {
         endIcon={<Shortcut />}
         sx={{ my: 1, mr: 1 }}
       >
-        View all {params["num_ratee_ratings"]} ratings for this ballkid
+        View all {params.num_ratee_ratings} ratings for this ballkid
       </Button>
       <Button
         size="small"
@@ -407,13 +407,13 @@ function renderRatingsBallkidSection(ballkid, params) {
         ""
       ) : (
         <div>
-          {params["num_ratee_ratings"] >= NUM_RATINGS_WARNING_THRESHOLD &&
-          params["num_raters"] >= NUM_RATERS_WARNING_THRESHOLD ? (
+          {params.num_ratee_ratings >= NUM_RATINGS_WARNING_THRESHOLD &&
+          params.num_raters >= NUM_RATERS_WARNING_THRESHOLD ? (
             ""
           ) : (
             <Alert severity="warning" sx={{ my: 1 }}>
-              Note: This ballkid only had {params["num_raters"]} rater(s) and
-              received a total of {params["num_ratee_ratings"]} rating(s).
+              Note: This ballkid only had {params.num_raters} rater(s) and
+              received a total of {params.num_ratee_ratings} rating(s).
             </Alert>
           )}
 
@@ -746,52 +746,102 @@ export function AggregateMetrics({ pk }) {
     <CircularProgress className="center-div" size={30} />
   ) : (
     <Grid container>
-      <Grid item xs={12} md={10} lg={8}>
+      <Grid item xs={12} sm={9} md={8} lg={7} xl={6}>
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell align="center"></TableCell>
-                <TableCell align="center">Total Time Checked In</TableCell>
-                <TableCell align="center">Total Time on Court</TableCell>
-                <TableCell align="center">% Time on Court</TableCell>
+                <TableCell align="center">Ballkid</TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">Average</TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell align="center">Ballkid</TableCell>
+                <TableCell align="center">Total Time Checked In</TableCell>
+
                 <TableCell align="center">
-                  {getTimeStr(getTimeFloat(metrics["checkin_duration"]))}
+                  {getTimeStr(getTimeFloat(metrics.checkin_duration))}
                 </TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {getTimeStr(parseFloat(averages.checkin_avg) / 3600)}
+                  </TableCell>
+                )}
+              </TableRow>
+              <TableRow>
+                <TableCell align="center">Total Days Checked In</TableCell>
+
+                <TableCell align="center">{metrics.checkin_days}</TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {Number(averages.days_avg).toFixed(1)}
+                  </TableCell>
+                )}
+              </TableRow>
+              <TableRow>
                 <TableCell align="center">
-                  {getTimeStr(getTimeFloat(metrics["court_duration"]))}
+                  Average Checked In Time Per Day
                 </TableCell>
+
                 <TableCell align="center">
-                  {toPercent(
-                    getTimeFloat(metrics["court_duration"]) /
-                      getTimeFloat(metrics["checkin_duration"])
+                  {getTimeStr(
+                    getTimeFloat(metrics.checkin_duration) /
+                      metrics.checkin_days
                   )}
                 </TableCell>
-              </TableRow>
-              {!isChairperson ? (
-                ""
-              ) : (
-                <TableRow>
-                  <TableCell align="center">Average</TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
                   <TableCell align="center">
-                    {getTimeStr(parseFloat(averages["checkin_avg"]) / 3600)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {getTimeStr(parseFloat(averages["court_avg"]) / 3600)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {toPercent(
-                      parseFloat(averages["court_avg"]) /
-                        parseFloat(averages["checkin_avg"])
+                    {getTimeStr(
+                      parseFloat(averages.checkin_avg) /
+                        3600 /
+                        averages.days_avg
                     )}
                   </TableCell>
-                </TableRow>
-              )}
+                )}
+              </TableRow>
+              <TableRow>
+                <TableCell align="center">Total Time on Court</TableCell>
+                <TableCell align="center">
+                  {getTimeStr(getTimeFloat(metrics.court_duration))}
+                </TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {getTimeStr(parseFloat(averages.court_avg) / 3600)}
+                  </TableCell>
+                )}
+              </TableRow>
+              <TableRow>
+                <TableCell align="center">% Time on Court</TableCell>
+                <TableCell align="center">
+                  {toPercent(
+                    getTimeFloat(metrics.court_duration) /
+                      getTimeFloat(metrics.checkin_duration)
+                  )}
+                </TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {toPercent(
+                      parseFloat(averages.court_avg) /
+                        parseFloat(averages.checkin_avg)
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

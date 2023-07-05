@@ -509,11 +509,11 @@ class GetAverageCalibrationParams(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        avg_offset = CalibrationParams.objects.aggregate(
+        avgs = CalibrationParams.objects.aggregate(
             Avg("rater_offset"), Avg("rater_scale")
         )
-        logger.info(f"{datetime.now()} [GetAverageCalibrationParams] avg {avg_offset}")
-        return Response(avg_offset)
+        logger.info(f"{datetime.now()} [GetAverageCalibrationParams] avg {avgs}")
+        return Response(avgs)
 
 
 class DeleteRating(APIView):

@@ -703,6 +703,10 @@ class GetCheckinCourtAnalytics(APIView):
         recalc_checkin_analytics(ballkid=ballkid)
 
         ballkids = annotate_durations(Ballkid.objects.filter(id=pk))
+        ballkids = ballkids.annotate(
+            checkin_duration=F("checkinanalytics__duration"),
+            checkin_days=F("checkinanalytics__count"),
+        )
         return Response(BallkidSerializer(ballkids[0]).data)
 
 
@@ -812,6 +816,7 @@ class GetAverageCourtLeaderboard(APIView):
 
         averages = annotate_durations(Ballkid.objects.filter(is_active=True)).aggregate(
             checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
+            days_avg=Avg("checkinanalytics__count"),
             court_avg=Coalesce(Avg("court_duration"), timedelta()),
             stadium_avg=Coalesce(Avg("stadium_duration"), timedelta()),
             harris_avg=Coalesce(Avg("harris_duration"), timedelta()),
