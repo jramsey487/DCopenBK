@@ -12,16 +12,28 @@ from api.utils import *
 from api.consts import *
 
 from datetime import datetime
-from rcal import RcalWarning, calibrate_parameters
+from rcal import calibrate_parameters
+
+from rcal import RcalException, calibrate_parameters
 import networkx as nx
-import warnings
 import statistics
 import logging
 
 logger = logging.getLogger("api.rating")
 
 
-def queryset_to_rcal(data, rating_name="overall", returnAveraged=True):
+def get_min_dates(ratings):
+    """
+    For a queryset ratings, returns a dict mapping year to min_date in that year
+    """
+    years = ratings.values_list("date__year", flat=True).distinct()
+    return {
+        year: min([rating.date for rating in ratings.filter(date__year=year)])
+        for year in years
+    }
+
+
+def queryset_to_rcal(ratings, rating_name="overall", returnAveraged=True):
     """
     Converts a Django queryset into the appropriate format for review calibration:
         Queryset of Rating objects => dict of (captain, ballkid, day) : rating
@@ -30,23 +42,27 @@ def queryset_to_rcal(data, rating_name="overall", returnAveraged=True):
 
     NOTE THAT RATINGS OF 0 ARE CONSIDERED EMPTY AND ARE NOT INCLUDED
     """
-    if len(data) == 0:
-        return {}
-
-    # TODO: need to update this so that it is min date per year!!!!!
-    min_date = min([rating.date for rating in data])
-
     logger.info(
-        f"{datetime.now()} [queryset_to_rcal] data {data} with min_date {min_date} and rating_name {rating_name}"
+        f"{datetime.now()} [queryset_to_rcal] ratings {ratings} with rating_name {rating_name}"
     )
 
-    # Number of days per date bucketing for calibration. A larger number results in
-    # more likely to succeed (but theoretically less accurate) calibration
-    days_per_bucket = 4
+    if len(ratings) == 0:
+        logger.info(
+            f"{datetime.now()} [queryset_to_rcal] empty ratings returning empty rcal dict"
+        )
+        return {}
 
     rcal_dict = {}
-    for rating in data:
-        mapped_date = days_per_bucket * ((rating.date - min_date).days // days_per_bucket)
+    min_dates = get_min_dates(ratings)
+    logger.info(
+        f"{datetime.now()} [queryset_to_rcal] ratings {ratings} have min_dates {min_dates}"
+    )
+
+    for rating in ratings:
+        mapped_date = DAYS_PER_BUCKET * (
+            (rating.date - min_dates[rating.date.year]).days // DAYS_PER_BUCKET
+        )
+
         key = (
             rating.rater.get_name(),
             rating.ratee.get_name()
@@ -116,14 +132,7 @@ def remove_nonoverlapping_reviewers(data):
     return new_data, excluded
 
 
-def calibrate(
-    ratings,
-    rating_name="overall",
-    year=get_current_year(),
-    min_rating=0.5,
-    max_rating=5,
-    stdev=2,
-):
+def calibrate(ratings, rating_name="overall", year=get_current_year()):
     logger.info(
         f"{datetime.now()} [calibrate] starting calibration for {len(ratings)} ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
     )
@@ -135,8 +144,8 @@ def calibrate(
     train, excluded = remove_nonoverlapping_reviewers(train)
     test, _ = remove_nonoverlapping_reviewers(test)
 
-    cp = calibrate_parameters(train, rating_delta=(max_rating - min_rating))
-    cp.rescale_parameters(test, (min_rating, max_rating), ignore_outliers=stdev)
+    cp = calibrate_parameters(train, rating_delta=(MAX_RATING - MIN_RATING))
+    cp.rescale_parameters(test, (MIN_RATING, MAX_RATING), ignore_outliers=CALIBRATE_STDEV)
 
     cp.set_reviewer_offsets({r: 0 for r in excluded})
     cp.set_reviewer_scales({r: 1 for r in excluded})
@@ -144,7 +153,6 @@ def calibrate(
     logger.info(
         f"{datetime.now()} [calibrate] completed calibration excluding {excluded}"
     )
-
     return cp, excluded
 
 
@@ -338,7 +346,7 @@ class CreateRating(APIView):
 
             return Response(RatingSerializer(rating).data)
 
-        logger.warn(
+        logger.warning(
             f"{datetime.now()} [CreateRating] Error creating rating with serializer errors {serializer.errors}"
         )
         return Response(
@@ -359,27 +367,26 @@ class CalibratedRatings(APIView):
             f"{datetime.now()} [CalibratedRatings] Starting rating calibration for {len(ratings)} ratings"
         )
 
-        # See which rating categories throw Rcal warnings
-        all_warnings = set()
+        # Keep track of which rating categories throw Rcal exceptions
+        failed_categories = {}
+
+        # Try calibration for all rating categories
         for rating_name in RATING_CATEGORIES:
-            with warnings.catch_warnings(record=True) as caught_warnings:
+            try:
                 cp_dict[rating_name], excluded[rating_name] = calibrate(
-                    ratings,
-                    rating_name,
-                    year=year,
-                    min_rating=MIN_RATING,
-                    max_rating=MAX_RATING,
+                    ratings, rating_name, year=year
                 )
-            if any((x.category == RcalWarning for x in caught_warnings)):
-                all_warnings.add(rating_name)
+            except RcalException as e:
+                # Log thrown rcal exceptions for a given rating category
+                failed_categories[rating_name] = e
 
                 # If rcal warning was thrown for rating_name, then clear out cp_dict
                 # for that rating name and just return the untransformed rating for
                 # the rating category
                 cp_dict[rating_name] = None
 
-        logger.warn(
-            f"{datetime.now()} [CalibratedRatings] rating categories with warnings {all_warnings}"
+        logger.warning(
+            f"{datetime.now()} [CalibratedRatings] rating categories with failed rating categories {failed_categories}"
         )
 
         # Get dict of all calibrated overall ratings for saving calibration params
@@ -463,15 +470,15 @@ class CalibratedRatings(APIView):
         )
 
         # If an rcal warning was thrown for the overall rating category
-        if "overall" in all_warnings:
-            logger.warn(
+        if "overall" in failed_categories:
+            logger.warning(
                 f"{datetime.now()} [CalibratedRatings] overall rating category threw an rcal warning"
             )
             s = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
 
         # If a non-zero number of reviewers had no overlap in the overall rating category
         elif excluded["overall"]:
-            logger.warn(
+            logger.warning(
                 f"{datetime.now()} [CalibratedRatings] overall rating category had excluded reviewers {excluded['overall']}"
             )
             s = status.HTTP_206_PARTIAL_CONTENT

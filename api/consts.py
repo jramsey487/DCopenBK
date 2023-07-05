@@ -19,6 +19,7 @@ HOUR_COLON_MINUTE_FORMAT_STR = "%H:%M"
 
 MIN_RATING = 0.5
 MAX_RATING = 5
+CALIBRATE_STDEV = 2
 RATING_CATEGORIES = [
     "overall",
     "athleticism",
@@ -27,3 +28,6 @@ RATING_CATEGORIES = [
     "decision",
     "effort",
 ]
+# Number of days per date bucketing for calibration. A larger number results in
+# more likely to succeed (but theoretically less accurate) calibration
+DAYS_PER_BUCKET = 4
