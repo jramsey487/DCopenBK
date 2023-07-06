@@ -746,7 +746,7 @@ export function AggregateMetrics({ pk }) {
     <CircularProgress className="center-div" size={30} />
   ) : (
     <Grid container>
-      <Grid item xs={12} sm={9} md={8} lg={7} xl={6}>
+      <Grid item xs={12} sm={11} md={9} lg={7} xl={5}>
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -762,7 +762,9 @@ export function AggregateMetrics({ pk }) {
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell align="center">Total Time Checked In</TableCell>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  Total Time Checked In
+                </TableCell>
 
                 <TableCell align="center">
                   {getTimeStr(getTimeFloat(metrics.checkin_duration))}
@@ -776,7 +778,9 @@ export function AggregateMetrics({ pk }) {
                 )}
               </TableRow>
               <TableRow>
-                <TableCell align="center">Total Days Checked In</TableCell>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  Total Days Checked In
+                </TableCell>
 
                 <TableCell align="center">{metrics.checkin_days}</TableCell>
                 {!isChairperson ? (
@@ -788,7 +792,7 @@ export function AggregateMetrics({ pk }) {
                 )}
               </TableRow>
               <TableRow>
-                <TableCell align="center">
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
                   Average Checked In Time Per Day
                 </TableCell>
 
@@ -811,7 +815,9 @@ export function AggregateMetrics({ pk }) {
                 )}
               </TableRow>
               <TableRow>
-                <TableCell align="center">Total Time on Court</TableCell>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  Total Time on Court
+                </TableCell>
                 <TableCell align="center">
                   {getTimeStr(getTimeFloat(metrics.court_duration))}
                 </TableCell>
@@ -824,7 +830,9 @@ export function AggregateMetrics({ pk }) {
                 )}
               </TableRow>
               <TableRow>
-                <TableCell align="center">% Time on Court</TableCell>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  % Time on Court
+                </TableCell>
                 <TableCell align="center">
                   {toPercent(
                     getTimeFloat(metrics.court_duration) /
@@ -845,6 +853,77 @@ export function AggregateMetrics({ pk }) {
             </TableBody>
           </Table>
         </TableContainer>
+        {/* <Grid item xs={12} lg={10} xl={8}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"></TableCell>
+                <TableCell align="center">Total Time Checked In</TableCell>
+                <TableCell align="center">Total Days Checked In</TableCell>
+                <TableCell align="center">
+                  Average Checked In Time Per Day
+                </TableCell>
+                <TableCell align="center">Total Time on Court</TableCell>
+                <TableCell align="center">% Time on Court</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell align="center">Ballkid</TableCell>
+                <TableCell align="center">
+                  {getTimeStr(getTimeFloat(metrics.checkin_duration))}
+                </TableCell>
+                <TableCell align="center">{metrics.checkin_days}</TableCell>
+                <TableCell align="center">
+                  {getTimeStr(
+                    getTimeFloat(metrics.checkin_duration) /
+                      metrics.checkin_days
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  {getTimeStr(getTimeFloat(metrics.court_duration))}
+                </TableCell>
+                <TableCell align="center">
+                  {toPercent(
+                    getTimeFloat(metrics.court_duration) /
+                      getTimeFloat(metrics.checkin_duration)
+                  )}
+                </TableCell>
+              </TableRow>
+              {!isChairperson ? (
+                ""
+              ) : (
+                <TableRow>
+                  <TableCell align="center">Average</TableCell>
+                  <TableCell align="center">
+                    {getTimeStr(parseFloat(averages.checkin_avg) / 3600)}
+                  </TableCell>
+
+                  <TableCell align="center">
+                    {Number(averages.days_avg).toFixed(1)}
+                  </TableCell>
+                  <TableCell align="center">
+                    {getTimeStr(
+                      parseFloat(averages.checkin_avg) /
+                        3600 /
+                        averages.days_avg
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {getTimeStr(parseFloat(averages.court_avg) / 3600)}
+                  </TableCell>
+                  <TableCell align="center">
+                    {toPercent(
+                      parseFloat(averages.court_avg) /
+                        parseFloat(averages.checkin_avg)
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer> */}
       </Grid>
     </Grid>
   );
