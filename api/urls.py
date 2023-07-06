@@ -31,6 +31,7 @@ ballkid_urls = [
 # Schedule URLs
 schedule_urls = [
     path("get-schedule", GetSchedule.as_view(), name="get-schedule"),
+    path("delete-schedule", DeleteSchedule.as_view(), name="delete-schedule"),
     path("create-schedule", CreateSchedule.as_view(), name="create-schedule"),
     path("add-hour", AddHour.as_view(), name="add-hour"),
     path("update-schedule", UpdateSchedule.as_view(), name="update-schedule"),

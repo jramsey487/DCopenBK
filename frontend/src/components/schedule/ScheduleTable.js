@@ -103,7 +103,7 @@ export function ScheduleTable({ shifts, date, readOnly, setUpdated }) {
               method: "POST",
               headers: getAuthHeader(),
               body: JSON.stringify({
-                day: date,
+                date: date,
                 num_courts: courts.length,
               }),
             })

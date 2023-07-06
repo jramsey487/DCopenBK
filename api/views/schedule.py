@@ -14,26 +14,30 @@ import logging
 logger = logging.getLogger("api.schedule")
 
 
+def get_days_shifts(param):
+    if param == "":
+        date = datetime.now()
+    else:
+        date = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR)
+    start_hour = datetime(year=date.year, month=date.month, day=date.day, hour=8)
+    end_hour = start_hour + timedelta(days=1)
+
+    logger.info(
+        f"{datetime.now()} [get_days_shifts] input {param}; start range {start_hour} and end {end_hour}"
+    )
+
+    return Schedule.objects.filter(start__gte=start_hour, start__lt=end_hour).order_by(
+        "id"
+    )
+
+
 class GetSchedule(generics.ListAPIView):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        param = self.request.query_params.get("day")
-        if param == "":
-            day = datetime.now()
-        else:
-            day = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR)
-        start_hour = datetime(year=day.year, month=day.month, day=day.day, hour=8)
-        end_hour = start_hour + timedelta(days=1)
-
-        logger.info(
-            f"{datetime.now()} [GetSchedule] input {param}; start range {start_hour} and end {end_hour}"
-        )
-
-        return Schedule.objects.filter(
-            start__gte=start_hour, start__lt=end_hour
-        ).order_by("id")
+        param = self.request.query_params.get("date")
+        return get_days_shifts(param)
 
 
 class CreateSchedule(APIView):
@@ -41,7 +45,7 @@ class CreateSchedule(APIView):
 
     def post(self, request, format=None):
         start_hour = datetime.strptime(
-            f"{request.data['day']} {request.data['start_hour']}",
+            f"{request.data['date']} {request.data['start_hour']}",
             f"{SLASH_MONTH_DAY_YEAR_FORMAT_STR} {HOUR_COLON_MINUTE_FORMAT_STR}",
         )
         num_teams = request.data["num_teams"]
@@ -75,19 +79,39 @@ class CreateSchedule(APIView):
         )
 
 
+class DeleteSchedule(APIView):
+    permission_classes = [IsChairperson]
+
+    def delete(self, request, format=None):
+        param = self.request.query_params.get("date")
+
+        shifts = get_days_shifts(param)
+        logger.info(
+            f"{datetime.now()} [DeleteSchedule] for param {param}, deleting {len(shifts)} shifts {shifts}"
+        )
+        shifts.delete()
+
+        return Response(
+            {"Success": f"Deleted schedule for {param}"},
+            status=status.HTTP_200_OK,
+        )
+
+
 class AddHour(APIView):
     permission_classes = [IsChairperson]
 
     def post(self, request, format=None):
-        day = datetime.strptime(request.data["day"], SLASH_MONTH_DAY_YEAR_FORMAT_STR)
-        start_hour = datetime(year=day.year, month=day.month, day=day.day, hour=8)
+        date = datetime.strptime(request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR)
+        start_hour = datetime(year=date.year, month=date.month, day=date.day, hour=8)
         end_hour = start_hour + timedelta(days=1)
         shifts = Schedule.objects.filter(start__gte=start_hour, start__lt=end_hour)
 
         max_hour = shifts.aggregate(max=Max("start"))["max"]
         next_hour = max_hour + timedelta(hours=1)
 
-        logger.info(f"{datetime.now()} [AddHour] for day {day}, max_hour was {max_hour}")
+        logger.info(
+            f"{datetime.now()} [AddHour] for date {date}, max_hour was {max_hour}"
+        )
 
         for court in COURT.choices:
             shift = Schedule(
