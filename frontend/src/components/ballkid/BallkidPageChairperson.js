@@ -834,10 +834,12 @@ export function AggregateMetrics({ pk }) {
                   % Time on Court
                 </TableCell>
                 <TableCell align="center">
-                  {toPercent(
-                    getTimeFloat(metrics.court_duration) /
-                      getTimeFloat(metrics.checkin_duration)
-                  )}
+                  {getTimeFloat(metrics.checkin_duration) === 0
+                    ? "0%"
+                    : toPercent(
+                        getTimeFloat(metrics.court_duration) /
+                          getTimeFloat(metrics.checkin_duration)
+                      )}
                 </TableCell>
                 {!isChairperson ? (
                   ""
