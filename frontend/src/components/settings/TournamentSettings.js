@@ -10,7 +10,8 @@ import { TextField } from "@mui/material";
 export default function TournamentSettings(props) {
   const [showTeams, setShowTeams] = useState(false);
   const [showFinalsTeams, setShowFinalsTeams] = useState(false);
-  const [banner, setBanner] = useState("");
+  const [banner, setBanner] = useState();
+  const [bannerDisabled, setBannerDisabled] = useState(true);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -44,23 +45,44 @@ export default function TournamentSettings(props) {
       <Grid container spacing={2} sx={{ pr: 2 }}>
         <Grid item xs={12} className="justify">
           <Typography variant="subtitle1">Set site-wide banner</Typography>
-          <TextField
-            variant="standard"
-            defaultValue={banner}
-            style={{ width: "75%" }}
-            multiline
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                fetch("/api/update-tournament", {
-                  method: "PATCH",
-                  headers: getAuthHeader(),
-                  body: JSON.stringify({
-                    banner: e.target.value ?? "",
-                  }),
-                }).then((response) => response.json());
-              }
-            }}
-          />
+          {banner === undefined || banner === null ? (
+            ""
+          ) : (
+            <TextField
+              variant="standard"
+              defaultValue={banner}
+              style={{ width: "75%" }}
+              disabled={bannerDisabled}
+              onDoubleClick={() => setBannerDisabled(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  fetch("/api/get-tournament", {
+                    method: "PATCH",
+                    headers: getAuthHeader(),
+                    body: JSON.stringify({
+                      banner: e.target.value ?? "",
+                    }),
+                  }).then((response) => {
+                    if (response.ok) {
+                      setBannerDisabled(true);
+
+                      if (e.target.value === "") {
+                        setSuccessMsg(
+                          "Banner removed for all ballkids and captains!"
+                        );
+                      } else {
+                        setSuccessMsg(
+                          "Banner updated for all ballkids and captains!"
+                        );
+                      }
+                    } else {
+                      setErrorMsg("Error updating banner.");
+                    }
+                  });
+                }
+              }}
+            />
+          )}
         </Grid>
 
         {["", "finals "].map((teamType) => (
@@ -121,7 +143,7 @@ export default function TournamentSettings(props) {
           </Button>
         </Grid>
 
-        <Grid item xs={12} className="justify">
+        {/* <Grid item xs={12} className="justify">
           <Typography variant="subtitle1">
             Wrap up this year's tournament
           </Typography>
@@ -133,7 +155,7 @@ export default function TournamentSettings(props) {
           >
             Complete
           </Button>
-        </Grid>
+        </Grid> */}
       </Grid>
     </div>
   );

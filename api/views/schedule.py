@@ -240,15 +240,17 @@ class GetTournament(APIView):
     def patch(self, request, format=None):
         tournament = Tournament.objects.get(year=2023)
 
-        if request.data["show_teams"] is not None:
+        if "show_teams" in request.data:
             tournament.show_teams = request.data["show_teams"]
-        if request.data["show_finals_teams"] is not None:
+        if "show_finals_teams" in request.data:
             tournament.show_finals_teams = request.data["show_finals_teams"]
+        if "banner" in request.data:
+            tournament.banner = request.data["banner"]
 
         tournament.save()
 
         logger.info(
-            f"{datetime.now()} [GetTournament] tournament {tournament} updated with request {request.data}"
+            f"{datetime.now()} [GetTournament PATCH] tournament {tournament} updated with request {request.data}"
         )
 
         return Response(

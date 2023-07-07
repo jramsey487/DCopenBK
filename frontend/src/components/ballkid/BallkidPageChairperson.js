@@ -693,7 +693,6 @@ function Comments(props) {
         variant="standard"
         defaultValue={props.ballkid.comments}
         style={{ width: "100%" }}
-        multiline
         disabled={disabled}
         onDoubleClick={() => setDisabled(false)}
         onKeyDown={(e) => {
