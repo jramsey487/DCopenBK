@@ -575,7 +575,7 @@ class TeamHistory(models.Model):
 
 class CourtAnalytics(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
-    court = models.CharField(max_length=20)
+    court = models.CharField(max_length=50, blank=True)
     count = models.IntegerField(default=0)
     duration = models.DurationField(default=timedelta)
 
