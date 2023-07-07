@@ -16,7 +16,7 @@ export default function SchedulePage(props) {
   const [date, setDate] = useState(getToday());
 
   useEffect(() => {
-    fetch("/api/get-schedule?day=" + date, { headers: getAuthHeader() })
+    fetch("/api/get-schedule?date=" + date, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setShifts(data));
   }, [date]);
