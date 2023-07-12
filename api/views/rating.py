@@ -142,19 +142,23 @@ def calibrate(ratings, rating_name="overall", year=get_current_year()):
     test = queryset_to_rcal(year_ratings, rating_name, returnAveraged=False)
 
     train, excluded = remove_nonoverlapping_reviewers(train)
-    test, _ = remove_nonoverlapping_reviewers(test)
+
+    # test is a subset of train. If a reviewer is in excluded,
+    # then we should ignore them when rescaling parameters.
+    # After rescaling parameters for the reviewers not in excluded,
+    # we manually give the trivial parameters to the excluded reveiwers.
+    test = {k: v for k, v in test.items() if k[0] not in excluded}
 
     try:
         cp = calibrate_parameters(train, rating_delta=(MAX_RATING - MIN_RATING))
         cp.rescale_parameters(
             test, (MIN_RATING, MAX_RATING), ignore_outliers=CALIBRATE_STDEV
         )
+        cp.set_reviewer_scales({r: 1 for r in excluded})
+        cp.set_reviewer_offsets({r: 0 for r in excluded})
 
     except RcalException as e:
         return None, excluded, e
-
-    cp.set_reviewer_offsets({r: 0 for r in excluded})
-    cp.set_reviewer_scales({r: 1 for r in excluded})
 
     logger.info(
         f"{datetime.now()} [calibrate] completed calibration excluding {excluded}"
