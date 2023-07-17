@@ -33,8 +33,12 @@ import Check from "@mui/icons-material/Check";
 import RatingDialog from "./ratings/RatingDialog";
 import { END_DATE, START_DATE, ICON_DICT } from "./Consts";
 
-export function Icons({ ballkid, margin }) {
-  if (!ballkid.is_captain && ballkid.num_years_experience > 0) {
+export function Icons({ ballkid, margin, isTeamsPage = false }) {
+  if (
+    !ballkid.is_captain &&
+    ballkid.num_years_experience <= 3 &&
+    ballkid.num_years_experience > 0
+  ) {
     return "";
   }
 
@@ -43,6 +47,7 @@ export function Icons({ ballkid, margin }) {
       {ballkid.is_chairperson && ICON_DICT["chairperson"]}
       {ballkid.is_captain && ICON_DICT["captain"]}
       {ballkid.num_years_experience === 0 && ICON_DICT["rookie"]}
+      {ballkid.num_years_experience > 3 && isTeamsPage && ICON_DICT["supervet"]}
     </Icon>
   );
 }
@@ -349,7 +354,7 @@ export function DraggableBallkidAndIcon({ ballkid }) {
           {ballkid.first_name} {ballkid.last_name}
         </Link>
         &thinsp;
-        <Icons ballkid={ballkid} margin={0} />
+        <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
       </div>
     </div>
   );

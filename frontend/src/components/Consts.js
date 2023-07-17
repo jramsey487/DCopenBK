@@ -1,6 +1,7 @@
 import Star from "@mui/icons-material/Star";
 import Circle from "@mui/icons-material/Circle";
 import EventSeat from "@mui/icons-material/EventSeat";
+import LocalPolice from "@mui/icons-material/LocalPolice";
 import EmojiPeople from "@mui/icons-material/EmojiPeople";
 import Fence from "@mui/icons-material/Fence";
 
@@ -25,6 +26,7 @@ export const ICON_DICT = {
   captain: <Star sx={{ color: "orange" }} />,
   rookie: <Circle sx={{ color: "green" }} />,
   chairperson: <EventSeat sx={{ color: "purple" }} />,
+  supervet: <LocalPolice sx={{ color: "info.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
   net: <Fence sx={{ color: "gray" }} />,
 };
