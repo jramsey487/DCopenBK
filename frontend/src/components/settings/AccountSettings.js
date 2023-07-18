@@ -37,7 +37,7 @@ function ChangePassword() {
       <Grid item xs={12}>
         <TextField
           label="Enter Old Password"
-          name="oldPassword"
+          value={oldPassword}
           variant="standard"
           type="password"
           required={true}
@@ -47,7 +47,7 @@ function ChangePassword() {
       <Grid item xs={12}>
         <TextField
           label="Enter New Password"
-          name="newPassword"
+          value={password}
           variant="standard"
           type="password"
           required={true}
@@ -57,9 +57,9 @@ function ChangePassword() {
       <Grid item xs={12}>
         <TextField
           label="Confirm New Password"
-          name="newPassword"
           variant="standard"
           type="password"
+          value={confirmPassword}
           required={true}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
