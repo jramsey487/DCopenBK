@@ -303,7 +303,7 @@ class TestCreateBallkidView(APITestCase):
         self.assertEqual(POSITION.BN, ballkid.preferred_position)
         self.assertTrue(ballkid.is_captain)
         self.assertEqual(3, ballkid.num_years_experience)
-        self.assertEqual("api/static/img/none.jpg", ballkid.image)
+        self.assertEqual("static/img/none.jpg", ballkid.image)
 
     def test_new_ballkid_strip_whitespace(self):
         data = {
@@ -328,7 +328,7 @@ class TestCreateBallkidView(APITestCase):
         self.assertEqual(POSITION.BN, ballkid.preferred_position)
         self.assertTrue(ballkid.is_captain)
         self.assertEqual(3, ballkid.num_years_experience)
-        self.assertEqual("api/static/img/none.jpg", ballkid.image)
+        self.assertEqual("static/img/none.jpg", ballkid.image)
 
     def test_existing_ballkid(self):
         Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
@@ -338,7 +338,7 @@ class TestCreateBallkidView(APITestCase):
         self.assertEqual(POSITION.B, ballkid.preferred_position)
         self.assertFalse(ballkid.is_captain)
         self.assertEqual(0, ballkid.num_years_experience)
-        self.assertEqual("api/static/img/none.jpg", ballkid.image)
+        self.assertEqual("static/img/none.jpg", ballkid.image)
 
         data = {
             "first_name": "Lacy",

@@ -49,9 +49,7 @@ class Ballkid(models.Model):
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
     age = models.IntegerField(default=0)
-    image = models.CharField(
-        max_length=100, default="api/static/img/none.jpg", blank=True
-    )
+    image = models.CharField(max_length=100, default=DEFAULT_IMAGE_FILE, blank=True)
     num_years_experience = models.IntegerField(default=0)
     is_out_of_town = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
