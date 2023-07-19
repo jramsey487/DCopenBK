@@ -373,7 +373,11 @@ class BallkidsSortedList(generics.ListAPIView):
         pk = self.kwargs.get("pk")
 
         ballkids = Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
-            "-is_captain", "-num_years_experience", "last_name", "first_name"
+            "-is_chairperson",
+            "-is_captain",
+            "-num_years_experience",
+            "last_name",
+            "first_name",
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)

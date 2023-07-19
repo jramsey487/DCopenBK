@@ -35,7 +35,8 @@ import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
 
 import RatingDialog from "./ratings/RatingDialog";
-import { END_DATE, START_DATE, ICON_DICT } from "./Consts";
+import { END_DATE, START_DATE, ICON_DICT, TOOLTIP_DICT } from "./Consts";
+import { Tooltip } from "@mui/material";
 
 export function Icons({ ballkid, margin, isTeamsPage = false }) {
   if (
@@ -64,20 +65,22 @@ export function LayoutButtons({ gridLayout, setGridLayout }) {
   return (
     <div sx={{ mb: 1 }}>
       {[true, false].map((isGridButton) => (
-        <IconButton
-          key={isGridButton}
-          size="small"
-          style={{
-            borderRadius: 0,
-            background: isGridButton === gridLayout ? "lightgray" : "",
-          }}
-          onClick={(e) => {
-            setGridLayout(isGridButton);
-            setLocalStorage("gridLayout", isGridButton);
-          }}
-        >
-          {isGridButton ? <GridView /> : <List />}
-        </IconButton>
+        <Tooltip title={isGridButton ? "Grid View" : "List View"}>
+          <IconButton
+            key={isGridButton}
+            size="small"
+            style={{
+              borderRadius: 0,
+              background: isGridButton === gridLayout ? "lightgray" : "",
+            }}
+            onClick={(e) => {
+              setGridLayout(isGridButton);
+              setLocalStorage("gridLayout", isGridButton);
+            }}
+          >
+            {isGridButton ? <GridView /> : <List />}
+          </IconButton>
+        </Tooltip>
       ))}
     </div>
   );
@@ -171,21 +174,22 @@ export function SearchAndFilter({
         </Typography>
         &ensp;
         {filters.map((filterName) => (
-          <IconButton
-            key={filterName}
-            size="small"
-            style={{
-              borderRadius: 0,
-              background: filterGroup === filterName ? "lightgray" : "",
-            }}
-            onClick={() => {
-              filterGroup === filterName
-                ? setFilterGroup(null)
-                : setFilterGroup(filterName);
-            }}
-          >
-            {ICON_DICT[filterName]}
-          </IconButton>
+          <Tooltip key={filterName} title={TOOLTIP_DICT[filterName]}>
+            <IconButton
+              size="small"
+              style={{
+                borderRadius: 0,
+                background: filterGroup === filterName ? "lightgray" : "",
+              }}
+              onClick={() => {
+                filterGroup === filterName
+                  ? setFilterGroup(null)
+                  : setFilterGroup(filterName);
+              }}
+            >
+              {ICON_DICT[filterName]}
+            </IconButton>
+          </Tooltip>
         ))}
       </div>
     </Grid>

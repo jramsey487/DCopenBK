@@ -1,7 +1,7 @@
 import Star from "@mui/icons-material/Star";
-import Circle from "@mui/icons-material/Circle";
+import FiberManualRecord from "@mui/icons-material/FiberManualRecord";
 import EventSeat from "@mui/icons-material/EventSeat";
-import LocalPolice from "@mui/icons-material/LocalPolice";
+import Stop from "@mui/icons-material/Stop";
 import EmojiPeople from "@mui/icons-material/EmojiPeople";
 import Fence from "@mui/icons-material/Fence";
 
@@ -24,12 +24,22 @@ export const CUT_STATUSES = {
 
 export const ICON_DICT = {
   captain: <Star sx={{ color: "orange" }} />,
-  rookie: <Circle sx={{ color: "green" }} />,
+  rookie: <FiberManualRecord sx={{ color: "green" }} />,
   chairperson: <EventSeat sx={{ color: "purple" }} />,
-  supervet: <LocalPolice sx={{ color: "info.main" }} />,
-  outOfTownRookie: <Circle sx={{ color: "error.main" }} />,
+  supervet: <Stop sx={{ color: "info.main" }} />,
+  outOfTownRookie: <FiberManualRecord sx={{ color: "error.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
   net: <Fence sx={{ color: "gray" }} />,
+};
+
+export const TOOLTIP_DICT = {
+  captain: "Captain",
+  rookie: "Rookie",
+  chairperson: "Chairperson",
+  supervet: "Supervet (> 3 years experience)",
+  outOfTownRookie: "Out-of-town rookie",
+  back: "Back",
+  net: "Net",
 };
 
 export const NUM_RATINGS_WARNING_THRESHOLD = 5;
