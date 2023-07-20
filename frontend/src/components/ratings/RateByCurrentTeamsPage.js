@@ -80,9 +80,11 @@ export default function RateByCurrentTeamsPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [showTeams, setShowTeams] = useState(false);
   const [updated, setUpdated] = useState(false);
 
   const pk = getLocalStorage("ballkid_id");
+  const group = getLocalStorage("group");
 
   useEffect(() => {
     fetch("/api/sorted-list/" + pk, { headers: getAuthHeader() })
@@ -100,6 +102,13 @@ export default function RateByCurrentTeamsPage(props) {
       .then((response) => response.json())
       .then((data) => setTeams(data["teams"]));
 
+    fetch("/api/get-tournament", {
+      method: "GET",
+      headers: getAuthHeader(),
+    })
+      .then((response) => response.json())
+      .then((data) => setShowTeams(data["show_teams"]));
+
     fetch("/api/get-next-shifts", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setNextShifts(data))
@@ -111,7 +120,7 @@ export default function RateByCurrentTeamsPage(props) {
       <Typography variant="h4" sx={{ mb: 1 }}>
         Rate by Current Team
       </Typography>
-      {assigned.length === 0 ? (
+      {assigned.length === 0 || (group !== "chairperson" && !showTeams) ? (
         <Typography>There are currently no teams assigned.</Typography>
       ) : (
         <Grid container spacing={2}>
