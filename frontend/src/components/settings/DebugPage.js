@@ -37,7 +37,7 @@ function CreateBallkid(props) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -178,7 +178,7 @@ function CreateUser(props) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -280,7 +280,7 @@ function CreateCheckinHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -389,7 +389,7 @@ function CreateTeamHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -514,7 +514,7 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -648,7 +648,7 @@ function CreateFinalsHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -754,7 +754,7 @@ function CreateCutHistory({ ballkidsList }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -882,7 +882,7 @@ function CreateRating({ ballkidsList, captainsList }) {
   const isMobile = useIsMobile();
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -1069,7 +1069,7 @@ function UpdateShift() {
   }));
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
@@ -1174,7 +1174,7 @@ function BulkCreation({ type }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}

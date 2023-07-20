@@ -37,7 +37,7 @@ import Help from "@mui/icons-material/Help";
 
 import RatingDialog from "./ratings/RatingDialog";
 import { END_DATE, START_DATE, ICON_DICT, TOOLTIP_DICT } from "./Consts";
-import { Tooltip } from "@mui/material";
+import { MenuItem, Tooltip } from "@mui/material";
 
 export function Icons({ ballkid, margin, isTeamsPage = false }) {
   if (
@@ -267,25 +267,26 @@ export function HideShowToggle({
 
 export function TabbedSections({ sections }) {
   const [tabIndex, setTabIndex] = useState(0);
-  const [mobileSelection, setMobileSelection] = useState();
+  const [mobileSelection, setMobileSelection] = useState(
+    Object.keys(sections)[0]
+  );
 
   const isMobile = useIsMobile();
 
   return isMobile ? (
     <div>
       <Select
-        native
         value={mobileSelection}
         sx={{ mb: 1 }}
         onChange={(e) => setMobileSelection(e.target.value)}
       >
         {Object.keys(sections).map((option) => (
-          <option key={option} value={option}>
+          <MenuItem key={option} value={option}>
             {option}
-          </option>
+          </MenuItem>
         ))}
       </Select>
-      {sections[mobileSelection]}
+      <Box sx={{ mx: 1 }}>{sections[mobileSelection]}</Box>
     </div>
   ) : (
     <Box
@@ -310,9 +311,9 @@ export function TabbedSections({ sections }) {
       </Tabs>
 
       {Object.keys(sections).map((label, index) => (
-        <div key={index} hidden={tabIndex !== index}>
+        <Box key={index} hidden={tabIndex !== index} sx={{ mx: 4 }}>
           {tabIndex === index && sections[label]}
-        </div>
+        </Box>
       ))}
     </Box>
   );

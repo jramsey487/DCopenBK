@@ -16,7 +16,7 @@ function ChangePassword() {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
-    <Grid container spacing={2} sx={{ mx: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Alerts
           successMsg={successMsg}
