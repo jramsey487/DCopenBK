@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { TabbedSections } from "../Utils";
 
 function AboutSchedule() {
-  return;
+  return "";
 }
 
 export default function AboutPageChairperson() {

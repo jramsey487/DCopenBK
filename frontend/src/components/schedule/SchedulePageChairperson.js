@@ -16,7 +16,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import { ScheduleTable } from "./ScheduleTable";
-import { getAuthHeader, getToday, Alerts } from "../Utils";
+import { getAuthHeader, getToday, Alerts, HelpIcon } from "../Utils";
 
 function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);
@@ -181,6 +181,21 @@ export default function SchedulePageChairperson(props) {
 
   const [open, setOpen] = useState(false);
 
+  const helpMessage = (
+    <DialogContentText>
+      This page displays the schedule for the selected date.
+      <br /> <br />
+      If there are no shifts found for the selected date, you can create a
+      default schedule based on the inputted parameters.
+      <br /> <br />
+      If there are shifts found for the selected date, you can view and edit the
+      teams assigned to which courts at which hour. To edit a team assignment,
+      simply change the team number in the text field of the corresponding cell.
+      Any team assignment changes auto-save. You can also add hours to the
+      schedule
+    </DialogContentText>
+  );
+
   useEffect(() => {
     fetch(`/api/get-schedule?date=${date}`, { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -197,9 +212,12 @@ export default function SchedulePageChairperson(props) {
         setUpdated={setUpdated}
       />
 
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        Schedule
-      </Typography>
+      <div className="sxs" sx={{ mb: 2 }}>
+        <Typography variant="h4">Schedule</Typography>
+        &thinsp;
+        <HelpIcon page="Schedule" message={helpMessage} />
+      </div>
+
       <Box className="justify">
         <Box className="sxs" sx={{ mb: 2 }}>
           <Typography variant="body1">

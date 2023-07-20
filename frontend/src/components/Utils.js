@@ -33,6 +33,7 @@ import AspectRatio from "@mui/joy/AspectRatio";
 import GridView from "@mui/icons-material/GridView";
 import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
+import Help from "@mui/icons-material/Help";
 
 import RatingDialog from "./ratings/RatingDialog";
 import { END_DATE, START_DATE, ICON_DICT, TOOLTIP_DICT } from "./Consts";
@@ -479,6 +480,25 @@ export function BallkidCard({ ballkid, renderAdditional }) {
         </CardContent>
       </CardActionArea>
     </Card>
+  );
+}
+
+export function HelpIcon({ page, message }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{page} Help</DialogTitle>
+        <DialogContent>{message}</DialogContent>
+      </Dialog>
+
+      <Tooltip title="Help">
+        <IconButton color="disabled" onClick={() => setOpen(true)}>
+          <Help />
+        </IconButton>
+      </Tooltip>
+    </div>
   );
 }
 
