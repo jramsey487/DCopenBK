@@ -301,6 +301,9 @@ class BulkCreateSignups(APIView):
 
         Ballkid.objects.bulk_create(ballkids)
 
+        for ballkid in Ballkid.objects.all():
+            ballkid.validate()
+
         return Response(
             {"Success": f"Bulk created signups"},
             status=status.HTTP_200_OK,

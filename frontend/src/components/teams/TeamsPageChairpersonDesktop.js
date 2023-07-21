@@ -98,7 +98,9 @@ export function UnassignedDesktop({
             unassigned,
             searchKeyword,
             filterGroup
-          ).filter((ballkid) => ballkid.preferred_position.includes(position));
+          ).filter((ballkid) => ballkid.position === position);
+          const half = Math.ceil(ballkids.length / 2);
+
           return (
             <div key={position}>
               <div className="sxs">
@@ -117,20 +119,26 @@ export function UnassignedDesktop({
                 </Typography>
               ) : (
                 <Grid container>
-                  {ballkids.map((ballkid) => (
-                    <Grid
-                      key={ballkid.id}
-                      item
-                      xs={12}
-                      sm={6}
-                      md={6}
-                      lg={6}
-                      xl={4}
-                      sx={{ px: 1 }}
-                    >
-                      {<DraggableBallkidAndIcon ballkid={ballkid} />}
-                    </Grid>
-                  ))}
+                  {[ballkids.slice(0, half), ballkids.slice(half)].map(
+                    (sliced) => (
+                      <Grid
+                        container
+                        item
+                        direction="column"
+                        xs={12}
+                        sm={6}
+                        md={6}
+                        lg={6}
+                        xl={4}
+                      >
+                        {sliced.map((ballkid) => (
+                          <Grid key={ballkid.id} item sx={{ px: 1 }}>
+                            {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                          </Grid>
+                        ))}
+                      </Grid>
+                    )
+                  )}
                 </Grid>
               )}
             </div>

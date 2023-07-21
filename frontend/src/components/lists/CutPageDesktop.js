@@ -204,6 +204,9 @@ function ActiveSection({ active, setUpdated }) {
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
+  const filtered = filterBallkids(active, searchKeyword, filterGroup);
+  const half = Math.ceil(filtered.length / 2);
+
   return (
     <Box
       component={Paper}
@@ -216,7 +219,7 @@ function ActiveSection({ active, setUpdated }) {
           Active Ballkids
         </Typography>
         <Typography variant="h6" sx={MARGINS}>
-          &ensp; ({filterBallkids(active, searchKeyword, filterGroup).length})
+          &ensp; ({filtered.length})
         </Typography>
       </div>
 
@@ -232,18 +235,22 @@ function ActiveSection({ active, setUpdated }) {
         </Typography>
       ) : (
         <Grid container>
-          {filterBallkids(active, searchKeyword, filterGroup).map((ballkid) => (
+          {[filtered.slice(0, half), filtered.slice(half)].map((sliced) => (
             <Grid
-              key={ballkid.id}
+              container
               item
+              direction="column"
               xs={12}
               sm={6}
               md={6}
               lg={6}
               xl={4}
-              sx={{ px: 1 }}
             >
-              {<DraggableBallkidAndIcon ballkid={ballkid} />}
+              {sliced.map((ballkid) => (
+                <Grid key={ballkid.id} item sx={{ px: 1 }}>
+                  {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                </Grid>
+              ))}
             </Grid>
           ))}
         </Grid>
