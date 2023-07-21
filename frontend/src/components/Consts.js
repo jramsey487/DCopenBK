@@ -3,7 +3,7 @@ import FiberManualRecord from "@mui/icons-material/FiberManualRecord";
 import EventSeat from "@mui/icons-material/EventSeat";
 import Stop from "@mui/icons-material/Stop";
 import EmojiPeople from "@mui/icons-material/EmojiPeople";
-import Fence from "@mui/icons-material/Fence";
+import Grid4x4 from "@mui/icons-material/Grid4x4";
 
 export const MARGINS = { mt: 2, mb: 1 };
 export const ON_COURT_GREEN = "#c8f7c8";
@@ -29,7 +29,7 @@ export const ICON_DICT = {
   supervet: <Stop sx={{ color: "info.main" }} />,
   outOfTownRookie: <FiberManualRecord sx={{ color: "error.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
-  net: <Fence sx={{ color: "gray" }} />,
+  net: <Grid4x4 sx={{ color: "gray" }} />,
 };
 
 export const TOOLTIP_DICT = {
