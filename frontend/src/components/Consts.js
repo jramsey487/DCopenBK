@@ -1,5 +1,5 @@
 import Star from "@mui/icons-material/Star";
-import FiberManualRecord from "@mui/icons-material/FiberManualRecord";
+import Circle from "@mui/icons-material/Circle";
 import EventSeat from "@mui/icons-material/EventSeat";
 import Stop from "@mui/icons-material/Stop";
 import EmojiPeople from "@mui/icons-material/EmojiPeople";
@@ -24,12 +24,12 @@ export const CUT_STATUSES = {
 
 export const ICON_DICT = {
   captain: <Star sx={{ color: "orange" }} />,
-  rookie: <FiberManualRecord sx={{ color: "green" }} />,
+  rookie: <Circle fontSize="small" sx={{ color: "green" }} />,
   chairperson: <EventSeat sx={{ color: "purple" }} />,
   supervet: <Stop sx={{ color: "info.main" }} />,
-  outOfTownRookie: <FiberManualRecord sx={{ color: "error.main" }} />,
+  outOfTownRookie: <Circle fontSize="small" sx={{ color: "error.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
-  net: <Grid4x4 sx={{ color: "gray" }} />,
+  net: <Grid4x4 sx={{ color: "gray" }} fontSize="small" />,
 };
 
 export const TOOLTIP_DICT = {
