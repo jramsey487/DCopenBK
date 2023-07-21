@@ -204,8 +204,9 @@ export function SearchAndFilter({
   );
 }
 
-export function TournamentBanner({ updated, setUpdated }) {
+export function TournamentBanner() {
   const [banner, setBanner] = useState();
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     fetch("/api/get-tournament", {
@@ -219,12 +220,11 @@ export function TournamentBanner({ updated, setUpdated }) {
   return banner === undefined || banner === null || banner === "" ? (
     ""
   ) : (
-    // <Snackbar open={true} severity="warning" message={banner} />
-    <Snackbar open={true}>
-      <Alert severity="warning" variant="filled" sx={{ width: "100%" }}>
+    <Collapse in={open}>
+      <Alert severity="warning" variant="filled" onClose={() => setOpen(false)}>
         {banner}
       </Alert>
-    </Snackbar>
+    </Collapse>
   );
 }
 

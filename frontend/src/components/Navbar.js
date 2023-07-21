@@ -341,58 +341,55 @@ export default function Navbar(props) {
   }
 
   return (
-    <div>
+    <AppBar position="sticky">
       {!props.isLoggedIn ? "" : <TournamentBanner />}
+      <Toolbar>
+        <div className="justify" style={{ height: "100%" }}>
+          <div className="sxs">
+            <Box
+              className="sxs"
+              component={Link}
+              to="/"
+              sx={{ textDecoration: "none", color: "white" }}
+            >
+              <Icon>
+                <SportsTennis />
+              </Icon>
+              <Typography variant="h6" sx={{ mx: 2 }}>
+                Mubadala Citi Open Ballcrew
+              </Typography>
+            </Box>
 
-      <AppBar position="sticky">
-        <Toolbar>
-          <div className="justify" style={{ height: "100%" }}>
-            <div className="sxs">
-              <Box
-                className="sxs"
-                component={Link}
-                to="/"
-                sx={{ textDecoration: "none", color: "white" }}
-              >
-                <Icon>
-                  <SportsTennis />
-                </Icon>
-                <Typography variant="h6" sx={{ mx: 2 }}>
-                  Mubadala Citi Open Ballcrew
-                </Typography>
-              </Box>
-
-              {!props.isLoggedIn || isMobile ? (
-                ""
-              ) : (
-                <div className="sxs">
-                  {tabs.map((tab) => (
-                    <DesktopNavbarItem
-                      key={tab.label}
-                      tab={tab}
-                      useIconButton={false}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {!props.isLoggedIn ? (
-              <Button color="inherit" component={Link} to="/login">
-                Login
-              </Button>
-            ) : isMobile ? (
-              <MobileNavbar tabs={tabs} accountTab={accountTab} />
+            {!props.isLoggedIn || isMobile ? (
+              ""
             ) : (
-              <DesktopNavbarItem
-                tab={accountTab}
-                useIconButton={true}
-                setToken={props.setToken}
-              />
+              <div className="sxs">
+                {tabs.map((tab) => (
+                  <DesktopNavbarItem
+                    key={tab.label}
+                    tab={tab}
+                    useIconButton={false}
+                  />
+                ))}
+              </div>
             )}
           </div>
-        </Toolbar>
-      </AppBar>
-    </div>
+
+          {!props.isLoggedIn ? (
+            <Button color="inherit" component={Link} to="/login">
+              Login
+            </Button>
+          ) : isMobile ? (
+            <MobileNavbar tabs={tabs} accountTab={accountTab} />
+          ) : (
+            <DesktopNavbarItem
+              tab={accountTab}
+              useIconButton={true}
+              setToken={props.setToken}
+            />
+          )}
+        </div>
+      </Toolbar>
+    </AppBar>
   );
 }
