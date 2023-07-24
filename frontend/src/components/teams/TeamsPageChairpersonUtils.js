@@ -98,8 +98,7 @@ function renderTeamCardHeader(
   assigned,
   nextShifts,
   setCheckoutOpen,
-  setClearOpen,
-  setUpdated
+  setClearOpen
 ) {
   return (
     <div>
@@ -224,8 +223,7 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
               assigned,
               nextShifts,
               setCheckoutOpen,
-              setClearOpen,
-              setUpdated
+              setClearOpen
             )}
 
             {positions.map((position) => (

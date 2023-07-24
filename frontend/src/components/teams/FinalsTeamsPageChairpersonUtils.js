@@ -17,10 +17,13 @@ import {
   Alerts,
   HideShowToggle,
   DraggableBallkidAndIcon,
+  ConfirmDialog,
 } from "../Utils";
 
 function Team({ team, assigned, setUpdated }) {
   const positions = ["Net", "Back"];
+
+  const [clearOpen, setClearOpen] = useState(false);
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -41,6 +44,19 @@ function Team({ team, assigned, setUpdated }) {
 
   return (
     <Grid item xs={12} sm={6} md={6} lg={6} xl={3} ref={dropRef}>
+      <ConfirmDialog
+        message={`You are about to clear Team ${team} and unassign all ${
+          assigned.length
+        } ballkid${assigned.length > 1 ? "s" : ""}.`}
+        url={"/api/clear-team"}
+        body={JSON.stringify({
+          finals_team: team,
+        })}
+        open={clearOpen}
+        setOpen={setClearOpen}
+        setUpdated={setUpdated}
+      />
+
       <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
         <CardContent>
           <div className="justify">
@@ -54,20 +70,7 @@ function Team({ team, assigned, setUpdated }) {
             {assigned.length === 0 ? (
               ""
             ) : (
-              <Button
-                size="small"
-                onClick={(e) => {
-                  fetch("/api/clear-team", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      finals_team: team,
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
+              <Button size="small" onClick={(e) => setClearOpen(true)}>
                 Clear
               </Button>
             )}
