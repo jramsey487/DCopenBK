@@ -700,6 +700,7 @@ function Comments({
       <div className="sxs">
         <TextField
           variant="standard"
+          multiline
           value={comments}
           style={{ width: "100%" }}
           disabled={disabled}
@@ -710,7 +711,7 @@ function Comments({
         <Button
           size="small"
           variant="outlined"
-          sx={{ ml: 1 }}
+          sx={{ ml: 2 }}
           onClick={() =>
             fetch("/api/update-ballkid", {
               method: "PATCH",

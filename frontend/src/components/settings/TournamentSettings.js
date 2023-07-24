@@ -26,7 +26,7 @@ function SetBanner({ banner, setSuccessMsg, setErrorMsg }) {
         onChange={(e) => setNewBanner(e.target.value)}
       />
       <Button
-        variant="contained"
+        variant="outlined"
         size="small"
         onClick={() =>
           fetch("/api/get-tournament", {
@@ -54,7 +54,7 @@ function SetBanner({ banner, setSuccessMsg, setErrorMsg }) {
           })
         }
       >
-        Submit
+        Publish
       </Button>
     </div>
   );
