@@ -9,23 +9,21 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
 
 import AddCircle from "@mui/icons-material/AddCircle";
+import RemoveCircle from "@mui/icons-material/RemoveCircle";
 import KeyboardDoubleArrowDown from "@mui/icons-material/KeyboardDoubleArrowDown";
 import KeyboardDoubleArrowUp from "@mui/icons-material/KeyboardDoubleArrowUp";
-import Delete from "@mui/icons-material/Delete";
 
 import { getAuthHeader, isCurrentHour, dayHourToStr } from "../Utils";
 import { Tooltip } from "@mui/material";
 
-function ActionIcons({ hour, editing, setUpdated }) {
+function ShiftScheduleButtons({ hour, setUpdated }) {
   return (
     <div>
       <Tooltip title="Shift Schedule Up">
         <IconButton
-          color={editing ? "" : "primary"}
-          disabled={editing ? true : false}
+          color="primary"
           sx={{ m: 0, p: 0 }}
           onClick={() => {
             fetch("/api/shift-schedule", {
@@ -46,8 +44,7 @@ function ActionIcons({ hour, editing, setUpdated }) {
 
       <Tooltip title="Shift Schedule Down">
         <IconButton
-          color={editing ? "" : "primary"}
-          disabled={editing ? true : false}
+          color="primary"
           sx={{ m: 0, p: 0 }}
           onClick={() => {
             fetch("/api/shift-schedule", {
@@ -65,23 +62,6 @@ function ActionIcons({ hour, editing, setUpdated }) {
           <KeyboardDoubleArrowDown />
         </IconButton>
       </Tooltip>
-
-      {/* <Tooltip title="Delete Hour">
-        <IconButton
-          onClick={() => {
-            fetch("/api/delete-hour", {
-              method: "DELETE",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                rain_delay: true,
-                hour: hour,
-              }),
-            });
-          }}
-        >
-          <Delete color="error" />
-        </IconButton>
-      </Tooltip> */}
     </div>
   );
 }
@@ -174,28 +154,50 @@ function AddCourtButton({ date, setUpdated }) {
   );
 }
 
-function AddHourButton({ date, courts, setUpdated }) {
+function HourButtons({ date, courts, setUpdated }) {
   return (
-    <Tooltip title="Add Hour">
-      <IconButton
-        sx={{ mt: 1 }}
-        color="primary"
-        onClick={(e) => {
-          fetch("/api/add-hour", {
-            method: "POST",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              date: date,
-              num_courts: courts.length,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => setUpdated(true));
-        }}
-      >
-        <AddCircle />
-      </IconButton>
-    </Tooltip>
+    <div className="sxs">
+      <Tooltip title="Add Hour">
+        <IconButton
+          sx={{ pl: 2, pr: 1, mt: 1 }}
+          color="primary"
+          onClick={(e) => {
+            fetch("/api/add-hour", {
+              method: "POST",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                date: date,
+                num_courts: courts.length,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <AddCircle />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Delete Last Hour">
+        <IconButton
+          sx={{ p: 0, mt: 1 }}
+          color="primary"
+          onClick={(e) => {
+            fetch("/api/delete-hour", {
+              method: "DELETE",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                date: date,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <RemoveCircle />
+        </IconButton>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -250,11 +252,14 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                     }}
                   >
                     <TableCell align="center">
-                      <ActionIcons
-                        hour={hour}
-                        editing={editing}
-                        setUpdated={setUpdated}
-                      />
+                      {editing ? (
+                        ""
+                      ) : (
+                        <ShiftScheduleButtons
+                          hour={hour}
+                          setUpdated={setUpdated}
+                        />
+                      )}
                     </TableCell>
 
                     <TableCell align="center">{dayHourToStr(hour)}</TableCell>
@@ -287,7 +292,7 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
         </Grid>
 
         <Grid item xs={0.5}>
-          {readOnly ? (
+          {readOnly || !editing ? (
             ""
           ) : (
             <AddCourtButton date={date} setUpdated={setUpdated} />
@@ -295,10 +300,10 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
         </Grid>
       </Grid>
 
-      {readOnly ? (
+      {readOnly || !editing ? (
         ""
       ) : (
-        <AddHourButton date={date} courts={courts} setUpdated={setUpdated} />
+        <HourButtons date={date} courts={courts} setUpdated={setUpdated} />
       )}
     </div>
   );

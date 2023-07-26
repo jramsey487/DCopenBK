@@ -140,7 +140,6 @@ export default function SchedulePageChairperson(props) {
   );
 
   useEffect(() => {
-    console.log("rerendering");
     fetch(`/api/get-schedule?date=${date}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setShifts(data))

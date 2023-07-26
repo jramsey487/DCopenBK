@@ -22,10 +22,6 @@ def get_days_shifts(param):
     start_hour = datetime(year=date.year, month=date.month, day=date.day, hour=8)
     end_hour = start_hour + timedelta(days=1)
 
-    logger.info(
-        f"{datetime.now()} [get_days_shifts] input {param}; start range {start_hour} and end {end_hour}"
-    )
-
     return Schedule.objects.filter(start__gte=start_hour, start__lt=end_hour)
 
 
@@ -36,7 +32,6 @@ class GetSchedule(generics.ListAPIView):
     def get_queryset(self):
         param = self.request.query_params.get("date")
         shifts = get_days_shifts(param).order_by("start", "id")
-        print(len(shifts))
         return shifts
 
 
@@ -97,19 +92,19 @@ class DeleteSchedule(APIView):
         )
 
 
-class AddHour(APIView):
+class AddDeleteHour(APIView):
     permission_classes = [IsChairperson]
 
     def post(self, request, format=None):
-        param = request.data["date"]
-        shifts = get_days_shifts(param)
+        date = request.data["date"]
+        shifts = get_days_shifts(date)
         courts = shifts.values_list("court", flat=True).distinct()
 
         max_hour = shifts.aggregate(max=Max("start"))["max"]
         next_hour = max_hour + timedelta(hours=1)
 
         logger.info(
-            f"{datetime.now()} [AddHour] for date {param}, max_hour was {max_hour}"
+            f"{datetime.now()} [AddHour] for date {date}, max_hour was {max_hour}"
         )
 
         for court in courts:
@@ -121,6 +116,22 @@ class AddHour(APIView):
 
         return Response(
             {"Success": f"Added hour at {next_hour}"}, status=status.HTTP_200_OK
+        )
+
+    def delete(self, request, format=None):
+        date = request.data["date"]
+        max_hour = get_days_shifts(date).aggregate(max=Max("start"))["max"]
+
+        logger.info(
+            f"{datetime.now()} [DeleteHour] for date {date}, max_hour was {max_hour}"
+        )
+
+        for shift in Schedule.objects.filter(start=max_hour):
+            logger.info(f"{datetime.now()} [DeleteHour] deleting shift {shift}")
+            shift.delete()
+
+        return Response(
+            {"Success": f"Deleted hour {max_hour}"}, status=status.HTTP_200_OK
         )
 
 
@@ -261,23 +272,6 @@ class GetTournament(APIView):
         )
 
 
-class DeleteHour(APIView):
-    permission_classes = [IsChairperson]
-
-    def delete(self, request, format=None):
-        hour = request.data["hour"]
-        start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
-
-        shifts = Schedule.objects.filter(start=start)
-        shifts.delete()
-
-        logger.info(
-            f"{datetime.now()} [DeleteHour] deleted shifts {shifts} at hour {start}"
-        )
-
-        return Response({"Success": f"Deleted hour {start}"}, status=status.HTTP_200_OK)
-
-
 class ShiftSchedule(APIView):
     permission_classes = [IsChairperson]
 
@@ -311,9 +305,11 @@ class ShiftSchedule(APIView):
 
         # Shift schedule up by 1 hour
         elif direction == "up":
+            # Delete previous hour's shifts
             for shift in Schedule.objects.filter(start=start - timedelta(hours=1)):
                 shift.delete()
 
+            # Shift all remaining day's shifts up one hour
             for shift in remaining_days_shifts:
                 shift.start = shift.start - timedelta(hours=1)
                 shift.save()
