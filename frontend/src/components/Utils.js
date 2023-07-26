@@ -95,7 +95,12 @@ export function LayoutButtons({ gridLayout, setGridLayout }) {
 
 export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
   return (
-    <Collapse in={errorMsg || successMsg}>
+    <Collapse
+      in={
+        (errorMsg !== null && errorMsg !== "" && errorMsg !== undefined) ||
+        (successMsg !== null && successMsg !== "" && successMsg !== undefined)
+      }
+    >
       {successMsg !== "" ? (
         <Alert
           severity="success"
