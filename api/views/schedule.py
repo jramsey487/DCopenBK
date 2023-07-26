@@ -35,7 +35,9 @@ class GetSchedule(generics.ListAPIView):
 
     def get_queryset(self):
         param = self.request.query_params.get("date")
-        return get_days_shifts(param).order_by("id")
+        shifts = get_days_shifts(param).order_by("start", "id")
+        print(len(shifts))
+        return shifts
 
 
 class CreateSchedule(APIView):
@@ -255,5 +257,68 @@ class GetTournament(APIView):
 
         return Response(
             {"Success": f"Updated tournament"},
+            status=status.HTTP_200_OK,
+        )
+
+
+class DeleteHour(APIView):
+    permission_classes = [IsChairperson]
+
+    def delete(self, request, format=None):
+        hour = request.data["hour"]
+        start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+
+        shifts = Schedule.objects.filter(start=start)
+        shifts.delete()
+
+        logger.info(
+            f"{datetime.now()} [DeleteHour] deleted shifts {shifts} at hour {start}"
+        )
+
+        return Response({"Success": f"Deleted hour {start}"}, status=status.HTTP_200_OK)
+
+
+class ShiftSchedule(APIView):
+    permission_classes = [IsChairperson]
+
+    def patch(self, request, format=None):
+        hour = request.data["hour"]
+        start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+        direction = request.data["direction"]
+
+        logger.info(
+            f"{datetime.now()} [ShiftSchedule] shifting schedule {direction} at {start}"
+        )
+
+        remaining_days_shifts = Schedule.objects.filter(
+            start__gte=start, start__lt=start + timedelta(hours=12)
+        )
+
+        # Shift back schedule by 1 hour
+        if direction == "down":
+            courts = list(
+                Schedule.objects.filter(start=start).values_list("court", flat=True)
+            )
+
+            # Shift all shifts back by 1 hour
+            for shift in remaining_days_shifts:
+                shift.start = shift.start + timedelta(hours=1)
+                shift.save()
+
+            # Create empty shifts for the current hour
+            for court in courts:
+                Schedule.objects.create(court=court, start=start, team=0)
+
+        # Shift schedule up by 1 hour
+        elif direction == "up":
+            for shift in Schedule.objects.filter(start=start - timedelta(hours=1)):
+                shift.delete()
+
+            for shift in remaining_days_shifts:
+                shift.start = shift.start - timedelta(hours=1)
+                shift.save()
+
+        return Response(
+            {"Success": f"Shifted schedule {direction} at {start}"},
             status=status.HTTP_200_OK,
         )
