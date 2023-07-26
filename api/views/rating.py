@@ -120,7 +120,9 @@ def remove_nonoverlapping_reviewers(data):
     if not con:
         return {}, {r for (r, p, d) in data}
 
-    con = max(con, key=len)
+    # TODO @ JOE: pretty sure there is a bug here
+    # con = max(con, key=len)
+    con = max(con, key=len, default=[])
 
     new_data = {(r, p, d): y for ((r, p, d), y) in data.items() if r in con}
     excluded = set(g.nodes).difference(con)
