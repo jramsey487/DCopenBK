@@ -132,7 +132,7 @@ export default function CheckinLeaderboard(props) {
       width: 200,
       valueGetter: (rowData) =>
         getTimeFloat(rowData.row.avgCheckinTime) +
-        getTimeFloat(rowData.row.time) / rowData.row.days,
+        getTimeFloat(rowData.row.duration) / rowData.row.days,
       valueFormatter: (obj) => getTimeStr(obj.value),
     },
   ];

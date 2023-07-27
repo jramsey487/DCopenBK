@@ -48,6 +48,7 @@ import {
   getDurationStr,
   Alerts,
   toPercent,
+  getTimeStr,
 } from "../Utils";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
@@ -773,12 +774,18 @@ export function AggregateMetrics({ pk }) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => setMetrics(data));
+      .then((data) => {
+        setMetrics(data);
+        console.log(data);
+      });
 
     if (isChairperson) {
       fetch("/api/get-average-court-leaderboard", { headers: getAuthHeader() })
         .then((response) => response.json())
-        .then((data) => setAverages(data))
+        .then((data) => {
+          setAverages(data);
+          console.log(data);
+        })
         .then(() => setLoading(false));
     } else {
       setLoading(false);
@@ -808,7 +815,6 @@ export function AggregateMetrics({ pk }) {
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
                   Total Time Checked In
                 </TableCell>
-
                 <TableCell align="center">
                   {getDurationStr(getTimeFloat(metrics.checkin_duration))}
                 </TableCell>
@@ -820,11 +826,11 @@ export function AggregateMetrics({ pk }) {
                   </TableCell>
                 )}
               </TableRow>
+
               <TableRow>
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
                   Total Days Checked In
                 </TableCell>
-
                 <TableCell align="center">{metrics.checkin_days}</TableCell>
                 {!isChairperson ? (
                   ""
@@ -834,9 +840,10 @@ export function AggregateMetrics({ pk }) {
                   </TableCell>
                 )}
               </TableRow>
+
               <TableRow>
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
-                  Average Checked In Time Per Day
+                  Average Time Checked In Per Day
                 </TableCell>
 
                 <TableCell align="center">
@@ -857,6 +864,48 @@ export function AggregateMetrics({ pk }) {
                   </TableCell>
                 )}
               </TableRow>
+
+              <TableRow>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  Average Check-in Time
+                </TableCell>
+                <TableCell align="center">
+                  {getTimeStr(metrics.avg_checkin_time)}
+                </TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {getTimeStr(parseFloat(averages.checkin_time_avg) / 3600)}
+                  </TableCell>
+                )}
+              </TableRow>
+
+              <TableRow>
+                <TableCell align="center" sx={{ fontWeight: "medium" }}>
+                  Average Check-out Time
+                </TableCell>
+                <TableCell align="center">
+                  {getTimeStr(
+                    getTimeFloat(metrics.avg_checkin_time) +
+                      getTimeFloat(metrics.checkin_duration) /
+                        metrics.checkin_days
+                  )}
+                </TableCell>
+                {!isChairperson ? (
+                  ""
+                ) : (
+                  <TableCell align="center">
+                    {getTimeStr(
+                      parseFloat(averages.checkin_time_avg) / 3600 +
+                        parseFloat(
+                          averages.checkin_avg / 3600 / averages.days_avg
+                        )
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+
               <TableRow>
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
                   Total Time on Court
@@ -872,6 +921,7 @@ export function AggregateMetrics({ pk }) {
                   </TableCell>
                 )}
               </TableRow>
+
               <TableRow>
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
                   % Time on Court
