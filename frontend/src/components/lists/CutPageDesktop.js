@@ -236,24 +236,29 @@ function ActiveSection({ active, setUpdated }) {
         </Typography>
       ) : (
         <Grid container>
-          {[filtered.slice(0, half), filtered.slice(half)].map((sliced) => (
-            <Grid
-              container
-              item
-              direction="column"
-              xs={12}
-              sm={6}
-              md={6}
-              lg={6}
-              xl={4}
-            >
-              {sliced.map((ballkid) => (
-                <Grid key={ballkid.id} item sx={{ px: 1 }}>
-                  {<DraggableBallkidAndIcon ballkid={ballkid} />}
-                </Grid>
-              ))}
-            </Grid>
-          ))}
+          {[filtered.slice(0, half), filtered.slice(half)].map((sliced) =>
+            sliced.length === 0 ? (
+              ""
+            ) : (
+              <Grid
+                container
+                item
+                key={sliced[0].id}
+                direction="column"
+                xs={12}
+                sm={6}
+                md={6}
+                lg={6}
+                xl={4}
+              >
+                {sliced.map((ballkid) => (
+                  <Grid key={ballkid.id} item sx={{ px: 1 }}>
+                    {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                  </Grid>
+                ))}
+              </Grid>
+            )
+          )}
         </Grid>
       )}
     </Box>
