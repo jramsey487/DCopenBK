@@ -34,12 +34,12 @@ class CreateCheckinHistory(APIView):
         if checkout:
             history = CheckinHistory.objects.create(
                 ballkid=ballkid,
-                checkin=checkin,
-                checkout=checkout,
+                start=checkin,
+                end=checkout,
                 duration=checkout - checkin,
             )
         else:
-            history = CheckinHistory.objects.create(ballkid=ballkid, checkin=checkin)
+            history = CheckinHistory.objects.create(ballkid=ballkid, start=checkin)
 
         return Response(CheckinHistorySerializer(history).data)
 
