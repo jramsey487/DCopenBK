@@ -1,7 +1,7 @@
 import Star from "@mui/icons-material/Star";
 import Circle from "@mui/icons-material/Circle";
 import EventSeat from "@mui/icons-material/EventSeat";
-import Stop from "@mui/icons-material/Stop";
+import Square from "@mui/icons-material/Square";
 import EmojiPeople from "@mui/icons-material/EmojiPeople";
 import Grid4x4 from "@mui/icons-material/Grid4x4";
 
@@ -26,7 +26,7 @@ export const ICON_DICT = {
   captain: <Star sx={{ color: "orange" }} />,
   rookie: <Circle fontSize="small" sx={{ color: "green" }} />,
   chairperson: <EventSeat sx={{ color: "purple" }} />,
-  supervet: <Stop sx={{ color: "info.main" }} />,
+  supervet: <Square fontSize="small" sx={{ color: "info.main" }} />,
   outOfTownRookie: <Circle fontSize="small" sx={{ color: "error.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
   net: <Grid4x4 sx={{ color: "gray" }} fontSize="small" />,
