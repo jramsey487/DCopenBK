@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
@@ -685,49 +685,78 @@ function ActiveOverflowMenu(props) {
 
 function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
+  const [savedComments, setSavedComments] = useState(ballkid.comments);
   const [comments, setComments] = useState(ballkid.comments);
+
+  const commentsInput = useRef(null);
 
   return (
     <div>
-      <Typography variant="h6"> Comments: </Typography>
-
       <div className="sxs">
-        <TextField
-          variant="standard"
-          multiline
-          value={comments}
-          style={{ width: "100%" }}
-          disabled={disabled}
-          onDoubleClick={() => setDisabled(false)}
-          onChange={(e) => setComments(e.target.value)}
-        />
-
+        <Typography variant="h6">Chairperson Comments: </Typography>
         <Button
           size="small"
-          variant="outlined"
-          sx={{ ml: 2 }}
-          onClick={() =>
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                comments: comments,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Comments saved!");
-                setDisabled(true);
-              } else {
-                setErrorMsg("Error saving comments.");
-              }
-            })
-          }
+          disabled={!disabled}
+          onClick={() => {
+            setDisabled(false);
+            setTimeout(() => commentsInput.current.focus(), 100);
+          }}
+          sx={{ mt: 0.5 }}
         >
-          Save
+          Edit
         </Button>
       </div>
+
+      {disabled ? (
+        <Typography color="gray">{comments}</Typography>
+      ) : (
+        <div className="sxs">
+          <TextField
+            variant="standard"
+            multiline
+            value={comments}
+            style={{ width: "100%" }}
+            disabled={disabled}
+            inputRef={commentsInput}
+            onChange={(e) => setComments(e.target.value)}
+          />
+
+          <Button
+            size="small"
+            sx={{ ml: 2 }}
+            onClick={() =>
+              fetch("/api/update-ballkid", {
+                method: "PATCH",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  first_name: ballkid.first_name,
+                  last_name: ballkid.last_name,
+                  comments: comments,
+                }),
+              }).then((response) => {
+                if (response.ok) {
+                  setSuccessMsg("Comments saved!");
+                  setDisabled(true);
+                  setSavedComments(comments);
+                } else {
+                  setErrorMsg("Error saving comments.");
+                }
+              })
+            }
+          >
+            Save
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              setComments(savedComments);
+              setDisabled(true);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

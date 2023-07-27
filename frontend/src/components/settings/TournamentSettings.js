@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
@@ -8,63 +8,95 @@ import { Alerts, HelpIcon, HideShowToggle, getAuthHeader } from "../Utils";
 import { Box, TextField } from "@mui/material";
 import { tournamentSettings } from "../HelpMessages";
 
-function SetBanner({ banner, setSuccessMsg, setErrorMsg }) {
-  const [bannerDisabled, setBannerDisabled] = useState(true);
-  const [newBanner, setNewBanner] = useState(banner);
+function SetBanner({ tournament, setSuccessMsg, setErrorMsg }) {
+  const [disabled, setDisabled] = useState(true);
+  const [savedBanner, setSavedBanner] = useState(tournament.banner);
+  const [banner, setBanner] = useState(tournament.banner);
+
+  const bannerInput = useRef(null);
 
   const refreshStr = "Refresh to view updated banner state.";
 
   return (
-    <div className="sxs" style={{ width: "75%" }}>
-      <TextField
-        variant="standard"
-        defaultValue={banner}
-        style={{ width: "100%" }}
-        disabled={bannerDisabled}
-        sx={{ mx: 2 }}
-        multiline
-        onDoubleClick={() => setBannerDisabled(false)}
-        onChange={(e) => setNewBanner(e.target.value)}
-      />
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={() =>
-          fetch("/api/get-tournament", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              banner: newBanner ?? "",
-            }),
-          }).then((response) => {
-            if (response.ok) {
-              setBannerDisabled(true);
+    <Grid item xs={12} className="justify">
+      <div className="sxs">
+        <Typography variant="subtitle1">Site-wide banner</Typography>
+        <Button
+          size="small"
+          disabled={!disabled}
+          onClick={() => {
+            setDisabled(false);
+            setTimeout(() => bannerInput.current.focus(), 100);
+          }}
+          sx={{ mt: 0.5 }}
+        >
+          Edit
+        </Button>
+      </div>
+      {disabled ? (
+        <Typography style={{ width: "70%" }} color="gray">
+          {banner}
+        </Typography>
+      ) : (
+        <div className="sxs" style={{ width: "70%" }}>
+          <TextField
+            variant="standard"
+            value={banner}
+            style={{ width: "100%" }}
+            disabled={disabled}
+            inputRef={bannerInput}
+            sx={{ mx: 2 }}
+            multiline
+            onChange={(e) => setBanner(e.target.value)}
+          />
+          <Button
+            size="small"
+            onClick={() =>
+              fetch("/api/get-tournament", {
+                method: "PATCH",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  banner: banner ?? "",
+                }),
+              }).then((response) => {
+                if (response.ok) {
+                  setDisabled(true);
+                  setSavedBanner(banner);
 
-              if (newBanner === "") {
-                setSuccessMsg(
-                  `Banner removed for all ballkids and captains! ${refreshStr}`
-                );
-              } else {
-                setSuccessMsg(
-                  `Banner updated for all ballkids and captains! ${refreshStr}`
-                );
-              }
-            } else {
-              setErrorMsg(`Error updating banner. ${refreshStr}`);
+                  if (banner === "") {
+                    setSuccessMsg(
+                      `Banner removed for all ballkids and captains! ${refreshStr}`
+                    );
+                  } else {
+                    setSuccessMsg(
+                      `Banner updated for all ballkids and captains! ${refreshStr}`
+                    );
+                  }
+                } else {
+                  setErrorMsg(`Error updating banner. ${refreshStr}`);
+                }
+              })
             }
-          })
-        }
-      >
-        Publish
-      </Button>
-    </div>
+          >
+            Publish
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              setDisabled(true);
+              setBanner(savedBanner);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+    </Grid>
   );
 }
 
 export default function TournamentSettings(props) {
-  const [showTeams, setShowTeams] = useState(false);
-  const [showFinalsTeams, setShowFinalsTeams] = useState(false);
-  const [banner, setBanner] = useState();
+  const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -75,14 +107,12 @@ export default function TournamentSettings(props) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => {
-        setShowTeams(data.show_teams);
-        setShowFinalsTeams(data.show_finals_teams);
-        setBanner(data.banner);
-      });
+      .then((data) => setTournament(data));
   }, []);
 
-  return (
+  return tournament === null || tournament === undefined ? (
+    ""
+  ) : (
     <div className="page">
       <Alerts
         successMsg={successMsg}
@@ -98,18 +128,11 @@ export default function TournamentSettings(props) {
       </Box>
 
       <Grid container spacing={2} sx={{ pr: 2 }}>
-        <Grid item xs={12} className="justify-top">
-          <Typography variant="subtitle1">Set site-wide banner</Typography>
-          {banner === undefined || banner === null ? (
-            ""
-          ) : (
-            <SetBanner
-              banner={banner}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          )}
-        </Grid>
+        <SetBanner
+          tournament={tournament}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
 
         {["", "finals "].map((teamType) => (
           <Grid item key={teamType} xs={12} className="justify">
@@ -119,8 +142,16 @@ export default function TournamentSettings(props) {
 
             <HideShowToggle
               teamType={teamType.trim()}
-              showTeams={teamType === "" ? showTeams : showFinalsTeams}
-              setShowTeams={teamType === "" ? setShowTeams : setShowFinalsTeams}
+              showTeams={
+                teamType === ""
+                  ? tournament.show_teams
+                  : tournament.show_finals_teams
+              }
+              setShowTeams={
+                teamType === ""
+                  ? tournament.show_teams
+                  : tournament.show_finals_teams
+              }
               setSuccessMsg={setSuccessMsg}
               setErrorMsg={setErrorMsg}
             />
