@@ -10,12 +10,20 @@ import { tournamentSettings } from "../HelpMessages";
 
 function SetBanner({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
-  const [savedBanner, setSavedBanner] = useState(tournament.banner);
-  const [banner, setBanner] = useState(tournament.banner);
+  const [savedBanner1, setSavedBanner1] = useState(tournament.banner1);
+  const [savedBanner2, setSavedBanner2] = useState(tournament.banner2);
+  const [savedBanner3, setSavedBanner3] = useState(tournament.banner3);
+  const [banner1, setBanner1] = useState(tournament.banner1);
+  const [banner2, setBanner2] = useState(tournament.banner2);
+  const [banner3, setBanner3] = useState(tournament.banner3);
+
+  const bannerToSetBannerDict = {
+    banner1: setBanner1,
+    banner2: setBanner2,
+    banner3: setBanner3,
+  };
 
   const bannerInput = useRef(null);
-
-  const refreshStr = "Refresh to view updated banner state.";
 
   return (
     <Grid item xs={12} className="justify">
@@ -34,21 +42,33 @@ function SetBanner({ tournament, setSuccessMsg, setErrorMsg }) {
         </Button>
       </div>
       {disabled ? (
-        <Typography style={{ width: "70%" }} color="gray">
-          {banner}
-        </Typography>
+        <Box style={{ width: "70%" }} sx={{ ml: 2 }}>
+          {[banner1, banner2, banner3].map((banner, index) => (
+            <Typography color="gray" key={`disabled${index}`}>
+              {banner}
+            </Typography>
+          ))}
+        </Box>
       ) : (
-        <div className="sxs" style={{ width: "70%" }}>
-          <TextField
-            variant="standard"
-            value={banner}
-            style={{ width: "100%" }}
-            disabled={disabled}
-            inputRef={bannerInput}
-            sx={{ mx: 2 }}
-            multiline
-            onChange={(e) => setBanner(e.target.value)}
-          />
+        <Box className="sxs" style={{ width: "70%" }}>
+          <Box>
+            {[banner1, banner2, banner3].map((banner, index) => (
+              <TextField
+                key={`undisabled${index}`}
+                variant="standard"
+                value={banner}
+                style={{ width: "90%" }}
+                disabled={disabled}
+                inputRef={index === 0 ? bannerInput : null}
+                sx={{ mx: 2 }}
+                multiline
+                onChange={(e) =>
+                  bannerToSetBannerDict[`banner${index + 1}`](e.target.value)
+                }
+              />
+            ))}
+          </Box>
+
           <Button
             size="small"
             onClick={() =>
@@ -56,40 +76,41 @@ function SetBanner({ tournament, setSuccessMsg, setErrorMsg }) {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
-                  banner: banner ?? "",
+                  banner1: banner1 ?? "",
+                  banner2: banner2 ?? "",
+                  banner3: banner3 ?? "",
                 }),
               }).then((response) => {
                 if (response.ok) {
                   setDisabled(true);
-                  setSavedBanner(banner);
+                  setSavedBanner1(banner1);
+                  setSavedBanner2(banner2);
+                  setSavedBanner3(banner3);
 
-                  if (banner === "") {
-                    setSuccessMsg(
-                      `Banner removed for all ballkids and captains! ${refreshStr}`
-                    );
-                  } else {
-                    setSuccessMsg(
-                      `Banner updated for all ballkids and captains! ${refreshStr}`
-                    );
-                  }
+                  setSuccessMsg(
+                    "Banner updated for all ballkids and captains! Refresh page to view updated banner state."
+                  );
                 } else {
-                  setErrorMsg(`Error updating banner. ${refreshStr}`);
+                  setErrorMsg("Error updating banner.");
                 }
               })
             }
           >
             Publish
           </Button>
+
           <Button
             size="small"
             onClick={() => {
               setDisabled(true);
-              setBanner(savedBanner);
+              setBanner1(savedBanner1);
+              setBanner2(savedBanner2);
+              setBanner3(savedBanner3);
             }}
           >
             Cancel
           </Button>
-        </div>
+        </Box>
       )}
     </Grid>
   );

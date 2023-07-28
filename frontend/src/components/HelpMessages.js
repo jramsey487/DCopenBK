@@ -428,9 +428,9 @@ export const tournamentSettings = (
   <DialogContentText>
     This page allows you to view and change tournament-wide settings.
     <br /> <br />
-    A site-wide banner can be set and published from here. This will show up as
-    a banner at the top of the screen for all logged in ballkids, captains, and
-    chairpeople.
+    Up to three site-wide banners can be set and published from here. This will
+    show up as banner(s) at the top of the screen for all logged in ballkids,
+    captains, and chairpeople.
     <br /> <br />
     Visibility of teams and finals teams to ballkids and captains can be
     controlled from here. This can also be set on the Teams and Finals Teams

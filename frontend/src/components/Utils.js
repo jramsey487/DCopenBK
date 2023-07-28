@@ -214,8 +214,16 @@ export function SearchAndFilter({
 }
 
 export function TournamentBanner() {
-  const [banner, setBanner] = useState();
-  const [open, setOpen] = useState(true);
+  const [banners, setBanners] = useState([]);
+  const [open1, setOpen1] = useState(true);
+  const [open2, setOpen2] = useState(true);
+  const [open3, setOpen3] = useState(true);
+
+  const openSetOpenList = [
+    [open1, setOpen1],
+    [open2, setOpen2],
+    [open3, setOpen3],
+  ];
 
   useEffect(() => {
     fetch("/api/get-tournament", {
@@ -223,17 +231,27 @@ export function TournamentBanner() {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => setBanner(data.banner));
+      .then((data) => setBanners([data.banner1, data.banner2, data.banner3]));
   }, []);
 
-  return banner === undefined || banner === null || banner === "" ? (
-    ""
-  ) : (
-    <Collapse in={open}>
-      <Alert severity="warning" variant="filled" onClose={() => setOpen(false)}>
-        {banner}
-      </Alert>
-    </Collapse>
+  return (
+    <Box>
+      {banners.map((banner, index) =>
+        banner === undefined || banner === null || banner === "" ? (
+          ""
+        ) : (
+          <Collapse in={openSetOpenList[index][0]} key={index}>
+            <Alert
+              severity="warning"
+              variant="filled"
+              onClose={() => openSetOpenList[index][1](false)}
+            >
+              {banner}
+            </Alert>
+          </Collapse>
+        )
+      )}
+    </Box>
   );
 }
 

@@ -289,8 +289,12 @@ class GetTournament(APIView):
             tournament.show_teams = request.data["show_teams"]
         if "show_finals_teams" in request.data:
             tournament.show_finals_teams = request.data["show_finals_teams"]
-        if "banner" in request.data:
-            tournament.banner = request.data["banner"]
+        if "banner1" in request.data:
+            tournament.banner1 = request.data["banner1"]
+        if "banner2" in request.data:
+            tournament.banner2 = request.data["banner2"]
+        if "banner3" in request.data:
+            tournament.banner3 = request.data["banner3"]
 
         tournament.save()
 
