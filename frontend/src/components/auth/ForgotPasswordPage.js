@@ -64,7 +64,7 @@ export default function ForgotPasswordPage(props) {
               variant="standard"
               required={true}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSubmit(email, navigate, setErrorMsg);
                 }
