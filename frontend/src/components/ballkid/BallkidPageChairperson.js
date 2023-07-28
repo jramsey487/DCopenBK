@@ -765,6 +765,7 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
 export function AggregateMetrics({ pk }) {
   const [metrics, setMetrics] = useState([]);
   const [averages, setAverages] = useState();
+  const [checkinTimeMetrics, setCheckinTimeMetrics] = useState();
   const [loading, setLoading] = useState(true);
 
   const isChairperson = getLocalStorage("group") === "chairperson";
@@ -774,18 +775,20 @@ export function AggregateMetrics({ pk }) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => {
-        setMetrics(data);
-        console.log(data);
-      });
+      .then((data) => setMetrics(data));
+
+    fetch(`/api/get-average-checkin-time/${pk}`, {
+      headers: getAuthHeader(),
+    })
+      .then((response) => response.json())
+      .then((data) => setCheckinTimeMetrics(data));
 
     if (isChairperson) {
-      fetch("/api/get-average-court-leaderboard", { headers: getAuthHeader() })
+      fetch("/api/get-average-court-leaderboard", {
+        headers: getAuthHeader(),
+      })
         .then((response) => response.json())
-        .then((data) => {
-          setAverages(data);
-          console.log(data);
-        })
+        .then((data) => setAverages(data))
         .then(() => setLoading(false));
     } else {
       setLoading(false);
@@ -799,17 +802,18 @@ export function AggregateMetrics({ pk }) {
       <Grid item xs={12} sm={11} md={9} lg={7} xl={5}>
         <TableContainer>
           <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center"></TableCell>
-                <TableCell align="center">Ballkid</TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
+            {!isChairperson ? (
+              ""
+            ) : (
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center"></TableCell>
+                  <TableCell align="center">Ballkid</TableCell>
                   <TableCell align="center">Average</TableCell>
-                )}
-              </TableRow>
-            </TableHead>
+                </TableRow>
+              </TableHead>
+            )}
+
             <TableBody>
               <TableRow>
                 <TableCell align="center" sx={{ fontWeight: "medium" }}>
@@ -870,13 +874,13 @@ export function AggregateMetrics({ pk }) {
                   Average Check-in Time
                 </TableCell>
                 <TableCell align="center">
-                  {getTimeStr(metrics.avg_checkin_time)}
+                  {getTimeStr(parseFloat(checkinTimeMetrics?.ballkid) / 3600)}
                 </TableCell>
                 {!isChairperson ? (
                   ""
                 ) : (
                   <TableCell align="center">
-                    {getTimeStr(parseFloat(averages.checkin_time_avg) / 3600)}
+                    {getTimeStr(parseFloat(checkinTimeMetrics?.average) / 3600)}
                   </TableCell>
                 )}
               </TableRow>
@@ -887,7 +891,7 @@ export function AggregateMetrics({ pk }) {
                 </TableCell>
                 <TableCell align="center">
                   {getTimeStr(
-                    getTimeFloat(metrics.avg_checkin_time) +
+                    parseFloat(checkinTimeMetrics?.ballkid) / 3600 +
                       getTimeFloat(metrics.checkin_duration) /
                         metrics.checkin_days
                   )}
@@ -897,10 +901,10 @@ export function AggregateMetrics({ pk }) {
                 ) : (
                   <TableCell align="center">
                     {getTimeStr(
-                      parseFloat(averages.checkin_time_avg) / 3600 +
-                        parseFloat(
-                          averages.checkin_avg / 3600 / averages.days_avg
-                        )
+                      parseFloat(checkinTimeMetrics?.average) / 3600 +
+                        parseFloat(averages.checkin_avg) /
+                          3600 /
+                          averages.days_avg
                     )}
                   </TableCell>
                 )}

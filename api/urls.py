@@ -51,6 +51,16 @@ analytics_urls = [
         GetCheckinCourtAnalytics.as_view(),
         name="get-checkin-court-analytics",
     ),
+    # path(
+    #     "get-average-checkin-court-analytics",
+    #     GetAverageCheckinCourtAnalytics.as_view(),
+    #     name="get-average-checkin-court-analytics",
+    # ),
+    path(
+        "get-average-checkin-time/<int:pk>",
+        GetAverageCheckinTime.as_view(),
+        name="get-average-checkin-time",
+    ),
     path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
     path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),

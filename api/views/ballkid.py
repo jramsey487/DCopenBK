@@ -285,6 +285,7 @@ def annotate_ratings(ballkids, pk):
 def annotate_durations(ballkids):
     return ballkids.annotate(
         checkin_duration=Coalesce(F("checkinanalytics__duration"), timedelta()),
+        checkin_days=Coalesce(F("checkinanalytics__count"), 0),
         court_duration=Coalesce(Sum("courtanalytics__duration"), timedelta()),
         stadium_duration=Coalesce(
             Sum(
@@ -710,12 +711,28 @@ class GetCheckinCourtAnalytics(APIView):
         recalc_checkin_analytics(ballkid=ballkid)
 
         ballkids = annotate_durations(Ballkid.objects.filter(id=pk))
-        ballkids = ballkids.annotate(
-            checkin_duration=F("checkinanalytics__duration"),
-            checkin_days=F("checkinanalytics__count"),
+        return Response(BallkidSerializer(ballkids[0]).data)
+
+
+class GetAverageCheckinTime(APIView):
+    permission_classes = [IsChairpersonOrSelf]
+
+    def get(self, request, pk):
+        recalc_checkin_analytics()
+        recalc_court_analytics()
+
+        ballkids = Ballkid.objects.annotate(
             avg_checkin_time=Avg("checkinhistory__start__time"),
         )
-        return Response(BallkidSerializer(ballkids[0]).data)
+        average = ballkids.aggregate(checkin_time_avg=Avg("avg_checkin_time"))
+
+        return Response(
+            {
+                "ballkid": ballkids.get(id=pk).avg_checkin_time,
+                "average": average["checkin_time_avg"],
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class GetCheckinLeaderboard(generics.ListAPIView):
@@ -830,22 +847,15 @@ class GetAverageCourtLeaderboard(APIView):
         recalc_court_analytics()
         recalc_checkin_analytics()
 
-        averages = (
-            annotate_durations(Ballkid.objects.filter(is_active=True))
-            .annotate(
-                checkin_time=Avg("checkinhistory__start__time"),
-            )
-            .aggregate(
-                checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
-                checkin_time_avg=Avg("checkin_time"),
-                days_avg=Avg("checkinanalytics__count"),
-                court_avg=Coalesce(Avg("court_duration"), timedelta()),
-                stadium_avg=Coalesce(Avg("stadium_duration"), timedelta()),
-                harris_avg=Coalesce(Avg("harris_duration"), timedelta()),
-                grandstand_avg=Coalesce(Avg("grandstand_duration"), timedelta()),
-                four_avg=Coalesce(Avg("four_duration"), timedelta()),
-                five_avg=Coalesce(Avg("five_duration"), timedelta()),
-            )
+        averages = annotate_durations(Ballkid.objects.filter(is_active=True)).aggregate(
+            checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
+            days_avg=Avg("checkinanalytics__count"),
+            court_avg=Coalesce(Avg("court_duration"), timedelta()),
+            stadium_avg=Coalesce(Avg("stadium_duration"), timedelta()),
+            harris_avg=Coalesce(Avg("harris_duration"), timedelta()),
+            grandstand_avg=Coalesce(Avg("grandstand_duration"), timedelta()),
+            four_avg=Coalesce(Avg("four_duration"), timedelta()),
+            five_avg=Coalesce(Avg("five_duration"), timedelta()),
         )
 
         return Response(averages, status=status.HTTP_200_OK)
