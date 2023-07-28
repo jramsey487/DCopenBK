@@ -38,6 +38,8 @@ export default function RatingsPage(props) {
           setCalibrationWarning(
             "Warning: Insufficient data for effective calibration of one or more reviewers."
           );
+        } else {
+          setCalibrationWarning("");
         }
         return response.json();
       })

@@ -479,7 +479,7 @@ class CalibratedRatings(APIView):
         # If an rcal warning was thrown for the overall rating category
         if "overall" in failed_categories and failed_categories["overall"] is not None:
             logger.warning(
-                f"{datetime.now()} [CalibratedRatings] overall rating category threw an rcal warning"
+                f"{datetime.now()} [CalibratedRatings] overall rating category threw an rcal error"
             )
             s = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
 
