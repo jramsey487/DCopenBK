@@ -18,7 +18,11 @@ export default function FeedbackPage() {
         <Link target="_blank" href="https://forms.gle/J9BH4jC94RxWzMm79">
           here
         </Link>{" "}
-        or feel free to email mubadalacitiopenballcrew@gmail.com.
+        or feel free to email{" "}
+        <Link target="_blank" href="mailto:mubadalacitiopenballcrew@gmail.com">
+          mubadalacitiopenballcrew@gmail.com
+        </Link>
+        .
       </Typography>
     </div>
   );
