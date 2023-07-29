@@ -170,10 +170,6 @@ export default function MyProfile(props) {
               </Grid>
 
               <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
-                <CourtHistoryChart pk={pk} />
-              </Grid>
-
-              <Grid item xs={12} lg={5.5} sx={{ m: 2 }}>
                 <CaptainHistoryChart pk={pk} />
               </Grid>
             </Grid>

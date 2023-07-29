@@ -27,7 +27,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { getLocalStorage, useIsMobile, TournamentBanner } from "./Utils";
 
 const ballkidTabs = [
-  { label: "By Name", url: "/" },
+  { label: "By Name", url: "/list" },
   {
     label: "Teams",
     url: "/teams",
@@ -40,7 +40,7 @@ const ballkidTabs = [
 ];
 
 const captainTabs = [
-  { label: "By Name", url: "/" },
+  { label: "By Name", url: "/list" },
   {
     label: "Teams",
     url: "/teams",
@@ -65,10 +65,10 @@ const captainTabs = [
 const chairpersonTabs = [
   {
     label: "List",
-    url: "/",
+    url: "/checkin",
     subtabs: [
-      { label: "By Name", url: "/" },
       { label: "Check-In", url: "/checkin" },
+      { label: "By Name", url: "/list" },
       { label: "Cut", url: "/cut" },
       { label: "Inactive", url: "/inactive" },
     ],
@@ -354,7 +354,7 @@ export default function Navbar({ isLoggedIn, setToken }) {
             <Box
               className="sxs"
               component={Link}
-              to="/"
+              to="/list"
               sx={{ textDecoration: "none", color: "white" }}
             >
               <Icon>
