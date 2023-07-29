@@ -19,7 +19,7 @@ class GetTokenView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        logger.info(f"{datetime.now()} [GetTokenView] request data: {request.data}")
+        logger.info(f"[GetTokenView] request data: {request.data}")
 
         serializer = self.serializer_class(
             data={
@@ -48,27 +48,21 @@ class UpdateCaptainStatus(APIView):
     model = User
 
     def patch(self, request, format=None):
-        logger.info(
-            f"{datetime.now()} [UpdateCaptainStatus] request data: {request.data}"
-        )
+        logger.info(f"[UpdateCaptainStatus] request data: {request.data}")
 
         first_name = request.data["first_name"]
         last_name = request.data["last_name"]
         ballkid = Ballkid.objects.get(first_name=first_name, last_name=last_name)
         user = User.objects.get(first_name=first_name, last_name=last_name)
 
-        logger.info(
-            f"{datetime.now()} [UpdateCaptainStatus] ballkid {ballkid}; user {user}"
-        )
+        logger.info(f"[UpdateCaptainStatus] ballkid {ballkid}; user {user}")
 
         if ballkid.is_chairperson:
             raise Exception("Cannot change captain status of a chairperson")
 
         # If promoting to captain, then remove ballkid and add captain as a group
         if request.data["is_captain"]:
-            logger.info(
-                f"{datetime.now()} [UpdateCaptainStatus] Promoting ballkid {ballkid} to captain"
-            )
+            logger.info(f"[UpdateCaptainStatus] Promoting ballkid {ballkid} to captain")
             user.groups.clear()
 
             captain_group = Group.objects.get(name="captain")
@@ -76,9 +70,7 @@ class UpdateCaptainStatus(APIView):
 
         # If demoting from captain, then add ballkid and remove captain asa group
         else:
-            logger.info(
-                f"{datetime.now()} [UpdateCaptainStatus] Demoting captain {ballkid} from captain"
-            )
+            logger.info(f"[UpdateCaptainStatus] Demoting captain {ballkid} from captain")
             user.groups.clear()
 
             ballkid_group = Group.objects.get(name="ballkid")
@@ -103,7 +95,7 @@ class RegisterUserView(APIView):
     model = User
 
     def post(self, request, format="json"):
-        logger.info(f"{datetime.now()} [RegisterUserView] request data: {request.data}")
+        logger.info(f"[RegisterUserView] request data: {request.data}")
 
         first_name = request.data.get("first_name", "")
         last_name = request.data.get("last_name", "")
@@ -117,7 +109,7 @@ class RegisterUserView(APIView):
                 group_name = request.data.get("group", None)
                 if group_name:
                     logger.info(
-                        f"{datetime.now()} [RegisterUserView] Assigning group {group_name} to user {user}"
+                        f"[RegisterUserView] Assigning group {group_name} to user {user}"
                     )
                     group = Group.objects.get(name=group_name)
                     user.groups.add(group)
@@ -127,7 +119,7 @@ class RegisterUserView(APIView):
                 ).first()
                 if ballkid:
                     logger.info(
-                        f"{datetime.now()} [RegisterUserView] Assigning user {user} to ballkid {ballkid}"
+                        f"[RegisterUserView] Assigning user {user} to ballkid {ballkid}"
                     )
                     ballkid.user = user
                     ballkid.save()
@@ -150,41 +142,3 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-
-# class ChangePasswordView(generics.UpdateAPIView):
-#     serializer_class = ChangePasswordSerializer
-#     model = User
-#     permission_classes = [AllowAny]
-
-#     def get_object(self, queryset=None):
-#         obj = self.request.user
-#         return obj
-
-#     def update(self, request, *args, **kwargs):
-#         logger.info(f"{datetime.now()} [ChangePasswordView] request data: {request.data}")
-
-#         self.object = self.get_object()
-#         serializer = self.get_serializer(data=request.data)
-
-#         if serializer.is_valid():
-#             # Check old password
-#             if not self.object.check_password(serializer.data.get("old_password")):
-#                 return Response(
-#                     {"old_password": ["Wrong password."]},
-#                     status=status.HTTP_400_BAD_REQUEST,
-#                 )
-
-#             # set_password also hashes the password that the user will get
-#             self.object.set_password(serializer.data.get("new_password"))
-#             self.object.save()
-#             response = {
-#                 "status": "success",
-#                 "code": status.HTTP_200_OK,
-#                 "message": "Password updated successfully",
-#                 "data": [],
-#             }
-
-#             return Response(response)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

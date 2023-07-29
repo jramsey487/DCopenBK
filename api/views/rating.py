@@ -42,21 +42,15 @@ def queryset_to_rcal(ratings, rating_name="overall", returnAveraged=True):
 
     NOTE THAT RATINGS OF 0 ARE CONSIDERED EMPTY AND ARE NOT INCLUDED
     """
-    logger.info(
-        f"{datetime.now()} [queryset_to_rcal] ratings {ratings} with rating_name {rating_name}"
-    )
+    logger.info(f"[queryset_to_rcal] ratings {ratings} with rating_name {rating_name}")
 
     if len(ratings) == 0:
-        logger.info(
-            f"{datetime.now()} [queryset_to_rcal] empty ratings returning empty rcal dict"
-        )
+        logger.info(f"[queryset_to_rcal] empty ratings returning empty rcal dict")
         return {}
 
     rcal_dict = {}
     min_dates = get_min_dates(ratings)
-    logger.info(
-        f"{datetime.now()} [queryset_to_rcal] ratings {ratings} have min_dates {min_dates}"
-    )
+    logger.info(f"[queryset_to_rcal] ratings {ratings} have min_dates {min_dates}")
 
     for rating in ratings:
         mapped_date = DAYS_PER_BUCKET * (
@@ -90,7 +84,7 @@ def queryset_to_rcal(ratings, rating_name="overall", returnAveraged=True):
             rcal_dict.setdefault(key, []).append(float(rating_val))
 
     logger.info(
-        f"{datetime.now()} [queryset_to_rcal] return dict {rcal_dict} with averaging: {returnAveraged}"
+        f"[queryset_to_rcal] return dict {rcal_dict} with averaging: {returnAveraged}"
     )
 
     if not returnAveraged:
@@ -126,7 +120,7 @@ def remove_nonoverlapping_reviewers(data):
     excluded = set(g.nodes).difference(con)
 
     logger.info(
-        f"{datetime.now()} [remove_nonoverlapping_reviewers] data {new_data} after exclusion of reviewers {excluded}"
+        f"[remove_nonoverlapping_reviewers] data {new_data} after exclusion of reviewers {excluded}"
     )
 
     return new_data, excluded
@@ -134,7 +128,7 @@ def remove_nonoverlapping_reviewers(data):
 
 def calibrate(ratings, rating_name="overall", year=get_current_year()):
     logger.info(
-        f"{datetime.now()} [calibrate] starting calibration for {len(ratings)} ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
+        f"[calibrate] starting calibration for {len(ratings)} ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
     )
     year_ratings = ratings.filter(date__year=year)
 
@@ -160,9 +154,7 @@ def calibrate(ratings, rating_name="overall", year=get_current_year()):
     except RcalException as e:
         return None, excluded, e
 
-    logger.info(
-        f"{datetime.now()} [calibrate] completed calibration excluding {excluded}"
-    )
+    logger.info(f"[calibrate] completed calibration excluding {excluded}")
     return cp, excluded, None
 
 
@@ -175,9 +167,7 @@ def save_calibration_parameters(cp, calibrated=None):
     calibrated: Dict mapping (rating id, ratee name) to calibrated rating. Used
     for saving calibrated parameters
     """
-    logger.info(
-        f"{datetime.now()} [save_calibration_parameters] saving calibration params"
-    )
+    logger.info(f"[save_calibration_parameters] saving calibration params")
 
     # Update all non-calibration related parameters
     ratings = Rating.objects.all()
@@ -187,7 +177,7 @@ def save_calibration_parameters(cp, calibrated=None):
     # ratees = ratings.values_list("ratee", flat=True).distinct()
     # keys = raters.union(ratees)
     # logger.info(
-    #     f"{datetime.now()} [save_calibration_parameters] union of raters {raters} and ratees {ratees}: {keys}"
+    #     f"[save_calibration_parameters] union of raters {raters} and ratees {ratees}: {keys}"
     # )
 
     ballkids = Ballkid.objects.filter(is_active=True)
@@ -198,7 +188,7 @@ def save_calibration_parameters(cp, calibrated=None):
     #         name = ballkid.get_name()
     #     except ObjectDoesNotExist:
     #         logger.warning(
-    #             f"{datetime.now()} [save_calibration_params] Could not find ballkid {name}"
+    #             f"[save_calibration_params] Could not find ballkid {name}"
     #         )
     #         continue
 
@@ -230,7 +220,7 @@ def save_calibration_parameters(cp, calibrated=None):
             },
         )
         logger.info(
-            f"{datetime.now()} [save_calibration_parameters] params for ballkid {ballkid} updated with raw metrics: {params}"
+            f"[save_calibration_parameters] params for ballkid {ballkid} updated with raw metrics: {params}"
         )
 
         if calibrated:
@@ -250,7 +240,7 @@ def save_calibration_parameters(cp, calibrated=None):
                 },
             )
             logger.info(
-                f"{datetime.now()} [save_calibration_parameters] params for ballkid {ballkid} updated with calibrated metrics: {params}"
+                f"[save_calibration_parameters] params for ballkid {ballkid} updated with calibrated metrics: {params}"
             )
 
         if cp is not None:
@@ -264,7 +254,7 @@ def save_calibration_parameters(cp, calibrated=None):
                 },
             )
             logger.info(
-                f"{datetime.now()} [save_calibration_parameters] params for ballkid {ballkid} updated with rcal metrics: {params}"
+                f"[save_calibration_parameters] params for ballkid {ballkid} updated with rcal metrics: {params}"
             )
 
 
@@ -352,7 +342,7 @@ class CreateRating(APIView):
                 comments=serializer.data["comments"],
             )
 
-            logger.info(f"{datetime.now()} [CreateRating] Created rating {rating}")
+            logger.info(f"[CreateRating] Created rating {rating}")
 
             # Update calibration parameters
             cp, _, _ = calibrate(Rating.objects.all())
@@ -361,7 +351,7 @@ class CreateRating(APIView):
             return Response(RatingSerializer(rating).data)
 
         logger.warning(
-            f"{datetime.now()} [CreateRating] Error creating rating with serializer errors {serializer.errors}"
+            f"[CreateRating] Error creating rating with serializer errors {serializer.errors}"
         )
         return Response(
             {"Invalid serializer": f"Errors: {serializer.errors}"},
@@ -378,7 +368,7 @@ class CalibratedRatings(APIView):
         year_ratings = ratings.filter(date__year=year)
 
         logger.info(
-            f"{datetime.now()} [CalibratedRatings] Starting rating calibration for {len(ratings)} ratings"
+            f"[CalibratedRatings] Starting rating calibration for {len(ratings)} ratings"
         )
 
         # Keep track of which rating categories throw Rcal exceptions
@@ -393,7 +383,7 @@ class CalibratedRatings(APIView):
             ) = calibrate(ratings, rating_name, year=year)
 
         logger.warning(
-            f"{datetime.now()} [CalibratedRatings] rating categories with failed rating categories {failed_categories}"
+            f"[CalibratedRatings] rating categories with failed rating categories {failed_categories}"
         )
 
         # Get dict of all calibrated overall ratings for saving calibration params
@@ -406,7 +396,7 @@ class CalibratedRatings(APIView):
             for rating in year_ratings
         }
         logger.info(
-            f"{datetime.now()} [CalibratedRatings] completed calibration for {len(calibrated)} ratings"
+            f"[CalibratedRatings] completed calibration for {len(calibrated)} ratings"
         )
 
         # Save calibration parameters for overall ratings only
@@ -479,14 +469,14 @@ class CalibratedRatings(APIView):
         # If an rcal warning was thrown for the overall rating category
         if "overall" in failed_categories and failed_categories["overall"] is not None:
             logger.warning(
-                f"{datetime.now()} [CalibratedRatings] overall rating category threw an rcal error"
+                f"[CalibratedRatings] overall rating category threw an rcal error"
             )
             s = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
 
         # If a non-zero number of reviewers had no overlap in the overall rating category
         elif excluded["overall"]:
             logger.warning(
-                f"{datetime.now()} [CalibratedRatings] overall rating category had excluded reviewers {excluded['overall']}"
+                f"[CalibratedRatings] overall rating category had excluded reviewers {excluded['overall']}"
             )
             s = status.HTTP_206_PARTIAL_CONTENT
 
@@ -494,7 +484,7 @@ class CalibratedRatings(APIView):
             s = status.HTTP_200_OK
 
         logger.info(
-            f"{datetime.now()} [CalibratedRatings] post-processed calibrated ratings {postprocessed} "
+            f"[CalibratedRatings] post-processed calibrated ratings {postprocessed} "
         )
         return Response(RatingSerializer(postprocessed, many=True).data, status=s)
 
@@ -506,9 +496,7 @@ class GetCalibrationParams(generics.RetrieveAPIView):
     def get_object(self):
         pk = self.kwargs["pk"]
         params, created = CalibrationParams.objects.get_or_create(ballkid_id=pk)
-        logger.info(
-            f"{datetime.now()} [GetCalibrationParams] params {params} for ballkid_id {pk}"
-        )
+        logger.info(f"[GetCalibrationParams] params {params} for ballkid_id {pk}")
         return params
 
 
@@ -522,7 +510,7 @@ class GetAverageCalibrationParams(APIView):
             rater_offset__lt=100,
             rater_offset__gt=-100,
         ).aggregate(Avg("rater_offset"), Avg("rater_scale"))
-        logger.info(f"{datetime.now()} [GetAverageCalibrationParams] avg {avgs}")
+        logger.info(f"[GetAverageCalibrationParams] avg {avgs}")
         return Response(avgs)
 
 
@@ -532,7 +520,7 @@ class DeleteRating(APIView):
 
     def delete(self, request, pk, format=None):
         rating = Rating.objects.get(pk=pk)
-        logger.info(f"{datetime.now()} [DeleteRating] deleting rating {rating}")
+        logger.info(f"[DeleteRating] deleting rating {rating}")
         rating.delete()
 
         # Update calibration parameters

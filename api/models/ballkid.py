@@ -98,9 +98,7 @@ class Ballkid(models.Model):
         value(bool): New checkin status that the ballkid is getting set to. True if the ballkid
         is getting checked in and False if the ballkid is getting checked out
         """
-        logger.info(
-            f"{datetime.now()} [handle_checkin_history] ballkid {self.id}, value {value}"
-        )
+        logger.info(f"[handle_checkin_history] ballkid {self.id}, value {value}")
 
         if now is None:
             now = datetime.now()
@@ -135,9 +133,7 @@ class Ballkid(models.Model):
         value(int): New team assignment that the ballkid is getting set to. 0 if the ballkid
         is getting unassigned, and otherwise is a positive int
         """
-        logger.info(
-            f"{datetime.now()} [handle_team_history] ballkid {self.id}, value {value}"
-        )
+        logger.info(f"[handle_team_history] ballkid {self.id}, value {value}")
 
         if now is None:
             now = datetime.now()
@@ -178,9 +174,7 @@ class Ballkid(models.Model):
         value(int): New team assignment that the ballkid is getting set to. 0 if the ballkid
         is getting unassigned, and otherwise is a positive int
         """
-        logger.info(
-            f"{datetime.now()} [handle_captain_history_team] ballkid {self.id}, value {value}"
-        )
+        logger.info(f"[handle_captain_history_team] ballkid {self.id}, value {value}")
 
         if now is None:
             now = datetime.now()
@@ -281,9 +275,7 @@ class Ballkid(models.Model):
         value(bool): True if the ballkid is getting promoted to captain and False if the
         ballkid is getting demoted from captain
         """
-        logger.info(
-            f"{datetime.now()} [handle_captain_history_captain] ballkid {self.id}, value {value}"
-        )
+        logger.info(f"[handle_captain_history_captain] ballkid {self.id}, value {value}")
 
         if now is None:
             now = datetime.now()
@@ -335,7 +327,7 @@ class Ballkid(models.Model):
         which the ballkid was cut
         """
         logger.info(
-            f"{datetime.now()} [handle_cut_history] ballkid {self.id}, value {value}, self_cut {self_cut}"
+            f"[handle_cut_history] ballkid {self.id}, value {value}, self_cut {self_cut}"
         )
 
         if now is None:
@@ -356,15 +348,13 @@ class Ballkid(models.Model):
                     "self_cut": self_cut,
                 },
             )
-            logger.info(
-                f"{datetime.now()} [handle_cut_history] Created {created} cut history {history}"
-            )
+            logger.info(f"[handle_cut_history] Created {created} cut history {history}")
         else:
             num_deleted, elems = CutHistory.objects.filter(
                 ballkid=self, year=now.year
             ).delete()
             logger.info(
-                f"{datetime.now()} [handle_cut_history] Deleted {num_deleted} cut history entries: {elems}"
+                f"[handle_cut_history] Deleted {num_deleted} cut history entries: {elems}"
             )
 
     def set_field(self, field, value):
@@ -381,7 +371,7 @@ class Ballkid(models.Model):
         Exception if the field string is not recognized / supported
         """
         logger.info(
-            f"{datetime.now()} Updating ballkid {self.get_name()} field {field} with value {value}"
+            f"Updating ballkid {self.get_name()} field {field} with value {value}"
         )
 
         if field == "is_checked_in":
@@ -449,27 +439,27 @@ class Ballkid(models.Model):
         # Ballkid cannot be checked in if cut or inactive
         if not self.is_active or self.is_cut:
             logger.info(
-                f"{datetime.now()} [validate] ballkid {self.id} cannot be checked in if cut or inactive"
+                f"[validate] ballkid {self.id} cannot be checked in if cut or inactive"
             )
             self.set_field("is_checked_in", False)
 
         # Ballkid cannot be assigned to a team if not checked in
         if not self.is_checked_in:
             logger.info(
-                f"{datetime.now()} [validate] ballkid {self.id} cannot be assigned if not checked in"
+                f"[validate] ballkid {self.id} cannot be assigned if not checked in"
             )
             self.set_field("current_team", 0)
 
         # Reset the position to the preferred position
         if self.current_team == 0:
             logger.info(
-                f"{datetime.now()} [validate] ballkid {self.id} position reset to preferred position"
+                f"[validate] ballkid {self.id} position reset to preferred position"
             )
             self.set_field("position", self.get_preferred_position())
 
         # Reset the position to the preferred position
         if self.finals_team == "":
-            f"{datetime.now()} [validate] ballkid {self.id} finals position reset to preferred position"
+            f"[validate] ballkid {self.id} finals position reset to preferred position"
             self.set_field("finals_position", self.get_preferred_position())
 
         self.save()

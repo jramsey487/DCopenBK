@@ -39,7 +39,7 @@ def recalc_checkin_analytics(ballkid=None, now=None):
     TODO: make this more efficient by caching the result and only
     updating based on the most recent history
     """
-    logger.info(f"{datetime.now()} [recalc-checkin-analytics] for ballkid {ballkid}")
+    logger.info(f"[recalc-checkin-analytics] for ballkid {ballkid}")
 
     if now is None:
         now = datetime.now()
@@ -62,14 +62,14 @@ def recalc_checkin_analytics(ballkid=None, now=None):
         analytics = {ballkid.id: [set(), timedelta()]}
 
     logger.info(
-        f"{datetime.now()} [recalc-checkin-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
+        f"[recalc-checkin-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
     )
 
     # Add each history's duration and count to the dict of ballkid checkin analytics
     for history in histories:
         if history.ballkid_id not in analytics:
             logger.warn(
-                f"{datetime.now()} [recalc-checkin-analytics] Key {history.ballkid_id} not found in analytics dict"
+                f"[recalc-checkin-analytics] Key {history.ballkid_id} not found in analytics dict"
             )
             continue
 
@@ -79,7 +79,7 @@ def recalc_checkin_analytics(ballkid=None, now=None):
         end_time = history.end if history.end else now
         analytics[history.ballkid_id][1] += end_time - history.start
     logger.info(
-        f"{datetime.now()} [recalc-checkin-analytics] Compiled analytics: {analytics}, starting bulk create"
+        f"[recalc-checkin-analytics] Compiled analytics: {analytics}, starting bulk create"
     )
 
     CheckinAnalytics.objects.bulk_create(
@@ -91,11 +91,11 @@ def recalc_checkin_analytics(ballkid=None, now=None):
         unique_fields=["ballkid_id"],
         update_fields=["count", "duration"],
     )
-    logger.info(f"{datetime.now()} [recalc-checkin-analytics] Completed bulk create")
+    logger.info(f"[recalc-checkin-analytics] Completed bulk create")
 
 
 def recalc_court_analytics(ballkid=None, now=None):
-    logger.info(f"{datetime.now()} [recalc-court-analytics] for ballkid {ballkid}")
+    logger.info(f"[recalc-court-analytics] for ballkid {ballkid}")
 
     if now is None:
         now = datetime.now()
@@ -121,7 +121,7 @@ def recalc_court_analytics(ballkid=None, now=None):
         }
 
     logger.info(
-        f"{datetime.now()} [recalc-court-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
+        f"[recalc-court-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
     )
 
     for history in histories:
@@ -148,7 +148,7 @@ def recalc_court_analytics(ballkid=None, now=None):
                 key = (history.ballkid_id, shift.court)
                 if key not in analytics:
                     logger.warn(
-                        f"{datetime.now()} [recalc-court-analytics] Key {key} not found in analytics"
+                        f"[recalc-court-analytics] Key {key} not found in analytics"
                     )
                     continue
 
@@ -156,7 +156,7 @@ def recalc_court_analytics(ballkid=None, now=None):
                 analytics[key][1] += overlapping
 
     logger.info(
-        f"{datetime.now()} [recalc-court-analytics] Compiled analytics: {analytics}, starting bulk create"
+        f"[recalc-court-analytics] Compiled analytics: {analytics}, starting bulk create"
     )
 
     CourtAnalytics.objects.bulk_create(
@@ -168,7 +168,7 @@ def recalc_court_analytics(ballkid=None, now=None):
         unique_fields=["ballkid_id", "court"],
         update_fields=["count", "duration"],
     )
-    logger.info(f"{datetime.now()} [recalc-court-analytics] Completed bulk create")
+    logger.info(f"[recalc-court-analytics] Completed bulk create")
 
 
 def recalc_captain_analytics(ballkid, now=None):
@@ -180,7 +180,7 @@ def recalc_captain_analytics(ballkid, now=None):
     and non-captain) that have had this ballkid as captain
     )
     """
-    logger.info(f"{datetime.now()} [recalc-captain-analytics] for ballkid {ballkid}")
+    logger.info(f"[recalc-captain-analytics] for ballkid {ballkid}")
 
     if now is None:
         now = datetime.now()
@@ -201,7 +201,7 @@ def recalc_captain_analytics(ballkid, now=None):
             histories = CaptainHistory.objects.filter(ballkid=ballkid)
 
         logger.info(
-            f"{datetime.now()} [recalc-captain-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
+            f"[recalc-captain-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
         )
 
         # For each history between ballkid and captain
@@ -244,7 +244,7 @@ def recalc_captain_analytics(ballkid, now=None):
                 continue
 
             logger.info(
-                f"{datetime.now()} [recalc-captain-analytics] For ballkid {ballkid.id} updating as captain {updateAsCaptain} with other ballkid/captain durations of {durations}"
+                f"[recalc-captain-analytics] For ballkid {ballkid.id} updating as captain {updateAsCaptain} with other ballkid/captain durations of {durations}"
             )
 
             if updateAsCaptain:
@@ -254,7 +254,7 @@ def recalc_captain_analytics(ballkid, now=None):
                     defaults={"duration": durations[other_id], "count": counts[other_id]},
                 )
                 logger.info(
-                    f"{datetime.now()} [recalc-captain-analytics] For (ballkid {other_id}, captain {ballkid.id}), created {created} analytic {analytic}"
+                    f"[recalc-captain-analytics] For (ballkid {other_id}, captain {ballkid.id}), created {created} analytic {analytic}"
                 )
             else:
                 analytic, created = CaptainAnalytics.objects.update_or_create(
@@ -263,7 +263,7 @@ def recalc_captain_analytics(ballkid, now=None):
                     defaults={"duration": durations[other_id], "count": counts[other_id]},
                 )
                 logger.info(
-                    f"{datetime.now()} [recalc-captain-analytics] For (ballkid {ballkid.id}, captain {other_id}), created {created} analytic {analytic}"
+                    f"[recalc-captain-analytics] For (ballkid {ballkid.id}, captain {other_id}), created {created} analytic {analytic}"
                 )
 
 
@@ -336,7 +336,7 @@ class BallkidsList(generics.ListAPIView):
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)
-        logger.info(f"{datetime.now()} [BallkidsList] pk: {pk}; ballkids: {queryset}")
+        logger.info(f"[BallkidsList] pk: {pk}; ballkids: {queryset}")
         return queryset
 
 
@@ -352,7 +352,7 @@ class AllBallkidsList(generics.ListAPIView):
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)
-        logger.info(f"{datetime.now()} [AllBallkidsList] pk: {pk}; ballkids: {queryset}")
+        logger.info(f"[AllBallkidsList] pk: {pk}; ballkids: {queryset}")
         return queryset
 
 
@@ -382,9 +382,7 @@ class BallkidsSortedList(generics.ListAPIView):
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)
-        logger.info(
-            f"{datetime.now()} [BallkidsSortedList] pk: {pk}; ballkids: {queryset}"
-        )
+        logger.info(f"[BallkidsSortedList] pk: {pk}; ballkids: {queryset}")
         return queryset
 
 
@@ -413,25 +411,21 @@ class CreateBallkid(APIView):
             }
             if "image" in data.keys() and data["image"] == "":
                 data["image"] = DEFAULT_IMAGE_FILE
-            logger.info(f"{datetime.now()} [CreateBallkid] input data: {data}")
+            logger.info(f"[CreateBallkid] input data: {data}")
 
             ballkid, created = Ballkid.objects.get_or_create(
                 first_name=serializer.data["first_name"].strip(),
                 last_name=serializer.data["last_name"].strip(),
                 defaults=data,
             )
-            logger.info(
-                f"{datetime.now()} [CreateBallkid] ballkid: {ballkid}; created: {created}"
-            )
+            logger.info(f"[CreateBallkid] ballkid: {ballkid}; created: {created}")
 
             ballkid.validate()
             ballkid.save()
 
             return Response(BallkidSerializer(ballkid).data)
 
-        logger.warning(
-            f"{datetime.now()} [CreateBallkid] serializer errors: {serializer.errors}"
-        )
+        logger.warning(f"[CreateBallkid] serializer errors: {serializer.errors}")
         return Response(
             {"Invalid serializer": f"Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
@@ -463,9 +457,7 @@ class UpdateBallkid(APIView):
         serializer = self.serializer_class(data=request.data, partial=True)
 
         if serializer.is_valid():
-            logger.info(
-                f"{datetime.now()} [UpdateBallkid] serializer data: {serializer.data}"
-            )
+            logger.info(f"[UpdateBallkid] serializer data: {serializer.data}")
 
             # Get ballkid with the corresponding first and last names
             first_name = serializer.data["first_name"]
@@ -493,9 +485,7 @@ class UpdateBallkid(APIView):
 
             return Response(BallkidSerializer(ballkid).data)
 
-        logger.warning(
-            f"{datetime.now()} [UpdateBallkid] serializer errors: {serializer.errors}"
-        )
+        logger.warning(f"[UpdateBallkid] serializer errors: {serializer.errors}")
         return Response(
             {"Invalid serializer": "Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
@@ -510,27 +500,21 @@ class CheckoutAll(APIView):
 
         if group == "all":
             queryset = Ballkid.objects.filter(is_checked_in=True)
-            logger.info(
-                f"{datetime.now()} [CheckoutAll] checking out all ballkids: {queryset}"
-            )
+            logger.info(f"[CheckoutAll] checking out all ballkids: {queryset}")
 
         elif group == "unassigned":
             queryset = Ballkid.objects.filter(is_checked_in=True, current_team=0)
-            logger.info(
-                f"{datetime.now()} [CheckoutAll] checking out unassigned ballkids: {queryset}"
-            )
+            logger.info(f"[CheckoutAll] checking out unassigned ballkids: {queryset}")
 
         else:
             try:
                 queryset = Ballkid.objects.filter(current_team=int(group))
                 logger.info(
-                    f"{datetime.now()} [CheckoutAll] checking out team {group} ballkids: {queryset}"
+                    f"[CheckoutAll] checking out team {group} ballkids: {queryset}"
                 )
 
             except Exception:
-                logger.warn(
-                    f"{datetime.now()} [CheckoutAll] Unrecognized checkout group {group}"
-                )
+                logger.warn(f"[CheckoutAll] Unrecognized checkout group {group}")
 
         for ballkid in queryset:
             ballkid.set_field("is_checked_in", False)
@@ -552,7 +536,7 @@ class CutAll(APIView):
 
         queryset = Ballkid.objects.filter(cut_status=cut_status)
         logger.info(
-            f"{datetime.now()} [CutAll] setting all ballkids {queryset} to cut status {should_cut}"
+            f"[CutAll] setting all ballkids {queryset} to cut status {should_cut}"
         )
 
         for ballkid in queryset:
@@ -579,7 +563,7 @@ class CalcNumTeams(APIView):
             )["num_teams"]
             or 0
         )
-        logger.info(f"{datetime.now()} [CalcNumTeams] # teams: {num_teams}")
+        logger.info(f"[CalcNumTeams] # teams: {num_teams}")
 
         return Response(
             {"teams": [team + 1 for team in range(num_teams)]},
@@ -608,9 +592,7 @@ class ClearTeam(APIView):
             else Ballkid.objects.filter(finals_team=team)
         )
 
-        logger.info(
-            f"{datetime.now()} [ClearTeam] clearing team {team} with ballkids {queryset}"
-        )
+        logger.info(f"[ClearTeam] clearing team {team} with ballkids {queryset}")
 
         if queryset.exists():
             for ballkid in queryset:
@@ -661,7 +643,7 @@ class GetPastTeams(APIView):
             .order_by("-date", "ballkid__last_name", "ballkid__first_name")
         )
 
-        logger.info(f"{datetime.now()} [GetPastTeams] pk: {pk}; histories {histories}")
+        logger.info(f"[GetPastTeams] pk: {pk}; histories {histories}")
 
         # Map from date_str to list of ballkids that were on the captain's team
         # on that date

@@ -49,7 +49,7 @@ class CreateSchedule(APIView):
         courts = NUM_COURTS_TO_COURTS[num_courts]
 
         logger.info(
-            f"{datetime.now()} [CreateSchedule] num_teams {num_teams}, num_hours {num_hours}, num_courts {num_courts} with courts {courts}"
+            f"[CreateSchedule] num_teams {num_teams}, num_hours {num_hours}, num_courts {num_courts} with courts {courts}"
         )
 
         team_index = 0
@@ -61,7 +61,7 @@ class CreateSchedule(APIView):
                     team=(team_index % num_teams) + 1,
                     court=court,
                 )
-                logger.info(f"{datetime.now()} [CreateSchedule] creating shift {shift}")
+                logger.info(f"[CreateSchedule] creating shift {shift}")
                 shift.save()
 
                 team_index += 1
@@ -82,7 +82,7 @@ class DeleteSchedule(APIView):
 
         shifts = get_days_shifts(param)
         logger.info(
-            f"{datetime.now()} [DeleteSchedule] for param {param}, deleting {len(shifts)} shifts {shifts}"
+            f"[DeleteSchedule] for param {param}, deleting {len(shifts)} shifts {shifts}"
         )
         shifts.delete()
 
@@ -103,16 +103,14 @@ class AddDeleteHour(APIView):
         max_hour = shifts.aggregate(max=Max("start"))["max"]
         next_hour = max_hour + timedelta(hours=1)
 
-        logger.info(
-            f"{datetime.now()} [AddHour] for date {date}, max_hour was {max_hour}"
-        )
+        logger.info(f"[AddHour] for date {date}, max_hour was {max_hour}")
 
         for court in courts:
             shift, created = Schedule.objects.get_or_create(
                 start=next_hour,
                 court=court,
             )
-            logger.info(f"{datetime.now()} [AddHour] Created {created} shift {shift}")
+            logger.info(f"[AddHour] Created {created} shift {shift}")
 
         return Response(
             {"Success": f"Added hour at {next_hour}"}, status=status.HTTP_200_OK
@@ -122,12 +120,10 @@ class AddDeleteHour(APIView):
         date = request.data["date"]
         max_hour = get_days_shifts(date).aggregate(max=Max("start"))["max"]
 
-        logger.info(
-            f"{datetime.now()} [DeleteHour] for date {date}, max_hour was {max_hour}"
-        )
+        logger.info(f"[DeleteHour] for date {date}, max_hour was {max_hour}")
 
         for shift in Schedule.objects.filter(start=max_hour):
-            logger.info(f"{datetime.now()} [DeleteHour] deleting shift {shift}")
+            logger.info(f"[DeleteHour] deleting shift {shift}")
             shift.delete()
 
         return Response(
@@ -143,14 +139,14 @@ class AddCourt(APIView):
         shifts = get_days_shifts(param)
         starts = shifts.values_list("start", flat=True).distinct()
 
-        logger.info(f"{datetime.now()} [AddCourt] for date {param} with starts {starts}")
+        logger.info(f"[AddCourt] for date {param} with starts {starts}")
 
         for start in starts:
             shift, created = Schedule.objects.get_or_create(
                 start=start,
                 court="",
             )
-            logger.info(f"{datetime.now()} [AddCourt] Created {created} shift {shift}")
+            logger.info(f"[AddCourt] Created {created} shift {shift}")
 
         return Response({"Success": f"Added court"}, status=status.HTTP_200_OK)
 
@@ -171,7 +167,7 @@ class UpdateSchedule(APIView):
             shift.save()
 
             logger.info(
-                f"{datetime.now()} [UpdateSchedule] updated shift with start {start} and court {court} to team {team}"
+                f"[UpdateSchedule] updated shift with start {start} and court {court} to team {team}"
             )
 
             return Response(
@@ -181,7 +177,7 @@ class UpdateSchedule(APIView):
 
         except Exception as e:
             logger.warn(
-                f"{datetime.now()} [UpdateSchedule] start {start}, court {court}, team {team}; error: {e} "
+                f"[UpdateSchedule] start {start}, court {court}, team {team}; error: {e} "
             )
 
             return Response(
@@ -202,14 +198,12 @@ class UpdateCourtName(APIView):
 
         for shift in court_shifts:
             if new_name == "":
-                logger.info(
-                    f"{datetime.now()} [UpdateCourtName] deleting {shift} due to empty new name"
-                )
+                logger.info(f"[UpdateCourtName] deleting {shift} due to empty new name")
                 shift.delete()
 
             else:
                 logger.info(
-                    f"{datetime.now()} [UpdateCourtName] updating shift {shift} to new court name {new_name}"
+                    f"[UpdateCourtName] updating shift {shift} to new court name {new_name}"
                 )
 
                 shift.court = new_name
@@ -235,7 +229,7 @@ class EndCourt(APIView):
         )
 
         for shift in remaining_shifts:
-            logger.info(f"{datetime.now()} [EndCourt] clearing team from shift {shift}")
+            logger.info(f"[EndCourt] clearing team from shift {shift}")
             shift.team = 0
             shift.save()
 
@@ -243,9 +237,7 @@ class EndCourt(APIView):
             court=court, start__gt=now - timedelta(hours=1), start__lt=now
         )
         for shift in current_shifts:
-            logger.info(
-                f"{datetime.now()} [EndCourt] setting end to {now} for shift {shift}"
-            )
+            logger.info(f"[EndCourt] setting end to {now} for shift {shift}")
             shift.end = now
             shift.save()
 
@@ -269,7 +261,7 @@ class GetNextShifts(APIView):
         shifts = (
             Schedule.objects.exclude(team=0).filter(start__gt=threshold).order_by("start")
         )
-        logger.info(f"{datetime.now()} [GetNextShifts] next shifts {shifts}")
+        logger.info(f"[GetNextShifts] next shifts {shifts}")
 
         return Response(ScheduleSerializer(shifts, many=True).data)
 
@@ -279,7 +271,7 @@ class GetTournament(APIView):
 
     def get(self, request, format=None):
         tournament = Tournament.objects.get(year=2023)
-        logger.info(f"{datetime.now()} [GetTournament] tournament {tournament}")
+        logger.info(f"[GetTournament] tournament {tournament}")
         return Response(TournamentSerializer(tournament).data, status=status.HTTP_200_OK)
 
     def patch(self, request, format=None):
@@ -299,7 +291,7 @@ class GetTournament(APIView):
         tournament.save()
 
         logger.info(
-            f"{datetime.now()} [GetTournament PATCH] tournament {tournament} updated with request {request.data}"
+            f"[GetTournament PATCH] tournament {tournament} updated with request {request.data}"
         )
 
         return Response(
@@ -316,9 +308,7 @@ class ShiftSchedule(APIView):
         start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
         direction = request.data["direction"]
 
-        logger.info(
-            f"{datetime.now()} [ShiftSchedule] shifting schedule {direction} at {start}"
-        )
+        logger.info(f"[ShiftSchedule] shifting schedule {direction} at {start}")
 
         remaining_days_shifts = Schedule.objects.filter(
             start__gte=start, start__lt=start + timedelta(hours=12)
