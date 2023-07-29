@@ -205,7 +205,6 @@ class UpdateCourtName(APIView):
                 logger.info(
                     f"[UpdateCourtName] updating shift {shift} to new court name {new_name}"
                 )
-
                 shift.court = new_name
                 shift.save()
 
@@ -271,7 +270,7 @@ class GetTournament(APIView):
 
     def get(self, request, format=None):
         tournament = Tournament.objects.get(year=2023)
-        logger.info(f"[GetTournament] tournament {tournament}")
+        logger.info(f"[GetTournament GET] tournament {tournament}")
         return Response(TournamentSerializer(tournament).data, status=status.HTTP_200_OK)
 
     def patch(self, request, format=None):
@@ -322,21 +321,25 @@ class ShiftSchedule(APIView):
 
             # Shift all shifts back by 1 hour
             for shift in remaining_days_shifts:
+                logger.info(f"[ShiftSchedule] shifting shift {shift} back by 1 hour")
                 shift.start = shift.start + timedelta(hours=1)
                 shift.save()
 
             # Create empty shifts for the current hour
             for court in courts:
-                Schedule.objects.create(court=court, start=start, team=0)
+                shift = Schedule.objects.create(court=court, start=start, team=0)
+                logger.info(f"[ShiftSchedule] created shift {shift}")
 
         # Shift schedule up by 1 hour
         elif direction == "up":
             # Delete previous hour's shifts
             for shift in Schedule.objects.filter(start=start - timedelta(hours=1)):
+                logger.info(f"[ShiftSchedule] deleting shift {shift}")
                 shift.delete()
 
             # Shift all remaining day's shifts up one hour
             for shift in remaining_days_shifts:
+                logger.info(f"[ShiftSchedule] shifting shift {shift} up by 1 hour")
                 shift.start = shift.start - timedelta(hours=1)
                 shift.save()
 

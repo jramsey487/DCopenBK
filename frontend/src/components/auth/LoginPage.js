@@ -25,8 +25,8 @@ function submitPassword(state, setSuccessMsg, setErrorMsg, setToken, navigate) {
           navigate("/teams");
         }
       } else {
-        setErrorMsg("Incorrect password.");
-        throw new Error("Incorrect password");
+        setErrorMsg("Incorrect username or password.");
+        throw new Error("Incorrect username or password");
       }
       return response.json();
     })
