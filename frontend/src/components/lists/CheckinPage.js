@@ -101,9 +101,7 @@ export default function CheckinPage(props) {
   const [checkedOut, setCheckedOut] = useState([]);
   const [open, setOpen] = useState(false);
 
-  const [searchKeyword, setSearchKeyword] = useState(
-    getLocalStorage("searchKeyword") ?? ""
-  );
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState(
     getLocalStorage("filterGroup")
   );

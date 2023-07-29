@@ -307,7 +307,6 @@ export function renderBallkidFinalsHistory(finals) {
 }
 
 export function renderBallkidCutHistory(cuts) {
-  console.log(cuts);
   return (
     <Grid item xs={12} md={6.5}>
       <Typography variant="h6" sx={MARGINS}>

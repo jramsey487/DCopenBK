@@ -69,9 +69,7 @@ export function UnassignedMobile({
 }) {
   const [open, setOpen] = useState(false);
 
-  const [searchKeyword, setSearchKeyword] = useState(
-    getLocalStorage("searchKeyword") ?? ""
-  );
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState(
     getLocalStorage("filterGroup")
   );

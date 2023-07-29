@@ -18,9 +18,7 @@ import { list, listNonchairperson } from "../HelpMessages";
 export default function BallkidList(props) {
   const [ballkids, setBallkids] = useState([]);
 
-  const [searchKeyword, setSearchKeyword] = useState(
-    getLocalStorage("searchKeyword") ?? ""
-  );
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState(
     getLocalStorage("filterGroup")
   );

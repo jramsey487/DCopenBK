@@ -185,9 +185,7 @@ function renderBallkidsInSection(active, section, position, setUpdated) {
 }
 
 function ActiveSection({ active, setUpdated }) {
-  const [searchKeyword, setSearchKeyword] = useState(
-    getLocalStorage("searchKeyword") ?? ""
-  );
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState(
     getLocalStorage("filterGroup")
   );

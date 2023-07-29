@@ -119,9 +119,7 @@ export default function RateByNamePage(props) {
   const [showTeam, setShowTeam] = useState(
     getLocalStorage("showTeam") ?? (isChairperson ? false : true)
   );
-  const [searchKeyword, setSearchKeyword] = useState(
-    getLocalStorage("searchKeyword") ?? ""
-  );
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState(
     getLocalStorage("filterGroup")
   );

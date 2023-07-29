@@ -165,11 +165,7 @@ export function SearchBox({ setSearchKeyword }) {
       fullWidth
       sx={{ py: 1 }}
       placeholder="Search by name..."
-      defaultValue={getLocalStorage("searchKeyword")}
-      onChange={(e) => {
-        setSearchKeyword(e.target.value);
-        setLocalStorage("searchKeyword", e.target.value);
-      }}
+      onChange={(e) => setSearchKeyword(e.target.value)}
     />
   );
 }
