@@ -48,7 +48,6 @@ export default function BallkidPage(props) {
 
         <Grid item xs={12} sm={8} md={9} lg={10}>
           <Typography variant="h6"> Info:</Typography>
-          <Typography variant="body1"> Age: {ballkid.age} </Typography>
           <Typography variant="body1">
             Years experience: {ballkid.num_years_experience}
           </Typography>
