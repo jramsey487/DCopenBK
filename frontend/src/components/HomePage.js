@@ -46,7 +46,8 @@ import AccountSettings from "./settings/AccountSettings";
 function chairpersonRoutes(isMobile, setToken) {
   return (
     <Routes>
-      <Route exact path="/list" element={<BallkidList />} />
+      <Route exact path="/" element={<BallkidList />} />
+      <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageChairperson />} />
       <Route path="/checkin" element={<CheckinPage />} />
       <Route
@@ -100,7 +101,8 @@ function chairpersonRoutes(isMobile, setToken) {
 function captainRoutes(setToken) {
   return (
     <Routes>
-      <Route exact path="/list" element={<BallkidList />} />
+      <Route exact path="/" element={<BallkidList />} />
+      <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageCaptain />} />
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/finals-teams" element={<FinalsTeamsPage />} />
@@ -122,7 +124,8 @@ function captainRoutes(setToken) {
 function ballkidRoutes(setToken) {
   return (
     <Routes>
-      <Route exact path="/list" element={<BallkidList />} />
+      <Route exact path="/" element={<BallkidList />} />
+      <Route path="/list" element={<BallkidList />} />{" "}
       <Route path="/ballkid/:pk" element={<BallkidPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/finals-teams" element={<FinalsTeamsPage />} />
