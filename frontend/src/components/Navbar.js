@@ -105,7 +105,20 @@ const chairpersonTabs = [
   },
 ];
 
-const nonchairpersonAccountTab = {
+const ballkidAccountTab = {
+  icon: <AccountCircle />,
+  label: "Account",
+  url: "/me",
+  subtabs: [
+    { label: "My Profile", url: "/me" },
+    // { label: "Game", url: "/game" },
+    // { label: "Account Settings", url: "/settings" },
+    { label: "Feedback", url: "/feedback" },
+    { label: "Logout", url: "/login" },
+  ],
+};
+
+const captainAccountTab = {
   icon: <AccountCircle />,
   label: "Account",
   url: "/me",
@@ -330,11 +343,11 @@ export default function Navbar({ isLoggedIn, setToken }) {
   switch (group) {
     case "ballkid":
       tabs = ballkidTabs;
-      accountTab = nonchairpersonAccountTab;
+      accountTab = ballkidAccountTab;
       break;
     case "captain":
       tabs = captainTabs;
-      accountTab = nonchairpersonAccountTab;
+      accountTab = captainAccountTab;
       break;
     case "chairperson":
       tabs = chairpersonTabs;
