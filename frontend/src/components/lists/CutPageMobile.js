@@ -24,7 +24,6 @@ import {
   getAuthHeader,
   SearchAndFilter,
   ConfirmDialog,
-  getLocalStorage,
   DraggableBallkidAndIcon,
   HelpIcon,
 } from "../Utils";
@@ -273,9 +272,7 @@ export default function CutPageMobile(props) {
   const [active, setActive] = useState([]);
   const [updated, setUpdated] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState(
-    getLocalStorage("filterGroup")
-  );
+  const [filterGroup, setFilterGroup] = useState();
 
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
 

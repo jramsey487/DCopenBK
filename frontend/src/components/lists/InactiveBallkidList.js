@@ -112,9 +112,7 @@ export default function InactiveBallkidList(props) {
   const [cut, setCut] = useState([]);
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState(
-    getLocalStorage("filterGroup")
-  );
+  const [filterGroup, setFilterGroup] = useState();
   const [gridLayout, setGridLayout] = useState(
     getLocalStorage("gridLayout") ?? false
   );

@@ -120,9 +120,7 @@ export default function RateByNamePage(props) {
     getLocalStorage("showTeam") ?? (isChairperson ? false : true)
   );
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState(
-    getLocalStorage("filterGroup")
-  );
+  const [filterGroup, setFilterGroup] = useState();
   const [gridLayout, setGridLayout] = useState(
     getLocalStorage("gridLayout") ?? false
   );

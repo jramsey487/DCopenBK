@@ -194,12 +194,9 @@ export function SearchAndFilter({
                 borderRadius: 0,
                 background: filterGroup === filterName ? "lightgray" : "",
               }}
-              onClick={() => {
-                filterGroup === filterName
-                  ? setLocalStorage("filterGroup", null)
-                  : setLocalStorage("filterGroup", filterName);
-                setFilterGroup(getLocalStorage("filterGroup"));
-              }}
+              onClick={() =>
+                setFilterGroup(filterGroup === filterName ? null : filterName)
+              }
             >
               {ICON_DICT[filterName]}
             </IconButton>

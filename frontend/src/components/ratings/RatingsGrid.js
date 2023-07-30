@@ -2,13 +2,7 @@ import React, { useState, useRef } from "react";
 import { useSearchParams, Link as RouterLink } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
@@ -18,18 +12,11 @@ import Rating from "@mui/material/Rating";
 import Delete from "@mui/icons-material/Delete";
 
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import {
-  getLocalStorage,
-  getAuthHeader,
-  Alerts,
-  ConfirmDialog,
-} from "../Utils";
+import { getLocalStorage, ConfirmDialog } from "../Utils";
 
 export default function RatingsGrid({ ratings, setUpdated }) {
   const [open, setOpen] = useState(false);
   const [deleteRatingId, setDeleteRatingId] = useState();
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
 
   const group = getLocalStorage("group");
 

@@ -19,9 +19,7 @@ export default function BallkidList(props) {
   const [ballkids, setBallkids] = useState([]);
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState(
-    getLocalStorage("filterGroup")
-  );
+  const [filterGroup, setFilterGroup] = useState();
   const [gridLayout, setGridLayout] = useState(
     getLocalStorage("gridLayout") ?? false
   );

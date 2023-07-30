@@ -16,7 +16,6 @@ import {
   filterBallkids,
   ConfirmDialog,
   DraggableBallkidAndIcon,
-  getLocalStorage,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 import {
@@ -70,9 +69,7 @@ export function UnassignedMobile({
   const [open, setOpen] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterGroup, setFilterGroup] = useState(
-    getLocalStorage("filterGroup")
-  );
+  const [filterGroup, setFilterGroup] = useState();
 
   return (
     <div>
