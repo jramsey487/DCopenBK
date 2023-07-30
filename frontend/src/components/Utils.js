@@ -402,7 +402,7 @@ export function ConfirmDialog({
             fetch(url, {
               method: method,
               headers: getAuthHeader(),
-              body: body,
+              body: JSON.stringify(body),
             }).then((response) => {
               if (response.ok) {
                 setSuccessMsg("Success!");
@@ -410,7 +410,7 @@ export function ConfirmDialog({
                   setOpen(false);
                   setSuccessMsg("");
                   setUpdated(true);
-                }, 2500);
+                }, 2000);
               } else {
                 setErrorMsg("Error.");
               }

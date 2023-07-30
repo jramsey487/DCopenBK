@@ -137,9 +137,9 @@ export default function SchedulePageChairperson(props) {
         message={`You are about to delete the schedule for ${date}. This action cannot be
         undone.`}
         url={`/api/delete-schedule?date=${date}`}
-        body={JSON.stringify({
+        body={{
           date: date,
-        })}
+        }}
         open={open}
         setOpen={setOpen}
         setUpdated={setUpdated}

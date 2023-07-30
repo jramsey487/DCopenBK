@@ -60,10 +60,10 @@ function CutStatusSection({ section, active, setUpdated }) {
           active.length > 1 ? "s" : ""
         }. This will be publicly visible to all ballkids and captains.`}
         url={"/api/cut-all"}
-        body={JSON.stringify({
+        body={{
           cut_status: section,
           should_cut: true,
-        })}
+        }}
         open={open}
         setOpen={setOpen}
         setUpdated={setUpdated}

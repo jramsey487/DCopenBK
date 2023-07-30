@@ -69,9 +69,9 @@ export function UnassignedDesktop({
           unassigned.length
         } unassigned ballkid${unassigned.length > 1 ? "s" : ""}.`}
         url={"/api/checkout-all"}
-        body={JSON.stringify({
+        body={{
           checkout_group: "unassigned",
-        })}
+        }}
         open={open}
         setOpen={setOpen}
         setUpdated={setUpdated}

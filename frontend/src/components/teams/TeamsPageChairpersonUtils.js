@@ -155,11 +155,11 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
       fetch("/api/update-ballkid", {
         method: "PATCH",
         headers: getAuthHeader(),
-        body: JSON.stringify({
+        body: {
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
           current_team: team,
-        }),
+        },
       })
         .then((response) => response.json())
         .then(() => setUpdated(true)),
@@ -181,9 +181,9 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
           assigned.length > 1 ? "s" : ""
         } on Team ${team}.`}
         url={"/api/checkout-all"}
-        body={JSON.stringify({
+        body={{
           checkout_group: team,
-        })}
+        }}
         open={checkoutOpen}
         setOpen={setCheckoutOpen}
         setUpdated={setUpdated}
@@ -194,9 +194,9 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
           assigned.length
         } ballkid${assigned.length > 1 ? "s" : ""}.`}
         url={"/api/clear-team"}
-        body={JSON.stringify({
+        body={{
           current_team: team,
-        })}
+        }}
         open={clearOpen}
         setOpen={setClearOpen}
         setUpdated={setUpdated}

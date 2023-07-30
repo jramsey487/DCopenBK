@@ -16,7 +16,12 @@ import KeyboardDoubleArrowDown from "@mui/icons-material/KeyboardDoubleArrowDown
 import KeyboardDoubleArrowUp from "@mui/icons-material/KeyboardDoubleArrowUp";
 import EventBusy from "@mui/icons-material/EventBusy";
 
-import { getAuthHeader, isCurrentHour, dayHourToStr } from "../Utils";
+import {
+  getAuthHeader,
+  isCurrentHour,
+  dayHourToStr,
+  ConfirmDialog,
+} from "../Utils";
 import { Tooltip } from "@mui/material";
 
 function ShiftScheduleButtons({ hour, setUpdated }) {
@@ -202,6 +207,31 @@ function HourButtons({ date, courts, setUpdated }) {
   );
 }
 
+function CourtHeading({ court, setUpdated }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <TableCell align="center" width="50px">
+      <ConfirmDialog
+        message={`You are about to end ${court} and unassign all teams from this court for future shifts.`}
+        url="/api/end-court"
+        body={{
+          court: court,
+        }}
+        open={open}
+        setOpen={setOpen}
+        setUpdated={setUpdated}
+      />
+      {court}
+      <Tooltip title="End Court">
+        <IconButton onClick={() => setOpen(true)}>
+          <EventBusy fontSize="small" color="warning" />
+        </IconButton>
+      </Tooltip>
+    </TableCell>
+  );
+}
+
 export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
   const hourCourtToTeam = Object.assign(
     {},
@@ -246,26 +276,11 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                         />
                       </TableCell>
                     ) : (
-                      <TableCell key={court} align="center" width="50px">
-                        {court}
-                        <Tooltip title="End Court">
-                          <IconButton
-                            onClick={() =>
-                              fetch("/api/end-court", {
-                                method: "PATCH",
-                                headers: getAuthHeader(),
-                                body: JSON.stringify({
-                                  court: court,
-                                }),
-                              })
-                                .then((response) => response.json())
-                                .then(() => setUpdated(true))
-                            }
-                          >
-                            <EventBusy fontSize="small" color="warning" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
+                      <CourtHeading
+                        key={court}
+                        court={court}
+                        setUpdated={setUpdated}
+                      />
                     )
                   )}
                 </TableRow>

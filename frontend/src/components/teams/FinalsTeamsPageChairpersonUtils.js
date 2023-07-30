@@ -51,9 +51,9 @@ function Team({ team, assigned, setUpdated }) {
           assigned.length
         } ballkid${assigned.length > 1 ? "s" : ""}.`}
         url={"/api/clear-team"}
-        body={JSON.stringify({
+        body={{
           finals_team: team,
-        })}
+        }}
         open={clearOpen}
         setOpen={setClearOpen}
         setUpdated={setUpdated}

@@ -129,9 +129,9 @@ export default function CheckinPage(props) {
           checkedIn.length
         } checked in ballkid${checkedIn.length > 1 ? "s" : ""}.`}
         url={"/api/checkout-all"}
-        body={JSON.stringify({
+        body={{
           checkout_group: "all",
-        })}
+        }}
         open={open}
         setOpen={setOpen}
         setUpdated={setUpdated}
