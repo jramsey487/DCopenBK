@@ -154,11 +154,11 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
       fetch("/api/update-ballkid", {
         method: "PATCH",
         headers: getAuthHeader(),
-        body: {
+        body: JSON.stringify({
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
           current_team: team,
-        },
+        }),
       })
         .then((response) => response.json())
         .then(() => setUpdated(true)),
