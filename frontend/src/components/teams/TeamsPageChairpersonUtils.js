@@ -24,7 +24,7 @@ import {
   ConfirmDialog,
   HelpIcon,
 } from "../Utils";
-import { ON_COURT_GREEN, MARGINS } from "../Consts";
+import { ON_COURT_GREEN, MARGINS, POSITIONS } from "../Consts";
 import { teams } from "../HelpMessages.js";
 
 function renderSwitchButton(ballkid, setUpdated) {
@@ -141,7 +141,6 @@ function renderTeamCardHeader(
 }
 
 function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
-  const positions = ["Net", "Back"];
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
@@ -228,7 +227,7 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
               setClearOpen
             )}
 
-            {positions.map((position) => (
+            {POSITIONS.map((position) => (
               <div key={position}>
                 <Divider sx={{ my: 1 }} />
                 <div className="sxs">

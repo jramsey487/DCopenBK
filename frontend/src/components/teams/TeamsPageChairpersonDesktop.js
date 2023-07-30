@@ -13,7 +13,7 @@ import {
   ConfirmDialog,
   DraggableBallkidAndIcon,
 } from "../Utils";
-import { MARGINS } from "../Consts";
+import { MARGINS, POSITIONS } from "../Consts";
 import {
   Teams,
   Header,
@@ -29,8 +29,6 @@ export function UnassignedDesktop({
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
-
-  const positions = ["Net", "Back"];
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -97,7 +95,7 @@ export function UnassignedDesktop({
           setFilterGroup={setFilterGroup}
           filters={["rookie", "supervet", "captain", "chairperson"]}
         />
-        {positions.map((position) => {
+        {POSITIONS.map((position) => {
           const ballkids = filterBallkids(
             unassigned,
             searchKeyword,

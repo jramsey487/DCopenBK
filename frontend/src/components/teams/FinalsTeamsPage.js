@@ -7,13 +7,11 @@ import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 
 import { getAuthHeader, BallkidAndIcon, HelpIcon } from "../Utils";
-import { MATCH_TYPES } from "../Consts";
+import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { Box } from "@mui/material";
 import { finalsTeamsNonchairperson } from "../HelpMessages";
 
 function Team({ team, assigned }) {
-  const positions = ["Net", "Back"];
-
   return (
     <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
       <Card sx={{ mb: 2 }}>
@@ -32,7 +30,7 @@ function Team({ team, assigned }) {
             </div>
           </div>
 
-          {positions.map((position) => (
+          {POSITIONS.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
               <div className="sxs">

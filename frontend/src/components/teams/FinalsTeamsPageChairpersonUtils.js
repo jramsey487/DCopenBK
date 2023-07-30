@@ -21,10 +21,9 @@ import {
   HelpIcon,
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
+import { POSITIONS } from "../Consts";
 
 function Team({ team, assigned, setUpdated }) {
-  const positions = ["Net", "Back"];
-
   const [clearOpen, setClearOpen] = useState(false);
 
   const [{ isOver }, dropRef] = useDrop({
@@ -78,7 +77,7 @@ function Team({ team, assigned, setUpdated }) {
             )}
           </div>
 
-          {positions.map((position) => (
+          {POSITIONS.map((position) => (
             <div key={position}>
               <Divider sx={{ my: 1 }} />
               <div className="sxs">

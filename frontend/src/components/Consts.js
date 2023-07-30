@@ -8,6 +8,8 @@ import Grid4x4 from "@mui/icons-material/Grid4x4";
 export const MARGINS = { mt: 2, mb: 1 };
 export const ON_COURT_GREEN = "#c8f7c8";
 
+export const POSITIONS = ["Back", "Net"];
+
 export const MATCH_TYPES = {
   MS: "Men's Singles",
   MD: "Men's Doubles",

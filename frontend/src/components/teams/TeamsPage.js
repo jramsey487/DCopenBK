@@ -13,13 +13,11 @@ import {
   BallkidAndIcon,
   HelpIcon,
 } from "../Utils";
-import { ON_COURT_GREEN } from "../Consts";
+import { ON_COURT_GREEN, POSITIONS } from "../Consts";
 import { Box } from "@mui/material";
 import { teamsNonchairperson } from "../HelpMessages";
 
 function Team({ team, assigned, nextShifts }) {
-  const positions = ["Net", "Back"];
-
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
@@ -39,7 +37,7 @@ function Team({ team, assigned, nextShifts }) {
             <CourtAssignment nextShifts={nextShifts} />
           </div>
 
-          {positions.map((position) => (
+          {POSITIONS.map((position) => (
             <div key={position}>
               <Divider sx={{ mt: 1, mb: 1 }} />
               <div className="sxs">
