@@ -378,6 +378,13 @@ class Ballkid(models.Model):
 
         if field == "is_checked_in":
             self.handle_checkin_history(value)
+
+            # Reset the checkout time comments if ballkid is checked in and
+            # getting checked out
+            if self.is_checked_in and not value:
+                f"[validate] ballkid {self.id} checkout time comments reset to empty"
+                self.set_field("checkout_comments", None)
+
             self.is_checked_in = value
         elif field == "position":
             self.position = value
