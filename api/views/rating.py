@@ -519,8 +519,4 @@ class DeleteRating(APIView):
         logger.info(f"[DeleteRating] deleting rating {rating}")
         rating.delete()
 
-        # Update calibration parameters
-        cp, _, _ = calibrate(Rating.objects.all())
-        save_calibration_parameters(cp)
-
         return Response(status=status.HTTP_200_OK)
