@@ -9,7 +9,7 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 
-import Close from "@mui/icons-material/Close";
+import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import SwapVert from "@mui/icons-material/SwapVert";
 
 import {
@@ -22,6 +22,7 @@ import {
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
 import { POSITIONS } from "../Consts";
+import { Tooltip } from "@mui/material";
 
 function Team({ team, assigned, setUpdated }) {
   const [clearOpen, setClearOpen] = useState(false);
@@ -117,9 +118,34 @@ function renderBallkidsOnTeam(assigned, setUpdated) {
             {!ballkid.preferred_position.includes("/") ? (
               ""
             ) : (
-              <Button
-                variant="outlined"
+              <Tooltip title="Switch">
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  onClick={(e) => {
+                    fetch("/api/update-ballkid", {
+                      method: "PATCH",
+                      headers: getAuthHeader(),
+                      body: JSON.stringify({
+                        first_name: ballkid.first_name,
+                        last_name: ballkid.last_name,
+                        finals_position:
+                          ballkid.finals_position === "Back" ? "Net" : "Back",
+                      }),
+                    })
+                      .then((response) => response.json())
+                      .then(() => setUpdated(true));
+                  }}
+                >
+                  <SwapVert color="secondary" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            <Tooltip title="Unassign">
+              <IconButton
                 size="small"
+                sx={{ p: 0.5 }}
                 onClick={(e) => {
                   fetch("/api/update-ballkid", {
                     method: "PATCH",
@@ -127,37 +153,16 @@ function renderBallkidsOnTeam(assigned, setUpdated) {
                     body: JSON.stringify({
                       first_name: ballkid.first_name,
                       last_name: ballkid.last_name,
-                      finals_position:
-                        ballkid.finals_position === "Back" ? "Net" : "Back",
+                      finals_team: "",
                     }),
                   })
                     .then((response) => response.json())
                     .then(() => setUpdated(true));
                 }}
-                sx={{ minWidth: 0 }}
               >
-                <SwapVert />
-              </Button>
-            )}
-
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                fetch("/api/update-ballkid", {
-                  method: "PATCH",
-                  headers: getAuthHeader(),
-                  body: JSON.stringify({
-                    first_name: ballkid.first_name,
-                    last_name: ballkid.last_name,
-                    finals_team: "",
-                  }),
-                })
-                  .then((response) => response.json())
-                  .then(() => setUpdated(true));
-              }}
-            >
-              <Close />
-            </IconButton>
+                <RemoveCircleOutline color="primary" />
+              </IconButton>
+            </Tooltip>
           </div>
         </div>
       ))}

@@ -11,7 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 
-import Close from "@mui/icons-material/Close";
+import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import SwapVert from "@mui/icons-material/SwapVert";
 import HighlightOff from "@mui/icons-material/HighlightOff";
 
@@ -76,7 +76,7 @@ function renderUnassignButton(ballkid, setUpdated) {
             .then(() => setUpdated(true));
         }}
       >
-        <Close color="primary" />
+        <RemoveCircleOutline color="primary" />
       </IconButton>
     </Tooltip>
   );
@@ -119,8 +119,8 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
             {!ballkid.preferred_position.includes("/")
               ? ""
               : renderSwitchButton(ballkid, setUpdated)}
-            {renderCheckoutButton(ballkid, setUpdated)}
             {renderUnassignButton(ballkid, setUpdated)}
+            {renderCheckoutButton(ballkid, setUpdated)}
           </div>
         </div>
       ))}
