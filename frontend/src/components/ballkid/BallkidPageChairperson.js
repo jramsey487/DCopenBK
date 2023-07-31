@@ -689,17 +689,30 @@ function ActiveOverflowMenu(props) {
   );
 }
 
-function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
+function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
+  const defaultComments =
+    commentType === "checkout"
+      ? ballkid.checkout_comments
+      : commentType === "schedule"
+      ? ballkid.schedule_comments
+      : ballkid.comments;
+
   const [disabled, setDisabled] = useState(true);
-  const [savedComments, setSavedComments] = useState(ballkid.comments);
-  const [comments, setComments] = useState(ballkid.comments);
+  const [savedComments, setSavedComments] = useState(defaultComments ?? "");
+  const [comments, setComments] = useState(defaultComments ?? "");
 
   const commentsInput = useRef(null);
 
   return (
     <div>
       <div className="sxs">
-        <Typography variant="h6">Chairperson Comments: </Typography>
+        <Typography variant="body1" fontWeight="medium">
+          {commentType === "checkout"
+            ? "Today's Check-out Comments:"
+            : commentType === "schedule"
+            ? "Week's Schedule Comments:"
+            : "Chairperson Comments:"}
+        </Typography>
         <Button
           size="small"
           disabled={!disabled}
@@ -730,14 +743,21 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
           <Button
             size="small"
             sx={{ ml: 2 }}
-            onClick={() =>
+            onClick={() => {
+              const commentsBody =
+                commentType === "checkout"
+                  ? { checkout_comments: comments }
+                  : commentType === "schedule"
+                  ? { schedule_comments: comments }
+                  : { comments: comments };
+
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  comments: comments,
+                  ...commentsBody,
                 }),
               }).then((response) => {
                 if (response.ok) {
@@ -747,8 +767,8 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
                 } else {
                   setErrorMsg("Error saving comments.");
                 }
-              })
-            }
+              });
+            }}
           >
             Save
           </Button>
@@ -1054,11 +1074,27 @@ export default function BallkidPageChairperson(props) {
           {!ballkid.is_active ? (
             ""
           ) : (
-            <Comments
-              ballkid={ballkid}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
+            <div>
+              <Typography variant="h6">Comments</Typography>
+              <Comments
+                ballkid={ballkid}
+                commentType="checkout"
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+              <Comments
+                ballkid={ballkid}
+                commentType="schedule"
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+              <Comments
+                ballkid={ballkid}
+                commentType="other"
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+            </div>
           )}
         </Grid>
       </Grid>
