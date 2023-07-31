@@ -26,6 +26,8 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 
 import AspectRatio from "@mui/joy/AspectRatio";
 
@@ -36,7 +38,6 @@ import Help from "@mui/icons-material/Help";
 
 import RatingDialog from "./ratings/RatingDialog";
 import { END_DATE, START_DATE, ICON_DICT, TOOLTIP_DICT } from "./Consts";
-import { MenuItem, Tooltip } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 export function Icons({ ballkid, margin, isTeamsPage = false }) {
@@ -229,7 +230,16 @@ export function TournamentBanner() {
   }, []);
 
   return (
-    <Box>
+    <Box
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: "50%",
+        transform: "translate(-50%, 0)",
+        width: "100%",
+        zIndex: 999,
+      }}
+    >
       {banners.map((banner, index) =>
         banner === undefined || banner === null || banner === "" ? (
           ""
@@ -239,6 +249,7 @@ export function TournamentBanner() {
               severity="warning"
               variant="filled"
               onClose={() => openSetOpenList[index][1](false)}
+              sx={{ mt: 0.5 }}
             >
               {banner}
             </Alert>

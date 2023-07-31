@@ -13,6 +13,7 @@ import {
   BallkidCard,
   setLocalStorage,
   HelpIcon,
+  TournamentBanner,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 import { rateByPastTeam } from "../HelpMessages";
@@ -74,6 +75,8 @@ export default function RateByPastTeamPage(props) {
 
   return (
     <div className="page">
+      <TournamentBanner />
+
       <div className="justify">
         <Box className="sxs" sx={{ mb: 1 }}>
           <Typography variant="h4">Rate by Past Team</Typography>

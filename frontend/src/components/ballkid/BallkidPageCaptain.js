@@ -15,6 +15,7 @@ import {
   RatingButton,
   getLocalStorage,
   useIsMobile,
+  TournamentBanner,
 } from "../Utils";
 
 export default function BallkidPageCaptain(props) {
@@ -37,6 +38,8 @@ export default function BallkidPageCaptain(props) {
     ""
   ) : (
     <div className="page">
+      <TournamentBanner />
+
       <div className={isMobile ? "" : "justify"}>
         <div className="sxs">
           <Typography variant="h4">

@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 
 import AspectRatio from "@mui/joy/AspectRatio";
-import { Icons, getAuthHeader, useIsMobile } from "../Utils";
+import { Icons, TournamentBanner, getAuthHeader, useIsMobile } from "../Utils";
 
 export default function BallkidPage(props) {
   const [ballkid, setBallkid] = useState(null);
@@ -24,6 +24,8 @@ export default function BallkidPage(props) {
     ""
   ) : (
     <div className="page">
+      <TournamentBanner />
+
       <div className="sxs">
         <Typography variant="h4">
           {ballkid.first_name} {ballkid.last_name}

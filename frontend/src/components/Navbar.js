@@ -24,7 +24,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { getLocalStorage, useIsMobile, TournamentBanner } from "./Utils";
+import { getLocalStorage, useIsMobile } from "./Utils";
 
 const ballkidTabs = [
   { label: "By Name", url: "/list" },
@@ -360,7 +360,7 @@ export default function Navbar({ isLoggedIn, setToken }) {
 
   return (
     <AppBar position="sticky">
-      {!isLoggedIn ? "" : <TournamentBanner />}
+      {/* {!isLoggedIn ? "" : <TournamentBanner />} */}
       <Toolbar>
         <div className="justify" style={{ height: "100%" }}>
           <div className="sxs">

@@ -12,6 +12,7 @@ import {
   getLocalStorage,
   BallkidCard,
   HelpIcon,
+  TournamentBanner,
 } from "../Utils";
 import { list, listNonchairperson } from "../HelpMessages";
 
@@ -35,6 +36,8 @@ export default function BallkidList(props) {
 
   return (
     <div className="page">
+      <TournamentBanner />
+
       <div className="justify">
         <Box className="sxs" sx={{ mb: 1 }}>
           <Typography variant="h4">List by Name</Typography>

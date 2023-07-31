@@ -5,7 +5,12 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
-import { Alerts, TabbedSections, getAuthHeader } from "../Utils";
+import {
+  Alerts,
+  TabbedSections,
+  TournamentBanner,
+  getAuthHeader,
+} from "../Utils";
 
 function ChangePassword() {
   const [oldPassword, setOldPassword] = useState("");
@@ -99,6 +104,8 @@ export default function AccountSettings(props) {
   };
   return (
     <div className="page">
+      <TournamentBanner />
+
       <TabbedSections sections={sections} />
     </div>
   );

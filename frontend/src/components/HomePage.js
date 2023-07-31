@@ -38,10 +38,10 @@ import FinalsTeamsPageChairpersonDesktop from "./teams/FinalsTeamsPageChairperso
 import InactiveBallkidList from "./lists/InactiveBallkidList";
 import RateByCurrentTeamsPage from "./ratings/RateByCurrentTeamsPage";
 import FeedbackPage from "./settings/FeedbackPage";
-
-import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 import GamePage from "./settings/GamePage";
 import AccountSettings from "./settings/AccountSettings";
+
+import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 
 function chairpersonRoutes(isMobile, setToken) {
   return (

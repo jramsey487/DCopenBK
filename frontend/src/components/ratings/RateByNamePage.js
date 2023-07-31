@@ -16,6 +16,7 @@ import {
   BallkidCard,
   setLocalStorage,
   HelpIcon,
+  TournamentBanner,
 } from "../Utils";
 import { rateByName, rateByNameNonchairperson } from "../HelpMessages";
 
@@ -140,6 +141,8 @@ export default function RateByNamePage(props) {
 
   return (
     <div className="page">
+      <TournamentBanner />
+
       <div className="justify">
         <Box className="sxs" sx={{ mb: 1 }}>
           <Typography variant="h4">Rate by Name</Typography>

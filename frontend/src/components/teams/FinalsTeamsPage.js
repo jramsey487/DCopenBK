@@ -6,7 +6,12 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 
-import { getAuthHeader, BallkidAndIcon, HelpIcon } from "../Utils";
+import {
+  getAuthHeader,
+  BallkidAndIcon,
+  HelpIcon,
+  TournamentBanner,
+} from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { Box } from "@mui/material";
 import { finalsTeamsNonchairperson } from "../HelpMessages";
@@ -87,6 +92,8 @@ export default function FinalsTeamsPage(props) {
 
   return (
     <div className="page">
+      <TournamentBanner />
+
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Finals Teams</Typography>
         &thinsp;

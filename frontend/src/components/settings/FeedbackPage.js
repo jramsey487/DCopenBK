@@ -2,10 +2,13 @@ import React from "react";
 
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import { TournamentBanner } from "../Utils";
 
 export default function FeedbackPage() {
   return (
     <div className="page">
+      <TournamentBanner />
+
       <Typography variant="h4" sx={{ mb: 1 }}>
         Got Feedback?
       </Typography>

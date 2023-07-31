@@ -9,7 +9,13 @@ import Button from "@mui/material/Button";
 import Shortcut from "@mui/icons-material/Shortcut";
 import AspectRatio from "@mui/joy/AspectRatio";
 
-import { getAuthHeader, getLocalStorage, useIsMobile, Icons } from "../Utils";
+import {
+  getAuthHeader,
+  getLocalStorage,
+  useIsMobile,
+  Icons,
+  TournamentBanner,
+} from "../Utils";
 import {
   renderBallkidCutHistory,
   renderBallkidFinalsHistory,
@@ -93,6 +99,8 @@ export default function MyProfile(props) {
     ""
   ) : (
     <div className="page">
+      <TournamentBanner />
+
       <div className="sxs">
         <Typography variant="h4">
           {ballkid.first_name} {ballkid.last_name}

@@ -14,6 +14,7 @@ import {
   CourtAssignment,
   BallkidAndIcon,
   HelpIcon,
+  TournamentBanner,
 } from "../Utils";
 import { ON_COURT_GREEN } from "../Consts";
 import { Box } from "@mui/material";
@@ -120,6 +121,8 @@ export default function RateByCurrentTeamsPage(props) {
 
   return (
     <div className="page">
+      <TournamentBanner />
+
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Rate by Current Team</Typography>
         &thinsp;
