@@ -53,7 +53,7 @@ function renderCheckinButton(ballkid, isCheckedIn, setUpdated) {
   );
 }
 
-function Comments({ ballkid, isCheckoutComments, setUpdated }) {
+function Comments({ ballkid, isCheckoutComments, gridLayout, setUpdated }) {
   const defaultComment = isCheckoutComments ? "End" : "";
   const ballkidComments = isCheckoutComments
     ? ballkid.checkout_comments
@@ -69,14 +69,17 @@ function Comments({ ballkid, isCheckoutComments, setUpdated }) {
       ""
     ) : (
       <Typography
-        sx={{ mx: 1, px: 1 }}
+        sx={{ mx: 1, px: 1, my: gridLayout ? 1 : 0 }}
         bgcolor={ballkidComments === "End" ? "" : "orange"}
       >
         {ballkidComments}
       </Typography>
     )
   ) : (
-    <Box className="sxs" sx={{ mr: 3 }}>
+    <Box
+      className="sxs"
+      sx={{ mr: gridLayout ? 0 : 3, mt: gridLayout ? 1 : 0 }}
+    >
       <Typography>
         {isCheckoutComments ? "Check-out Time:" : "Last Day: "}
       </Typography>
@@ -150,19 +153,29 @@ function renderBallkids(ballkids, isCheckedIn, gridLayout, setUpdated) {
           <BallkidCard
             ballkid={ballkid}
             renderAdditional={
-              // <Box textAlign="center" sx={{ mt: gridLayout ? 1 : 0 }}>
-              <Box className="sxs">
+              <Box
+                className={gridLayout ? "" : "sxs"}
+                textAlign="center"
+                sx={{ mt: gridLayout ? 1 : 0 }}
+              >
+                {gridLayout
+                  ? renderCheckinButton(ballkid, isCheckedIn, setUpdated)
+                  : ""}
                 <Comments
                   ballkid={ballkid}
                   isCheckoutComments={false}
+                  gridLayout={gridLayout}
                   setUpdated={setUpdated}
                 />
                 <Comments
                   ballkid={ballkid}
                   isCheckoutComments={true}
+                  gridLayout={gridLayout}
                   setUpdated={setUpdated}
                 />
-                {renderCheckinButton(ballkid, isCheckedIn, setUpdated)}
+                {gridLayout
+                  ? ""
+                  : renderCheckinButton(ballkid, isCheckedIn, setUpdated)}
               </Box>
             }
           />
