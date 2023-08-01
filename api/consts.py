@@ -30,4 +30,4 @@ RATING_CATEGORIES = [
 ]
 # Number of days per date bucketing for calibration. A larger number results in
 # more likely to succeed (but theoretically less accurate) calibration
-DAYS_PER_BUCKET = 4
+DAYS_PER_BUCKET = 3
