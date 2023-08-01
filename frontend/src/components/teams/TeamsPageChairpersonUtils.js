@@ -262,27 +262,31 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
               setClearOpen
             )}
 
-            {POSITIONS.map((position) => (
-              <div key={position}>
-                <Divider sx={{ my: 1 }} />
-                <div className="sxs">
-                  <Typography variant="subtitle1">{position}s</Typography>
-                  <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                    (
-                    {
+            {assigned.length === 0
+              ? ""
+              : POSITIONS.map((position) => (
+                  <div key={position}>
+                    <Divider sx={{ my: 1 }} />
+                    <div className="sxs">
+                      <Typography variant="subtitle1">{position}s</Typography>
+                      <Typography variant="subtitle2" sx={{ ml: 1 }}>
+                        (
+                        {
+                          assigned.filter(
+                            (ballkid) => ballkid.position === position
+                          ).length
+                        }
+                        )
+                      </Typography>
+                    </div>
+                    {renderBallkidsOnTeam(
                       assigned.filter(
                         (ballkid) => ballkid.position === position
-                      ).length
-                    }
-                    )
-                  </Typography>
-                </div>
-                {renderBallkidsOnTeam(
-                  assigned.filter((ballkid) => ballkid.position === position),
-                  setUpdated
-                )}
-              </div>
-            ))}
+                      ),
+                      setUpdated
+                    )}
+                  </div>
+                ))}
           </CardContent>
         )}
       </Card>
