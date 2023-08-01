@@ -548,6 +548,20 @@ export function HelpIcon({ page, message }) {
   );
 }
 
+export function CheckoutText({ comments, gridLayout = false }) {
+  return comments === "End" ? (
+    ""
+  ) : (
+    <Typography
+      sx={{ mx: 0.5, px: 0.5, my: gridLayout ? 1 : 0 }}
+      bgcolor="orange"
+      variant="body2"
+    >
+      {comments}
+    </Typography>
+  );
+}
+
 export function filterBallkids(ballkids, searchKeyword, filterGroup) {
   return ballkids.filter(
     (ballkid) =>

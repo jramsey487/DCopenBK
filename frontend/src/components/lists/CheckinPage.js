@@ -20,6 +20,7 @@ import {
   HelpIcon,
   useIsMobile,
   TournamentBanner,
+  CheckoutText,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 import { checkin } from "../HelpMessages";
@@ -83,12 +84,7 @@ function Comments({ ballkid, isCheckoutComments, gridLayout, setUpdated }) {
     !isCheckoutComments ? (
       ""
     ) : (
-      <Typography
-        sx={{ mx: 1, px: 1, my: gridLayout ? 1 : 0 }}
-        bgcolor={ballkidComments === "End" ? "" : "orange"}
-      >
-        {ballkidComments}
-      </Typography>
+      <CheckoutText comments={comments} gridLayout={gridLayout} />
     )
   ) : (
     <Box

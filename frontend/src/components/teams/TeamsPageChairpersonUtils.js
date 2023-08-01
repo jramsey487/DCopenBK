@@ -25,6 +25,7 @@ import {
   useIsMobile,
   ConfirmDialog,
   HelpIcon,
+  CheckoutText,
 } from "../Utils";
 import { ON_COURT_GREEN, MARGINS, POSITIONS } from "../Consts";
 import { teams } from "../HelpMessages.js";
@@ -115,17 +116,7 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
         <div key={`ballkid${ballkid.id}`} className="justify">
           <div className="sxs">
             <DraggableBallkidAndIcon ballkid={ballkid} />
-            {ballkid.checkout_comments === "End" ? (
-              ""
-            ) : (
-              <Typography
-                sx={{ mx: 1, px: 1 }}
-                bgcolor="orange"
-                variant="body2"
-              >
-                {ballkid.checkout_comments}
-              </Typography>
-            )}
+            <CheckoutText comments={ballkid.checkout_comments} />
           </div>
           <div className="sxs">
             {!ballkid.preferred_position.includes("/")

@@ -13,6 +13,7 @@ import {
   ConfirmDialog,
   DraggableBallkidAndIcon,
   TournamentBanner,
+  CheckoutText,
 } from "../Utils";
 import { MARGINS, POSITIONS } from "../Consts";
 import {
@@ -139,8 +140,20 @@ export function UnassignedDesktop({
                           xl={4}
                         >
                           {sliced.map((ballkid) => (
-                            <Grid key={ballkid.id} item sx={{ px: 1 }}>
-                              {<DraggableBallkidAndIcon ballkid={ballkid} />}
+                            <Grid
+                              key={ballkid.id}
+                              item
+                              sx={{ px: 1 }}
+                              className="sxs"
+                            >
+                              <DraggableBallkidAndIcon ballkid={ballkid} />
+                              {isFinalsPage ? (
+                                ""
+                              ) : (
+                                <CheckoutText
+                                  comments={ballkid.checkout_comments}
+                                />
+                              )}
                             </Grid>
                           ))}
                         </Grid>
