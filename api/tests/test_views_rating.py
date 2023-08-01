@@ -21,7 +21,7 @@ class TestViewsRating(TestCase):
         self.rater2.save()
         self.rater3.save()
 
-        self.days_per_bucket = 4
+        self.days_per_bucket = 3
 
     def test_queryset_to_rcal_empty(self):
         ratings = Rating.objects.all()

@@ -339,11 +339,12 @@ def unassign_future_shifts(team, now=datetime.now()):
     current_shift = Schedule.objects.filter(
         start__lte=now, start__gt=now - timedelta(hours=1)
     ).first()
-    current_shift.end = now
-    current_shift.save()
-    logger.info(
-        f"[unassign_future_shifts] Current shift {current_shift} end updated to {now}"
-    )
+    if current_shift:
+        current_shift.end = now
+        current_shift.save()
+        logger.info(
+            f"[unassign_future_shifts] Current shift {current_shift} end updated to {now}"
+        )
 
 
 class BallkidsList(generics.ListAPIView):
