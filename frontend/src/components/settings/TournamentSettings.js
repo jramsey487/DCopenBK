@@ -14,6 +14,47 @@ import {
 import { Box, TextField } from "@mui/material";
 import { tournamentSettings } from "../HelpMessages";
 
+function renderDownloadButton(setSuccessMsg, setErrorMsg) {
+  return (
+    <Button
+      variant="contained"
+      size="small"
+      onClick={() =>
+        fetch("/api/download", {
+          method: "GET",
+          headers: getAuthHeader(),
+        })
+          .then((response) => {
+            if (response.ok) {
+              setSuccessMsg("Downloaded all data!");
+            } else {
+              setErrorMsg("Error downloading data.");
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            // Create blob link to download
+            const url = window.URL.createObjectURL(new Blob([blob]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `sample.zip`);
+            // Append to html page, force download, and clean up by removing link
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            // downloadFile({
+            //   data: data,
+            //   fileName: "test.csv",
+            //   fileType: "text/csv",
+            // });
+          })
+      }
+    >
+      Download
+    </Button>
+  );
+}
+
 function SetBanner({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
   const [savedBanner1, setSavedBanner1] = useState(tournament.banner1);
@@ -191,42 +232,7 @@ export default function TournamentSettings(props) {
           <Typography variant="subtitle1">
             Export all data from database
           </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() =>
-              fetch("/api/download", {
-                method: "GET",
-                headers: getAuthHeader(),
-              })
-                .then((response) => {
-                  if (response.ok) {
-                    setSuccessMsg("Downloaded all data!");
-                  } else {
-                    setErrorMsg("Error downloading data.");
-                  }
-                  return response.blob();
-                })
-                .then((blob) => {
-                  // Create blob link to download
-                  const url = window.URL.createObjectURL(new Blob([blob]));
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.setAttribute("download", `sample.zip`);
-                  // Append to html page, force download, and clean up by removing link
-                  document.body.appendChild(link);
-                  link.click();
-                  link.parentNode.removeChild(link);
-                  // downloadFile({
-                  //   data: data,
-                  //   fileName: "test.csv",
-                  //   fileType: "text/csv",
-                  // });
-                })
-            }
-          >
-            Download
-          </Button>
+          {renderDownloadButton(setSuccessMsg, setErrorMsg)}
         </Grid>
 
         {/* <Grid item xs={12} className="justify">

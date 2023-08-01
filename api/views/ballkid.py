@@ -657,7 +657,11 @@ class GetPastTeams(APIView):
             captain_id=pk, duration__gte=timedelta(minutes=MIN_CAPTAIN_DURATION)
         )
         current = CaptainHistory.objects.filter(captain_id=pk, end=None)
-        show_teams = Tournament.objects.get(year=2023).show_teams
+        try:
+            show_teams = Tournament.objects.get(year=2023).show_teams
+        except Exception:
+            show_teams = True
+
         union = (thresholded | current) if show_teams else thresholded
 
         histories = (
