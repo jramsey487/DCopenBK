@@ -186,7 +186,7 @@ export function renderTeams(assigned, teams, setUpdated) {
 }
 
 export function Header() {
-  const [tournament, setTournament] = useState(false);
+  const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
