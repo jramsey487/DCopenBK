@@ -295,6 +295,8 @@ class GetTournament(APIView):
         if "banner3" in request.data:
             tournament.banner3 = request.data["banner3"]
             tournament.banner3_timestamp = timestamp
+        if "rcal_ignore_outliers" in request.data:
+            tournament.rcal_ignore_outliers = float(request.data["rcal_ignore_outliers"])
 
         tournament.save()
 

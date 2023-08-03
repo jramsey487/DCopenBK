@@ -3,6 +3,11 @@ import React, { useState, useEffect, useRef } from "react";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+
+import Done from "@mui/icons-material/Done";
 
 import {
   Alerts,
@@ -11,7 +16,6 @@ import {
   getAuthHeader,
   TournamentBanner,
 } from "../Utils";
-import { Box, TextField } from "@mui/material";
 import { tournamentSettings } from "../HelpMessages";
 
 function renderDownloadButton(setSuccessMsg, setErrorMsg) {
@@ -195,6 +199,50 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
   );
 }
 
+function RemoveOutliers({ tournament, setSuccessMsg, setErrorMsg }) {
+  const [param, setParam] = useState(tournament.rcal_ignore_outliers);
+  const [disabled, setDisabled] = useState(true);
+
+  return (
+    <div className="sxs">
+      <TextField
+        variant="standard"
+        size="small"
+        value={param}
+        style={{ width: 80 }}
+        onChange={(e) => {
+          setParam(e.target.value);
+          setDisabled(false);
+        }}
+      />
+      <IconButton
+        color="primary"
+        disabled={disabled}
+        onClick={() => {
+          setDisabled(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              rcal_ignore_outliers: param,
+            }),
+          }).then((response) => {
+            if (response.ok) {
+              setSuccessMsg(
+                "Calibration ignore outliers parameter was updated!"
+              );
+            } else {
+              setErrorMsg("Error updating ignore outliers parameter.");
+            }
+          });
+        }}
+      >
+        <Done />
+      </IconButton>
+    </div>
+  );
+}
+
 export default function TournamentSettings(props) {
   const [tournament, setTournament] = useState();
 
@@ -254,6 +302,17 @@ export default function TournamentSettings(props) {
             />
           </Grid>
         ))}
+
+        <Grid item xs={12} className="justify">
+          <Typography variant="subtitle1">
+            Change calibration ignore_outliers parameter
+          </Typography>
+          <RemoveOutliers
+            tournament={tournament}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+        </Grid>
 
         <Grid item xs={12} className="justify">
           <Typography variant="subtitle1">
