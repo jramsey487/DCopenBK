@@ -155,7 +155,7 @@ def calibrate(ratings, rating_name="overall", year=get_current_year()):
         cp.set_reviewer_scales({r: 1 for r in excluded})
         cp.set_reviewer_offsets({r: 0 for r in excluded})
 
-    except RcalException as e:
+    except Exception as e:
         return None, excluded, e
 
     logger.info(

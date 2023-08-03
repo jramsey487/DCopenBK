@@ -8,6 +8,9 @@ from rcal import CalibrationParameters
 
 class TestViewsRating(TestCase):
     def setUp(self):
+        self.tournament = Tournament(year=2023)
+        self.tournament.save()
+
         self.ratee1 = Ballkid(first_name="Lacy", last_name="Iosue")
         self.ratee2 = Ballkid(first_name="Andrea", last_name="Iosue")
         self.ratee3 = Ballkid(first_name="Lace", last_name="Iosue")
