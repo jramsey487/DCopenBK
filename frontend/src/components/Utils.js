@@ -266,7 +266,10 @@ export function TournamentBanner() {
               onClose={() => openSetOpenList[index][1](false)}
               sx={{ mt: 0.5 }}
             >
-              {`[${dayHourToStr(timestamps[index], true)}] ${banner}`}
+              {`${banner} [Last Updated: ${dayHourToStr(
+                timestamps[index],
+                true
+              )}]`}
             </Alert>
           </Collapse>
         )
