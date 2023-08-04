@@ -65,7 +65,7 @@ export default function BallkidPage(props) {
             Preferred position: {ballkid.preferred_position}
           </Typography>
           <br />
-          {ballkid.is_cut | !ballkid.is_active ? (
+          {ballkid.is_cut || !ballkid.is_active || !showTeams ? (
             ""
           ) : (
             <div>
@@ -73,16 +73,12 @@ export default function BallkidPage(props) {
               <Typography variant="body1">
                 Position: {ballkid.position}
               </Typography>
-              {!showTeams ? (
-                ""
-              ) : (
-                <Typography variant="body1">
-                  Current Team:{" "}
-                  {ballkid.current_team === 0
-                    ? "Unassigned"
-                    : ballkid.current_team}
-                </Typography>
-              )}
+              <Typography variant="body1">
+                Current Team:{" "}
+                {ballkid.current_team === 0
+                  ? "Unassigned"
+                  : ballkid.current_team}
+              </Typography>
               <br />
             </div>
           )}

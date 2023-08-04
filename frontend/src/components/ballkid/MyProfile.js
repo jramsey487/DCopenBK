@@ -69,6 +69,7 @@ function RatingSection({ ballkid }) {
 
 export default function MyProfile(props) {
   const [ballkid, setBallkid] = useState(null);
+  const [showTeams, setShowTeams] = useState(false);
 
   const [finals, setFinals] = useState([]);
   const [cuts, setCuts] = useState([]);
@@ -90,8 +91,14 @@ export default function MyProfile(props) {
 
     fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setCuts(data))
+      .then((data) => setCuts(data));
 
+    fetch("/api/get-tournament", {
+      method: "GET",
+      headers: getAuthHeader(),
+    })
+      .then((response) => response.json())
+      .then((data) => setShowTeams(data["show_teams"]))
       .then(() => setUpdated(false));
   }, [updated, pk]);
 
@@ -140,7 +147,7 @@ export default function MyProfile(props) {
           </Typography>
           <br />
 
-          {(ballkid.is_cut === "true") | !ballkid.is_active ? (
+          {ballkid.is_cut === "true" || !ballkid.is_active || !showTeams ? (
             ""
           ) : (
             <div>

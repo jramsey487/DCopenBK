@@ -95,7 +95,7 @@ export default function BallkidPageCaptain(props) {
           </Typography>
           <br />
 
-          {ballkid.is_cut | !ballkid.is_active ? (
+          {ballkid.is_cut || !ballkid.is_active || !showTeams ? (
             ""
           ) : (
             <div>
@@ -103,16 +103,12 @@ export default function BallkidPageCaptain(props) {
               <Typography variant="body1">
                 Position: {ballkid.position}
               </Typography>
-              {!showTeams ? (
-                ""
-              ) : (
-                <Typography variant="body1">
-                  Current Team:{" "}
-                  {ballkid.current_team === 0
-                    ? "Unassigned"
-                    : ballkid.current_team}
-                </Typography>
-              )}
+              <Typography variant="body1">
+                Current Team:{" "}
+                {ballkid.current_team === 0
+                  ? "Unassigned"
+                  : ballkid.current_team}
+              </Typography>
               <br />
 
               <Typography variant="h6">Ratings:</Typography>
