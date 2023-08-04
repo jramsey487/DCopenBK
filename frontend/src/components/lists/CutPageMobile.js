@@ -26,8 +26,10 @@ import {
   ConfirmDialog,
   DraggableBallkidAndIcon,
   HelpIcon,
+  Alerts,
   TournamentBanner,
 } from "../Utils";
+import { renderCopyButtons } from "./CutPageDesktop";
 import { CUT_STATUSES, MARGINS } from "../Consts";
 import { cut } from "../HelpMessages";
 
@@ -271,16 +273,25 @@ function ActiveSection({ active, sections, setUpdated }) {
 
 export default function CutPageMobile(props) {
   const [active, setActive] = useState([]);
+  const [emails, setEmails] = useState([]);
+
   const [updated, setUpdated] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
 
   useEffect(() => {
     fetch("/api/all-sorted-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setActive(data.filter((ballkid) => !ballkid.is_cut)))
+      .then((data) => setActive(data.filter((ballkid) => !ballkid.is_cut)));
+
+    fetch("/api/all-emails", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => setEmails(data["emails"]))
       .then(() => setUpdated(false));
   }, [updated]);
 
@@ -288,10 +299,20 @@ export default function CutPageMobile(props) {
     <div className="page">
       <TournamentBanner />
 
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Cut Page</Typography>
-        &thinsp;
-        <HelpIcon page="Cut" message={cut} />
+      <Alerts
+        successMsg={successMsg}
+        errorMsg={errorMsg}
+        setSuccessMsg={setSuccessMsg}
+        setErrorMsg={setErrorMsg}
+      />
+
+      <Box className="justify">
+        <Box className="sxs" sx={{ mb: 1 }}>
+          <Typography variant="h4">Cut Page</Typography>
+          &thinsp;
+          <HelpIcon page="Cut" message={cut} />
+        </Box>
+        {renderCopyButtons(active, emails, setSuccessMsg)}
       </Box>
 
       <Grid container spacing={2}>

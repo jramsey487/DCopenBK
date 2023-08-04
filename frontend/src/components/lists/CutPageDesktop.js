@@ -266,6 +266,47 @@ function ActiveSection({ active, setUpdated }) {
   );
 }
 
+export function renderCopyButtons(active, emails, setSuccessMsg) {
+  return (
+    <Box>
+      <Box sx={{ my: 0.2 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => {
+            const names = active
+              .filter(
+                (ballkid) =>
+                  ballkid.cut_status === "Definitely Keep" ||
+                  ballkid.cut_status === "Possibly Keep"
+              )
+              .map((ballkid) => `${ballkid.first_name} ${ballkid.last_name}`)
+              .join("\n");
+            navigator.clipboard.writeText(names);
+            setSuccessMsg("Successfully copied non-cut ballkid names!");
+          }}
+        >
+          Copy all keep ballkid names
+        </Button>
+      </Box>
+
+      <Box sx={{ my: 0.2 }} style={{ float: "right" }}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => {
+            navigator.clipboard.writeText(emails);
+            setSuccessMsg(
+              "Successfully copied all currently active, non-cut ballkid emails!"
+            );
+          }}
+        >
+          Copy all ballkid emails
+        </Button>
+      </Box>
+    </Box>
+  );
+}
 export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
   const [emails, setEmails] = useState([]);
@@ -314,46 +355,7 @@ export default function CutPageDesktop(props) {
               <HelpIcon page="Cut" message={cut} />
             </Box>
 
-            <Box>
-              <Box sx={{ my: 0.2 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    const names = active
-                      .filter(
-                        (ballkid) =>
-                          ballkid.cut_status === "Definitely Keep" ||
-                          ballkid.cut_status === "Possibly Keep"
-                      )
-                      .map(
-                        (ballkid) =>
-                          `${ballkid.first_name} ${ballkid.last_name}`
-                      )
-                      .join("\n");
-                    navigator.clipboard.writeText(names);
-                    setSuccessMsg("Successfully copied non-cut ballkid names!");
-                  }}
-                >
-                  Copy all keep ballkid names
-                </Button>
-              </Box>
-
-              <Box sx={{ my: 0.2 }} style={{ float: "right" }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    navigator.clipboard.writeText(emails);
-                    setSuccessMsg(
-                      "Successfully copied all currently active, non-cut ballkid email!"
-                    );
-                  }}
-                >
-                  Copy all ballkid emails
-                </Button>
-              </Box>
-            </Box>
+            {renderCopyButtons(active, emails, setSuccessMsg)}
           </Box>
 
           <Grid container spacing={2}>
