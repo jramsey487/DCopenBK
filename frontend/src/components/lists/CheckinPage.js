@@ -20,7 +20,7 @@ import {
   HelpIcon,
   useIsMobile,
   TournamentBanner,
-  CheckoutText,
+  CommentsText,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 import { checkin } from "../HelpMessages";
@@ -84,7 +84,11 @@ function Comments({ ballkid, isCheckoutComments, gridLayout, setUpdated }) {
     !isCheckoutComments ? (
       ""
     ) : (
-      <CheckoutText comments={comments} gridLayout={gridLayout} />
+      <CommentsText
+        comments={comments}
+        commentType={"checkout"}
+        gridLayout={gridLayout}
+      />
     )
   ) : (
     <Box

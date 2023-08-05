@@ -13,7 +13,7 @@ import {
   ConfirmDialog,
   DraggableBallkidAndIcon,
   TournamentBanner,
-  CheckoutText,
+  CommentsText,
 } from "../Utils";
 import { MARGINS, POSITIONS } from "../Consts";
 import {
@@ -150,8 +150,9 @@ export function UnassignedDesktop({
                               {isFinalsPage ? (
                                 ""
                               ) : (
-                                <CheckoutText
+                                <CommentsText
                                   comments={ballkid.checkout_comments}
+                                  commentType={"checkout"}
                                 />
                               )}
                             </Grid>
