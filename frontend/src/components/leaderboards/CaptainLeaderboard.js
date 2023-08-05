@@ -46,29 +46,44 @@ export default function CaptainLeaderboard(props) {
     {
       field: "avgRating",
       headerName: "Average",
-      width: 150,
+      width: 140,
       valueGetter: (rowData) => rowData.row.ballkid.raw_avg,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "stdevRating",
       headerName: "Standard Deviation",
-      width: 150,
+      width: 140,
       valueGetter: (rowData) => rowData.row.ballkid.raw_stdev,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "scale",
       headerName: "Calibration Scale",
-      width: 150,
+      width: 140,
       valueGetter: (rowData) => rowData.row.ballkid.scale,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "offset",
       headerName: "Calibration Offset",
-      width: 150,
+      width: 140,
       valueGetter: (rowData) => rowData.row.ballkid.offset,
+      valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
+    },
+    {
+      field: "distanceToIdeal",
+      headerName: "Distance To Ideal",
+      width: 140,
+      valueGetter: (rowData) => {
+        const a = rowData.row.ballkid.scale;
+        const b = rowData.row.ballkid.offset;
+
+        // distance to ideal is 1/(4.5) int_{.5}^5 (ax + b - x)**2
+        return (
+          (1 / 4) * (37 * a ** 2 + a * (22 * b - 74) + 4 * b ** 2 - 22 * b + 37)
+        );
+      },
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
   ];
