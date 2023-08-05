@@ -336,7 +336,7 @@ class Ballkid(models.Model):
         )
 
         if now is None:
-            now = datetime.now()
+            now = datetime.now() - timedelta(hours=10)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
