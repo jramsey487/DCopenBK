@@ -7,6 +7,7 @@ import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import { HelpIcon, TournamentBanner, getAuthHeader } from "../Utils";
 import { viewRatings } from "../HelpMessages";
@@ -21,6 +22,7 @@ export default function RatingsPage(props) {
   const [calibrationWarning, setCalibrationWarning] = useState("");
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
 
+  const [loading, setLoading] = useState(true);
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export default function RatingsPage(props) {
 
     fetch(`/api/calibrated-ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => {
+        setLoading(false);
         if (response.status === 203) {
           setCalibrationWarning(
             "Warning: Insufficient data for effective overall calibration."
@@ -88,11 +91,14 @@ export default function RatingsPage(props) {
         />
         <Typography variant="body1">Calibrated Ratings</Typography>
       </div>
-
-      <RatingsGrid
-        ratings={showCalibrated ? calibrated : ratings}
-        setUpdated={setUpdated}
-      />
+      {showCalibrated && loading ? (
+        <CircularProgress className="center-div" size={30} />
+      ) : (
+        <RatingsGrid
+          ratings={showCalibrated ? calibrated : ratings}
+          setUpdated={setUpdated}
+        />
+      )}
 
       <Typography variant="body2" sx={{ mt: 1 }}>
         For more information on how calibration is done, see{" "}
