@@ -392,10 +392,9 @@ class AllEmailsList(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        emails = (
-            Ballkid.objects.filter(is_active=True, is_chairperson=False).order_by(
-                "is_captain", "num_years_experience", "last_name", "first_name"
-            )
+        emails = Ballkid.objects.filter(
+            is_active=True,
+            is_chairperson=False, is_cut=False
         ).values_list("user__email", flat=True)
         return Response({"emails": emails}, status=status.HTTP_200_OK)
 

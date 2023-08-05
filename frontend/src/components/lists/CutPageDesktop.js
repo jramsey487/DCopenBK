@@ -279,7 +279,7 @@ function ActiveSection({ active, setUpdated }) {
   );
 }
 
-export function renderCopyButtons(active, emails, setSuccessMsg) {
+export function renderCopyButtons(ballkids, emails, setSuccessMsg) {
   return (
     <Box>
       <Box sx={{ my: 0.2 }}>
@@ -287,7 +287,7 @@ export function renderCopyButtons(active, emails, setSuccessMsg) {
           size="small"
           variant="outlined"
           onClick={() => {
-            const names = active
+            const names = ballkids
               .filter(
                 (ballkid) =>
                   ballkid.cut_status === "Definitely Keep" ||
