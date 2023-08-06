@@ -378,30 +378,6 @@ class AllBallkidsList(generics.ListAPIView):
         return queryset
 
 
-class AllBallkidsSortedList(generics.ListAPIView):
-    serializer_class = BallkidSerializer
-    permission_classes = [IsChairperson]
-
-    def get_queryset(self):
-        return (
-            Ballkid.objects.annotate(
-                num_ratings=Count(
-                    "ratee", filter=Q(ratee__date__year=get_current_year())
-                ),
-                calibrated_avg=Coalesce(
-                    F("calibrationparams__ratee_calibrated_avg"), 0.0
-                ),
-                rank=models.Window(
-                    expression=DenseRank(),
-                    order_by=Coalesce(
-                        F("calibrationparams__ratee_calibrated_avg"), 0.0
-                    ).desc(),
-                ),
-            )
-            .filter(is_active=True, is_chairperson=False, is_cut=False)
-            .order_by("is_captain", "num_years_experience", "last_name", "first_name")
-        )
-
 
 class AllEmailsList(APIView):
     permission_classes = [IsChairperson]
@@ -448,12 +424,29 @@ class BallkidsSortedList(generics.ListAPIView):
     def get_queryset(self):
         pk = self.kwargs.get("pk")
 
-        ballkids = Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
-            "-is_chairperson",
-            "-is_captain",
-            "-num_years_experience",
-            "last_name",
-            "first_name",
+        ballkids = (
+            Ballkid.objects.filter(is_active=True, is_cut=False)
+            .annotate(
+                num_ratings=Count(
+                    "ratee", filter=Q(ratee__date__year=get_current_year())
+                ),
+                calibrated_avg=Coalesce(
+                    F("calibrationparams__ratee_calibrated_avg"), 0.0
+                ),
+                rank=models.Window(
+                    expression=DenseRank(),
+                    order_by=Coalesce(
+                        F("calibrationparams__ratee_calibrated_avg"), 0.0
+                    ).desc(),
+                ),
+            )
+            .order_by(
+                "-is_chairperson",
+                "-is_captain",
+                "-num_years_experience",
+                "last_name",
+                "first_name",
+            )
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)

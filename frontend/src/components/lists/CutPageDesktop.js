@@ -409,9 +409,13 @@ export default function CutPageDesktop(props) {
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
 
   useEffect(() => {
-    fetch("/api/all-sorted-list", { headers: getAuthHeader() })
+    fetch("/api/sorted-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setActive(data.filter((ballkid) => !ballkid.is_cut)));
+      .then((data) =>
+        setActive(
+          data.filter((ballkid) => !ballkid.is_cut && !ballkid.is_chairperson)
+        )
+      );
 
     fetch("/api/all-emails", { headers: getAuthHeader() })
       .then((response) => response.json())

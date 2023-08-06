@@ -13,7 +13,7 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
   useEffect(() => {
-    fetch("/api/all-sorted-list", { headers: getAuthHeader() })
+    fetch("/api/sorted-list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
         setAssigned(
