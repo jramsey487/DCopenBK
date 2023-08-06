@@ -148,7 +148,7 @@ export default function CutPageMobile() {
         )
       );
 
-    fetch("/api/all-emails", { headers: getAuthHeader() })
+    fetch("/api/emails-list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setEmails(data["emails"]))
       .then(() => setUpdated(false));

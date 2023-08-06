@@ -362,7 +362,7 @@ class BallkidsList(generics.ListAPIView):
         return queryset
 
 
-class AllEmailsList(APIView):
+class EmailsList(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
