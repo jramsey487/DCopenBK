@@ -45,6 +45,7 @@ import {
   ICON_DICT,
   TOOLTIP_DICT,
   NUM_RATINGS_WARNING_THRESHOLD,
+  ON_COURT_GREEN,
 } from "./Consts";
 
 export function Icons({ ballkid, margin, isTeamsPage = false }) {
@@ -625,7 +626,7 @@ export function CommentsText({ comments, commentType, gridLayout = false }) {
       ) : (
         <Typography
           sx={{ mx: 0.5, px: 0.5, my: 0.1 }}
-          bgcolor="lightgreen"
+          bgcolor={ON_COURT_GREEN}
           variant="body2"
         >
           {comments}
