@@ -29,21 +29,21 @@ class TestBallkidListView(APITestCase):
         self.ballkid5 = Ballkid.objects.create(
             first_name="Dinosaur",
             last_name="Iosue",
-            is_active=True,
-            is_cut=True,
+            last_day=datetime.strftime(datetime.now(), "%A"),
+        )
+        self.ballkid6 = Ballkid.objects.create(
+            first_name="Cut", last_name="Iosue", is_active=True, is_cut=True
         )
 
     def test_list(self):
         response = self.client.get(reverse("list"))
-        ballkids = [self.ballkid3, self.ballkid1, self.ballkid2]
-        serializer = BallkidSerializer(ballkids, many=True)
-
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer.data, response.data)
-
-    def test_all_list(self):
-        response = self.client.get(reverse("all-list"))
-        ballkids = [self.ballkid5, self.ballkid3, self.ballkid1, self.ballkid2]
+        ballkids = [
+            self.ballkid6,
+            self.ballkid5,
+            self.ballkid3,
+            self.ballkid1,
+            self.ballkid2,
+        ]
         serializer = BallkidSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -59,17 +59,9 @@ class TestBallkidListView(APITestCase):
         self.assertEqual(serializer.data[1]["first_name"], response.data[1]["first_name"])
         self.assertEqual(serializer.data[2]["first_name"], response.data[2]["first_name"])
 
-    def test_cut_list(self):
-        response = self.client.get(reverse("list"))
-        ballkids = [self.ballkid3, self.ballkid1, self.ballkid2]
-        serializer = BallkidSerializer(ballkids, many=True)
-
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer.data, response.data)
-
-    def test_cut_list(self):
-        response = self.client.get(reverse("all-list"))
-        ballkids = [self.ballkid5, self.ballkid3, self.ballkid1, self.ballkid2]
+    def test_self_cut_list(self):
+        response = self.client.get(reverse("self-cut-list"))
+        ballkids = [self.ballkid5]
         serializer = BallkidSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -77,7 +69,7 @@ class TestBallkidListView(APITestCase):
 
     def test_inactive_list(self):
         response = self.client.get(reverse("inactive-list"))
-        ballkids = [self.ballkid4, self.ballkid5]
+        ballkids = [self.ballkid6, self.ballkid4]
         serializer = BallkidSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -95,20 +87,30 @@ class TestBallkidListView(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        annotated1 = response.data[0]
-        self.assertEqual(self.ballkid3.first_name, annotated1["first_name"])
-        self.assertEqual(0, annotated1["num_ratings"])
-        self.assertFalse(annotated1["have_rated"])
+        annotated = response.data[0]
+        self.assertEqual(self.ballkid6.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
-        annotated2 = response.data[1]
-        self.assertEqual(self.ballkid1.first_name, annotated2["first_name"])
-        self.assertEqual(1, annotated2["num_ratings"])
-        self.assertTrue(annotated2["have_rated"])
+        annotated = response.data[1]
+        self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
-        annotated3 = response.data[2]
-        self.assertEqual(self.ballkid2.first_name, annotated3["first_name"])
-        self.assertEqual(0, annotated3["num_ratings"])
-        self.assertFalse(annotated3["have_rated"])
+        annotated = response.data[2]
+        self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
+
+        annotated = response.data[3]
+        self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
+        self.assertEqual(1, annotated["num_ratings"])
+        self.assertTrue(annotated["have_rated"])
+
+        annotated = response.data[4]
+        self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
     def test_list_ratings_excludes_prev_years(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
@@ -128,20 +130,30 @@ class TestBallkidListView(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        annotated1 = response.data[0]
-        self.assertEqual(self.ballkid3.first_name, annotated1["first_name"])
-        self.assertEqual(0, annotated1["num_ratings"])
-        self.assertFalse(annotated1["have_rated"])
+        annotated = response.data[0]
+        self.assertEqual(self.ballkid6.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
-        annotated2 = response.data[1]
-        self.assertEqual(self.ballkid1.first_name, annotated2["first_name"])
-        self.assertEqual(1, annotated2["num_ratings"])
-        self.assertTrue(annotated2["have_rated"])
+        annotated = response.data[1]
+        self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
-        annotated3 = response.data[2]
-        self.assertEqual(self.ballkid2.first_name, annotated3["first_name"])
-        self.assertEqual(0, annotated3["num_ratings"])
-        self.assertFalse(annotated3["have_rated"])
+        annotated = response.data[2]
+        self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
+
+        annotated = response.data[3]
+        self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
+        self.assertEqual(1, annotated["num_ratings"])
+        self.assertTrue(annotated["have_rated"])
+
+        annotated = response.data[4]
+        self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
+        self.assertEqual(0, annotated["num_ratings"])
+        self.assertFalse(annotated["have_rated"])
 
     def test_sorted_list_ratings(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
@@ -202,78 +214,6 @@ class TestBallkidListView(APITestCase):
         self.assertEqual(self.ballkid3.first_name, annotated3["first_name"])
         self.assertEqual(0, annotated3["num_ratings"])
         self.assertFalse(annotated3["have_rated"])
-
-    def test_all_list_ratings(self):
-        Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid5, rating=5)
-
-        response = self.client.get(
-            reverse(
-                "all-list-ratings",
-                kwargs={"pk": self.ballkid2.id},
-            ),
-            format="json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(4, len(response.data))
-
-        annotated = response.data[0]
-        self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
-        self.assertEqual(1, annotated["num_ratings"])
-        self.assertTrue(annotated["have_rated"])
-
-        annotated = response.data[1]
-        self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
-
-        annotated = response.data[2]
-        self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
-
-        annotated = response.data[3]
-        self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
-
-    def test_all_list_ratings_exclude_prev_years(self):
-        Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid5, rating=5)
-        Rating.objects.create(
-            rater=self.ballkid2,
-            ratee=self.ballkid3,
-            rating=5,
-            date=datetime.today() - timedelta(days=365),
-        )
-
-        response = self.client.get(
-            reverse(
-                "all-list-ratings",
-                kwargs={"pk": self.ballkid2.id},
-            ),
-            format="json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(4, len(response.data))
-
-        annotated = response.data[0]
-        self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
-        self.assertEqual(1, annotated["num_ratings"])
-        self.assertTrue(annotated["have_rated"])
-
-        annotated = response.data[1]
-        self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
-
-        annotated = response.data[2]
-        self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
-
-        annotated = response.data[3]
-        self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
-        self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
 
 
 class TestCreateBallkidView(APITestCase):
