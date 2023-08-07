@@ -7,6 +7,8 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 
+import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
+
 import Done from "@mui/icons-material/Done";
 
 import {
@@ -18,12 +20,16 @@ import {
 } from "../Utils";
 import { tournamentSettings } from "../HelpMessages";
 
-function renderDownloadButton(setSuccessMsg, setErrorMsg) {
+function DownloadButton({ setSuccessMsg, setErrorMsg }) {
+  const [loading, setLoading] = useState(false);
+
   return (
-    <Button
+    <LoadingButton
+      loading={loading}
       variant="contained"
       size="small"
-      onClick={() =>
+      onClick={() => {
+        setLoading(true);
         fetch("/api/download", {
           method: "GET",
           headers: getAuthHeader(),
@@ -52,10 +58,11 @@ function renderDownloadButton(setSuccessMsg, setErrorMsg) {
             //   fileType: "text/csv",
             // });
           })
-      }
+          .then(() => setLoading(false));
+      }}
     >
       Download
-    </Button>
+    </LoadingButton>
   );
 }
 
@@ -318,7 +325,10 @@ export default function TournamentSettings(props) {
           <Typography variant="subtitle1">
             Export all data from database
           </Typography>
-          {renderDownloadButton(setSuccessMsg, setErrorMsg)}
+          <DownloadButton
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
         </Grid>
 
         {/* <Grid item xs={12} className="justify">
