@@ -325,6 +325,17 @@ def annotate_durations(ballkids):
     )
 
 
+def annotate_rank(ballkids):
+    return ballkids.annotate(
+        num_ratings=Count("ratee", filter=Q(ratee__date__year=get_current_year())),
+        calibrated_avg=Coalesce(F("calibrationparams__ratee_calibrated_avg"), 0.0),
+        rank=models.Window(
+            expression=DenseRank(),
+            order_by=Coalesce(F("calibrationparams__ratee_calibrated_avg"), 0.0).desc(),
+        ),
+    )
+
+
 def unassign_future_shifts(team, now=datetime.now()):
     # Delete all future shifts for this team
     remaining_shifts = Schedule.objects.filter(
@@ -377,27 +388,19 @@ class SelfCutList(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        ballkids = Ballkid.objects.filter(is_active=True, is_cut=False)
-        for ballkid in ballkids:
-            if ballkid.schedule_comments:
-                try:
-                    datetime.strptime(ballkid.schedule_comments.strip(), "%A")
-
-                    logger.info(
-                        f"[SelfCutList] Updating ballkid {ballkid} with last_day {ballkid.last_day} to {ballkid.schedule_comments}"
-                    )
-                    ballkid.last_day = ballkid.schedule_comments.strip()
-                    ballkid.save()
-
-                except Exception as e:
-                    logger.warn(
-                        f"[SelfCutList] Error {e} when updating ballkid {ballkid} with schedule comments {ballkid.schedule_comments}"
-                    )
-
         current_day = datetime.strftime((datetime.now() - timedelta(hours=10)), "%A")
-        return Ballkid.objects.filter(
+        ballkids = Ballkid.objects.filter(
             is_active=True, is_cut=False, last_day=current_day
         ).order_by("last_name", "first_name")
+        
+        for ballkid in ballkids: 
+            ballkid.cut_status = 'self_cut'
+            ballkid.save()
+
+        logger.info(
+            f"[SelfCutList] for current_day {current_day}, self cut list is {ballkids}"
+        )
+        return ballkids
 
 
 class BallkidsSortedList(generics.ListAPIView):
@@ -420,20 +423,7 @@ class BallkidsSortedList(generics.ListAPIView):
             ballkids = ballkids if not pk else annotate_ratings(ballkids, pk)
 
         if group == "chairperson":
-            ballkids = ballkids.annotate(
-                num_ratings=Count(
-                    "ratee", filter=Q(ratee__date__year=get_current_year())
-                ),
-                calibrated_avg=Coalesce(
-                    F("calibrationparams__ratee_calibrated_avg"), 0.0
-                ),
-                rank=models.Window(
-                    expression=DenseRank(),
-                    order_by=Coalesce(
-                        F("calibrationparams__ratee_calibrated_avg"), 0.0
-                    ).desc(),
-                ),
-            )
+            ballkids = annotate_rank(ballkids)
 
         logger.info(
             f"[BallkidsSortedList] group: {group} with pk: {pk}, returning ballkids: {ballkids}"

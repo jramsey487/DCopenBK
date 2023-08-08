@@ -137,7 +137,10 @@ export function renderBallkidsInSection(active, section, position, setUpdated) {
           ""
         ) : (
           <div key={`ballkid${ballkid.id}`} className="justify">
-            <DraggableBallkidAndIcon ballkid={ballkid} type="rank" />
+            <DraggableBallkidAndIcon
+              ballkid={ballkid}
+              type={section === "Self-Cut" ? "" : "rank"}
+            />
 
             <div className="sxs">
               {section === "Self-Cut" ? (
