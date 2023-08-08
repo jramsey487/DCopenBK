@@ -712,7 +712,7 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
     commentType === "checkout"
       ? ballkid.checkout_comments
       : commentType === "schedule"
-      ? ballkid.schedule_comments
+      ? ballkid.last_day
       : ballkid.comments;
 
   const [disabled, setDisabled] = useState(true);
@@ -728,7 +728,7 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
           {commentType === "checkout"
             ? "Today's Check-out Comments:"
             : commentType === "schedule"
-            ? "Week's Schedule Comments:"
+            ? "Last Day:"
             : "Other Chairperson Comments:"}
         </Typography>
         <Button
@@ -736,7 +736,11 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
           disabled={!disabled}
           onClick={() => {
             setDisabled(false);
-            setTimeout(() => commentsInput.current.focus(), 100);
+            setTimeout(
+              () =>
+                commentType === "schedule" ? {} : commentsInput.current.focus(),
+              100
+            );
           }}
           sx={{ mt: 0.5 }}
         >
@@ -748,15 +752,47 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
         <Typography color="gray">{comments}</Typography>
       ) : (
         <div className="sxs">
-          <TextField
-            variant="standard"
-            multiline
-            value={comments}
-            style={{ width: "100%" }}
-            disabled={disabled}
-            inputRef={commentsInput}
-            onChange={(e) => setComments(e.target.value)}
-          />
+          {commentType === "schedule" ? (
+            <TextField
+              select
+              value={comments}
+              disabled={disabled}
+              variant="standard"
+              sx={{ mx: 0.5 }}
+              style={{ minWidth: 125 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onChange={(e) => setComments(e.target.value)}
+              onDoubleClick={() => setDisabled(false)}
+            >
+              {[
+                "End",
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ].map((value) => (
+                <MenuItem key={value} value={value}>
+                  {value}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <TextField
+              variant="standard"
+              multiline
+              value={comments}
+              style={{ width: "100%" }}
+              disabled={disabled}
+              inputRef={commentsInput}
+              onChange={(e) => setComments(e.target.value)}
+            />
+          )}
 
           <Button
             size="small"
@@ -766,7 +802,7 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
                 commentType === "checkout"
                   ? { checkout_comments: comments }
                   : commentType === "schedule"
-                  ? { schedule_comments: comments }
+                  ? { last_day: comments }
                   : { comments: comments };
 
               fetch("/api/update-ballkid", {
@@ -1098,13 +1134,13 @@ export default function BallkidPageChairperson(props) {
               <Typography variant="h6">Comments</Typography>
               <Comments
                 ballkid={ballkid}
-                commentType="checkout"
+                commentType="schedule"
                 setSuccessMsg={setSuccessMsg}
                 setErrorMsg={setErrorMsg}
               />
               <Comments
                 ballkid={ballkid}
-                commentType="schedule"
+                commentType="checkout"
                 setSuccessMsg={setSuccessMsg}
                 setErrorMsg={setErrorMsg}
               />

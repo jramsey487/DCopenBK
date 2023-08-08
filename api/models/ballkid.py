@@ -84,7 +84,6 @@ class Ballkid(models.Model):
         max_length=10, choices=DAY_OF_WEEK.choices, null=True, blank=True
     )
     checkout_comments = models.TextField(null=True, blank=True)
-    schedule_comments = models.TextField(null=True, blank=True)
     comments = models.TextField(default="", blank=True)
 
     # TODO: consider adding this in the future but need to
@@ -418,6 +417,7 @@ class Ballkid(models.Model):
             self.checkout_comments = value
         elif field == "last_day":
             self.last_day = value
+            self.cut_status = ""
         else:
             raise Exception(f"Unrecognized field {field}")
 
