@@ -36,7 +36,7 @@ jobs:
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
-          pip install -e git@github.com:jtiosue/rcal.git
+          pip install git@github.com:jtiosue/rcal.git
       - name: Run migrations
         run: python manage.py migrate
       - name: Run tests
