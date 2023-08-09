@@ -19,7 +19,7 @@ import {
   getAuthHeader,
 } from "../Utils";
 import { ratingsCaptainLeaderboard } from "../HelpMessages";
-import { CHART_COLORS, DATA_GRID_HEIGHT, MARGINS } from "../Consts";
+import { CHART_COLORS, DATA_GRID_HEIGHT, MARGINS, CHART_GRAY } from "../Consts";
 
 import {
   Chart as ChartJS,
@@ -52,10 +52,7 @@ function RaterParamsChart() {
   useEffect(() => {
     fetch("/api/calibration-parameters", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => {
-        setParams(data);
-        console.log(data);
-      });
+      .then((data) => setParams(data));
 
     fetch("/api/average-calibration-parameters", { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -127,8 +124,8 @@ function RaterParamsChart() {
           },
         ],
         borderDash: [10, 5],
-        borderColor: "#000000",
-        backgroundColor: "#00000050",
+        borderColor: CHART_GRAY,
+        backgroundColor: `${CHART_GRAY}50`,
       },
       {
         label: "Ideal",
@@ -137,8 +134,8 @@ function RaterParamsChart() {
           { x: 5, y: 5 },
         ],
         borderDash: [4, 4],
-        borderColor: "#000000",
-        backgroundColor: "#00000050",
+        borderColor: CHART_GRAY,
+        backgroundColor: `${CHART_GRAY}50`,
       },
     ],
   };

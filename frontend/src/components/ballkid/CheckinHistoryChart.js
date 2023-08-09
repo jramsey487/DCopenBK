@@ -10,6 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { getTimeFloat, getDays, getAuthHeader } from "../Utils";
+import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
@@ -111,7 +112,7 @@ export function CheckinHistoryChart({ pk }) {
       {
         label: "Hours Checked In",
         data: days.map((day) => getCheckinDuration(histories, day)),
-        backgroundColor: "rgb(75, 192, 192)",
+        backgroundColor: CHART_COLORS[10],
       },
     ],
   };

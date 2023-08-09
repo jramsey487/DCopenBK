@@ -63,4 +63,8 @@ export const CHART_COLORS = [
   "#dc0ab4",
   "#b3d4ff",
   "#00bfa0",
+  "#b19cd9",
+  "#4bc0c0",
+  "#ff6384",
 ];
+export const CHART_GRAY = "#6e6e6e";

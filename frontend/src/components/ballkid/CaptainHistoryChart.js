@@ -10,6 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { getTimeFloat, getAuthHeader } from "../Utils";
+import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
@@ -61,7 +62,7 @@ export function CaptainHistoryChart({ pk }) {
       {
         label: "Time on Captain's Team",
         data: histories.map((analytic) => getTimeFloat(analytic["duration"])),
-        backgroundColor: "rgb(240, 99, 132)",
+        backgroundColor: CHART_COLORS[7],
       },
     ],
   };

@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 import { Scatter } from "react-chartjs-2";
 import { getDays } from "../Utils";
+import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(
   CategoryScale,
@@ -69,8 +70,8 @@ export function BallkidParamsChart({ offset, improvement }) {
           x: day,
           y: improvement * index + offset,
         })),
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        borderColor: CHART_COLORS[11],
+        backgroundColor: `${CHART_COLORS[11]}50`,
       },
     ],
   };

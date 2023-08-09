@@ -12,6 +12,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { getTimeFloat, getAuthHeader, getLocalStorage } from "../Utils";
+import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
@@ -90,7 +91,7 @@ export function CourtHistoryChart({ pk }) {
     {
       label: "Time on Court",
       data: labels.map((court) => getDurationFloat(analytics, court)),
-      backgroundColor: "rgb(177, 156, 217)",
+      backgroundColor: CHART_COLORS[9],
     },
   ];
   dataset = !isChairperson
@@ -100,7 +101,7 @@ export function CourtHistoryChart({ pk }) {
         {
           label: "Average Time on Court",
           data: labels.map((court) => getAverageDurationFloat(averages, court)),
-          backgroundColor: "rgba(177, 156, 240, 0.5)",
+          backgroundColor: `${CHART_COLORS[9]}85`,
         },
       ];
 
