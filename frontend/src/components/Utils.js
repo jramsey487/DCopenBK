@@ -195,22 +195,24 @@ export function SearchAndFilter({
           Filter to:
         </Typography>
         &ensp;
-        {filters.map((filterName) => (
-          <Tooltip key={filterName} title={TOOLTIP_DICT[filterName]}>
-            <IconButton
-              size="small"
-              style={{
-                borderRadius: 0,
-                background: filterGroup === filterName ? "lightgray" : "",
-              }}
-              onClick={() =>
-                setFilterGroup(filterGroup === filterName ? null : filterName)
-              }
+        <ToggleButtonGroup
+          value={filterGroup}
+          size="small"
+          exclusive
+          onChange={(e, newVal) => setFilterGroup(newVal)}
+        >
+          {filters.map((filterName) => (
+            <ToggleButton
+              key={filterName}
+              value={filterName}
+              style={{ border: 0 }}
             >
-              {ICON_DICT[filterName]}
-            </IconButton>
-          </Tooltip>
-        ))}
+              <Tooltip title={TOOLTIP_DICT[filterName]}>
+                {ICON_DICT[filterName]}
+              </Tooltip>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </div>
     </Grid>
   );
