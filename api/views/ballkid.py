@@ -341,7 +341,10 @@ def annotate_rank(ballkids):
     )
 
 
-def unassign_future_shifts(team, now=datetime.now()):
+def unassign_future_shifts(team, now=None):
+    if now is None:
+        now = datetime.now()
+
     # Delete all future shifts for this team
     remaining_shifts = Schedule.objects.filter(
         start__gte=now, start__lt=now + timedelta(hours=12), team=team
@@ -393,7 +396,9 @@ class SelfCutList(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        current_day = datetime.strftime((datetime.now() - timedelta(hours=10)), "%A")
+        current_day = datetime.strftime(
+            (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
+        )
         ballkids = Ballkid.objects.filter(
             is_active=True, is_cut=False, last_day=current_day
         ).order_by("last_name", "first_name")
@@ -592,7 +597,9 @@ class CutAll(APIView):
         self_cut = request.data["self_cut"] if "self_cut" in request.data else False
 
         if self_cut:
-            current_day = datetime.strftime((datetime.now() - timedelta(hours=10)), "%A")
+            current_day = datetime.strftime(
+                (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
+            )
             queryset = Ballkid.objects.filter(
                 is_active=True, is_cut=False, last_day=current_day
             ).order_by("last_name", "first_name")

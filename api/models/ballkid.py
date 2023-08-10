@@ -348,7 +348,11 @@ class Ballkid(models.Model):
         )
 
         if now is None:
-            now = datetime.now() - timedelta(hours=10)
+            # This assumes that ballkids are cut before the start of matches
+            # (assumed to be 10am) the following day. If a ballkid is cut at
+            # 2am on Thursday, then it will indicate that the furthest day is
+            # Wednesday (time does not matter for cut history)
+            now = datetime.now() - timedelta(hours=MATCHES_START_HOUR)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
