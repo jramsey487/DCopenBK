@@ -128,6 +128,7 @@ class TestGetCheckinLeaderboard(APITestCase):
             start=datetime(2023, 5, 3, 10, 30, 0),
             end=datetime(2023, 5, 3, 15, 30, 0),
             duration=timedelta(hours=5),
+            is_first_checkin=True,
         )
         CheckinHistory.objects.create(
             ballkid=self.ballkid2,
@@ -146,6 +147,7 @@ class TestGetCheckinLeaderboard(APITestCase):
             start=datetime(2023, 5, 3, 18, 30, 0),
             end=datetime(2023, 5, 3, 22, 30, 0),
             duration=timedelta(hours=4),
+            is_first_checkin=False,
         )
 
         response = self.client.get(
@@ -160,6 +162,7 @@ class TestGetCheckinLeaderboard(APITestCase):
         self.assertEqual(self.ballkid1.first_name, leaderboard1["first_name"])
         self.assertEqual("09:00:00", leaderboard1["checkin_duration"])
         self.assertEqual(1, leaderboard1["checkin_days"])
+        self.assertEqual("10:30:00", leaderboard1["avg_checkin_time"])
 
         leaderboard2 = response.data[1]
         self.assertEqual(self.ballkid2.first_name, leaderboard2["first_name"])
@@ -373,12 +376,14 @@ class TestGetAverageCheckinLeaderboard(APITestCase):
             start=datetime(2023, 5, 3, 11, 30, 0),
             end=datetime(2023, 5, 3, 13, 30, 0),
             duration=timedelta(hours=2),
+            is_first_checkin=True,
         )
         CheckinHistory.objects.create(
             ballkid=self.ballkid3,
             start=datetime(2023, 5, 3, 16, 30, 0),
             end=datetime(2023, 5, 3, 20, 30, 0),
             duration=timedelta(hours=4),
+            is_first_checkin=False,
         )
 
         response = self.client.get(
@@ -389,6 +394,7 @@ class TestGetAverageCheckinLeaderboard(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(timedelta(hours=6), response.data["checkin_avg"])
         self.assertEqual(1, response.data["days_avg"])
+        self.assertEqual("10:30:00", str(response.data["avg_checkin_time"]))
 
     def test_mult_histories_diff_days(self):
         CheckinHistory.objects.create(

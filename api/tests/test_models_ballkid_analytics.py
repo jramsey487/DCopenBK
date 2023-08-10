@@ -79,6 +79,30 @@ class TestBallkidModelAnalytics(TestCase):
         self.assertEqual(timedelta(hours=8, minutes=15), history1.duration)
         self.assertEqual(timedelta(hours=3, minutes=1), history2.duration)
 
+    def test_handle_checkin_history_mult_histories_is_first_checkin(self):
+        self.assertEqual(0, len(CheckinHistory.objects.all()))
+
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
+        self.ballkid.is_checked_in = True
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 18, 45))
+        self.ballkid.is_checked_in = False
+        self.assertEqual(1, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
+
+        self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 20, 30))
+        self.ballkid.is_checked_in = True
+        self.ballkid.handle_checkin_history(False, now=datetime(2022, 1, 1, 23, 31))
+        self.ballkid.is_checked_in = False
+        self.assertEqual(2, len(CheckinHistory.objects.filter(ballkid=self.ballkid)))
+
+        histories = CheckinHistory.objects.all().order_by("start")
+        self.assertEqual(2, len(histories))
+        history1 = histories.first()
+        history2 = histories.last()
+        self.assertEqual(timedelta(hours=8, minutes=15), history1.duration)
+        self.assertTrue(history1.is_first_checkin)
+        self.assertEqual(timedelta(hours=3, minutes=1), history2.duration)
+        self.assertFalse(history2.is_first_checkin)
+
     def test_handle_checkin_history_checkout_before_checkin(self):
         self.ballkid.handle_checkin_history(True, now=datetime(2022, 1, 1, 10, 30))
         self.ballkid.is_checked_in = True
