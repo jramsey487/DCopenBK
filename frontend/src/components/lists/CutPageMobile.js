@@ -19,7 +19,7 @@ import {
   DraggableBallkidAndIcon,
   HelpIcon,
   Alerts,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import {
   SelfCutCard,
@@ -156,7 +156,7 @@ export default function CutPageMobile() {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Alerts
         successMsg={successMsg}

@@ -14,7 +14,7 @@ import {
   getLocalStorage,
   useIsMobile,
   Icons,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import {
   renderBallkidCutHistory,
@@ -106,7 +106,7 @@ export default function MyProfile(props) {
     ""
   ) : (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <div className="sxs">
         <Typography variant="h4">

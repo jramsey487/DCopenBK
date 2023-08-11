@@ -218,39 +218,39 @@ export function SearchAndFilter({
   );
 }
 
-export function TournamentBanner() {
-  const [banners, setBanners] = useState([]);
-  const [timestamps, setTimestamps] = useState([]);
-  const [open1, setOpen1] = useState(true);
-  const [open2, setOpen2] = useState(true);
-  const [open3, setOpen3] = useState(true);
+function Banner({ banner }) {
+  const [open, setOpen] = useState(true);
 
-  const openSetOpenList = [
-    [open1, setOpen1],
-    [open2, setOpen2],
-    [open3, setOpen3],
-  ];
+  return (
+    <Collapse in={open}>
+      <Alert
+        severity="warning"
+        variant="filled"
+        onClose={() => setOpen(false)}
+        sx={{ mt: 0.5 }}
+      >
+        {`${banner.content} [Last Updated: ${dayHourToStr(
+          banner.timestamp,
+          true
+        )}]`}
+      </Alert>
+    </Collapse>
+  );
+}
+
+export function Banners() {
+  const [banners, setBanners] = useState([]);
 
   useEffect(() => {
-    fetch("/api/get-tournament", {
+    fetch("/api/banner-list", {
       method: "GET",
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => {
-        setBanners([data.banner1, data.banner2, data.banner3]);
-        setTimestamps([
-          data.banner1_timestamp,
-          data.banner2_timestamp,
-          data.banner3_timestamp,
-        ]);
-      });
+      .then((data) => setBanners(data));
   }, []);
 
-  return banners === undefined ||
-    timestamps === undefined ||
-    banners === null ||
-    timestamps === null ? (
+  return banners === undefined || banners === null ? (
     ""
   ) : (
     <Box
@@ -263,25 +263,9 @@ export function TournamentBanner() {
         zIndex: 999,
       }}
     >
-      {banners.map((banner, index) =>
-        banner === undefined || banner === null || banner === "" ? (
-          ""
-        ) : (
-          <Collapse in={openSetOpenList[index][0]} key={index}>
-            <Alert
-              severity="warning"
-              variant="filled"
-              onClose={() => openSetOpenList[index][1](false)}
-              sx={{ mt: 0.5 }}
-            >
-              {`${banner} [Last Updated: ${dayHourToStr(
-                timestamps[index],
-                true
-              )}]`}
-            </Alert>
-          </Collapse>
-        )
-      )}
+      {banners.map((banner) => (
+        <Banner key={banner.id} banner={banner} />
+      ))}
     </Box>
   );
 }

@@ -51,7 +51,7 @@ import {
   Alerts,
   toPercent,
   getTimeStr,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
@@ -1076,7 +1076,7 @@ export default function BallkidPageChairperson(props) {
     ""
   ) : (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Alerts
         successMsg={successMsg}

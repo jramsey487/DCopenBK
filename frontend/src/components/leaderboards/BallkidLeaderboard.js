@@ -6,12 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import { DataGrid } from "@mui/x-data-grid";
 
-import {
-  BallkidAndIcon,
-  HelpIcon,
-  TournamentBanner,
-  getAuthHeader,
-} from "../Utils";
+import { BallkidAndIcon, HelpIcon, Banners, getAuthHeader } from "../Utils";
 import { ratingsBallkidLeaderboard } from "../HelpMessages";
 import { DATA_GRID_HEIGHT } from "../Consts";
 
@@ -84,7 +79,7 @@ export default function BallkidLeaderboard(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Ratings Leaderboard - Ballkid</Typography>

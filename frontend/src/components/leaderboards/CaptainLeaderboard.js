@@ -9,12 +9,7 @@ import TextField from "@mui/material/TextField";
 
 import { DataGrid } from "@mui/x-data-grid";
 
-import {
-  BallkidAndIcon,
-  HelpIcon,
-  TournamentBanner,
-  getAuthHeader,
-} from "../Utils";
+import { BallkidAndIcon, HelpIcon, Banners, getAuthHeader } from "../Utils";
 import { ratingsCaptainLeaderboard } from "../HelpMessages";
 import { CHART_COLORS, DATA_GRID_HEIGHT, MARGINS } from "../Consts";
 import { RaterParamsChart } from "../ballkid/RaterParamsChart";
@@ -157,7 +152,7 @@ export default function CaptainLeaderboard(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Ratings Leaderboard - Captain</Typography>

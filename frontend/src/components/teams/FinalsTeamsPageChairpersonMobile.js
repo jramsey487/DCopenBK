@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { TournamentBanner, getAuthHeader } from "../Utils";
+import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedMobile } from "./TeamsPageChairpersonMobile";
 import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
@@ -32,7 +32,7 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Header />
       {renderTeams(assigned, teams, setUpdated)}

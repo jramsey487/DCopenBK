@@ -12,7 +12,7 @@ import {
   isCurrentHour,
   BallkidAndIcon,
   HelpIcon,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { ON_COURT_GREEN, POSITIONS } from "../Consts";
 import { Box } from "@mui/material";
@@ -105,7 +105,7 @@ export default function TeamsPage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Current Teams</Typography>

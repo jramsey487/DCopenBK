@@ -21,7 +21,7 @@ import {
   useIsMobile,
   getToken,
   TabbedSections,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { RatingAndLabel } from "../ratings/RatingDialog";
 
@@ -1306,7 +1306,7 @@ export default function DebugPage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <TabbedSections sections={sections} />
     </div>

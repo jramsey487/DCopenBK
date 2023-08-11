@@ -22,7 +22,7 @@ import {
   ConfirmDialog,
   DraggableBallkidAndIcon,
   HelpIcon,
-  TournamentBanner,
+  Banners,
   Alerts,
 } from "../Utils";
 import { CUT_STATUSES, MARGINS, POSITIONS } from "../Consts";
@@ -451,7 +451,7 @@ export default function CutPageDesktop(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Alerts
         successMsg={successMsg}

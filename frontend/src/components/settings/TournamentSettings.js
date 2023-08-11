@@ -16,7 +16,7 @@ import {
   HelpIcon,
   HideShowToggle,
   getAuthHeader,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { tournamentSettings } from "../HelpMessages";
 
@@ -269,7 +269,7 @@ export default function TournamentSettings(props) {
     ""
   ) : (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Alerts
         successMsg={successMsg}

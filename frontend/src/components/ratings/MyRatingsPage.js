@@ -3,12 +3,7 @@ import React, { useState, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
-import {
-  HelpIcon,
-  TournamentBanner,
-  getAuthHeader,
-  getLocalStorage,
-} from "../Utils";
+import { HelpIcon, Banners, getAuthHeader, getLocalStorage } from "../Utils";
 import RatingsGrid from "./RatingsGrid";
 import { viewMyRatings, viewMyRatingsNonchairperson } from "../HelpMessages";
 
@@ -28,7 +23,7 @@ export default function MyRatingsPage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">View My Ratings</Typography>

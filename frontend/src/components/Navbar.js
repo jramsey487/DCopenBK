@@ -360,7 +360,7 @@ export default function Navbar({ isLoggedIn, setToken }) {
 
   return (
     <AppBar position="sticky">
-      {/* {!isLoggedIn ? "" : <TournamentBanner />} */}
+      {/* {!isLoggedIn ? "" : <Banners />} */}
       <Toolbar>
         <div className="justify" style={{ height: "100%" }}>
           <div className="sxs">

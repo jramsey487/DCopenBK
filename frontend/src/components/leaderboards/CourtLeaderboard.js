@@ -20,7 +20,7 @@ import {
   BallkidAndIcon,
   toPercent,
   HelpIcon,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { courtLeaderboard } from "../HelpMessages";
 import { DATA_GRID_HEIGHT } from "../Consts";
@@ -235,7 +235,7 @@ export default function CourtLeaderboard(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Court Time Leaderboard</Typography>

@@ -9,7 +9,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import { ScheduleTable } from "./ScheduleTable";
-import { HelpIcon, TournamentBanner, getAuthHeader, getToday } from "../Utils";
+import { HelpIcon, Banners, getAuthHeader, getToday } from "../Utils";
 import { scheduleNonchairperson } from "../HelpMessages";
 
 export default function SchedulePage(props) {
@@ -24,7 +24,7 @@ export default function SchedulePage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Box className="sxs" sx={{ mb: 1 }}>
         <Typography variant="h4">Schedule</Typography>

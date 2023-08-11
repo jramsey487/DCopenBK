@@ -13,7 +13,7 @@ import {
   filterBallkids,
   BallkidCard,
   HelpIcon,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { MARGINS } from "../Consts";
 import { inactive } from "../HelpMessages";
@@ -133,7 +133,7 @@ export default function InactiveBallkidList(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <div className="justify">
         <Box className="sxs" sx={{ mb: 1 }}>

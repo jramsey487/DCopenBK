@@ -12,7 +12,7 @@ import {
   filterBallkids,
   ConfirmDialog,
   DraggableBallkidAndIcon,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { MARGINS, POSITIONS } from "../Consts";
 import {
@@ -200,7 +200,7 @@ export default function TeamsPageChairpersonDesktop(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <Grid container className="justify-top">
         <Grid

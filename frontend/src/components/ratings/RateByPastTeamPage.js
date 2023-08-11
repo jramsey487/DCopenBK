@@ -13,7 +13,7 @@ import {
   BallkidCard,
   setLocalStorage,
   HelpIcon,
-  TournamentBanner,
+  Banners,
   getDay,
 } from "../Utils";
 import { MARGINS } from "../Consts";
@@ -78,7 +78,7 @@ export default function RateByPastTeamPage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <div className="justify">
         <Box className="sxs" sx={{ mb: 1 }}>

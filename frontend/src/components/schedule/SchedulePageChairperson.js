@@ -16,7 +16,7 @@ import {
   getToday,
   ConfirmDialog,
   HelpIcon,
-  TournamentBanner,
+  Banners,
 } from "../Utils";
 import { schedule } from "../HelpMessages";
 
@@ -139,7 +139,7 @@ export default function SchedulePageChairperson(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <ConfirmDialog
         message={`You are about to delete the schedule for ${date}. This action cannot be

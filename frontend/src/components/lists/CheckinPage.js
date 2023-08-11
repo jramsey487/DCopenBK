@@ -20,7 +20,7 @@ import {
   BallkidCard,
   HelpIcon,
   useIsMobile,
-  TournamentBanner,
+  Banners,
   CommentsText,
 } from "../Utils";
 import { MARGINS } from "../Consts";
@@ -308,7 +308,7 @@ export default function CheckinPage(props) {
 
   return (
     <div className="page">
-      <TournamentBanner />
+      <Banners />
 
       <ConfirmDialog
         message={`You are about to check out all ${
