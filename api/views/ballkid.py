@@ -945,4 +945,15 @@ class BannerList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Banner.objects.all()
+        return Banner.objects.order_by("timestamp")
+
+
+class UpdateBanner(APIView):
+    serializer_class = BannerSerializer
+    permission_classes = [IsChairperson]
+
+    def post(self, request, format=None):
+        pass
+
+    def patch(self, request, format=None):
+        pass
