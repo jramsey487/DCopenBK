@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from datetime import datetime, timedelta
 from phonenumber_field.modelfields import PhoneNumberField
+from api.models.schedule import Tournament
 from api.utils import *
 from api.consts import *
 import logging
@@ -378,6 +379,108 @@ class Ballkid(models.Model):
                 f"[handle_cut_history] Deleted {num_deleted} cut history entries: {elems}"
             )
 
+    def handle_finals_history_team(self, value, show_teams, now=None):
+        # If finals teams are not public, then don't create/update any
+        # finals history for any teams
+        if not show_teams:
+            return
+
+        # If no change, then return early
+        if self.finals_team == value:
+            return
+
+        if now is None:
+            now = datetime.now()
+        current_year = get_current_year()
+
+        # Filter to any existing finals history which has the current year
+        # TODO: consider changing this to filter on ballkid and match type
+        histories = FinalsHistory.objects.filter(
+            ballkid=self, years__contains=[current_year]
+        )
+        if histories.count() > 1:
+            raise Exception(
+                f"Found multiple histories {histories} for ballkid {self} containing year {current_year}"
+            )
+
+        # Remove old finals history item because ballkid has been unassigned
+        # from the previous finals history
+        if histories.count() > 0:
+            history = histories[0]
+            if history.count == 1:
+                history.delete()
+            else:
+                history.count -= 1
+                history.years.remove(current_year)
+                history.save()
+
+        # If assigning a new finals team to the ballkid, then update finals
+        # history with a new row
+        if value != "":
+            history, created = FinalsHistory.objects.get_or_create(
+                ballkid=self,
+                match_type=value,
+                defaults={"count": 0, "years": []},
+            )
+            history.count += 1
+            history.years.append(current_year)
+            history.save()
+
+    def handle_finals_history_hideshow(self, value, now=None):
+        if now is None:
+            now = datetime.now()
+        current_year = get_current_year()
+
+        # If no finals team assigned to the ballkid, then don't
+        # do anything and return early
+        if self.finals_team == "":
+            return
+
+        # If the ballkid has an assigned finals team and showing teams,
+        # then create a finals history entry with the finals team assigned
+        if value:
+            history, created = FinalsHistory.objects.get_or_create(
+                ballkid=self,
+                match_type=self.finals_team,
+                defaults={"count": 0, "years": []},
+            )
+            history.count += 1
+            history.years.append(current_year)
+            logger.info(
+                f"[handle_finals_history_hideshow] Finals history created {created} for ballkid {self}: {history}"
+            )
+            history.save()
+
+        # If hiding teams, then delete the current year from the
+        # ballkid's finals history
+        else:
+            # Filter to any existing finals history which has the current year
+            # TODO: consider changing this to filter on ballkid and match type
+            histories = FinalsHistory.objects.filter(
+                ballkid=self, years__contains=[current_year]
+            )
+            if histories.count() > 1:
+                logger.warn(
+                    f"[handle_finals_history_hideshow] Found multiple histories {histories} for ballkid {self} containing year {current_year}"
+                )
+
+            # Remove old finals history item because ballkid has been unassigned
+            # from the previous finals history
+            if histories.count() == 1:
+                history = histories[0]
+                if history.count == 1:
+                    logger.info(
+                        f"[handle_finals_history_hideshow] Deleting history {history} due to hiding finals teams"
+                    )
+                    history.delete()
+                else:
+                    logger.info(
+                        f"[handle_finals_history_hideshow] Removing {current_year} from history {history} due to hiding finals teams"
+                    )
+                    history.count -= 1
+                    history.years.remove(current_year)
+                    history.save()
+
     def set_field(self, field, value, self_cut=False):
         """
         Sets corresponding field to the value provided. Calls specialty handle
@@ -405,35 +508,51 @@ class Ballkid(models.Model):
                 self.set_field("checkout_comments", None)
 
             self.is_checked_in = value
+
         elif field == "position":
             self.position = value
+
         elif field == "finals_position":
             self.finals_position = value
+
         elif field == "preferred_position":
             self.preferred_position = value
+
         elif field == "current_team":
             self.handle_team_history(value)
             self.handle_captain_history_team(value)
             self.current_team = value
+
         elif field == "finals_team":
+            show_teams = Tournament.objects.get(year=2023).show_finals_teams
+            self.handle_finals_history_team(value, show_teams)
+
             self.finals_team = value
+
         elif field == "is_active":
             self.is_active = value
+
         elif field == "is_cut":
             self.handle_cut_history(value, self_cut=self_cut)
             self.is_cut = value
+
         elif field == "cut_status":
             self.cut_status = value
+
         elif field == "is_captain":
             self.handle_captain_history_captain(value)
             self.is_captain = value
+
         elif field == "comments":
             self.comments = value
+
         elif field == "checkout_comments":
             self.checkout_comments = value
+
         elif field == "last_day":
             self.last_day = value
             self.cut_status = ""
+
         else:
             raise Exception(f"Unrecognized field {field}")
 

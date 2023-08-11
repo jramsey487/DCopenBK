@@ -1,6 +1,5 @@
 from django.db.models import Value, Avg, F, StdDev
 from django.db.models.functions import Concat
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,8 +12,6 @@ from api.consts import *
 
 from datetime import datetime
 from rcal import calibrate_parameters
-
-from rcal import RcalException, calibrate_parameters
 import networkx as nx
 import statistics
 import logging

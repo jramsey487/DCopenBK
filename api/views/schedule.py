@@ -269,12 +269,13 @@ class GetTournament(APIView):
     permission_classes = [IsChairpersonOrAuthenticatedReadOnly]
 
     def get(self, request, format=None):
-        tournament = Tournament.objects.get(year=2023)
+        tournament = Tournament.objects.get(year=get_current_year())
         logger.info(f"[GetTournament GET] tournament {tournament}")
         return Response(TournamentSerializer(tournament).data, status=status.HTTP_200_OK)
 
     def patch(self, request, format=None):
-        tournament = Tournament.objects.get(year=2023)
+        current_year = get_current_year()
+        tournament = Tournament.objects.get(year=current_year)
 
         if "time" in request.data:
             timestamp = datetime.strptime(
@@ -285,7 +286,14 @@ class GetTournament(APIView):
         if "show_teams" in request.data:
             tournament.show_teams = request.data["show_teams"]
         if "show_finals_teams" in request.data:
-            tournament.show_finals_teams = request.data["show_finals_teams"]
+            show_teams = request.data["show_finals_teams"]
+            tournament.show_finals_teams = show_teams
+
+            # Update finals history depending on whether or not finals
+            # teams are hidden or shown
+            for ballkid in Ballkid.objects.filter(is_active=True, is_cut=False):
+                ballkid.handle_finals_history_hideshow(show_teams)
+
         if "banner1" in request.data:
             tournament.banner1 = request.data["banner1"]
             tournament.banner1_timestamp = timestamp
