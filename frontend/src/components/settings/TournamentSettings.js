@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
@@ -10,6 +10,10 @@ import TextField from "@mui/material/TextField";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 import Done from "@mui/icons-material/Done";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Close from "@mui/icons-material/Close";
+import AddCircle from "@mui/icons-material/AddCircle";
 
 import {
   Alerts,
@@ -66,22 +70,212 @@ function DownloadButton({ setSuccessMsg, setErrorMsg }) {
   );
 }
 
+// function Banner({
+//   banner,
+//   disabled,
+//   setDisabled,
+//   bannerInput,
+//   setSuccessMsg,
+//   setErrorMsg,
+//   setUpdated,
+//   newBanner = false,
+// }) {
+//   const [bannerMessage, setBannerMessage] = useState(
+//     newBanner ? "" : banner.message
+//   );
+
+//   return disabled ? (
+//     <Typography color="gray">{banner.message}</Typography>
+//   ) : (
+//     <Box className="sxs">
+//       <TextField
+//         variant="standard"
+//         value={bannerMessage}
+//         style={{ width: "90%" }}
+//         disabled={disabled}
+//         inputRef={newBanner ? bannerInput : undefined}
+//         sx={{ mx: 2 }}
+//         multiline
+//         onChange={(e) => setBannerMessage(e.target.value)}
+//       />
+//       <Button
+//         size="small"
+//         disabled={banner.message === bannerMessage}
+//         onClick={() =>
+//           fetch("/api/update-banner", {
+//             method: newBanner ? "POST" : "PATCH",
+//             headers: getAuthHeader(),
+//             body: JSON.stringify({
+//               id: newBanner ? 0 : banner.id,
+//               time: new Date().toLocaleString(),
+//               message: bannerMessage,
+//             }),
+//           }).then((response) => {
+//             if (response.ok) {
+//               setDisabled(true);
+//               setBannerMessage("");
+//               setUpdated(true);
+
+//               setSuccessMsg(
+//                 "Banner updated for all ballkids and captains! Refresh page to view updated banners."
+//               );
+//             } else {
+//               setErrorMsg("Error updating banner.");
+//             }
+//           })
+//         }
+//       >
+//         {newBanner ? "Publish" : "Update"}
+//       </Button>
+//     </Box>
+//   );
+// }
+
+// function BannerSection({ setSuccessMsg, setErrorMsg }) {
+//   const [banners, setBanners] = useState([]);
+//   const [disabled, setDisabled] = useState(true);
+//   const [updated, setUpdated] = useState(false);
+
+//   const bannerInput = useRef(null);
+
+//   useEffect(() => {
+//     fetch("/api/banner-list", {
+//       method: "GET",
+//       headers: getAuthHeader(),
+//     })
+//       .then((response) => response.json())
+//       .then((data) => setBanners(data))
+//       .then(() => setUpdated(false));
+//   }, [updated]);
+
+//   return (
+//     <Grid item xs={12} className="justify">
+//       <div className="sxs">
+//         <Typography variant="subtitle1">Site-wide banner(s)</Typography>
+//         <Button
+//           size="small"
+//           disabled={!disabled}
+//           onClick={() => {
+//             setDisabled(false);
+//             setTimeout(() => bannerInput.current.focus(), 100);
+//           }}
+//           sx={{ mt: 0.5 }}
+//         >
+//           Edit
+//         </Button>
+//       </div>
+
+//       <Box style={{ width: "75%" }} sx={{ ml: 2 }}>
+//         {banners.map((banner, index) => (
+//           <Banner
+//             key={index}
+//             banner={banner}
+//             disabled={disabled}
+//             setDisabled={setDisabled}
+//             bannerInput={bannerInput}
+//             setSuccessMsg={setSuccessMsg}
+//             setErrorMsg={setErrorMsg}
+//             setUpdated={setUpdated}
+//           />
+//         ))}
+
+//         <Banner
+//           banner={{}}
+//           disabled={disabled}
+//           setDisabled={setDisabled}
+//           bannerInput={bannerInput}
+//           setSuccessMsg={setSuccessMsg}
+//           setErrorMsg={setErrorMsg}
+//           setUpdated={setUpdated}
+//           newBanner={true}
+//         />
+//       </Box>
+//       {disabled ? (
+//         ""
+//       ) : (
+//         <Button size="small" onClick={() => setDisabled(true)}>
+//           Cancel
+//         </Button>
+//       )}
+//     </Grid>
+//   );
+// }
+
 function Banner({
   banner,
-  disabled,
-  setDisabled,
   bannerInput,
   setSuccessMsg,
   setErrorMsg,
   setUpdated,
   newBanner = false,
 }) {
+  const [disabled, setDisabled] = useState(true);
   const [bannerMessage, setBannerMessage] = useState(
+    newBanner ? "" : banner.message
+  );
+  const [savedBanner, setSavedBanner] = useState(
     newBanner ? "" : banner.message
   );
 
   return disabled ? (
-    <Typography color="gray">{banner.message}</Typography>
+    newBanner ? (
+      <IconButton
+        size="small"
+        onClick={() => {
+          setDisabled(false);
+          setTimeout(() => bannerInput.current.focus(), 100);
+        }}
+      >
+        <Tooltip title="Add Banner">
+          <AddCircle />
+        </Tooltip>
+      </IconButton>
+    ) : (
+      <Box className="sxs">
+        <Typography color="gray" style={{ width: "90%" }} sx={{ mr: 2 }}>
+          {banner.message}
+        </Typography>
+
+        <Tooltip title="Edit">
+          <IconButton
+            size="small"
+            onClick={() => {
+              setDisabled(false);
+              setTimeout(() => bannerInput.current.focus(), 100);
+            }}
+          >
+            <Edit />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Delete">
+          <IconButton
+            size="small"
+            onClick={() =>
+              fetch("/api/update-banner", {
+                method: "DELETE",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  id: banner.id,
+                }),
+              }).then((response) => {
+                if (response.ok) {
+                  setUpdated(true);
+
+                  setSuccessMsg(
+                    "Banner deleted for all ballkids and captains! Refresh page to view updated banner(s)."
+                  );
+                } else {
+                  setErrorMsg("Error updating banner.");
+                }
+              })
+            }
+          >
+            <Delete />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    )
   ) : (
     <Box className="sxs">
       <TextField
@@ -89,14 +283,15 @@ function Banner({
         value={bannerMessage}
         style={{ width: "90%" }}
         disabled={disabled}
-        inputRef={newBanner ? bannerInput : undefined}
-        sx={{ mx: 2 }}
+        inputRef={bannerInput}
+        sx={{ mr: 2 }}
         multiline
         onChange={(e) => setBannerMessage(e.target.value)}
       />
-      <Button
+
+      <IconButton
         size="small"
-        disabled={banner.message === bannerMessage}
+        disabled={banner.message === bannerMessage || bannerMessage === ""}
         onClick={() =>
           fetch("/api/update-banner", {
             method: newBanner ? "POST" : "PATCH",
@@ -109,11 +304,11 @@ function Banner({
           }).then((response) => {
             if (response.ok) {
               setDisabled(true);
-              setBannerMessage("");
+              setSavedBanner(bannerMessage);
               setUpdated(true);
 
               setSuccessMsg(
-                "Banner updated for all ballkids and captains! Refresh page to view updated banners."
+                "Banner updated for all ballkids and captains! Refresh page to view updated banner(s)."
               );
             } else {
               setErrorMsg("Error updating banner.");
@@ -121,15 +316,28 @@ function Banner({
           })
         }
       >
-        {newBanner ? "Publish" : "Update"}
-      </Button>
+        <Tooltip title="Save">
+          <Done />
+        </Tooltip>
+      </IconButton>
+
+      <Tooltip title="Cancel">
+        <IconButton
+          size="small"
+          onClick={() => {
+            setDisabled(true);
+            setBannerMessage(savedBanner);
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 }
 
 function BannerSection({ setSuccessMsg, setErrorMsg }) {
   const [banners, setBanners] = useState([]);
-  const [disabled, setDisabled] = useState(true);
   const [updated, setUpdated] = useState(false);
 
   const bannerInput = useRef(null);
@@ -145,10 +353,9 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
   }, [updated]);
 
   return (
-    <Grid item xs={12} className="justify">
-      <div className="sxs">
-        <Typography variant="subtitle1">Site-wide banner(s)</Typography>
-        <Button
+    <Grid item xs={12} className="justify-top">
+      <Typography variant="subtitle1">Site-wide banner(s)</Typography>
+      {/* <Button
           size="small"
           disabled={!disabled}
           onClick={() => {
@@ -158,16 +365,13 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
           sx={{ mt: 0.5 }}
         >
           Edit
-        </Button>
-      </div>
+        </Button> */}
 
       <Box style={{ width: "75%" }} sx={{ ml: 2 }}>
         {banners.map((banner, index) => (
           <Banner
             key={index}
             banner={banner}
-            disabled={disabled}
-            setDisabled={setDisabled}
             bannerInput={bannerInput}
             setSuccessMsg={setSuccessMsg}
             setErrorMsg={setErrorMsg}
@@ -177,8 +381,6 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
 
         <Banner
           banner={{}}
-          disabled={disabled}
-          setDisabled={setDisabled}
           bannerInput={bannerInput}
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
@@ -186,13 +388,13 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
           newBanner={true}
         />
       </Box>
-      {disabled ? (
+      {/* {disabled ? (
         ""
       ) : (
         <Button size="small" onClick={() => setDisabled(true)}>
           Cancel
         </Button>
-      )}
+      )} */}
     </Grid>
   );
 }
@@ -235,7 +437,9 @@ function RemoveOutliers({ tournament, setSuccessMsg, setErrorMsg }) {
           });
         }}
       >
-        <Done />
+        <Tooltip title="Save">
+          <Done />
+        </Tooltip>
       </IconButton>
     </div>
   );

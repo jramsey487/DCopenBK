@@ -982,3 +982,9 @@ class UpdateBanner(APIView):
             f"[UpdateBanner] Banner updated {banner} given request {request.data}"
         )
         return Response({"Success": f"Updated banner"}, status=status.HTTP_200_OK)
+
+    def delete(self, request, format=None):
+        banner = Banner.objects.get(id=request.data["id"])
+        logger.info(f"[UpdateBanner] Deleting banner {banner}")
+        banner.delete()
+        return Response({"Success": f"Deleted banner"}, status=status.HTTP_200_OK)
