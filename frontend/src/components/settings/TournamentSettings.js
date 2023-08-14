@@ -305,6 +305,9 @@ function Banner({
             if (response.ok) {
               setDisabled(true);
               setSavedBanner(bannerMessage);
+              if (newBanner) {
+                setBannerMessage("");
+              }
               setUpdated(true);
 
               setSuccessMsg(
