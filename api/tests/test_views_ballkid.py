@@ -9,6 +9,7 @@ from api.models.schedule import Tournament
 from api.models.rating import Rating
 from api.serializers import BallkidSerializer
 from api.tests.utils import *
+from api.consts import MATCHES_START_HOUR
 
 from datetime import datetime, timedelta
 
@@ -32,7 +33,9 @@ class TestBallkidListView(APITestCase):
         self.ballkid5 = Ballkid.objects.create(
             first_name="Dinosaur",
             last_name="Iosue",
-            last_day=datetime.strftime(datetime.now(), "%A"),
+            last_day=datetime.strftime(
+                (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
+            ),
         )
         self.ballkid6 = Ballkid.objects.create(
             first_name="Cut", last_name="Iosue", is_active=True, is_cut=True
