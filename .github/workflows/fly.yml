@@ -29,7 +29,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e git+https://github.com/jtiosue/rcal.git#egg=rcal
+
+      - name: Install rcal
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
+          pip install git+ssh://git@github.com/jtiosue/rcal.git
 
       - name: Run deploy prep script
         run: sh deploy.sh

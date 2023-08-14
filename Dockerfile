@@ -20,7 +20,7 @@ RUN set -ex && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
     rm -rf /root/.cache/ && \
-    pip install -e git+https://github.com/jtiosue/rcal.git#egg=rcal
+    pip install git+ssh://git@github.com/jtiosue/rcal.git
 
 COPY . /code/
 
