@@ -220,8 +220,9 @@ export function SearchAndFilter({
 
 function Banner({ banner }) {
   const [open, setOpen] = useState(true);
+  const group = getLocalStorage("group");
 
-  return (
+  const bannerAlert = (
     <Collapse in={open}>
       <Alert
         severity="warning"
@@ -236,6 +237,26 @@ function Banner({ banner }) {
       </Alert>
     </Collapse>
   );
+
+  if (banner.audience === "all") {
+    return bannerAlert;
+  }
+
+  if (
+    banner.audience === "captains" &&
+    (group === "chairperson" || group === "captain")
+  ) {
+    return bannerAlert;
+  }
+
+  if (
+    banner.audience === "ballkid" &&
+    getLocalStorage("ballkid_id") === banner?.ballkid
+  ) {
+    return bannerAlert;
+  }
+
+  return "";
 }
 
 export function Banners() {
