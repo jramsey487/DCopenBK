@@ -117,6 +117,8 @@ class CalibrationParamsSerializer(serializers.ModelSerializer):
 
 
 class BannerSerializer(serializers.ModelSerializer):
+    ballkid_name = serializers.CharField(max_length=60, required=False)
+
     class Meta:
         model = Banner
         fields = "__all__"

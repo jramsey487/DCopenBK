@@ -739,7 +739,7 @@ class CourtAnalytics(models.Model):
 class Banner(models.Model):
     timestamp = models.DateTimeField(blank=True, null=True)
     message = models.TextField()
-    audience = models.CharField(default="all", max_length=20, blank=True, null=True)
+    audience = models.CharField(default="all", max_length=20)
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):

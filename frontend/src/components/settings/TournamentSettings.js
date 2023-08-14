@@ -6,6 +6,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -70,152 +71,43 @@ function DownloadButton({ setSuccessMsg, setErrorMsg }) {
   );
 }
 
-// function Banner({
-//   banner,
-//   disabled,
-//   setDisabled,
-//   bannerInput,
-//   setSuccessMsg,
-//   setErrorMsg,
-//   setUpdated,
-//   newBanner = false,
-// }) {
-//   const [bannerMessage, setBannerMessage] = useState(
-//     newBanner ? "" : banner.message
-//   );
-
-//   return disabled ? (
-//     <Typography color="gray">{banner.message}</Typography>
-//   ) : (
-//     <Box className="sxs">
-//       <TextField
-//         variant="standard"
-//         value={bannerMessage}
-//         style={{ width: "90%" }}
-//         disabled={disabled}
-//         inputRef={newBanner ? bannerInput : undefined}
-//         sx={{ mx: 2 }}
-//         multiline
-//         onChange={(e) => setBannerMessage(e.target.value)}
-//       />
-//       <Button
-//         size="small"
-//         disabled={banner.message === bannerMessage}
-//         onClick={() =>
-//           fetch("/api/update-banner", {
-//             method: newBanner ? "POST" : "PATCH",
-//             headers: getAuthHeader(),
-//             body: JSON.stringify({
-//               id: newBanner ? 0 : banner.id,
-//               time: new Date().toLocaleString(),
-//               message: bannerMessage,
-//             }),
-//           }).then((response) => {
-//             if (response.ok) {
-//               setDisabled(true);
-//               setBannerMessage("");
-//               setUpdated(true);
-
-//               setSuccessMsg(
-//                 "Banner updated for all ballkids and captains! Refresh page to view updated banners."
-//               );
-//             } else {
-//               setErrorMsg("Error updating banner.");
-//             }
-//           })
-//         }
-//       >
-//         {newBanner ? "Publish" : "Update"}
-//       </Button>
-//     </Box>
-//   );
-// }
-
-// function BannerSection({ setSuccessMsg, setErrorMsg }) {
-//   const [banners, setBanners] = useState([]);
-//   const [disabled, setDisabled] = useState(true);
-//   const [updated, setUpdated] = useState(false);
-
-//   const bannerInput = useRef(null);
-
-//   useEffect(() => {
-//     fetch("/api/banner-list", {
-//       method: "GET",
-//       headers: getAuthHeader(),
-//     })
-//       .then((response) => response.json())
-//       .then((data) => setBanners(data))
-//       .then(() => setUpdated(false));
-//   }, [updated]);
-
-//   return (
-//     <Grid item xs={12} className="justify">
-//       <div className="sxs">
-//         <Typography variant="subtitle1">Site-wide banner(s)</Typography>
-//         <Button
-//           size="small"
-//           disabled={!disabled}
-//           onClick={() => {
-//             setDisabled(false);
-//             setTimeout(() => bannerInput.current.focus(), 100);
-//           }}
-//           sx={{ mt: 0.5 }}
-//         >
-//           Edit
-//         </Button>
-//       </div>
-
-//       <Box style={{ width: "75%" }} sx={{ ml: 2 }}>
-//         {banners.map((banner, index) => (
-//           <Banner
-//             key={index}
-//             banner={banner}
-//             disabled={disabled}
-//             setDisabled={setDisabled}
-//             bannerInput={bannerInput}
-//             setSuccessMsg={setSuccessMsg}
-//             setErrorMsg={setErrorMsg}
-//             setUpdated={setUpdated}
-//           />
-//         ))}
-
-//         <Banner
-//           banner={{}}
-//           disabled={disabled}
-//           setDisabled={setDisabled}
-//           bannerInput={bannerInput}
-//           setSuccessMsg={setSuccessMsg}
-//           setErrorMsg={setErrorMsg}
-//           setUpdated={setUpdated}
-//           newBanner={true}
-//         />
-//       </Box>
-//       {disabled ? (
-//         ""
-//       ) : (
-//         <Button size="small" onClick={() => setDisabled(true)}>
-//           Cancel
-//         </Button>
-//       )}
-//     </Grid>
-//   );
-// }
-
 function Banner({
   banner,
   bannerInput,
+  audience,
   setSuccessMsg,
   setErrorMsg,
   setUpdated,
   newBanner = false,
 }) {
   const [disabled, setDisabled] = useState(true);
-  const [bannerMessage, setBannerMessage] = useState(
-    newBanner ? "" : banner.message
+
+  const defaultMessage = newBanner ? "" : banner.message;
+  const [bannerMessage, setBannerMessage] = useState(defaultMessage);
+  const [savedBanner, setSavedBanner] = useState(defaultMessage);
+
+  const defaultBallkid = {
+    id: banner?.ballkid,
+    label: banner?.ballkid_name,
+  };
+  const [ballkid, setBallkid] = useState(newBanner ? null : defaultBallkid);
+  const [savedBallkid, setSavedBallkid] = useState(
+    newBanner ? null : defaultBallkid
   );
-  const [savedBanner, setSavedBanner] = useState(
-    newBanner ? "" : banner.message
-  );
+  const [ballkidsList, setBallkidsList] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/list", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) =>
+        setBallkidsList(
+          data.map((ballkid) => ({
+            label: ballkid.first_name + " " + ballkid.last_name,
+            id: ballkid.id,
+          }))
+        )
+      );
+  }, []);
 
   return disabled ? (
     newBanner ? (
@@ -233,6 +125,7 @@ function Banner({
     ) : (
       <Box className="sxs">
         <Typography color="gray" style={{ width: "90%" }} sx={{ mr: 2 }}>
+          {audience !== "ballkid" ? "" : `${banner?.ballkid_name}: `}
           {banner.message}
         </Typography>
 
@@ -278,9 +171,34 @@ function Banner({
     )
   ) : (
     <Box className="sxs">
+      {audience !== "ballkid" ? (
+        ""
+      ) : (
+        <Autocomplete
+          disablePortal
+          openOnFocus
+          sx={{ width: 300, mr: 2 }}
+          options={ballkidsList}
+          value={ballkid}
+          onChange={(e, newVal) => {
+            setBallkid(newVal);
+          }}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              variant="standard"
+              label="Ballkid"
+              required
+            />
+          )}
+        />
+      )}
+
       <TextField
         variant="standard"
         value={bannerMessage}
+        label={audience === "ballkid" ? "Banner Message" : ""}
         style={{ width: "90%" }}
         disabled={disabled}
         inputRef={bannerInput}
@@ -291,7 +209,11 @@ function Banner({
 
       <IconButton
         size="small"
-        disabled={banner.message === bannerMessage || bannerMessage === ""}
+        disabled={
+          (banner.message === bannerMessage &&
+            banner.ballkid_name === ballkid?.label) ||
+          bannerMessage === ""
+        }
         onClick={() =>
           fetch("/api/update-banner", {
             method: newBanner ? "POST" : "PATCH",
@@ -300,13 +222,17 @@ function Banner({
               id: newBanner ? 0 : banner.id,
               time: new Date().toLocaleString(),
               message: bannerMessage,
+              audience: audience,
+              ballkidId: ballkid?.id,
             }),
           }).then((response) => {
             if (response.ok) {
               setDisabled(true);
               setSavedBanner(bannerMessage);
+              setSavedBallkid(ballkid);
               if (newBanner) {
                 setBannerMessage("");
+                setBallkid(null);
               }
               setUpdated(true);
 
@@ -330,6 +256,7 @@ function Banner({
           onClick={() => {
             setDisabled(true);
             setBannerMessage(savedBanner);
+            setBallkid(savedBallkid);
           }}
         >
           <Close />
@@ -339,7 +266,7 @@ function Banner({
   );
 }
 
-function BannerSection({ setSuccessMsg, setErrorMsg }) {
+function BannerSection({ audience, setSuccessMsg, setErrorMsg }) {
   const [banners, setBanners] = useState([]);
   const [updated, setUpdated] = useState(false);
 
@@ -351,24 +278,22 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => setBanners(data))
+      .then((data) =>
+        setBanners(data.filter((banner) => banner.audience === audience))
+      )
       .then(() => setUpdated(false));
-  }, [updated]);
+  }, [audience, updated]);
 
   return (
     <Grid item xs={12} className="justify-top">
-      <Typography variant="subtitle1">Site-wide banner(s)</Typography>
-      {/* <Button
-          size="small"
-          disabled={!disabled}
-          onClick={() => {
-            setDisabled(false);
-            setTimeout(() => bannerInput.current.focus(), 100);
-          }}
-          sx={{ mt: 0.5 }}
-        >
-          Edit
-        </Button> */}
+      <Typography variant="subtitle1">
+        {audience === "all"
+          ? "Site-wide "
+          : audience === "captains"
+          ? "Captains-wide "
+          : "Ballkid-specific "}
+        banner(s)
+      </Typography>
 
       <Box style={{ width: "75%" }} sx={{ ml: 2 }}>
         {banners.map((banner, index) => (
@@ -376,6 +301,7 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
             key={index}
             banner={banner}
             bannerInput={bannerInput}
+            audience={audience}
             setSuccessMsg={setSuccessMsg}
             setErrorMsg={setErrorMsg}
             setUpdated={setUpdated}
@@ -385,6 +311,7 @@ function BannerSection({ setSuccessMsg, setErrorMsg }) {
         <Banner
           banner={{}}
           bannerInput={bannerInput}
+          audience={audience}
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
           setUpdated={setUpdated}
@@ -484,7 +411,19 @@ export default function TournamentSettings(props) {
 
       <Grid container spacing={2} sx={{ pr: 2 }}>
         <BannerSection
-          tournament={tournament}
+          audience="all"
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+
+        <BannerSection
+          audience="captains"
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+
+        <BannerSection
+          audience="ballkid"
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
         />

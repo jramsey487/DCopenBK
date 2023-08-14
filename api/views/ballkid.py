@@ -13,9 +13,10 @@ from django.db.models import (
     StdDev,
     Exists,
     Case,
+    Value,
     When,
 )
-from django.db.models.functions import TruncDay, Coalesce, DenseRank
+from django.db.models.functions import TruncDay, Coalesce, DenseRank, Concat
 from django.shortcuts import get_object_or_404
 
 from api.models.ballkid import *
@@ -945,7 +946,9 @@ class BannerList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        banners = Banner.objects.order_by("timestamp")
+        banners = Banner.objects.annotate(
+            ballkid_name=Concat("ballkid__first_name", Value(" "), "ballkid__last_name"),
+        ).order_by("timestamp")
         return banners
 
 
@@ -960,8 +963,15 @@ class UpdateBanner(APIView):
         )
 
         banner = Banner.objects.create(
-            message=request.data["message"], timestamp=timestamp
+            message=request.data["message"],
+            timestamp=timestamp,
+            audience=request.data["audience"],
         )
+        if "ballkidId" in request.data:
+            ballkid = Ballkid.objects.get(id=request.data["ballkidId"])
+            banner.ballkid = ballkid
+            banner.save()
+
         logger.info(
             f"[UpdateBanner] Created banner {banner} given request {request.data}"
         )
@@ -976,6 +986,11 @@ class UpdateBanner(APIView):
         banner = Banner.objects.get(id=request.data["id"])
         banner.message = request.data["message"]
         banner.timestamp = timestamp
+
+        if "ballkidId" in request.data and request.data["ballkidId"]:
+            ballkid = Ballkid.objects.get(id=request.data["ballkidId"])
+            banner.ballkid = ballkid
+
         banner.save()
 
         logger.info(
