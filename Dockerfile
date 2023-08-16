@@ -24,8 +24,7 @@ RUN set -ex && \
 
 RUN mkdir -p /root/.ssh && \
     chmod 0700 /root/.ssh
-RUN echo "$SSH_KEY" > /root/.ssh/id_rsa && \
-    chmod 600 /root/.ssh/id_rsa
+RUN echo "$SSH_KEY" > /root/.ssh/id_rsa 
 RUN echo hello
 RUN echo "$SSH_KEY"
 RUN cat /root/.ssh/id_rsa
