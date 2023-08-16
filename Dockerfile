@@ -24,11 +24,12 @@ RUN set -ex && \
 
 RUN mkdir -p /root/.ssh && \
     chmod 0700 /root/.ssh && \
-    echo "$SSH_KEY" > /root/.ssh/id_rsa && \
+    echo '$SSH_KEY' > /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/id_rsa
 
-RUN eval `ssh-agent` && \
-    ssh-add /root/.ssh/id_rsa 
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+# RUN eval `ssh-agent` && \
+#     ssh-add /root/.ssh/id_rsa 
 RUN pip install git+ssh://git@github.com/jtiosue/rcal.git
 
 COPY . /code/
