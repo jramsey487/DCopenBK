@@ -45,4 +45,7 @@ jobs:
       - name: Deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --remote-only --build-arg SSH_KEY="${{ secrets.RCAL_SECRET_KEY }}"
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
+          flyctl deploy --remote-only --secret SSH_KEY="${{ secrets.RCAL_SECRET_KEY }}"
