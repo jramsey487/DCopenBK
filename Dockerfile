@@ -24,6 +24,7 @@ RUN set -ex && \
 
 RUN mkdir -p /root/.ssh && \
     chmod 0700 /root/.ssh && \
+    echo "$SSH_KEY" && \
     echo "$SSH_KEY" > /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/id_rsa
 RUN eval `ssh-agent` && \
