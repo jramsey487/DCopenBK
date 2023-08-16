@@ -23,14 +23,11 @@ RUN set -ex && \
     rm -rf /root/.cache/ 
 
 RUN mkdir -p /root/.ssh && \
-    chmod 0700 /root/.ssh
-RUN echo "$SSH_KEY" > /root/.ssh/id_rsa 
-RUN echo hello
-RUN echo "$SSH_KEY"
-RUN cat /root/.ssh/id_rsa
-RUN eval `ssh-agent` && \
-    ssh-add /root/.ssh/id_rsa && \
-    pip install git+ssh://git@github.com/jtiosue/rcal.git
+    chmod 0700 /root/.ssh && \
+    echo "$SSH_KEY" > /root/.ssh/id_rsa && \
+    chmod 600 /root/.ssh/id_rsa
+
+RUN pip install git+ssh://git@github.com/jtiosue/rcal.git
 
 COPY . /code/
 
