@@ -258,7 +258,9 @@ class GetNextShifts(APIView):
         # TODO: maybe change this to filter to unique teams
         threshold = datetime.now() - timedelta(hours=1)
         shifts = (
-            Schedule.objects.exclude(team=0).filter(start__gt=threshold).order_by("start")
+            Schedule.objects.exclude(team=0)
+            .filter(start__gt=threshold)
+            .order_by("start")
         )
         logger.info(f"[GetNextShifts] next shifts {shifts}")
 
@@ -268,10 +270,30 @@ class GetNextShifts(APIView):
 class GetTournament(APIView):
     permission_classes = [IsChairpersonOrAuthenticatedReadOnly]
 
+    def post(self, request, format=None):
+        print(request.data)
+        start = datetime.strptime(
+            request.data["start"], T_YEAR_MONTH_DAY_Z_FORMAT_STR
+        ).date()
+        end = datetime.strptime(
+            request.data["end"], T_YEAR_MONTH_DAY_Z_FORMAT_STR
+        ).date()
+
+        tournament, _ = Tournament.objects.update_or_create(
+            year=request.data["year"],
+            defaults={
+                "start_date": start,
+                "end_date": end,
+            },
+        )
+        return Response(TournamentSerializer(tournament).data)
+
     def get(self, request, format=None):
-        tournament = Tournament.objects.get(year=get_current_year())
+        tournament = Tournament.objects.filter(year=get_current_year()).first()
         logger.info(f"[GetTournament GET] tournament {tournament}")
-        return Response(TournamentSerializer(tournament).data, status=status.HTTP_200_OK)
+        return Response(
+            TournamentSerializer(tournament).data, status=status.HTTP_200_OK
+        )
 
     def patch(self, request, format=None):
         current_year = get_current_year()
@@ -295,7 +317,9 @@ class GetTournament(APIView):
                 ballkid.handle_finals_history_hideshow(show_teams)
 
         if "rcal_ignore_outliers" in request.data:
-            tournament.rcal_ignore_outliers = float(request.data["rcal_ignore_outliers"])
+            tournament.rcal_ignore_outliers = float(
+                request.data["rcal_ignore_outliers"]
+            )
 
         tournament.save()
 

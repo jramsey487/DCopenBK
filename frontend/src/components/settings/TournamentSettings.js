@@ -7,8 +7,13 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
+import Button from "@mui/material/Button";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
+
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import Done from "@mui/icons-material/Done";
 import Edit from "@mui/icons-material/Edit";
@@ -375,11 +380,116 @@ function RemoveOutliers({ tournament, setSuccessMsg, setErrorMsg }) {
   );
 }
 
+function CreateTournament({ setUpdated }) {
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [start, setStart] = useState(null);
+  const [end, setEnd] = useState(null);
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography>No tournament currently exists for this year.</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography>Create one now:</Typography>
+      </Grid>
+
+      <Grid item xs={12}>
+        <TextField
+          value={year}
+          label="Year"
+          variant="standard"
+          type="number"
+          required
+          onChange={(e) => setYear(parseInt(e.target.value))}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            renderInput={(props) => (
+              <TextField variant="standard" required {...props} />
+            )}
+            label="Start Date"
+            value={start}
+            mask={"__/__/____"}
+            onChange={(newValue) => setStart(newValue)}
+          />
+        </LocalizationProvider>
+      </Grid>
+
+      <Grid item xs={12}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            renderInput={(props) => (
+              <TextField variant="standard" required {...props} />
+            )}
+            label="End Date"
+            value={end}
+            mask={"__/__/____"}
+            onChange={(newValue) => setEnd(newValue)}
+          />
+        </LocalizationProvider>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={() => {
+            if (start === null || end === null) {
+              setErrorMsg("Start and end dates are required.");
+            } else if (Date.parse(start) >= Date.parse(end)) {
+              setErrorMsg(
+                "Tournament start date cannot be on or after the end date."
+              );
+            } else {
+              fetch("/api/get-tournament", {
+                method: "POST",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  year: year,
+                  start: start,
+                  end: end,
+                }),
+              }).then((response) => {
+                if (response.ok) {
+                  setSuccessMsg("Tournament created!");
+                  setTimeout(() => setUpdated(true), 1000);
+                } else {
+                  setErrorMsg("Error creating tournament.");
+                }
+                setYear("");
+                setStart(null);
+                setEnd(null);
+              });
+            }
+          }}
+        >
+          Create Tournament
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
 export default function TournamentSettings(props) {
   const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
     fetch("/api/get-tournament", {
@@ -387,8 +497,9 @@ export default function TournamentSettings(props) {
       headers: getAuthHeader(),
     })
       .then((response) => response.json())
-      .then((data) => setTournament(data));
-  }, []);
+      .then((data) => setTournament(data))
+      .then(() => setUpdated(false));
+  }, [updated]);
 
   return tournament === null || tournament === undefined ? (
     ""
@@ -409,79 +520,83 @@ export default function TournamentSettings(props) {
         <HelpIcon page="Tournament Settings" message={tournamentSettings} />
       </Box>
 
-      <Grid container spacing={2} sx={{ pr: 2 }}>
-        <BannerSection
-          audience="all"
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
+      {tournament.year === null ? (
+        <CreateTournament setUpdated={setUpdated} />
+      ) : (
+        <Grid container spacing={2} sx={{ pr: 2 }}>
+          <BannerSection
+            audience="all"
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
 
-        <BannerSection
-          audience="captains"
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
+          <BannerSection
+            audience="captains"
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
 
-        <BannerSection
-          audience="ballkid"
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
+          <BannerSection
+            audience="ballkid"
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
 
-        {["", "finals "].map((teamType) => (
-          <Grid item key={teamType} xs={12} className="justify">
+          {["", "finals "].map((teamType) => (
+            <Grid item key={teamType} xs={12} className="justify">
+              <Typography variant="subtitle1">
+                Visiblity of {teamType}teams to captains and ballkids
+              </Typography>
+
+              <HideShowToggle
+                teamType={teamType.trim()}
+                defaultShow={
+                  teamType === ""
+                    ? tournament.show_teams
+                    : tournament.show_finals_teams
+                }
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12} className="justify">
             <Typography variant="subtitle1">
-              Visiblity of {teamType}teams to captains and ballkids
+              Change calibration ignore_outliers parameter
             </Typography>
-
-            <HideShowToggle
-              teamType={teamType.trim()}
-              defaultShow={
-                teamType === ""
-                  ? tournament.show_teams
-                  : tournament.show_finals_teams
-              }
+            <RemoveOutliers
+              tournament={tournament}
               setSuccessMsg={setSuccessMsg}
               setErrorMsg={setErrorMsg}
             />
           </Grid>
-        ))}
 
-        <Grid item xs={12} className="justify">
-          <Typography variant="subtitle1">
-            Change calibration ignore_outliers parameter
-          </Typography>
-          <RemoveOutliers
-            tournament={tournament}
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-        </Grid>
+          <Grid item xs={12} className="justify">
+            <Typography variant="subtitle1">
+              Export all data from database
+            </Typography>
+            <DownloadButton
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </Grid>
 
-        <Grid item xs={12} className="justify">
+          {/* <Grid item xs={12} className="justify">
           <Typography variant="subtitle1">
-            Export all data from database
-          </Typography>
-          <DownloadButton
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-        </Grid>
-
-        {/* <Grid item xs={12} className="justify">
-          <Typography variant="subtitle1">
-            Wrap up this year's tournament
+          Wrap up this year's tournament
           </Typography>
           <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {}}
-          >
+          variant="contained"
+          color="error"
+          size="small"
+          onClick={() => {}}
+            >
             Complete
-          </Button>
-        </Grid> */}
-      </Grid>
+            </Button>
+            </Grid> */}
+        </Grid>
+      )}
     </div>
   );
 }
