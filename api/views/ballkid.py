@@ -833,12 +833,19 @@ class GetCheckinLeaderboard(generics.ListAPIView):
 
     def get_queryset(self):
         recalc_checkin_analytics()
+        current_year = get_current_year()
 
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
-                checkin_duration=F("checkinanalytics__duration"),
-                checkin_days=F("checkinanalytics__count"),
+                checkin_duration=F(
+                    "checkinanalytics__duration",
+                    filter=Q(checkinanalytics__year=current_year),
+                ),
+                checkin_days=F(
+                    "checkinanalytics__count",
+                    filter=Q(checkinanalytics__year=current_year),
+                ),
                 avg_checkin_time=Avg(
                     Case(
                         When(

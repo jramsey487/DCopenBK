@@ -677,11 +677,15 @@ class CheckinHistory(models.Model):
 
 class CheckinAnalytics(models.Model):
     ballkid = models.OneToOneField(Ballkid, on_delete=models.CASCADE)
+    year = models.IntegerField()
     duration = models.DurationField(default=timedelta)
     count = models.IntegerField(default=0)
 
+    class Meta:
+        unique_together = ("ballkid", "year")
+
     def __str__(self):
-        return f"{self.ballkid.get_name()} with total checkin time {self.duration} and total checkin days {self.count}"
+        return f"{self.year}: {self.ballkid.get_name()} with total checkin time {self.duration} and total checkin days {self.count}"
 
 
 class CaptainHistory(models.Model):
@@ -707,17 +711,15 @@ class CaptainAnalytics(models.Model):
     captain = models.ForeignKey(
         Ballkid, on_delete=models.CASCADE, related_name="captainanalytics_captain"
     )
+    year = models.IntegerField()
     count = models.IntegerField(default=0)
     duration = models.DurationField(default=timedelta)
 
     class Meta:
-        unique_together = (
-            "ballkid",
-            "captain",
-        )
+        unique_together = ("ballkid", "captain", "year")
 
     def __str__(self):
-        return f"{self.ballkid.get_name()} has had captain {self.captain.get_name()} {self.count} times with a total time of {self.duration}"
+        return f"{self.year}: {self.ballkid.get_name()} has had captain {self.captain.get_name()} {self.count} times with a total time of {self.duration}"
 
 
 class TeamHistory(models.Model):
@@ -733,15 +735,13 @@ class TeamHistory(models.Model):
 
 class CourtAnalytics(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
+    year = models.IntegerField()
     court = models.CharField(max_length=50, blank=True)
     count = models.IntegerField(default=0)
     duration = models.DurationField(default=timedelta)
 
     class Meta:
-        unique_together = (
-            "ballkid",
-            "court",
-        )
+        unique_together = ("ballkid", "court", "year")
 
     def __str__(self):
         return f"{self.ballkid.get_name()} has been on {self.court} {self.count} times with a total time of {self.duration}"
