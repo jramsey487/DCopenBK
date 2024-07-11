@@ -970,10 +970,18 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
                     0.0,
                 ),
                 calibrated_avg=Coalesce(
-                    F("calibrationparams__ratee_calibrated_avg"), 0.0
+                    Avg(
+                        "calibrationparams__ratee_calibrated_avg",
+                        filter=Q(calibrationparams__year=current_year),
+                    ),
+                    0.0,
                 ),
                 calibrated_stdev=Coalesce(
-                    F("calibrationparams__ratee_calibrated_stdev"), 0.0
+                    Avg(
+                        "calibrationparams__ratee_calibrated_stdev",
+                        filter=Q(calibrationparams__year=current_year),
+                    ),
+                    0.0,
                 ),
             )
             .order_by("-calibrated_avg", "-raw_avg")

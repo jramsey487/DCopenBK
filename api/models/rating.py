@@ -24,7 +24,8 @@ class Rating(models.Model):
 
 
 class CalibrationParams(models.Model):
-    ballkid = models.OneToOneField(Ballkid, on_delete=models.CASCADE)
+    ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
+    year = models.IntegerField()
     ratee_improvement = models.FloatField(blank=True, null=True)
     ratee_offset = models.FloatField(blank=True, null=True)
     ratee_raw_avg = models.FloatField(blank=True, null=True)
@@ -39,5 +40,8 @@ class CalibrationParams(models.Model):
     num_rater_ratings = models.IntegerField(default=0)
     num_raters = models.IntegerField(default=0)
 
+    class Meta:
+        unique_together = ("ballkid", "year")
+
     def __str__(self):
-        return f"{self.ballkid.get_name()} with improvement {self.ratee_improvement} and offset {self.ratee_offset}, reviewer scale {self.rater_scale} and offset {self.rater_offset}"
+        return f"{self.year}: {self.ballkid.get_name()} with improvement {self.ratee_improvement} and offset {self.ratee_offset}, reviewer scale {self.rater_scale} and offset {self.rater_offset}"

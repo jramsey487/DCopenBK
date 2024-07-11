@@ -56,9 +56,11 @@ def queryset_to_rcal(ratings, rating_name="overall", returnAveraged=True):
 
         key = (
             rating.rater.get_name(),
-            rating.ratee.get_name()
-            if rating.date.year == get_current_year()
-            else f"{rating.ratee.get_name()}{rating.date.year}",
+            (
+                rating.ratee.get_name()
+                if rating.date.year == get_current_year()
+                else f"{rating.ratee.get_name()}{rating.date.year}"
+            ),
             mapped_date,
         )
 
@@ -175,9 +177,11 @@ def save_calibration_parameters(cp, calibrated=None):
     """
     logger.info(f"[save_calibration_parameters] saving calibration params")
 
+    current_year = get_current_year()
+
     # Update all non-calibration related parameters
     ratings = Rating.objects.all()
-    year_ratings = Rating.objects.filter(date__year=get_current_year())
+    year_ratings = Rating.objects.filter(date__year=current_year)
 
     # raters = ratings.values_list("rater", flat=True).distinct()
     # ratees = ratings.values_list("ratee", flat=True).distinct()
@@ -215,6 +219,7 @@ def save_calibration_parameters(cp, calibrated=None):
 
         params, _ = CalibrationParams.objects.update_or_create(
             ballkid=ballkid,
+            year=current_year,
             defaults={
                 "num_ratee_ratings": num_ratee_ratings,
                 "num_rater_ratings": num_rater_ratings,
@@ -230,16 +235,21 @@ def save_calibration_parameters(cp, calibrated=None):
         )
 
         if calibrated:
-            ratee_calibrated = [val for key, val in calibrated.items() if key[1] == name]
+            ratee_calibrated = [
+                val for key, val in calibrated.items() if key[1] == name
+            ]
             calibrated_avg = (
                 statistics.mean(ratee_calibrated) if len(ratee_calibrated) > 0 else None
             )
             calibrated_stdev = (
-                statistics.stdev(ratee_calibrated) if len(ratee_calibrated) > 1 else None
+                statistics.stdev(ratee_calibrated)
+                if len(ratee_calibrated) > 1
+                else None
             )
 
             params, _ = CalibrationParams.objects.update_or_create(
                 ballkid=ballkid,
+                year=current_year,
                 defaults={
                     "ratee_calibrated_avg": calibrated_avg,
                     "ratee_calibrated_stdev": calibrated_stdev,
@@ -252,6 +262,7 @@ def save_calibration_parameters(cp, calibrated=None):
         if cp is not None:
             params, _ = CalibrationParams.objects.update_or_create(
                 ballkid=ballkid,
+                year=current_year,
                 defaults={
                     "ratee_improvement": cp.improvement_rates().get(name),
                     "ratee_offset": cp.person_offsets().get(name),
@@ -504,8 +515,12 @@ class GetCalibrationParamsBallkid(generics.RetrieveAPIView):
 
     def get_object(self):
         pk = self.kwargs["pk"]
-        params, created = CalibrationParams.objects.get_or_create(ballkid_id=pk)
-        logger.info(f"[GetCalibrationParamsBallkid] params {params} for ballkid_id {pk}")
+        params, created = CalibrationParams.objects.get_or_create(
+            ballkid_id=pk, year=get_current_year()
+        )
+        logger.info(
+            f"[GetCalibrationParamsBallkid] params {params} for ballkid_id {pk}"
+        )
         return params
 
 
@@ -515,9 +530,8 @@ class GetCalibrationParams(generics.ListAPIView):
 
     def get_queryset(self):
         params = (
-            CalibrationParams.objects.filter(
-                Q(ballkid__is_captain=True) | Q(ballkid__is_chairperson=True)
-            )
+            CalibrationParams.objects.filter(year=get_current_year())
+            .filter(Q(ballkid__is_captain=True) | Q(ballkid__is_chairperson=True))
             .exclude(rater_offset__isnull=True, rater_scale__isnull=True)
             .annotate(
                 name=Concat("ballkid__first_name", Value(" "), "ballkid__last_name"),
@@ -534,6 +548,7 @@ class GetAverageCalibrationParams(APIView):
 
     def get(self, request):
         avgs = CalibrationParams.objects.filter(
+            year=get_current_year(),
             ballkid__is_active=True,
             rater_scale__lt=100,
             rater_offset__lt=100,
