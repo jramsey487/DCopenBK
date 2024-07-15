@@ -180,6 +180,11 @@ debug_urls = [
     ),
     path("bulk-create-finals", BulkCreateFinals.as_view(), name="bulk-create-finals"),
     path("bulk-create-cuts", BulkCreateCuts.as_view(), name="bulk-create-cuts"),
+    path(
+        "bulk-create-checkins",
+        BulkCreateCheckins.as_view(),
+        name="bulk-create-checkins",
+    ),
 ]
 
 urlpatterns = (

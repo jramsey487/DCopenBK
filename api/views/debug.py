@@ -585,6 +585,44 @@ class BulkCreateCuts(APIView):
         )
 
 
+class BulkCreateCheckins(APIView):
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        file = request.FILES["file"]
+        reader = csv.DictReader(io.StringIO(file.read().decode("utf-8")))
+
+        histories = []
+
+        for line in reader:
+            ballkid_id = int(line["ballkid"])
+            try:
+                ballkid = Ballkid.objects.get(id=ballkid_id)
+            except Exception:
+                continue
+
+            start = datetime.strptime(line["start"], "%Y-%m-%d %H:%M:%S")
+            end = datetime.strptime(line["end"], "%Y-%m-%d %H:%M:%S")
+            duration = end - start
+            is_first_checkin = line["is_first_checkin"]
+
+            history = CheckinHistory(
+                ballkid=ballkid,
+                start=start,
+                end=end,
+                duration=duration,
+                is_first_checkin=is_first_checkin,
+            )
+            histories.append(history)
+
+        CheckinHistory.objects.bulk_create(histories)
+
+        return Response(
+            {"Success": f"Bulk created {len(histories)} check-in histories"},
+            status=status.HTTP_200_OK,
+        )
+
+
 class DownloadData(APIView):
     permission_classes = [IsChairperson]
 
