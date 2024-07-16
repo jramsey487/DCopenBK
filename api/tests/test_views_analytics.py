@@ -494,6 +494,8 @@ class TestGetCheckinHistory(APITestCase):
         self.ballkid1 = Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
         self.ballkid2 = Ballkid.objects.create(first_name="Andrea", last_name="Losue")
 
+        self.year = get_current_year()
+
     def test_no_histories(self):
         response = self.client.get(
             reverse("get-checkins", kwargs={"pk": self.ballkid1.id}),
@@ -507,19 +509,19 @@ class TestGetCheckinHistory(APITestCase):
     def test_mult_ballkids_mult_histories_missing_checkout(self):
         history1 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 3, 10, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
         )
         history2 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 4, 13, 25, 0),
+            start=datetime(self.year, 5, 4, 13, 25, 0),
         )
         history3 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 3, 10, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
         )
         history4 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 1, 18, 25, 0),
+            start=datetime(self.year, 5, 1, 18, 25, 0),
         )
 
         response = self.client.get(
@@ -534,26 +536,26 @@ class TestGetCheckinHistory(APITestCase):
     def test_mult_ballkids_mult_histories(self):
         history1 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 3, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 3, 19, 25, 0),
             duration=timedelta(hours=9),
         )
         history2 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 4, 13, 25, 0),
-            end=datetime(2023, 5, 4, 19, 25, 0),
+            start=datetime(self.year, 5, 4, 13, 25, 0),
+            end=datetime(self.year, 5, 4, 19, 25, 0),
             duration=timedelta(hours=6),
         )
         history3 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 3, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 3, 19, 25, 0),
             duration=timedelta(hours=9),
         )
         history4 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 1, 18, 25, 0),
-            end=datetime(2023, 5, 1, 19, 25, 0),
+            start=datetime(self.year, 5, 1, 18, 25, 0),
+            end=datetime(self.year, 5, 1, 19, 25, 0),
             duration=timedelta(hours=1),
         )
 
@@ -569,26 +571,26 @@ class TestGetCheckinHistory(APITestCase):
     def test_mult_ballkids_mult_histories_in_order(self):
         history1 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 3, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 3, 19, 25, 0),
             duration=timedelta(hours=9),
         )
         history2 = CheckinHistory.objects.create(
             ballkid=self.ballkid1,
-            start=datetime(2023, 5, 4, 13, 25, 0),
-            end=datetime(2023, 5, 4, 19, 25, 0),
+            start=datetime(self.year, 5, 4, 13, 25, 0),
+            end=datetime(self.year, 5, 4, 19, 25, 0),
             duration=timedelta(hours=6),
         )
         history3 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 3, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 3, 19, 25, 0),
             duration=timedelta(hours=9),
         )
         history4 = CheckinHistory.objects.create(
             ballkid=self.ballkid2,
-            start=datetime(2023, 5, 1, 18, 25, 0),
-            end=datetime(2023, 5, 1, 19, 25, 0),
+            start=datetime(self.year, 5, 1, 18, 25, 0),
+            end=datetime(self.year, 5, 1, 19, 25, 0),
             duration=timedelta(hours=1),
         )
 
@@ -614,6 +616,8 @@ class TestGetCaptainAnalytics(APITestCase):
         self.captain2 = Ballkid.objects.create(
             first_name="Joseph", last_name="Iosue", is_captain=True
         )
+
+        self.year = get_current_year()
 
     def test_no_histories(self):
         response = self.client.get(
@@ -910,35 +914,35 @@ class TestGetCaptainAnalytics(APITestCase):
         CaptainHistory.objects.create(
             ballkid=self.ballkid1,
             captain=self.captain1,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 3, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 3, 19, 25, 0),
             duration=timedelta(hours=9),
             team=1,
         )
         CaptainHistory.objects.create(
             ballkid=self.ballkid1,
             captain=self.captain1,
-            start=datetime(2023, 5, 4, 13, 25, 0),
-            end=datetime(2023, 5, 4, 19, 25, 0),
+            start=datetime(self.year, 5, 4, 13, 25, 0),
+            end=datetime(self.year, 5, 4, 19, 25, 0),
             duration=timedelta(hours=6),
             team=1,
         )
         CaptainHistory.objects.create(
             ballkid=self.ballkid1,
             captain=self.captain2,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 4, 9, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 4, 9, 25, 0),
             duration=timedelta(hours=23),
             team=1,
         )
         Schedule.objects.create(
             team=1,
-            start=datetime(2023, 5, 3, 10, 25, 0),
-            end=datetime(2023, 5, 4, 19, 25, 0),
+            start=datetime(self.year, 5, 3, 10, 25, 0),
+            end=datetime(self.year, 5, 4, 19, 25, 0),
             court=COURT.STADIUM,
         )
 
-        recalc_captain_analytics(self.ballkid1, year=2023)
+        recalc_captain_analytics(self.ballkid1, year=self.year)
         response = self.client.get(
             reverse("get-captains", kwargs={"pk": self.ballkid1.id}),
             format="json",
@@ -946,10 +950,10 @@ class TestGetCaptainAnalytics(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         analytic1 = CaptainAnalytics.objects.get(
-            ballkid=self.ballkid1, captain=self.captain2, year=2023
+            ballkid=self.ballkid1, captain=self.captain2, year=self.year
         )
         analytic2 = CaptainAnalytics.objects.get(
-            ballkid=self.ballkid1, captain=self.captain1, year=2023
+            ballkid=self.ballkid1, captain=self.captain1, year=self.year
         )
         serializer = CaptainAnalyticsSerializer([analytic1, analytic2], many=True)
         self.assertEqual(serializer.data, response.data)
