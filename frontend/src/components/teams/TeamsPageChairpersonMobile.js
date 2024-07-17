@@ -23,6 +23,7 @@ import {
   Teams,
   Header,
   renderCheckoutUnassignedButton,
+  ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
 
 function renderAssignButton(
@@ -219,6 +220,7 @@ export default function TeamsPageChairpersonMobile(props) {
       <Banners />
 
       <Header />
+      <ActionsButtons updated={updated} setUpdated={setUpdated} />
       <Teams
         assigned={assigned}
         teams={teams}

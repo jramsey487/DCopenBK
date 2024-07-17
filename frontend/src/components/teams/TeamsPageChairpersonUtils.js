@@ -10,10 +10,20 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
+import TextField from "@mui/material/TextField";
+import Dialog from "@mui/material/Dialog";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Switch from "@mui/material/Switch";
 
 import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import SwapVert from "@mui/icons-material/SwapVert";
 import HighlightOff from "@mui/icons-material/HighlightOff";
+import AutoAwesome from "@mui/icons-material/AutoAwesome";
+
+import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 import {
   getAuthHeader,
@@ -26,7 +36,7 @@ import {
   ConfirmDialog,
   HelpIcon,
 } from "../Utils";
-import { ON_COURT_GREEN, MARGINS, POSITIONS } from "../Consts";
+import { ON_COURT_GREEN, MARGINS, POSITIONS, TIMEOUT_MS } from "../Consts";
 import { teams } from "../HelpMessages.js";
 
 function renderSwitchButton(ballkid, setUpdated) {
@@ -84,7 +94,7 @@ function renderUnassignButton(ballkid, setUpdated) {
 
 function renderCheckoutButton(ballkid, setUpdated) {
   return (
-    <Tooltip title="Checkout">
+    <Tooltip title="Check Out">
       <IconButton
         size="small"
         sx={{ p: 0.5 }}
@@ -377,6 +387,233 @@ export function Header() {
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
         />
+      </Box>
+    </div>
+  );
+}
+
+// function renderBalancedSlider(balanceCoeff, setBalanceCoeff) {
+//   const marks = [
+//     { value: 1, label: "More Balanced" },
+//     { value: 2, label: "" },
+//     { value: 3, label: "More Adjusted" },
+//   ];
+
+//   return (
+//     <Box>
+//       <DialogContentText sx={{ mt: 4, mb: 1, color: "black" }}>
+//         How much should skill/experience be balanced across teams?
+//       </DialogContentText>
+//       <Box width="75%" sx={{ mx: "auto" }}>
+//         <Slider
+//           value={balanceCoeff}
+//           valueLabelDisplay="off"
+//           step={null}
+//           marks={marks}
+//           min={1}
+//           max={3}
+//           onChange={(e) => setBalanceCoeff(e.target.value)}
+//         />
+//       </Box>
+//       <Box width="90%" sx={{ mx: "auto" }}>
+//         <DialogContentText sx={{ mt: 1 }} variant="body2">
+//           Note: More balanced teams will have similar levels of skill/experience
+//           between main and outer courts. More adjusted teams will have a larger
+//           disparity in skill/experience between main and outer courts.
+//         </DialogContentText>
+//       </Box>
+//     </Box>
+//   );
+// }
+
+function renderRecreateToggle(shouldRecreate, setShouldRecreate) {
+  return (
+    <Box>
+      <DialogContentText sx={{ mt: 4, mb: 1, color: "black" }}>
+        Should existing teams be re-created?
+      </DialogContentText>
+      <Box width="75%" sx={{ mx: "auto" }}>
+        <Box className="sxs">
+          <Typography variant="body2" width="45%">
+            Keep existing teams; only assign unassigned ballkids
+          </Typography>
+          <Switch
+            checked={shouldRecreate}
+            onClick={(e) => setShouldRecreate(e.target.checked)}
+          />
+          <Typography variant="body2" width="45%">
+            Unassign all ballkids; re-create all teams
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+function CreateTeamsDialog({ open, setOpen, updated, setUpdated }) {
+  const [numTeams, setNumTeams] = useState(10);
+  const [shouldRecreate, setShouldRecreate] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  return (
+    <Dialog open={open} onClose={() => setOpen(false)}>
+      <DialogTitle>
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
+        Auto-create Teams
+      </DialogTitle>
+
+      <DialogContent>
+        <Box className="sxs">
+          <DialogContentText sx={{ my: 1, color: "black" }}>
+            Enter number of teams to auto-create:
+          </DialogContentText>
+
+          <TextField
+            value={numTeams}
+            variant="standard"
+            required
+            InputProps={{
+              inputProps: {
+                style: { textAlign: "center" },
+              },
+            }}
+            style={{ width: 25 }}
+            sx={{ mx: 1 }}
+            onChange={(e) => setNumTeams(e.target.value)}
+          />
+        </Box>
+
+        <Box>{renderRecreateToggle(shouldRecreate, setShouldRecreate)}</Box>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <LoadingButton
+          loading={loading}
+          onClick={() => {
+            setLoading(true);
+
+            fetch("/api/create-teams", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                numTeams: numTeams,
+                shouldRecreate: shouldRecreate,
+              }),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  setUpdated(true);
+                  setSuccessMsg("Teams auto-created!");
+                  setTimeout(() => {
+                    setOpen(false);
+                    setSuccessMsg("");
+                    setErrorMsg("");
+                  }, TIMEOUT_MS);
+                } else {
+                  setErrorMsg("Error creating teams.");
+                }
+              })
+              .then(() => setLoading(false));
+          }}
+        >
+          Create
+        </LoadingButton>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+export function ActionsButtons({ updated, setUpdated }) {
+  const [teamsOpen, setTeamsOpen] = useState(false);
+  const [unassignOpen, setUnassignOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  return (
+    <div>
+      <CreateTeamsDialog
+        open={teamsOpen}
+        setOpen={setTeamsOpen}
+        updated={updated}
+        setUpdated={setUpdated}
+      />
+
+      <ConfirmDialog
+        message={`You are about to unassign all currently assigned teams.`}
+        url={"/api/clear-team"}
+        body={{
+          court: "",
+          rotation: "",
+        }}
+        open={unassignOpen}
+        setOpen={setUnassignOpen}
+        setUpdated={setUpdated}
+      />
+
+      <ConfirmDialog
+        message={`You are about to check out all currently assigned ballkids.`}
+        url={"/api/checkout-all"}
+        body={{
+          checkout_group: "assigned",
+        }}
+        open={checkoutOpen}
+        setOpen={setCheckoutOpen}
+        setUpdated={setUpdated}
+      />
+
+      <Box
+        className="sxs"
+        component="div"
+        sx={{
+          my: 0.5,
+          pb: 1,
+          overflowX: "scroll",
+          button: {
+            flex: "none",
+          },
+        }}
+      >
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          startIcon={<AutoAwesome />}
+          onClick={() => setTeamsOpen(true)}
+          sx={{ mr: 0.3 }}
+        >
+          Auto-create Teams
+        </Button>
+
+        <Button
+          variant="outlined"
+          size="small"
+          color="primary"
+          startIcon={<RemoveCircleOutline />}
+          onClick={() => setUnassignOpen(true)}
+          sx={{ mx: 0.3 }}
+        >
+          Unassign all teams
+        </Button>
+
+        <Button
+          variant="outlined"
+          size="small"
+          color="error"
+          startIcon={<HighlightOff />}
+          onClick={() => setCheckoutOpen(true)}
+          sx={{ mx: 0.3 }}
+        >
+          Check out all teams
+        </Button>
       </Box>
     </div>
   );

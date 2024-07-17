@@ -19,6 +19,7 @@ import {
   Teams,
   Header,
   renderCheckoutUnassignedButton,
+  ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
 
 export function UnassignedDesktop({
@@ -212,6 +213,7 @@ export default function TeamsPageChairpersonDesktop(props) {
           style={{ maxHeight: "85vh", overflow: "auto" }}
         >
           <Header />
+          <ActionsButtons updated={updated} setUpdated={setUpdated} />
           <Teams
             assigned={assigned}
             teams={teams}

@@ -9,6 +9,7 @@ export const MARGINS = { mt: 2, mb: 1 };
 export const ON_COURT_GREEN = "#c8f7c8";
 
 export const DATA_GRID_HEIGHT = "75vh";
+export const TIMEOUT_MS = 1500;
 
 export const POSITIONS = ["Back", "Net"];
 
