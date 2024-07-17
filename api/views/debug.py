@@ -313,7 +313,7 @@ class BulkCreateSignups(APIView):
                 ballkid.is_chairperson = is_chairperson
                 ballkid.phone = phone
                 ballkid.age = age
-                ballkid.is_out_of_town = False
+                ballkid.is_out_of_town = is_out_of_town_rookie
                 ballkid.emergency_name = emergency_name
                 ballkid.emergency_phone = emergency_phone
                 ballkid.image = image
