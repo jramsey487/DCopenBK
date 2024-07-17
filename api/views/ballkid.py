@@ -635,6 +635,12 @@ class CheckoutAll(APIView):
             queryset = Ballkid.objects.filter(is_checked_in=True, current_team=0)
             logger.info(f"[CheckoutAll] checking out unassigned ballkids: {queryset}")
 
+        elif group == "assigned":
+            queryset = Ballkid.objects.filter(is_checked_in=True).exclude(
+                current_team=0
+            )
+            logger.info(f"[CheckoutAll] checking out assigned ballkids: {queryset}")
+
         else:
             try:
                 team = int(group)
@@ -746,11 +752,12 @@ class ClearTeam(APIView):
             )
 
         team = request.data[team_type]
-        queryset = (
-            Ballkid.objects.filter(current_team=team)
-            if team_type == "current_team"
-            else Ballkid.objects.filter(finals_team=team)
-        )
+        if team_type == "current_team" and team == 0:
+            queryset = Ballkid.objects.exclude(current_team=0)
+        elif team_type == "current_team" and team != 0:
+            queryset = Ballkid.objects.filter(current_team=team)
+        else:
+            queryset = Ballkid.objects.filter(finals_team=team)
 
         logger.info(f"[ClearTeam] clearing team {team} with ballkids {queryset}")
 

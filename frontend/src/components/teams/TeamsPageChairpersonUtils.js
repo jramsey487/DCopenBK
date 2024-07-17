@@ -551,8 +551,7 @@ export function ActionsButtons({ updated, setUpdated }) {
         message={`You are about to unassign all currently assigned teams.`}
         url={"/api/clear-team"}
         body={{
-          court: "",
-          rotation: "",
+          current_team: 0,
         }}
         open={unassignOpen}
         setOpen={setUnassignOpen}
