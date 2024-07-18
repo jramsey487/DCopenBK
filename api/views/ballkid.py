@@ -1086,22 +1086,28 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        current_year = get_current_year()
+        year = get_current_year()
 
         return (
             Ballkid.objects.filter(is_active=True)
             .filter(Q(is_captain=True) | Q(is_chairperson=True))
             .annotate(
-                num_ratings=Count("rater", filter=Q(rater__date__year=current_year)),
+                num_ratings=Count("rater", filter=Q(rater__date__year=year)),
                 raw_avg=Coalesce(
-                    Avg("rater__rating", filter=Q(rater__date__year=current_year)), 0.0
+                    Avg("rater__rating", filter=Q(rater__date__year=year)), 0.0
                 ),
                 raw_stdev=Coalesce(
-                    StdDev("rater__rating", filter=Q(rater__date__year=current_year)),
+                    StdDev("rater__rating", filter=Q(rater__date__year=year)),
                     0.0,
                 ),
-                scale=F("calibrationparams__rater_scale"),
-                offset=F("calibrationparams__rater_offset"),
+                scale=Avg(
+                    "calibrationparams__rater_scale",
+                    filter=Q(calibrationparams__year=year),
+                ),
+                offset=Avg(
+                    "calibrationparams__rater_offset",
+                    filter=Q(calibrationparams__year=year),
+                ),
             )
             .order_by("-num_ratings")
         )
@@ -1112,30 +1118,30 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        current_year = get_current_year()
+        year = get_current_year()
 
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
-                num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
+                num_ratings=Count("ratee", filter=Q(ratee__date__year=year)),
                 raw_avg=Coalesce(
-                    Avg("ratee__rating", filter=Q(ratee__date__year=current_year)), 0.0
+                    Avg("ratee__rating", filter=Q(ratee__date__year=year)), 0.0
                 ),
                 raw_stdev=Coalesce(
-                    StdDev("ratee__rating", filter=Q(ratee__date__year=current_year)),
+                    StdDev("ratee__rating", filter=Q(ratee__date__year=year)),
                     0.0,
                 ),
                 calibrated_avg=Coalesce(
                     Avg(
                         "calibrationparams__ratee_calibrated_avg",
-                        filter=Q(calibrationparams__year=current_year),
+                        filter=Q(calibrationparams__year=year),
                     ),
                     0.0,
                 ),
                 calibrated_stdev=Coalesce(
                     Avg(
                         "calibrationparams__ratee_calibrated_stdev",
-                        filter=Q(calibrationparams__year=current_year),
+                        filter=Q(calibrationparams__year=year),
                     ),
                     0.0,
                 ),
