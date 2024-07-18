@@ -8,7 +8,7 @@ from rest_framework import status
 from api.admin import *
 from api.serializers import *
 from api.utils.utils import *
-from api.consts import *
+from api.utils.consts import *
 from api.permissions import *
 from api.models.ballkid import *
 from api.models.rating import *

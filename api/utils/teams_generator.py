@@ -1,5 +1,7 @@
-# from api.models import *
-# from api.consts import *
+from api.models.ballkid import *
+from api.utils.consts import *
+
+from django.db.models import Q
 
 # import random
 # import math
@@ -153,5 +155,22 @@
 #     return teams
 
 
-def create_teams(num, should_recreate):
-    pass
+# def assign_unassigned():
+#     ballkids = Ballkid.objects.filter(is_checked_in=True, current_team=0).order_by(
+#         "is_chairperson", "is_captain", "-num_years_experience"
+#     )
+
+
+def create_teams(num):
+    teams = {i + 1: [] for i in range(num)}
+
+    all = Ballkid.objects.filter(is_checked_in=True)
+    captains = all.filter(Q("is_chairperson") | Q("is_captain"))
+    supervets = all.filter(num_years_experience__gt=3)
+    ballkids = all.order_by("-num_years_experience")
+
+    for position in [POSITION.N, POSITION.B]:
+        all = ballkids.filter(position=position)
+        captains = all.filter(is_captain=True)
+    nets = ballkids.filter(position=POSITION.N)
+    backs = ballkids.filter(position=POSITION.B)

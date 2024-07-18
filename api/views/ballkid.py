@@ -26,7 +26,7 @@ from api.models.schedule import COURT
 from api.serializers import *
 from api.utils.utils import *
 from api.utils.teams_generator import create_teams
-from api.consts import *
+from api.utils.consts import *
 from api.permissions import *
 from accounts.views import UpdateCaptainStatus
 

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework.test import APIClient
 
-from api.consts import *
+from api.utils.consts import *
 
 from datetime import datetime, timedelta
 import logging

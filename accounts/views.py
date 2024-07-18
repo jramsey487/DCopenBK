@@ -1,15 +1,16 @@
-from django.shortcuts import render
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+
 from django.contrib.auth.models import User
+
 from accounts.serializers import *
 from api.permissions import IsChairperson
 from api.models.ballkid import Ballkid
-from datetime import datetime
+
 import logging
 
 logger = logging.getLogger("accounts")
@@ -70,7 +71,9 @@ class UpdateCaptainStatus(APIView):
 
         # If demoting from captain, then add ballkid and remove captain asa group
         else:
-            logger.info(f"[UpdateCaptainStatus] Demoting captain {ballkid} from captain")
+            logger.info(
+                f"[UpdateCaptainStatus] Demoting captain {ballkid} from captain"
+            )
             user.groups.clear()
 
             ballkid_group = Group.objects.get(name="ballkid")

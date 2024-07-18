@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from api.serializers import *
 from api.permissions import *
-from api.consts import *
+from api.utils.consts import *
 
 import logging
 

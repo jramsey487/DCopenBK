@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from phonenumber_field.modelfields import PhoneNumberField
 from api.models.schedule import Tournament
 from api.utils.utils import *
-from api.consts import *
+from api.utils.consts import *
 import logging
 
 logger = logging.getLogger("api.ballkid")

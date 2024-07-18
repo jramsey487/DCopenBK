@@ -9,7 +9,7 @@ from api.models.schedule import Tournament
 from api.models.rating import Rating
 from api.serializers import BallkidSerializer
 from api.utils.utils import *
-from api.consts import MATCHES_START_HOUR
+from api.utils.consts import MATCHES_START_HOUR
 
 from datetime import datetime, timedelta
 
@@ -61,9 +61,15 @@ class TestBallkidListView(APITestCase):
         serializer = BallkidSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer.data[0]["first_name"], response.data[0]["first_name"])
-        self.assertEqual(serializer.data[1]["first_name"], response.data[1]["first_name"])
-        self.assertEqual(serializer.data[2]["first_name"], response.data[2]["first_name"])
+        self.assertEqual(
+            serializer.data[0]["first_name"], response.data[0]["first_name"]
+        )
+        self.assertEqual(
+            serializer.data[1]["first_name"], response.data[1]["first_name"]
+        )
+        self.assertEqual(
+            serializer.data[2]["first_name"], response.data[2]["first_name"]
+        )
 
     def test_self_cut_list(self):
         response = self.client.get(reverse("self-cut-list"))

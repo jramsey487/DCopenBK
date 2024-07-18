@@ -8,7 +8,7 @@ from api.serializers import *
 from api.permissions import *
 from api.models.ballkid import *
 from api.utils.utils import *
-from api.consts import *
+from api.utils.consts import *
 
 from datetime import datetime
 from rcal import calibrate_parameters

@@ -3,6 +3,8 @@ MIN_CAPTAIN_DURATION = 30
 CHECKIN_START_HOUR = 8
 MATCHES_START_HOUR = 10
 
+SUPERVET_THRESHOLD = 3
+
 NUM_COURTS_TO_COURTS = {
     5: ["Stadium", "Court 4", "Harris", "Court 5", "Grandstand"],
     4: ["Stadium", "Court 4", "Harris", "Grandstand"],

@@ -6,7 +6,7 @@ from api.models.ballkid import Ballkid, MATCH_TYPE
 from api.views.ballkid import recalc_captain_analytics
 from api.serializers import *
 from api.utils.utils import *
-from api.consts import *
+from api.utils.consts import *
 
 from datetime import datetime
 
