@@ -1166,7 +1166,7 @@ class GetAverageCourtLeaderboard(APIView):
 
         averages = annotate_durations(Ballkid.objects.filter(is_active=True)).aggregate(
             checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
-            days_avg=Avg("checkinanalytics__count"),
+            days_avg=Coalesce(Avg("checkin_days"), 0),
             court_avg=Coalesce(Avg("court_duration"), timedelta()),
             stadium_avg=Coalesce(Avg("stadium_duration"), timedelta()),
             harris_avg=Coalesce(Avg("harris_duration"), timedelta()),
