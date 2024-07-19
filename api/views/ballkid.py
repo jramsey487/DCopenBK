@@ -319,28 +319,16 @@ def annotate_ratings(ballkids, pk):
 
 
 def annotate_durations(ballkids):
-    current_year = get_current_year()
+    year = get_current_year()
+    checkin_subq = CheckinAnalytics.objects.filter(ballkid_id=OuterRef("pk"), year=year)
 
     return ballkids.annotate(
-        checkin_duration=Coalesce(
-            Avg(
-                "checkinanalytics__duration",
-                filter=Q(checkinanalytics__year=current_year),
-            ),
-            timedelta(),
-        ),
-        checkin_days=Coalesce(
-            Avg(
-                "checkinanalytics__count",
-                filter=Q(checkinanalytics__year=current_year),
-                output_field=IntegerField(),
-            ),
-            0,
-        ),
+        checkin_duration=Subquery(checkin_subq.values("duration")),
+        checkin_days=Subquery(checkin_subq.values("count")),
         court_duration=Coalesce(
             Sum(
                 "courtanalytics__duration",
-                filter=Q(courtanalytics__year=current_year),
+                filter=Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -348,7 +336,7 @@ def annotate_durations(ballkids):
             Sum(
                 "courtanalytics__duration",
                 filter=Q(courtanalytics__court=COURT.STADIUM)
-                & Q(courtanalytics__year=current_year),
+                & Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -356,7 +344,7 @@ def annotate_durations(ballkids):
             Sum(
                 "courtanalytics__duration",
                 filter=Q(courtanalytics__court=COURT.HARRIS)
-                & Q(courtanalytics__year=current_year),
+                & Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -364,7 +352,7 @@ def annotate_durations(ballkids):
             Sum(
                 "courtanalytics__duration",
                 filter=Q(courtanalytics__court=COURT.GRANDSTAND)
-                & Q(courtanalytics__year=current_year),
+                & Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -372,7 +360,7 @@ def annotate_durations(ballkids):
             Sum(
                 "courtanalytics__duration",
                 filter=Q(courtanalytics__court=COURT.FOUR)
-                & Q(courtanalytics__year=current_year),
+                & Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -380,7 +368,7 @@ def annotate_durations(ballkids):
             Sum(
                 "courtanalytics__duration",
                 filter=Q(courtanalytics__court=COURT.FIVE)
-                & Q(courtanalytics__year=current_year),
+                & Q(courtanalytics__year=year),
             ),
             timedelta(),
         ),
@@ -388,14 +376,21 @@ def annotate_durations(ballkids):
 
 
 def annotate_rank(ballkids):
-    current_year = get_current_year()
+    year = get_current_year()
 
     return ballkids.annotate(
-        num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
+        num_ratings=Coalesce(
+            Avg(
+                "calibrationparams__num_ratee_ratings",
+                filter=Q(calibrationparams__year=year),
+                output_field=IntegerField(),
+            ),
+            0,
+        ),
         calibrated_avg=Coalesce(
             Avg(
                 "calibrationparams__ratee_calibrated_avg",
-                filter=Q(calibrationparams__year=current_year),
+                filter=Q(calibrationparams__year=year),
             ),
             0.0,
         ),
@@ -404,7 +399,7 @@ def annotate_rank(ballkids):
             order_by=Coalesce(
                 Avg(
                     "calibrationparams__ratee_calibrated_avg",
-                    filter=Q(calibrationparams__year=current_year),
+                    filter=Q(calibrationparams__year=year),
                 ),
                 0.0,
             ).desc(),
@@ -1018,25 +1013,25 @@ class GetCheckinLeaderboard(generics.ListAPIView):
 
     def get_queryset(self):
         recalc_checkin_analytics()
-        current_year = get_current_year()
+        year = get_current_year()
 
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
                 checkin_duration=Avg(
                     "checkinanalytics__duration",
-                    filter=Q(checkinanalytics__year=current_year),
+                    filter=Q(checkinanalytics__year=year),
                 ),
                 checkin_days=Avg(
                     "checkinanalytics__count",
-                    filter=Q(checkinanalytics__year=current_year),
+                    filter=Q(checkinanalytics__year=year),
                     output_field=IntegerField(),
                 ),
                 avg_checkin_time=Avg(
                     Case(
                         When(
                             Q(checkinhistory__is_first_checkin=True)
-                            & Q(checkinhistory__start__year=current_year),
+                            & Q(checkinhistory__start__year=year),
                             then="checkinhistory__start__time",
                         )
                     )
@@ -1050,7 +1045,7 @@ class GetAverageCheckinLeaderboard(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        current_year = get_current_year()
+        year = get_current_year()
         recalc_checkin_analytics()
 
         averages = (
@@ -1060,7 +1055,7 @@ class GetAverageCheckinLeaderboard(APIView):
                     Case(
                         When(
                             Q(checkinhistory__is_first_checkin=True)
-                            & Q(checkinhistory__start__year=current_year),
+                            & Q(checkinhistory__start__year=year),
                             then="checkinhistory__start__time",
                         )
                     )
@@ -1069,11 +1064,11 @@ class GetAverageCheckinLeaderboard(APIView):
             .aggregate(
                 checkin_avg=Avg(
                     "checkinanalytics__duration",
-                    filter=Q(checkinanalytics__year=current_year),
+                    filter=Q(checkinanalytics__year=year),
                 ),
                 days_avg=Avg(
                     "checkinanalytics__count",
-                    filter=Q(checkinanalytics__year=current_year),
+                    filter=Q(checkinanalytics__year=year),
                 ),
                 avg_checkin_time=Avg("checkin_time"),
             )
@@ -1121,27 +1116,6 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
 class GetRatingsBallkidLeaderboard(generics.ListAPIView):
     permission_classes = [IsChairperson]
     serializer_class = BallkidSerializer
-
-    # def get_queryset(self):
-    #     year = get_current_year()
-    #     subq = CalibrationParams.objects.filter(ballkid_id=OuterRef("pk"), year=year)
-
-    #     return (
-    #         Ballkid.objects.filter(is_active=True)
-    #         .annotate(
-    #             num_ratings=Count("ratee", filter=Q(ratee__date__year=year)),
-    #             raw_avg=Coalesce(
-    #                 Avg("ratee__rating", filter=Q(ratee__date__year=year)), 0.0
-    #             ),
-    #             raw_stdev=Coalesce(
-    #                 StdDev("ratee__rating", filter=Q(ratee__date__year=year)),
-    #                 0.0,
-    #             ),
-    #             calibrated_avg=Subquery(subq.values("ratee_calibrated_avg")),
-    #             calibrated_stdev=Subquery(subq.values("ratee_calibrated_stdev")),
-    #         )
-    #         .order_by("-num_ratings")
-    #     )
 
     def get_queryset(self):
         year = get_current_year()
