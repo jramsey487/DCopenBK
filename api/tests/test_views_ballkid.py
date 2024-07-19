@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase, APIClient
 from api.models.ballkid import Ballkid, MATCH_TYPE, POSITION, CUT_STATUS
 from api.models.schedule import Tournament
 from api.models.rating import Rating
+from api.views.rating import save_calibration_parameters
 from api.serializers import BallkidSerializer
 from api.utils.utils import *
 from api.utils.consts import MATCHES_START_HOUR
@@ -169,6 +170,7 @@ class TestBallkidListView(APITestCase):
 
     def test_sorted_list_ratings(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse(
@@ -202,6 +204,7 @@ class TestBallkidListView(APITestCase):
             rating=5,
             date=datetime.today() - timedelta(days=365),
         )
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse(

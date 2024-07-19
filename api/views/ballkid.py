@@ -497,6 +497,7 @@ class BallkidsSortedList(generics.ListAPIView):
         )
 
         if group == "captain" or group == "chairperson":
+            save_calibration_parameters()
             ballkids = ballkids if not pk else annotate_ratings(ballkids, pk)
 
         if group == "chairperson":
@@ -1090,25 +1091,41 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
             Ballkid.objects.filter(is_active=True)
             .filter(Q(is_captain=True) | Q(is_chairperson=True))
             .annotate(
-                num_ratings=Avg(
-                    "calibrationparams__num_rater_ratings",
-                    filter=Q(calibrationparams__year=year),
+                num_ratings=Coalesce(
+                    Avg(
+                        "calibrationparams__num_rater_ratings",
+                        filter=Q(calibrationparams__year=year),
+                        output_field=IntegerField(),
+                    ),
+                    0,
                 ),
-                raw_avg=Avg(
-                    "calibrationparams__rater_raw_avg",
-                    filter=Q(calibrationparams__year=year),
+                raw_avg=Coalesce(
+                    Avg(
+                        "calibrationparams__rater_raw_avg",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                raw_stdev=Avg(
-                    "calibrationparams__rater_raw_stdev",
-                    filter=Q(calibrationparams__year=year),
+                raw_stdev=Coalesce(
+                    Avg(
+                        "calibrationparams__rater_raw_stdev",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                scale=Avg(
-                    "calibrationparams__rater_scale",
-                    filter=Q(calibrationparams__year=year),
+                scale=Coalesce(
+                    Avg(
+                        "calibrationparams__rater_scale",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                offset=Avg(
-                    "calibrationparams__rater_offset",
-                    filter=Q(calibrationparams__year=year),
+                offset=Coalesce(
+                    Avg(
+                        "calibrationparams__rater_offset",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
             )
             .order_by("-num_ratings")
@@ -1126,28 +1143,44 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
         return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
-                num_ratings=Avg(
-                    "calibrationparams__num_ratee_ratings",
-                    filter=Q(calibrationparams__year=year),
+                num_ratings=Coalesce(
+                    Avg(
+                        "calibrationparams__num_ratee_ratings",
+                        filter=Q(calibrationparams__year=year),
+                        output_field=IntegerField(),
+                    ),
+                    0,
                 ),
-                raw_avg=Avg(
-                    "calibrationparams__ratee_raw_avg",
-                    filter=Q(calibrationparams__year=year),
+                raw_avg=Coalesce(
+                    Avg(
+                        "calibrationparams__ratee_raw_avg",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                raw_stdev=Avg(
-                    "calibrationparams__ratee_raw_stdev",
-                    filter=Q(calibrationparams__year=year),
+                raw_stdev=Coalesce(
+                    Avg(
+                        "calibrationparams__ratee_raw_stdev",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                calibrated_avg=Avg(
-                    "calibrationparams__ratee_calibrated_avg",
-                    filter=Q(calibrationparams__year=year),
+                calibrated_avg=Coalesce(
+                    Avg(
+                        "calibrationparams__ratee_calibrated_avg",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
-                calibrated_stdev=Avg(
-                    "calibrationparams__ratee_calibrated_stdev",
-                    filter=Q(calibrationparams__year=year),
+                calibrated_stdev=Coalesce(
+                    Avg(
+                        "calibrationparams__ratee_calibrated_stdev",
+                        filter=Q(calibrationparams__year=year),
+                    ),
+                    0.0,
                 ),
             )
-            .order_by("-num_ratings")
+            .order_by("-calibrated_avg", "-raw_avg")
         )
 
 

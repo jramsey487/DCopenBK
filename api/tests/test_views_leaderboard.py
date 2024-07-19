@@ -813,6 +813,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
         )
 
     def test_no_ratings(self):
+        save_calibration_parameters()
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
             format="json",
@@ -823,6 +824,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
 
     def test_one_rating(self):
         Rating.objects.create(rater=self.captain1, ratee=self.ballkid1, rating=5)
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
@@ -841,6 +843,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
         Rating.objects.create(rater=self.captain1, ratee=self.ballkid1, rating=5)
         Rating.objects.create(rater=self.captain1, ratee=self.ballkid2, rating=5)
         Rating.objects.create(rater=self.chairperson, ratee=self.ballkid1, rating=3)
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
@@ -865,6 +868,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
         Rating.objects.create(rater=self.captain1, ratee=self.chairperson, rating=5)
         Rating.objects.create(rater=self.captain1, ratee=self.chairperson, rating=5)
         Rating.objects.create(rater=self.chairperson, ratee=self.captain1, rating=3)
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
@@ -890,6 +894,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
         Rating.objects.create(rater=self.captain1, ratee=self.ballkid2, rating=5)
         Rating.objects.create(rater=self.captain1, ratee=self.captain2, rating=5)
         Rating.objects.create(rater=self.chairperson, ratee=self.ballkid1, rating=3)
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
@@ -920,6 +925,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
             rating=1,
             date=datetime.today() - timedelta(days=365),
         )
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
@@ -950,6 +956,7 @@ class TestGetRatingsBallkidLeaderboard(APITestCase):
         Rating.objects.create(
             rater=self.chairperson, ratee=self.ballkid1, rating=3, awareness_rating=1
         )
+        save_calibration_parameters()
 
         response = self.client.get(
             reverse("get-ballkid-leaderboard"),
