@@ -8,7 +8,7 @@ from rcal import CalibrationParameters
 
 class TestViewsRating(TestCase):
     def setUp(self):
-        self.tournament = Tournament(year=2023)
+        self.tournament = Tournament(year=get_current_year())
         self.tournament.save()
 
         self.ratee1 = Ballkid(first_name="Lacy", last_name="Iosue")
@@ -192,7 +192,9 @@ class TestViewsRating(TestCase):
         ratings = Rating.objects.all()
         rcal_dict = {}
 
-        self.assertEqual(rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism"))
+        self.assertEqual(
+            rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism")
+        )
 
     def test_queryset_to_rcal_athleticism_zero(self):
         rating1 = Rating.objects.create(
@@ -212,7 +214,9 @@ class TestViewsRating(TestCase):
         ratings = Rating.objects.all()
         rcal_dict = {}
 
-        self.assertEqual(rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism"))
+        self.assertEqual(
+            rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism")
+        )
 
     def test_queryset_to_rcal_athleticism_nonzero(self):
         rating1 = Rating.objects.create(
@@ -236,7 +240,9 @@ class TestViewsRating(TestCase):
             ("Joe Iosue", "Andrea Iosue", 0): 2,
         }
 
-        self.assertEqual(rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism"))
+        self.assertEqual(
+            rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism")
+        )
 
     def test_queryset_to_rcal_athleticism_nonzero_averaged(self):
         rating1 = Rating.objects.create(
@@ -259,7 +265,9 @@ class TestViewsRating(TestCase):
             ("Captain Iosue", "Lacy Iosue", 0): 1.5,
         }
 
-        self.assertEqual(rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism"))
+        self.assertEqual(
+            rcal_dict, queryset_to_rcal(ratings, rating_name="athleticism")
+        )
 
     def test_queryset_to_rcal_athleticism_nonzero_nonaveraged(self):
         rating1 = Rating.objects.create(
@@ -354,8 +362,9 @@ class TestViewsRating(TestCase):
             decision_rating=2,
         )
         ratings = Rating.objects.all()
+        year_ratings = ratings.filter(date__year=get_current_year())
 
-        cp, excluded, error = calibrate(ratings)
+        cp, excluded, error = calibrate(ratings, year_ratings)
         self.assertIsInstance(cp, CalibrationParameters, f"Type: {type(cp)}")
 
     def test_calibrate_excluded(self):
@@ -387,8 +396,9 @@ class TestViewsRating(TestCase):
             rating=4,
         )
         ratings = Rating.objects.all()
+        year_ratings = ratings.filter(date__year=get_current_year())
 
-        cp, excluded, error = calibrate(ratings)
+        cp, excluded, error = calibrate(ratings, year_ratings)
         self.assertIsInstance(cp, CalibrationParameters, f"Type: {type(cp)}")
 
         self.assertEqual(1, len(excluded))
@@ -416,7 +426,8 @@ class TestViewsRating(TestCase):
             rating=4,
         )
         ratings = Rating.objects.all()
+        year_ratings = ratings.filter(date__year=get_current_year())
 
-        cp, excluded, error = calibrate(ratings)
+        cp, excluded, error = calibrate(ratings, year_ratings)
         self.assertIsNone(cp)
         self.assertIsNotNone(error)
