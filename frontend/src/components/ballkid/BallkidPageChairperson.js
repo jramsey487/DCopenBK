@@ -60,6 +60,8 @@ import {
   NUM_RATINGS_WARNING_THRESHOLD,
   MARGINS,
   CHART_COLORS,
+  CHECKOUT_OPTIONS,
+  LAST_DAY_OPTIONS,
 } from "../Consts";
 
 function renderHeader(ballkid, setUpdated, isMobile) {
@@ -711,15 +713,23 @@ function ActiveOverflowMenu(props) {
   );
 }
 
-function LastDayComments({ ballkid, setSuccessMsg, setErrorMsg }) {
+function DropdownComments({
+  ballkid,
+  commentType,
+  setSuccessMsg,
+  setErrorMsg,
+}) {
+  const defaultComments =
+    commentType === "checkout" ? ballkid.checkout_comments : ballkid.last_day;
+
   const [disabled, setDisabled] = useState(true);
-  const [savedComments, setSavedComments] = useState(ballkid.last_day ?? "");
-  const [comments, setComments] = useState(ballkid.last_day ?? "");
+  const [savedComments, setSavedComments] = useState(defaultComments ?? "");
+  const [comments, setComments] = useState(defaultComments ?? "");
 
   return (
     <div className="sxs">
       <Typography variant="body1" sx={{ mr: 1 }}>
-        Last Day:
+        {commentType === "checkout" ? "Today's Checkout Time:" : "Last Day:"}
       </Typography>
       {disabled ? (
         <div className="sxs">
@@ -749,16 +759,10 @@ function LastDayComments({ ballkid, setSuccessMsg, setErrorMsg }) {
             onChange={(e) => setComments(e.target.value)}
             onDoubleClick={() => setDisabled(false)}
           >
-            {[
-              "End",
-              "Sunday",
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-            ].map((value) => (
+            {(commentType === "checkout"
+              ? CHECKOUT_OPTIONS
+              : LAST_DAY_OPTIONS
+            ).map((value) => (
               <MenuItem key={value} value={value}>
                 {value}
               </MenuItem>
@@ -768,14 +772,19 @@ function LastDayComments({ ballkid, setSuccessMsg, setErrorMsg }) {
           <Button
             size="small"
             sx={{ ml: 2 }}
-            onClick={() =>
+            onClick={() => {
+              const commentsBody =
+                commentType === "checkout"
+                  ? { checkout_comments: comments }
+                  : { last_day: comments };
+
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  last_day: comments,
+                  ...commentsBody,
                 }),
               }).then((response) => {
                 if (response.ok) {
@@ -785,8 +794,8 @@ function LastDayComments({ ballkid, setSuccessMsg, setErrorMsg }) {
                 } else {
                   setErrorMsg("Error saving comments.");
                 }
-              })
-            }
+              });
+            }}
           >
             Save
           </Button>
@@ -805,24 +814,18 @@ function LastDayComments({ ballkid, setSuccessMsg, setErrorMsg }) {
   );
 }
 
-function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
-  const defaultComments =
-    commentType === "checkout" ? ballkid.checkout_comments : ballkid.comments;
-
+function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
-  const [savedComments, setSavedComments] = useState(defaultComments ?? "");
-  const [comments, setComments] = useState(defaultComments ?? "");
+  const [savedComments, setSavedComments] = useState(ballkid.comments ?? "");
+  const [comments, setComments] = useState(ballkid.comments ?? "");
 
   const commentsInput = useRef(null);
 
   return (
     <div>
       <div className="sxs">
-        <Typography variant="body1" fontWeight="medium">
-          {commentType === "checkout"
-            ? "Today's Check-out Comments:"
-            : "Other Chairperson Comments:"}
-        </Typography>
+        {/* <Typography variant="body1" fontWeight="medium"> */}
+        <Typography variant="body1">Other Chairperson Comments:</Typography>
         <Button
           size="small"
           disabled={!disabled}
@@ -859,19 +862,14 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
           <Button
             size="small"
             sx={{ ml: 2 }}
-            onClick={() => {
-              const commentsBody =
-                commentType === "checkout"
-                  ? { checkout_comments: comments }
-                  : { comments: comments };
-
+            onClick={() =>
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  ...commentsBody,
+                  comments: comments,
                 }),
               }).then((response) => {
                 if (response.ok) {
@@ -881,8 +879,8 @@ function Comments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
                 } else {
                   setErrorMsg("Error saving comments.");
                 }
-              });
-            }}
+              })
+            }
           >
             Save
           </Button>
@@ -1237,12 +1235,13 @@ export default function BallkidPageChairperson(props) {
                   <AddCircle />
                 </IconButton>
               </Box>
-              <LastDayComments
+              <DropdownComments
                 ballkid={ballkid}
+                commentType="last_day"
                 setSuccessMsg={setSuccessMsg}
                 setErrorMsg={setErrorMsg}
               />
-              <Comments
+              <DropdownComments
                 ballkid={ballkid}
                 commentType="checkout"
                 setSuccessMsg={setSuccessMsg}
@@ -1250,7 +1249,6 @@ export default function BallkidPageChairperson(props) {
               />
               <Comments
                 ballkid={ballkid}
-                commentType="other"
                 setSuccessMsg={setSuccessMsg}
                 setErrorMsg={setErrorMsg}
               />

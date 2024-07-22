@@ -72,3 +72,29 @@ export const CHART_COLORS = [
   "#ff6384",
 ];
 export const CHART_GRAY = "#6e6e6e";
+
+export const CHECKOUT_OPTIONS = [
+  "End",
+  "1pm",
+  "2pm",
+  "3pm",
+  "4pm",
+  "5pm",
+  "6pm",
+  "7pm",
+  "8pm",
+  "9pm",
+  "10pm",
+  "11pm",
+  "12am",
+];
+export const LAST_DAY_OPTIONS = [
+  "End",
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];

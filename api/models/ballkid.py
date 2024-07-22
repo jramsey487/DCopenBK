@@ -34,6 +34,7 @@ class CUT_STATUS(models.TextChoices):
 
 
 class DAY_OF_WEEK(models.TextChoices):
+    END = "End"
     MONDAY = "Monday"
     TUESDAY = "Tuesday"
     WEDNESDAY = "Wednesday"
@@ -41,10 +42,10 @@ class DAY_OF_WEEK(models.TextChoices):
     FRIDAY = "Friday"
     SATURDAY = "Saturday"
     SUNDAY = "Sunday"
-    END = "End"
 
 
 class CHECKOUT_TIMES(models.TextChoices):
+    END = "End"
     ONE = "1pm"
     TWO = "2pm"
     THREE = "3pm"

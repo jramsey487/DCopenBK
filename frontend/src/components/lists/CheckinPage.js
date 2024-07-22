@@ -23,7 +23,7 @@ import {
   Banners,
   CommentsText,
 } from "../Utils";
-import { MARGINS } from "../Consts";
+import { CHECKOUT_OPTIONS, LAST_DAY_OPTIONS, MARGINS } from "../Consts";
 import { checkin } from "../HelpMessages";
 import { IconButton, TextField } from "@mui/material";
 
@@ -87,7 +87,7 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
     >
       <Typography>Check-out Time:</Typography>
       &thinsp;
-      <TextField
+      {/* <TextField
         variant="standard"
         disabled={disabled}
         sx={{ maxWidth: "40px", mx: 0.5 }}
@@ -99,7 +99,27 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
         }}
         onChange={(e) => setComments(e.target.value)}
         onDoubleClick={() => setDisabled(false)}
-      />
+      /> */}
+      <TextField
+        select
+        value={comments}
+        disabled={disabled}
+        variant="standard"
+        sx={{ mx: 0.5 }}
+        style={{ minWidth: 75 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        onChange={(e) => setComments(e.target.value)}
+        onDoubleClick={() => setDisabled(false)}
+      >
+        {CHECKOUT_OPTIONS.map((value) => (
+          <MenuItem key={value} value={value}>
+            {value}
+          </MenuItem>
+        ))}
+      </TextField>
       <IconButton
         variant="outlined"
         size="small"
@@ -151,7 +171,7 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
         disabled={disabled}
         variant="standard"
         sx={{ mx: 0.5 }}
-        style={{ minWidth: 125 }}
+        style={{ minWidth: 115 }}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -159,16 +179,7 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
         onChange={(e) => setComments(e.target.value)}
         onDoubleClick={() => setDisabled(false)}
       >
-        {[
-          "End",
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-        ].map((value) => (
+        {LAST_DAY_OPTIONS.map((value) => (
           <MenuItem key={value} value={value}>
             {value}
           </MenuItem>
