@@ -261,7 +261,7 @@ class BulkCreateSignups(APIView):
                 )
             )
 
-            is_out_of_town_rookie = line["is_out_of_town_rookie"].strip() == "TRUE"
+            is_out_of_town = line["is_out_of_town"].strip() == "TRUE"
             phone = line["Phone Number (XXX-XXX-XXXX)"].strip()
             emergency_name = line["Emergency Contact Name"].strip()
             emergency_phone = line[
@@ -293,6 +293,7 @@ class BulkCreateSignups(APIView):
                         "".join(random.sample(string.ascii_lowercase, 12))
                     ),
                 )
+                user.save()
             else:
                 user = user_filtered[0]
                 user.email = email
@@ -313,9 +314,7 @@ class BulkCreateSignups(APIView):
                 ballkid.is_chairperson = is_chairperson
                 ballkid.phone = phone
                 ballkid.age = age
-                ballkid.is_out_of_town = (
-                    num_years_experience == 0 and is_out_of_town_rookie
-                )
+                ballkid.is_out_of_town = is_out_of_town
                 ballkid.emergency_name = emergency_name
                 ballkid.emergency_phone = emergency_phone
                 ballkid.image = image
@@ -331,7 +330,7 @@ class BulkCreateSignups(APIView):
                     is_active=True,
                     is_captain=is_captain,
                     is_chairperson=is_chairperson,
-                    is_out_of_town=is_out_of_town_rookie,
+                    is_out_of_town=is_out_of_town,
                     num_years_experience=num_years_experience,
                     preferred_position=preferred_position_map[
                         line["What position are you?"].strip() or "Back"
