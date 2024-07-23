@@ -220,7 +220,7 @@ export default function TeamsPageChairpersonMobile(props) {
       <Banners />
 
       <Header />
-      <ActionsButtons updated={updated} setUpdated={setUpdated} />
+      <ActionsButtons numAssigned={assigned.length} setUpdated={setUpdated} />
       <Teams
         assigned={assigned}
         teams={teams}

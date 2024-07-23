@@ -213,7 +213,10 @@ export default function TeamsPageChairpersonDesktop(props) {
           style={{ maxHeight: "85vh", overflow: "auto" }}
         >
           <Header />
-          <ActionsButtons updated={updated} setUpdated={setUpdated} />
+          <ActionsButtons
+            numAssigned={assigned.length}
+            setUpdated={setUpdated}
+          />
           <Teams
             assigned={assigned}
             teams={teams}

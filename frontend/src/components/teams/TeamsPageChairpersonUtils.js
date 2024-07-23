@@ -455,7 +455,7 @@ export function Header() {
 //   );
 // }
 
-function CreateTeamsDialog({ open, setOpen, updated, setUpdated }) {
+function CreateTeamsDialog({ open, setOpen, setUpdated }) {
   const [numTeams, setNumTeams] = useState(10);
 
   const [loading, setLoading] = useState(false);
@@ -549,7 +549,7 @@ function CreateTeamsDialog({ open, setOpen, updated, setUpdated }) {
   );
 }
 
-export function ActionsButtons({ updated, setUpdated }) {
+export function ActionsButtons({ numAssigned, setUpdated }) {
   const [teamsOpen, setTeamsOpen] = useState(false);
   const [unassignOpen, setUnassignOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -559,7 +559,6 @@ export function ActionsButtons({ updated, setUpdated }) {
       <CreateTeamsDialog
         open={teamsOpen}
         setOpen={setTeamsOpen}
-        updated={updated}
         setUpdated={setUpdated}
       />
 
@@ -601,6 +600,7 @@ export function ActionsButtons({ updated, setUpdated }) {
           variant="outlined"
           color="secondary"
           size="small"
+          disabled={numAssigned > 0}
           startIcon={<AutoAwesome />}
           onClick={() => setTeamsOpen(true)}
           sx={{ mr: 0.3 }}
