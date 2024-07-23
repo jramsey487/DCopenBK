@@ -496,10 +496,12 @@ class BallkidsSortedList(generics.ListAPIView):
             "first_name",
         )
 
+        # If pk is provided, then annotate ballkids with num ratings and whether or not
+        # pk user has given a rating
         if group == "captain" or group == "chairperson":
-            save_calibration_parameters()
             ballkids = ballkids if not pk else annotate_ratings(ballkids, pk)
 
+        # Rank annotations are used on the finals teams page
         if group == "chairperson":
             ballkids = annotate_rank(ballkids)
 

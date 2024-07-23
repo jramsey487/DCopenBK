@@ -188,7 +188,7 @@ export default function TeamsPageChairpersonMobile(props) {
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
+    fetch("/api/sorted-list", { headers: getAuthHeader(), body: {} })
       .then((response) => response.json())
       .then((data) => {
         setAssigned(
