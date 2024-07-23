@@ -64,6 +64,11 @@ export function Icons({ ballkid, margin, isTeamsPage = false }) {
         isTeamsPage &&
         ICON_DICT["outOfTownRookie"]}
       {group !== "ballkid" &&
+        ballkid.num_years_experience > 0 &&
+        ballkid.is_out_of_town &&
+        isTeamsPage &&
+        ICON_DICT["outOfTownBallkid"]}
+      {group !== "ballkid" &&
         ballkid.num_years_experience === 0 &&
         ICON_DICT["rookie"]}
       {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
@@ -678,6 +683,8 @@ export function filterBallkids(ballkids, searchKeyword, filterGroup) {
         .includes(searchKeyword.toLowerCase()) &
       (!filterGroup ||
         (filterGroup === "rookie" && ballkid.num_years_experience === 0) ||
+        (filterGroup === "supervet" &&
+          ballkid.num_years_experience > SUPERVET_THRESHOLD) ||
         (filterGroup === "captain" && ballkid.is_captain) ||
         (filterGroup === "chairperson" && ballkid.is_chairperson) ||
         (filterGroup === "back" && ballkid.preferred_position !== "Net") ||

@@ -35,6 +35,7 @@ export const ICON_DICT = {
   rookie: <Circle fontSize="small" sx={{ color: "green" }} />,
   chairperson: <EventSeat sx={{ color: "purple" }} />,
   supervet: <Square fontSize="small" sx={{ color: "info.main" }} />,
+  outOfTownBallkid: <Square fontSize="small" sx={{ color: "error.main" }} />,
   outOfTownRookie: <Circle fontSize="small" sx={{ color: "error.main" }} />,
   back: <EmojiPeople sx={{ color: "primary.main" }} />,
   net: <Grid4x4 fontSize="small" sx={{ color: "gray" }} />,
@@ -46,6 +47,7 @@ export const TOOLTIP_DICT = {
   chairperson: "Chairperson",
   supervet: `Supervet (> ${SUPERVET_THRESHOLD} years experience)`,
   outOfTownRookie: "Out-of-town rookie",
+  outOfTownBallkid: "Out-of-town ballkid",
   back: "Back",
   net: "Net",
 };
