@@ -175,8 +175,8 @@ export default function CaptainLeaderboard(props) {
             Note: Average is the average of all the ratings submitted (NOT
             received) by this captain/chairperson. Likewise for standard
             deviation. Calibration scale and offset are calculated for each
-            rater based on their ratings submitted in 2022 and 2023 by the
-            calibration method described{" "}
+            rater based on their ratings submitted in 2022, 2023, and 2024 by
+            the calibration method described{" "}
             <Link
               target="_blank"
               href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"

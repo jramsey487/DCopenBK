@@ -1263,7 +1263,7 @@ function BulkCheckin() {
       </Grid>
       <Grid item xs={12}>
         <Typography component="h4" variant="h4">
-          Bulk Check-in Ballkids
+          Bulk Check In Ballkids
         </Typography>
       </Grid>
       <Grid item xs={12}>

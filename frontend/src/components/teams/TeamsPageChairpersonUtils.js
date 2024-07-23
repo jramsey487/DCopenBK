@@ -468,9 +468,12 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
       .then((response) => response.json())
       .then((data) =>
         setNumTeams(
-          Math.round(
-            data.filter((ballkid) => ballkid.is_checked_in === true).length /
-              TARGET_NUM_BALLKIDS_PER_TEAM
+          Math.min(
+            10,
+            Math.round(
+              data.filter((ballkid) => ballkid.is_checked_in === true).length /
+                TARGET_NUM_BALLKIDS_PER_TEAM
+            )
           )
         )
       );
