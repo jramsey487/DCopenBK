@@ -87,19 +87,6 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
     >
       <Typography>Check-out Time:</Typography>
       &thinsp;
-      {/* <TextField
-        variant="standard"
-        disabled={disabled}
-        sx={{ maxWidth: "40px", mx: 0.5 }}
-        value={comments}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        onChange={(e) => setComments(e.target.value)}
-        onDoubleClick={() => setDisabled(false)}
-      /> */}
       <TextField
         select
         value={comments}

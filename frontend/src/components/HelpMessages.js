@@ -36,6 +36,20 @@ export const checkin = (
     designations (e.g. rookie, captain, chairperson, back, or net). To view
     pictures, view the list in Grid mode (as opposed to List mode).
     <br /> <br />
+    On desktop, a ballkid's last day and check-out time for today can be updated
+    and saved from the check-in page. All values default to "End" but need to be
+    confirmed by clicking on the check mark before their last day / check-out
+    time will be saved as such. Once saved, last day / check-out time comments
+    can be updated from the check-in page by double clicking on the dropdown,
+    updating the value, and saving by clicking the checkmark again. These values
+    can be updated on the individual ballkid page as well. Check-out time
+    comments will display for checked in ballkids in the "Checked In" section of
+    the check-in page, as well as on the teams page. Ballkids with "End" saved
+    will display "End," ballkids with no saved check-out time will not display
+    anything, and ballkids with a check-out time saved will show that time
+    highlighted orange. Check-out time comments are reset when the ballkid is
+    checked out.
+    <br /> <br />
     Note that this list only includes active, non-cut ballkids. To view inactive
     (archived or cut) ballkids, go to the Inactive page (List &gt; Inactive).
     <br /> <br />
@@ -106,14 +120,19 @@ export const teams = (
     <br /> <br />
     The hide/show toggle controls whether or not ballkids and captains can view
     the teams. Toggling to "Show" will make all teams publicly visible for
-    ballkids and captains to view.
+    ballkids and captains to view. Teams can only be auto-created if no ballkids
+    are currently assigned. All currently assigned teams can be unassigned in
+    bulk or checked out in bulk if desired.
     <br /> <br />
     The Unassigned section lists all checked in and unassigned ballkids.
     Ballkids are listed with chairpeople on top, followed by captains, followed
     by descending number of years of experience, with rookies at the bottom. A
     red circle (as opposed to a green circle) indicates the ballkid is an
-    out-of-town rookie. The "Check Out All" button will check out all unassigned
-    ballkids.
+    out-of-town rookie. A red square (as opposed to a blue square) indicates the
+    ballkid has out-of-town experience but is not a rookie at this tournament.
+    Check-out time comments (if not empty and not "End") will display next to
+    the ballkid name with an orange highlight. The "Check Out All" button will
+    check out all unassigned ballkids.
     <br /> <br />
     On desktop, the Unassigned section has separate lists for Nets and Backs,
     where Switches will ONLY show up in the section for their preferred
