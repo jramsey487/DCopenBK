@@ -20,9 +20,21 @@ import {
 } from "../Utils";
 import { rateByName, rateByNameNonchairperson } from "../HelpMessages";
 
-function getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam) {
+function getBallkidsToRender(
+  ballkids,
+  showUnrated,
+  showTeam,
+  myTeam,
+  tournamentShowTeams
+) {
   const pk = getLocalStorage("ballkid_id");
 
+  // If teams are hidden and they are saying to show their team, then don't show anyone
+  if (showTeam && !tournamentShowTeams) {
+    return [];
+  }
+
+  // If ballkid is unassigned and they are saying to show their team, then don't show anyone
   if (myTeam === 0 && showTeam) {
     return [];
   }
@@ -88,24 +100,28 @@ function BallkidsSection({ ballkids, layout, setUpdated }) {
                   />
                 )}
 
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <Box>
+                <Box>
+                  {!isChairperson ? (
+                    ""
+                  ) : (
                     <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
                       Total ratings:{" "}
                       <Box fontWeight="fontWeightRegular" display="inline">
                         {ballkid.num_ratings}
                       </Box>
                     </Typography>
+                  )}
+                  {ballkid.id === getLocalStorage("ballkid_id") ? (
+                    ""
+                  ) : (
                     <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
                       My total ratings:{" "}
                       <Box fontWeight="fontWeightRegular" display="inline">
                         {ballkid.num_my_ratings}
                       </Box>
                     </Typography>
-                  </Box>
-                )}
+                  )}
+                </Box>
               </Box>
             }
           />
@@ -118,6 +134,7 @@ function BallkidsSection({ ballkids, layout, setUpdated }) {
 export default function RateByNamePage(props) {
   const [ballkids, setBallkids] = useState([]);
   const [myTeam, setMyTeam] = useState();
+  const [tournamentShowTeams, setTournamentShowTeams] = useState(false);
   const [updated, setUpdated] = useState(false);
 
   const isChairperson = getLocalStorage("group") === "chairperson";
@@ -141,7 +158,13 @@ export default function RateByNamePage(props) {
       .then((data) => {
         setBallkids(data.filter((ballkid) => ballkid.is_cut === false));
         setMyTeam(data.filter((ballkid) => ballkid.id === pk)[0]?.current_team);
-      })
+      });
+    fetch("/api/get-tournament", {
+      method: "GET",
+      headers: getAuthHeader(),
+    })
+      .then((response) => response.json())
+      .then((data) => setTournamentShowTeams(data["show_teams"]))
       .then(() => setUpdated(false));
   }, [pk, updated]);
 
@@ -157,7 +180,13 @@ export default function RateByNamePage(props) {
             (
             {
               filterBallkids(
-                getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam),
+                getBallkidsToRender(
+                  ballkids,
+                  showUnrated,
+                  showTeam,
+                  myTeam,
+                  tournamentShowTeams
+                ),
                 searchKeyword,
                 filterGroup
               ).length
@@ -198,7 +227,13 @@ export default function RateByNamePage(props) {
       />
       <BallkidsSection
         ballkids={filterBallkids(
-          getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam),
+          getBallkidsToRender(
+            ballkids,
+            showUnrated,
+            showTeam,
+            myTeam,
+            tournamentShowTeams
+          ),
           searchKeyword,
           filterGroup
         )}
