@@ -265,7 +265,8 @@ export const rateByName = (
     name, first name). Ratings can be submitted for any ballkid, but ballkids
     whom you have already rated will be indicated by a checkmark and an outlined
     (as opposed to filled in) "Give Rating" button. The total number of ratings
-    the ballkid has received (from anyone) is listed as well.
+    the ballkid has received (from anyone, as well as from you) is listed as
+    well.
     <br /> <br />
     In order to only show ballkids who you have not yet rated, toggle the "Show
     All Ballkids / Show Ballkids to Rate" toggle at the top of the page. In
@@ -281,7 +282,8 @@ export const rateByNameNonchairperson = (
     As on the List by Name page, ballkids are listed alphabetically by (last
     name, first name). Ratings can be submitted for any ballkid, but ballkids
     whom you have already rated will be indicated by a checkmark and an outlined
-    (as opposed to filled in) "Give Rating" button.
+    (as opposed to filled in) "Give Rating" button. The number of ratings you
+    have personally submitted for each ballkid is also listed.
     <br /> <br />
     In order to only show ballkids who you have not yet rated, toggle the "Show
     All Ballkids / Show Ballkids to Rate" toggle at the top of the page. In
@@ -297,8 +299,9 @@ export const rateByCurrentTeam = (
     <br /> <br />
     Ratings can be submitted for any ballkid, but ballkids whom you have already
     rated will be indicated by a checkmark and an outlined (as opposed to filled
-    in) "Give Rating" button. The total number of ratings the ballkid has
-    received (from anyone) is listed as well.
+    in) "Give Rating" button. This page will only display teams to captains if
+    teams are toggled to be shown. This page will always show teams to
+    chairpeople, regardless of whether or not teams are toggled to be shown.
     <br /> <br />
     Teams that are currently on court will be highlighted green, with the
     current court assignment listed. Teams that are not currently on court will
@@ -316,13 +319,15 @@ export const rateByPastTeam = (
     day, they will show up under both days. For previous teams (i.e. if you are
     not currently on a team with a ballkid), ballkids will only show up if you
     had at least 30 minutes of court time with them. For your current team, all
-    ballkids who are currently on your team will show up.
+    ballkids who are currently on your team will show up, unless teams are
+    currently hidden.
     <br /> <br />
     Ratings can be submitted for any ballkid, but ballkids whom you have already
     rated will be indicated by a checkmark and an outlined (as opposed to filled
-    in) "Give Rating" button. In order to only show ballkids who you have not
-    yet rated, toggle the "Show All Ballkids / Show Ballkids to Rate" toggle at
-    the top of the page.
+    in) "Give Rating" button. The number of ratings you have personally
+    submitted for each ballkid is also listed. In order to only show ballkids
+    whom you have not yet rated, toggle the "Show All Ballkids / Show Ballkids
+    to Rate" toggle at the top of the page.
   </DialogContentText>
 );
 
