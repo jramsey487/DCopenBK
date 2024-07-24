@@ -120,7 +120,7 @@ export default function BallkidPageCaptain(props) {
                 endIcon={<Shortcut />}
                 sx={{ my: 1 }}
               >
-                View my ratings for this ballkid
+                View my {ballkid.num_my_ratings} rating(s) for this ballkid
               </Button>
             </div>
           )}

@@ -374,7 +374,7 @@ function renderRatingsCaptainSection(ballkid, ballkidGroup, params) {
         endIcon={<Shortcut />}
         sx={{ my: 1 }}
       >
-        View all {params.num_rater_ratings} ratings by{" "}
+        View all {params.num_rater_ratings} rating(s) by{" "}
         {pk === ballkid.id ? "me" : `this ${ballkidGroup}`}
       </Button>
 
@@ -418,6 +418,7 @@ function renderRatingsCaptainSection(ballkid, ballkidGroup, params) {
 }
 
 function renderRatingsBallkidSection(ballkid, params) {
+  console.log(ballkid);
   return (
     <Grid item xs={12} lg={5.5} sx={{ mx: 1 }}>
       <Button
@@ -428,7 +429,7 @@ function renderRatingsBallkidSection(ballkid, params) {
         endIcon={<Shortcut />}
         sx={{ my: 1, mr: 1 }}
       >
-        View all {params.num_ratee_ratings} ratings for this ballkid
+        View all {params.num_ratee_ratings} rating(s) for this ballkid
       </Button>
       <Button
         size="small"
@@ -438,7 +439,7 @@ function renderRatingsBallkidSection(ballkid, params) {
         endIcon={<Shortcut />}
         sx={{ my: 1 }}
       >
-        View my ratings for this ballkid
+        View my {ballkid.num_my_ratings} rating(s) for this ballkid
       </Button>
 
       {params.ratee_improvement == null ? (
@@ -1110,7 +1111,9 @@ export default function BallkidPageChairperson(props) {
   pk = parseInt(pk ?? getLocalStorage("ballkid_id"));
 
   useEffect(() => {
-    fetch(`/api/get-ballkid/${pk}`, { headers: getAuthHeader() })
+    fetch(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`, {
+      headers: getAuthHeader(),
+    })
       .then((response) => response.json())
       .then((data) => setBallkid(data));
 
