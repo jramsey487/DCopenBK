@@ -312,13 +312,13 @@ def annotate_ratings(ballkids, pk):
         num_my_ratings=Count(
             "ratee", filter=Q(ratee__date__year=current_year) & Q(ratee__rater__id=pk)
         ),
-        have_rated=Exists(
-            Rating.objects.filter(
-                rater_id=pk,
-                ratee_id=OuterRef("id"),
-                date__year=current_year,
-            )
-        ),
+        # have_rated=Exists(
+        #     Rating.objects.filter(
+        #         rater_id=pk,
+        #         ratee_id=OuterRef("id"),
+        #         date__year=current_year,
+        #     )
+        # ),
     )
 
 

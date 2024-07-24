@@ -42,6 +42,12 @@ function renderBallkid(ballkid, layout, setUpdated, date = null) {
               setUpdated={setUpdated}
               date={date}
             />
+            <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+              My total ratings:{" "}
+              <Box fontWeight="fontWeightRegular" display="inline">
+                {ballkid.num_my_ratings}
+              </Box>
+            </Typography>
           </Box>
         }
       />
@@ -67,7 +73,9 @@ export default function RateByPastTeamPage(props) {
       .then((data) => {
         setBallkids(data);
         setUnratedBallkids(
-          data.filter((ballkid) => !ballkid.have_rated && ballkid.id !== pk)
+          data.filter(
+            (ballkid) => ballkid.num_my_ratings === 0 && ballkid.id !== pk
+          )
         );
       });
 

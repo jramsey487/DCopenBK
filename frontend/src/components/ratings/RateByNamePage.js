@@ -31,7 +31,7 @@ function getBallkidsToRender(ballkids, showUnrated, showTeam, myTeam) {
   ballkidsToRender = !showUnrated
     ? ballkidsToRender
     : ballkidsToRender.filter(
-        (ballkid) => !ballkid.have_rated && ballkid.id !== pk
+        (ballkid) => ballkid.num_my_ratings === 0 && ballkid.id !== pk
       );
   ballkidsToRender = !showTeam
     ? ballkidsToRender
@@ -91,12 +91,20 @@ function BallkidsSection({ ballkids, layout, setUpdated }) {
                 {!isChairperson ? (
                   ""
                 ) : (
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mt: layout === "grid" ? 0.5 : 0 }}
-                  >
-                    Total ratings: {ballkid.num_ratings}
-                  </Typography>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+                      Total ratings:{" "}
+                      <Box fontWeight="fontWeightRegular" display="inline">
+                        {ballkid.num_ratings}
+                      </Box>
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+                      My total ratings:{" "}
+                      <Box fontWeight="fontWeightRegular" display="inline">
+                        {ballkid.num_my_ratings}
+                      </Box>
+                    </Typography>
+                  </Box>
                 )}
               </Box>
             }

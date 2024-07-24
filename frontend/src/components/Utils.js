@@ -148,7 +148,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
       />
 
       <Button
-        variant={ballkid.have_rated ? "outlined" : "contained"}
+        variant={ballkid.num_my_ratings > 0 ? "outlined" : "contained"}
         disableElevation
         color="primary"
         size="small"
@@ -158,7 +158,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={ballkid.have_rated ? <Check /> : ""}
+        endIcon={ballkid.num_my_ratings > 0 ? <Check /> : ""}
         sx={{ my: isMobile ? 1 : 0.2 }}
       >
         Give rating

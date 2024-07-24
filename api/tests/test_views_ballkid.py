@@ -103,27 +103,27 @@ class TestBallkidListView(APITestCase):
         annotated = response.data[0]
         self.assertEqual(self.ballkid6.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[1]
         self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[2]
         self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[3]
         self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
         self.assertEqual(1, annotated["num_ratings"])
-        self.assertTrue(annotated["have_rated"])
+        self.assertLess(0, annotated["num_my_ratings"])
 
         annotated = response.data[4]
         self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
     def test_list_ratings_excludes_prev_years(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
@@ -146,27 +146,27 @@ class TestBallkidListView(APITestCase):
         annotated = response.data[0]
         self.assertEqual(self.ballkid6.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[1]
         self.assertEqual(self.ballkid5.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[2]
         self.assertEqual(self.ballkid3.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
         annotated = response.data[3]
         self.assertEqual(self.ballkid1.first_name, annotated["first_name"])
         self.assertEqual(1, annotated["num_ratings"])
-        self.assertTrue(annotated["have_rated"])
+        self.assertLess(0, annotated["num_my_ratings"])
 
         annotated = response.data[4]
         self.assertEqual(self.ballkid2.first_name, annotated["first_name"])
         self.assertEqual(0, annotated["num_ratings"])
-        self.assertFalse(annotated["have_rated"])
+        self.assertEqual(0, annotated["num_my_ratings"])
 
     def test_sorted_list_ratings(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
@@ -184,17 +184,17 @@ class TestBallkidListView(APITestCase):
         annotated1 = response.data[0]
         self.assertEqual(self.ballkid2.first_name, annotated1["first_name"])
         self.assertEqual(0, annotated1["num_ratings"])
-        self.assertFalse(annotated1["have_rated"])
+        self.assertEqual(0, annotated1["num_my_ratings"])
 
         annotated2 = response.data[1]
         self.assertEqual(self.ballkid1.first_name, annotated2["first_name"])
         self.assertEqual(1, annotated2["num_ratings"])
-        self.assertTrue(annotated2["have_rated"])
+        self.assertLess(0, annotated2["num_my_ratings"])
 
         annotated3 = response.data[2]
         self.assertEqual(self.ballkid3.first_name, annotated3["first_name"])
         self.assertEqual(0, annotated3["num_ratings"])
-        self.assertFalse(annotated3["have_rated"])
+        self.assertEqual(0, annotated3["num_my_ratings"])
 
     def test_sorted_list_ratings_excludes_prev_years(self):
         Rating.objects.create(rater=self.ballkid2, ratee=self.ballkid1, rating=5)
@@ -218,17 +218,17 @@ class TestBallkidListView(APITestCase):
         annotated1 = response.data[0]
         self.assertEqual(self.ballkid2.first_name, annotated1["first_name"])
         self.assertEqual(0, annotated1["num_ratings"])
-        self.assertFalse(annotated1["have_rated"])
+        self.assertEqual(0, annotated1["num_my_ratings"])
 
         annotated2 = response.data[1]
         self.assertEqual(self.ballkid1.first_name, annotated2["first_name"])
         self.assertEqual(1, annotated2["num_ratings"])
-        self.assertTrue(annotated2["have_rated"])
+        self.assertLess(0, annotated2["num_my_ratings"])
 
         annotated3 = response.data[2]
         self.assertEqual(self.ballkid3.first_name, annotated3["first_name"])
         self.assertEqual(0, annotated3["num_ratings"])
-        self.assertFalse(annotated3["have_rated"])
+        self.assertEqual(0, annotated3["num_my_ratings"])
 
 
 class TestCreateBallkidView(APITestCase):
@@ -358,7 +358,7 @@ class TestGetBallkidView(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(True, response.data["have_rated"])
+        self.assertLess(0, response.data["num_my_ratings"])
         self.assertEqual(2, response.data["num_ratings"])
 
         response = self.client.get(
@@ -369,7 +369,7 @@ class TestGetBallkidView(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(False, response.data["have_rated"])
+        self.assertEqual(0, response.data["num_my_ratings"])
         self.assertEqual(0, response.data["num_ratings"])
 
     def test_exists_ratings_exclude_prev_years(self):
@@ -388,7 +388,7 @@ class TestGetBallkidView(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(True, response.data["have_rated"])
+        self.assertLess(0, response.data["num_my_ratings"])
         self.assertEqual(2, response.data["num_ratings"])
 
         response = self.client.get(
@@ -399,7 +399,7 @@ class TestGetBallkidView(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(False, response.data["have_rated"])
+        self.assertEqual(0, response.data["num_my_ratings"])
         self.assertEqual(0, response.data["num_ratings"])
 
 
@@ -433,7 +433,7 @@ class TestUpdateBallkidView(APITestCase):
             preferred_position=POSITION.NB,
         )
 
-        Tournament.objects.create(year=2023, show_finals_teams=True)
+        Tournament.objects.create(year=get_current_year(), show_finals_teams=True)
 
     def test_name_not_provided(self):
         self.assertRaises(
@@ -1163,7 +1163,7 @@ class TestClearTeamView(APITestCase):
             finals_team=MATCH_TYPE.MS,
         )
 
-        Tournament.objects.create(year=2023, show_finals_teams=True)
+        Tournament.objects.create(year=get_current_year(), show_finals_teams=True)
 
     def test_nonexisting_team(self):
         response = self.client.patch(self.url, {"current_team": 3}, format="json")
