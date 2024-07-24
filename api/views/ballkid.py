@@ -309,6 +309,9 @@ def annotate_ratings(ballkids, pk):
 
     return ballkids.annotate(
         num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
+        num_my_ratings=Count(
+            "ratee", filter=Q(ratee__date__year=current_year) & Q(ratee__rater__id=pk)
+        ),
         have_rated=Exists(
             Rating.objects.filter(
                 rater_id=pk,
@@ -907,11 +910,16 @@ class GetPastTeams(APIView):
     permission_classes = [IsChairpersonOrCaptain]
 
     def get(self, request, pk):
+        year = get_current_year()
         # Get all the histories where this ballkid was a captain
         thresholded = CaptainHistory.objects.filter(
-            captain_id=pk, duration__gte=timedelta(minutes=MIN_CAPTAIN_DURATION)
+            captain_id=pk,
+            start__year=year,
+            duration__gte=timedelta(minutes=MIN_CAPTAIN_DURATION),
         )
-        current = CaptainHistory.objects.filter(captain_id=pk, end=None)
+        current = CaptainHistory.objects.filter(
+            captain_id=pk, start__year=year, end=None
+        )
         try:
             show_teams = Tournament.objects.get(year=get_current_year()).show_teams
         except Exception:
