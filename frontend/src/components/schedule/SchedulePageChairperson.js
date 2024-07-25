@@ -23,7 +23,7 @@ import { schedule } from "../HelpMessages";
 function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);
   const [numTeams, setNumTeams] = useState(10);
-  const [startHour, setStartHour] = useState("12:00");
+  const [startHour, setStartHour] = useState("11:00");
   const [numHours, setNumHours] = useState(12);
 
   const minWidth = 250;
@@ -51,7 +51,7 @@ function CreateSchedule({ date, setUpdated }) {
             variant="standard"
             type="time"
             required={true}
-            defaultValue="11:00"
+            defaultValue={startHour}
             style={{ minWidth: minWidth }}
             onChange={(e) => setStartHour(e.target.value)}
           />
@@ -62,9 +62,15 @@ function CreateSchedule({ date, setUpdated }) {
             label="Number of Courts Running"
             variant="standard"
             type="number"
-            defaultValue={5}
+            defaultValue={numCourts}
             required={true}
             style={{ minWidth: minWidth }}
+            helperText={
+              (numCourts <= 5) & (numCourts > 0)
+                ? ""
+                : "Must have 1-5 initial courts"
+            }
+            error={numCourts > 5 || numCourts < 1}
             onChange={(e) => setNumCourts(parseInt(e.target.value))}
           />
         </Grid>
@@ -75,9 +81,11 @@ function CreateSchedule({ date, setUpdated }) {
             label="Number of Ballkid Teams"
             variant="standard"
             type="number"
-            defaultValue={10}
+            defaultValue={numTeams}
             required={true}
             style={{ minWidth: minWidth }}
+            helperText={numTeams > 0 ? "" : "Must have at least 1 team"}
+            error={numTeams < 1}
             onChange={(e) => setNumTeams(parseInt(e.target.value))}
           />
         </Grid>
@@ -87,9 +95,13 @@ function CreateSchedule({ date, setUpdated }) {
             label="Number of Hours"
             variant="standard"
             type="number"
-            defaultValue={12}
+            defaultValue={numHours}
             required={true}
             style={{ minWidth: minWidth }}
+            helperText={
+              numHours > 0 && numHours < 24 ? "" : "Must be > 0 and < 24 hours"
+            }
+            error={numHours < 1 || numHours >= 24}
             onChange={(e) => setNumHours(parseInt(e.target.value))}
           />
         </Grid>

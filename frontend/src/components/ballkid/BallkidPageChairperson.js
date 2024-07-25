@@ -66,7 +66,7 @@ import {
 
 function renderHeader(ballkid, setUpdated, isMobile) {
   const overflowMenu =
-    (ballkid.is_cut === "true") | !ballkid.is_active ? (
+    ballkid.is_cut === "true" || !ballkid.is_active ? (
       <InactiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
     ) : (
       <ActiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
@@ -1176,7 +1176,7 @@ export default function BallkidPageChairperson(props) {
           {renderPreferredPosition(ballkid, setUpdated, isMobile)}
           <br />
 
-          {ballkid.is_cut | !ballkid.is_active ? (
+          {ballkid.is_cut || !ballkid.is_active ? (
             ""
           ) : (
             <div>
