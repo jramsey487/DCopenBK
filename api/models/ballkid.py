@@ -1,63 +1,19 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
+
 from datetime import datetime, timedelta
+
 from phonenumber_field.modelfields import PhoneNumberField
+
+from api.models.enums import *
 from api.models.schedule import Tournament
 from api.utils.utils import *
 from api.utils.consts import *
+
 import logging
 
 logger = logging.getLogger("api.ballkid")
-
-
-class POSITION(models.TextChoices):
-    B = "Back", _("Back")
-    N = "Net", _("Net")
-    BN = "Back/Net", _("Back/Net")
-    NB = "Net/Back", _("Net/Back")
-
-
-class MATCH_TYPE(models.TextChoices):
-    MS = "Men's Singles"
-    MD = "Men's Doubles"
-    WS = "Women's Singles"
-    WD = "Women's Doubles"
-
-
-class CUT_STATUS(models.TextChoices):
-    DEFINITELY_KEEP = "Definitely Keep"
-    POSSIBLY_KEEP = "Possibly Keep"
-    POSSIBLY_CUT = "Possibly Cut"
-    DEFINITELY_CUT = "Definitely Cut"
-
-
-class DAY_OF_WEEK(models.TextChoices):
-    END = "End"
-    MONDAY = "Monday"
-    TUESDAY = "Tuesday"
-    WEDNESDAY = "Wednesday"
-    THURSDAY = "Thursday"
-    FRIDAY = "Friday"
-    SATURDAY = "Saturday"
-    SUNDAY = "Sunday"
-
-
-class CHECKOUT_TIMES(models.TextChoices):
-    END = "End"
-    ONE = "1pm"
-    TWO = "2pm"
-    THREE = "3pm"
-    FOUR = "4pm"
-    FIVE = "5pm"
-    SIX = "6pm"
-    SEVEN = "7pm"
-    EIGHT = "8pm"
-    NINE = "9pm"
-    TEN = "10pm"
-    ELEVEN = "11pm"
-    MIDNIGHT = "12am"
 
 
 class Ballkid(models.Model):
@@ -101,7 +57,7 @@ class Ballkid(models.Model):
     )
 
     # Comments / misc info
-    num_tickets_used = models.IntegerField(default=0)
+    num_tickets = models.IntegerField(default=0)
     last_day = models.CharField(
         max_length=10, choices=DAY_OF_WEEK.choices, null=True, blank=True
     )
@@ -582,8 +538,8 @@ class Ballkid(models.Model):
             self.last_day = value
             self.cut_status = ""
 
-        elif field == "num_tickets_used":
-            self.num_tickets_used = value
+        elif field == "num_tickets":
+            self.num_tickets = value
 
         else:
             raise Exception(f"Unrecognized field {field}")
@@ -779,3 +735,17 @@ class Banner(models.Model):
 
     def __str__(self):
         return f"Banner for ({self.audience}, ballkid {self.ballkid}) with message {self.message} at {self.timestamp}"
+
+
+class Ticket(models.Model):
+    session = models.CharField(
+        max_length=15,
+        choices=TICKET_SESSIONS.choices,
+    )
+    ballkid = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, null=True, blank=True
+    )
+    order = models.IntegerField()
+    num_requested = models.IntegerField(default=0)
+    num_granted = models.IntegerField(default=0)
+    num_delivered = models.IntegerField(default=0)

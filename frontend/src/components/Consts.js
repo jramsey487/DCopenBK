@@ -23,6 +23,19 @@ export const MATCH_TYPES = {
   WD: "Women's Doubles",
 };
 
+export const TICKET_SESSIONS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday AM",
+  "Friday PM",
+  "Saturday AM",
+  "Saturday PM",
+  "Finals",
+];
+
 export const CUT_STATUSES = {
   DEFINITELY_KEEP: "Definitely Keep",
   POSSIBLY_KEEP: "Possibly Keep",

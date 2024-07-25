@@ -113,6 +113,13 @@ export const inactive = (
   </DialogContentText>
 );
 
+export const ticketsPage = (
+  <DialogContentText>
+    placeholder
+    <br /> <br />
+  </DialogContentText>
+);
+
 export const teams = (
   <DialogContentText>
     This page allows you to create teams and control whether or not ballkids and

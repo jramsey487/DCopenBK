@@ -122,3 +122,12 @@ class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
         fields = "__all__"
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    ballkid_name = serializers.CharField(max_length=60, required=False)
+    num_tickets = serializers.IntegerField(default=0, required=False)
+
+    class Meta:
+        model = Ticket
+        fields = "__all__"

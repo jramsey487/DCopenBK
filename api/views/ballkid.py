@@ -729,8 +729,8 @@ class ResetData(APIView):
         # Check out and archive all ballkids
         for ballkid in Ballkid.objects.filter(is_active=True):
             ballkid.set_field("is_checked_in", False)
-            ballkid.set_field('is_active', False)
-            ballkid.set_field("num_tickets_used", 0)
+            ballkid.set_field("is_active", False)
+            ballkid.set_field("num_tickets", 0)
             ballkid.set_field("last_day", None)
             ballkid.set_field("comments", "")
             ballkid.validate()
@@ -1290,3 +1290,18 @@ class UpdateBanner(APIView):
         logger.info(f"[UpdateBanner] Deleting banner {banner}")
         banner.delete()
         return Response({"Success": f"Deleted banner"}, status=status.HTTP_200_OK)
+
+
+class TicketList(generics.ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        tickets = Ticket.objects.annotate(
+            ballkid_name=Concat(
+                "ballkid__first_name", Value(" "), "ballkid__last_name"
+            ),
+            num_tickets="ballkid__num_tickets",
+        ).order_by("session", "order")
+
+        return tickets

@@ -1195,10 +1195,10 @@ export default function BallkidPageChairperson(props) {
               <Box className="sxs">
                 <Typography variant="body1"># of Tickets Used:</Typography>
                 <Typography variant="body1" sx={{ mx: 1 }}>
-                  {ballkid.num_tickets_used}
+                  {ballkid.num_tickets}
                 </Typography>
                 <IconButton
-                  disabled={ballkid.num_tickets_used === 0}
+                  disabled={ballkid.num_tickets === 0}
                   size="small"
                   sx={{ p: 0.5 }}
                   onClick={(e) => {
@@ -1208,7 +1208,7 @@ export default function BallkidPageChairperson(props) {
                       body: JSON.stringify({
                         first_name: ballkid.first_name,
                         last_name: ballkid.last_name,
-                        num_tickets_used: ballkid.num_tickets_used - 1,
+                        num_tickets: ballkid.num_tickets - 1,
                       }),
                     })
                       .then((response) => response.json())
@@ -1227,7 +1227,7 @@ export default function BallkidPageChairperson(props) {
                       body: JSON.stringify({
                         first_name: ballkid.first_name,
                         last_name: ballkid.last_name,
-                        num_tickets_used: ballkid.num_tickets_used + 1,
+                        num_tickets: ballkid.num_tickets + 1,
                       }),
                     })
                       .then((response) => response.json())

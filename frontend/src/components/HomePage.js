@@ -42,6 +42,8 @@ import GamePage from "./settings/GamePage";
 import AccountSettings from "./settings/AccountSettings";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
+import TicketsPageMobile from "./lists/TicketsPageMobile";
+import TicketsPageDesktop from "./lists/TicketsPageDesktop";
 
 function chairpersonRoutes(isMobile, setToken) {
   return (
@@ -90,6 +92,10 @@ function chairpersonRoutes(isMobile, setToken) {
             <TeamsPageChairpersonDesktop />
           )
         }
+      />
+      <Route
+        path="/tickets"
+        element={isMobile ? <TicketsPageMobile /> : <TicketsPageDesktop />}
       />
       <Route path="/tournament-settings" element={<TournamentSettings />} />
       <Route path="/game" element={<GamePage />} />

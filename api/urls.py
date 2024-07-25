@@ -116,6 +116,7 @@ tournament_urls = [
     path("banner-list", BannerList.as_view(), name="banner-list"),
     path("update-banner", UpdateBanner.as_view(), name="update-banner"),
     path("reset-data", ResetData.as_view(), name="reset-data"),
+    path("ticket-list", TicketList.as_view(), name="ticket-list"),
 ]
 
 # Rating URLs
