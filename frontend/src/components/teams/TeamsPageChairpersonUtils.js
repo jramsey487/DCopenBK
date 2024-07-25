@@ -443,12 +443,13 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
             value={numTeams}
             variant="standard"
             required
+            type="number"
             InputProps={{
               inputProps: {
                 style: { textAlign: "center" },
               },
             }}
-            style={{ width: 25 }}
+            style={{ width: 50 }}
             sx={{ mx: 1 }}
             onChange={(e) => setNumTeams(e.target.value)}
           />
