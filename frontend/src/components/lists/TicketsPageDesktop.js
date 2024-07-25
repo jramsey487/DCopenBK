@@ -14,6 +14,9 @@ import MenuItem from "@mui/material/MenuItem";
 import AddCircle from "@mui/icons-material/AddCircle";
 import Done from "@mui/icons-material/Done";
 import Close from "@mui/icons-material/Close";
+import RadioButtonUnchecked from "@mui/icons-material/RadioButtonUnchecked";
+import CheckCircleOutline from "@mui/icons-material/CheckCircleOutline";
+import CheckCircle from "@mui/icons-material/CheckCircle";
 
 import {
   getAuthHeader,
@@ -23,17 +26,50 @@ import {
   BallkidLink,
 } from "../Utils";
 import { ticketsPage } from "../HelpMessages";
-import { TICKET_SESSIONS } from "../Consts";
+import { TICKET_LIMIT, TICKET_SESSIONS } from "../Consts";
 
-function Ticket() {
-  return <Box></Box>;
+function Ticket({ ticket, ticketRepr, setUpdated }) {
+  const ticketDict = {
+    requested: <RadioButtonUnchecked color="primary" />,
+    granted: <CheckCircleOutline color="secondary" />,
+    delivered: <CheckCircle color="success" />,
+  };
+
+  return (
+    <IconButton
+      size="small"
+      sx={{ p: 0.1 }}
+      onClick={(e) => {
+        fetch("/api/update-ticket", {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            session: ticket.session,
+            ballkidId: ticket.ballkid,
+            oldState: ticketRepr,
+          }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+    >
+      {ticketDict[ticketRepr]}
+    </IconButton>
+  );
 }
 
 function toTicketRepr(ticket) {
-  var ticketsRepr = [];
-  ticketsRepr = ticketsRepr + ["delivered"] * ticket.num_delivered;
+  const numDelivered = ticket.num_delivered;
+  const deltaNumGranted = ticket.num_granted - ticket.num_delivered;
+  const deltaNumRequested = ticket.num_requested - ticket.num_granted;
 
-  return [];
+  const ticketRepr = [
+    ...Array(numDelivered).fill("delivered"),
+    ...Array(deltaNumGranted).fill("granted"),
+    ...Array(deltaNumRequested).fill("requested"),
+  ];
+
+  return ticketRepr;
 }
 
 function AddTicketRequest({ session, ballkidsList, setUpdated }) {
@@ -129,6 +165,8 @@ function AddTicketRequest({ session, ballkidsList, setUpdated }) {
 function Sessions({ tickets, setUpdated }) {
   const [ballkidsList, setBallkidsList] = useState([]);
 
+  const isMobile = useIsMobile();
+
   useEffect(() => {
     fetch("/api/list", { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -141,8 +179,6 @@ function Sessions({ tickets, setUpdated }) {
         )
       );
   }, []);
-
-  const isMobile = useIsMobile();
 
   return (
     <Grid container spacing={2}>
@@ -179,10 +215,26 @@ function Sessions({ tickets, setUpdated }) {
                         id={ticket.ballkid}
                         name={ticket.ballkid_name}
                       />
+                      <Typography
+                        sx={{ mx: 1, px: 0.5, my: 0.1 }}
+                        bgcolor={
+                          ticket.num_tickets < TICKET_LIMIT ? "" : "pink"
+                        }
+                        variant="body2"
+                      >
+                        {ticket.num_tickets}
+                      </Typography>
                     </Box>
-                    {toTicketRepr(ticket).map((ticket) => (
-                      <Ticket />
-                    ))}
+                    <Box className="sxs">
+                      {toTicketRepr(ticket).map((ticketRepr, i) => (
+                        <Ticket
+                          key={`${ticket.session}_${ticket.ballkid}_${i}`}
+                          ticket={ticket}
+                          ticketRepr={ticketRepr}
+                          setUpdated={setUpdated}
+                        />
+                      ))}
+                    </Box>
                   </Box>
                 ))}
               <AddTicketRequest

@@ -10,6 +10,7 @@ export const ON_COURT_GREEN = "#c8f7c8";
 
 export const SUPERVET_THRESHOLD = 3;
 export const TARGET_NUM_BALLKIDS_PER_TEAM = 9;
+export const TICKET_LIMIT = 2;
 
 export const DATA_GRID_HEIGHT = "75vh";
 export const TIMEOUT_MS = 1500;

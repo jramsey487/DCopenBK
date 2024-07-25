@@ -1322,9 +1322,12 @@ class UpdateTicket(APIView):
         ballkid = Ballkid.objects.get(id=request.data["ballkid"]["id"])
 
         next_order = (
-            Ticket.objects.filter(session=session, year=year).aggregate(
-                max_order=Max("order")
-            )["max_order"]
+            Coalesce(
+                Ticket.objects.filter(session=session, year=year).aggregate(
+                    max_order=Max("order")
+                )["max_order"],
+                0,
+            )
             + 1
         )
 
@@ -1342,3 +1345,27 @@ class UpdateTicket(APIView):
         return Response(
             {"Success": f"Created ticket request"}, status=status.HTTP_200_OK
         )
+
+    def patch(self, request, format=None):
+        ballkid = Ballkid.objects.get(id=request.data["ballkidId"])
+
+        ticket = Ticket.objects.get(
+            session=request.data["session"], year=get_current_year(), ballkid=ballkid
+        )
+
+        old_state = request.data["oldState"]
+        if old_state == "requested":
+            ticket.num_granted += 1
+        elif old_state == "granted":
+            ticket.num_delivered += 1
+            ballkid.num_tickets += 1
+        else:
+            ticket.num_delivered -= 1
+            ballkid.num_tickets -= 1
+        ticket.save()
+        ballkid.save()
+
+        logger.info(
+            f"[UpdateTicket] Ticket updated {ticket} given request {request.data}"
+        )
+        return Response({"Success": f"Updated ticket"}, status=status.HTTP_200_OK)
