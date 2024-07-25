@@ -738,6 +738,7 @@ class Banner(models.Model):
 
 
 class Ticket(models.Model):
+    year = models.IntegerField()
     session = models.CharField(
         max_length=15,
         choices=TICKET_SESSIONS.choices,

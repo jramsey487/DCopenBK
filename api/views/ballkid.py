@@ -1298,11 +1298,47 @@ class TicketList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        tickets = Ticket.objects.annotate(
-            ballkid_name=Concat(
-                "ballkid__first_name", Value(" "), "ballkid__last_name"
-            ),
-            num_tickets=F("ballkid__num_tickets"),
-        ).order_by("session", "order")
+        tickets = (
+            Ticket.objects.filter(year=get_current_year())
+            .annotate(
+                ballkid_name=Concat(
+                    "ballkid__first_name", Value(" "), "ballkid__last_name"
+                ),
+                num_tickets=F("ballkid__num_tickets"),
+            )
+            .order_by("session", "order")
+        )
 
         return tickets
+
+
+class UpdateTicket(APIView):
+    serializer_class = BannerSerializer
+    permission_classes = [IsChairperson]
+
+    def post(self, request, format=None):
+        year = get_current_year()
+        session = request.data["session"]
+        ballkid = Ballkid.objects.get(id=request.data["ballkid"]["id"])
+
+        next_order = (
+            Ticket.objects.filter(session=session, year=year).aggregate(
+                max_order=Max("order")
+            )["max_order"]
+            + 1
+        )
+
+        ticket = Ticket.objects.create(
+            year=year,
+            session=session,
+            num_requested=request.data["numTickets"],
+            ballkid=ballkid,
+            order=next_order,
+        )
+
+        logger.info(
+            f"[UpdateTicket] Created ticket {ticket} given request {request.data}"
+        )
+        return Response(
+            {"Success": f"Created ticket request"}, status=status.HTTP_200_OK
+        )

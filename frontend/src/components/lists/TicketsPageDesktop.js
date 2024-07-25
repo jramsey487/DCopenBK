@@ -36,7 +36,7 @@ function toTicketRepr(ticket) {
   return [];
 }
 
-function AddTicketRequest({ ballkidsList }) {
+function AddTicketRequest({ session, ballkidsList, setUpdated }) {
   const [ballkid, setBallkid] = useState(null);
   const [numTickets, setNumTickets] = useState("");
 
@@ -88,7 +88,22 @@ function AddTicketRequest({ ballkidsList }) {
       <IconButton
         size="small"
         sx={{ ml: 2 }}
-        onClick={() => console.log("save")}
+        onClick={() =>
+          fetch("/api/update-ticket", {
+            method: "POST",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              session: session,
+              ballkid: ballkid,
+              numTickets: numTickets,
+            }),
+          }).then(() => {
+            setAdding(false);
+            setBallkid(null);
+            setNumTickets("");
+            setUpdated(true);
+          })
+        }
       >
         <Tooltip title="Save">
           <Done />
@@ -128,7 +143,6 @@ function Sessions({ tickets, setUpdated }) {
   }, []);
 
   const isMobile = useIsMobile();
-  console.log(tickets);
 
   return (
     <Grid container spacing={2}>
@@ -171,7 +185,11 @@ function Sessions({ tickets, setUpdated }) {
                     ))}
                   </Box>
                 ))}
-              <AddTicketRequest ballkidsList={ballkidsList} />
+              <AddTicketRequest
+                session={session}
+                ballkidsList={ballkidsList}
+                setUpdated={setUpdated}
+              />
             </CardContent>
           </Card>
         </Grid>
@@ -187,7 +205,8 @@ export default function TicketsPageDesktop(props) {
   useEffect(() => {
     fetch("/api/ticket-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setTickets(data));
+      .then((data) => setTickets(data))
+      .then(() => setUpdated(false));
   }, [updated]);
 
   return (
