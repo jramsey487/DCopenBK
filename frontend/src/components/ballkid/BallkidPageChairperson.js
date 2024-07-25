@@ -19,6 +19,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -35,6 +36,9 @@ import ReportOff from "@mui/icons-material/ReportOff";
 import Shortcut from "@mui/icons-material/Shortcut";
 import RemoveCircle from "@mui/icons-material/RemoveCircle";
 import AddCircle from "@mui/icons-material/AddCircle";
+import Done from "@mui/icons-material/Done";
+import Close from "@mui/icons-material/Close";
+import Edit from "@mui/icons-material/Edit";
 
 import RatingDialog from "../ratings/RatingDialog";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
@@ -734,14 +738,16 @@ function DropdownComments({
       {disabled ? (
         <div className="sxs">
           <Typography color="gray">{comments}</Typography>
-          <Button
+          <IconButton
             size="small"
             disabled={!disabled}
             onClick={() => setDisabled(false)}
             sx={{ mt: 0.5 }}
           >
-            Edit
-          </Button>
+            <Tooltip title="Edit">
+              <Edit />
+            </Tooltip>
+          </IconButton>
         </div>
       ) : (
         <div className="sxs">
@@ -769,7 +775,7 @@ function DropdownComments({
             ))}
           </TextField>
 
-          <Button
+          <IconButton
             size="small"
             sx={{ ml: 2 }}
             onClick={() => {
@@ -797,17 +803,21 @@ function DropdownComments({
               });
             }}
           >
-            Save
-          </Button>
-          <Button
+            <Tooltip title="Save">
+              <Done />
+            </Tooltip>
+          </IconButton>
+          <IconButton
             size="small"
             onClick={() => {
               setComments(savedComments);
               setDisabled(true);
             }}
           >
-            Cancel
-          </Button>
+            <Tooltip title="Cancel">
+              <Close />
+            </Tooltip>
+          </IconButton>
         </div>
       )}
     </div>
@@ -826,7 +836,7 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
       <div className="sxs">
         {/* <Typography variant="body1" fontWeight="medium"> */}
         <Typography variant="body1">Other Chairperson Comments:</Typography>
-        <Button
+        <IconButton
           size="small"
           disabled={!disabled}
           onClick={() => {
@@ -835,8 +845,10 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
           }}
           sx={{ mt: 0.5 }}
         >
-          Edit
-        </Button>
+          <Tooltip title="Edit">
+            <Edit />
+          </Tooltip>
+        </IconButton>
       </div>
 
       {disabled ? (
@@ -859,7 +871,7 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
             onChange={(e) => setComments(e.target.value)}
           />
 
-          <Button
+          <IconButton
             size="small"
             sx={{ ml: 2 }}
             onClick={() =>
@@ -882,17 +894,21 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
               })
             }
           >
-            Save
-          </Button>
-          <Button
+            <Tooltip title="Save">
+              <Done />
+            </Tooltip>
+          </IconButton>
+          <IconButton
             size="small"
             onClick={() => {
               setComments(savedComments);
               setDisabled(true);
             }}
           >
-            Cancel
-          </Button>
+            <Tooltip title="Cancel">
+              <Close />
+            </Tooltip>
+          </IconButton>
         </div>
       )}
     </div>
