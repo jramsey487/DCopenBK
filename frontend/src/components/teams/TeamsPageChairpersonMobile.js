@@ -148,7 +148,7 @@ export function UnassignedMobile({
                           commentTypes={
                             isFinalsPage
                               ? ["rank", "experience"]
-                              : ["checkout-teams"]
+                              : ["checkout_teams"]
                           }
                         />
                       </TableCell>

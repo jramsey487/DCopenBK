@@ -130,7 +130,7 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
         <div key={`ballkid${ballkid.id}`} className="justify">
           <DraggableBallkidAndIcon
             ballkid={ballkid}
-            commentTypes={["checkout-teams"]}
+            commentTypes={["checkout_teams"]}
           />
 
           <div className="sxs">

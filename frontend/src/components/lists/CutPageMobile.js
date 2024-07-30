@@ -109,7 +109,7 @@ function ActiveSection({ active, sections, setUpdated }) {
                     <TableCell component="th" scope="row">
                       <DraggableBallkidAndIcon
                         ballkid={ballkid}
-                        commentTypes={["rank", "experience"]}
+                        commentTypes={["rank", "experience", "last_day"]}
                       />
                     </TableCell>
                     <TableCell>{ballkid.preferred_position}</TableCell>

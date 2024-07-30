@@ -150,7 +150,7 @@ export function UnassignedDesktop({
                                 commentTypes={
                                   isFinalsPage
                                     ? ["rank", "experience"]
-                                    : ["checkout-teams"]
+                                    : ["checkout_teams"]
                                 }
                               />
                             </Grid>

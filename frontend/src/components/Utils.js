@@ -473,70 +473,6 @@ export function ConfirmDialog({
   );
 }
 
-// export function DraggableBallkidAndIcon({ ballkid, type = "" }) {
-//   const [{ isDragging }, drag] = useDrag(() => ({
-//     type: "ballkid",
-//     item: { ...ballkid },
-//     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-//   }));
-
-//   const base = (
-//     <div
-//       ref={drag}
-//       style={{
-//         opacity: isDragging ? 0.5 : 1,
-//       }}
-//     >
-//       <div className="sxs">
-//         <BallkidLink
-//           id={ballkid.id}
-//           name={`${ballkid.first_name} ${ballkid.last_name}`}
-//         />
-//         &thinsp;
-//         <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
-//       </div>
-//     </div>
-//   );
-//   switch (type) {
-//     case "":
-//       return base;
-
-//     // When rendering a draggable ballkid on the teams page, show the checkout
-//     // comments for today
-//     case "checkout":
-//     case "checkout-teams":
-//       return (
-//         <div className="sxs">
-//           {base}
-//           <CommentsText
-//             comments={ballkid.checkout_comments}
-//             commentType={type}
-//           />
-//         </div>
-//       );
-
-//     // When rendering a draggable ballkid on the cut and finals pages, show the
-//     // ratings rank and number of years of experience
-//     case "rank":
-//       return (
-//         <div className="sxs">
-//           {base}
-//           <CommentsText
-//             comments={[ballkid.rank, ballkid.num_ratings]}
-//             commentType={"rank"}
-//           />
-//           <CommentsText
-//             comments={ballkid.num_years_experience}
-//             commentType={"num_years_experience"}
-//           />
-//         </div>
-//       );
-
-//     default:
-//       return base;
-//   }
-// }
-
 export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "ballkid",
@@ -551,10 +487,10 @@ export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
         commentType="checkout"
       />
     ),
-    "checkout-teams": (
+    checkout_teams: (
       <CommentsText
         comments={ballkid.checkout_comments}
-        commentType="checkout-teams"
+        commentType="checkout_teams"
       />
     ),
     rank: (
@@ -566,10 +502,10 @@ export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
     experience: (
       <CommentsText
         comments={ballkid.num_years_experience}
-        commentType="num_years_experience"
+        commentType="experience"
       />
     ),
-    lastDay: (
+    last_day: (
       <CommentsText comments={ballkid.last_day} commentType="last_day" />
     ),
   };
@@ -588,7 +524,9 @@ export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
         />
         &thinsp;
         <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
-        {commentTypes.map((commentType) => commentTypeToComment[commentType])}
+        {commentTypes.map((commentType) => (
+          <Box key={commentType}>{commentTypeToComment[commentType]}</Box>
+        ))}
       </div>
     </div>
   );
@@ -677,7 +615,7 @@ export function HelpIcon({ page, message }) {
 
 export function CommentsText({ comments, commentType, layout = "list" }) {
   switch (commentType) {
-    case "checkout-teams":
+    case "checkout_teams":
       return comments === "End" ? (
         ""
       ) : (
@@ -701,7 +639,7 @@ export function CommentsText({ comments, commentType, layout = "list" }) {
         </Typography>
       );
 
-    case "num_years_experience":
+    case "experience":
       return comments === 0 ? (
         ""
       ) : (
@@ -727,6 +665,19 @@ export function CommentsText({ comments, commentType, layout = "list" }) {
           variant="body2"
         >
           {comments[0]}
+        </Typography>
+      );
+
+    case "last_day":
+      return comments === "End" ? (
+        ""
+      ) : (
+        <Typography
+          sx={{ mx: 0.5, px: 0.5, my: layout === "grid" ? 1 : 0 }}
+          bgcolor="orange"
+          variant="body2"
+        >
+          {comments === null ? "" : comments.substring(0, 3)}
         </Typography>
       );
 
