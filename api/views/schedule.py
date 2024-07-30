@@ -159,7 +159,7 @@ class UpdateSchedule(APIView):
             hour = request.data["hour"]
             start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
 
-            court = request.data["court"]
+            court = request.data["court"].strip()
             team = 0 if request.data["team"] == "" else int(request.data["team"])
 
             shift = Schedule.objects.get(start=start, court=court)
