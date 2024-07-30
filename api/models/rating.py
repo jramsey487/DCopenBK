@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from api.models.ballkid import Ballkid
+from api.models.enums import RATING_STATUS
 
 from datetime import datetime
 
@@ -18,6 +19,9 @@ class Rating(models.Model):
     decision_rating = models.FloatField(null=True, blank=True)
     effort_rating = models.FloatField(null=True, blank=True)
     comments = models.TextField(default="", blank=True)
+    status = models.CharField(
+        max_length=10, choices=RATING_STATUS.choices, default=RATING_STATUS.SUBMITTED
+    )
 
     def __str__(self):
         return f"{self.rater.get_name()} rated {self.ratee.get_name()} {self.rating} on {self.date}"

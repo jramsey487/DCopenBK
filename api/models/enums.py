@@ -61,3 +61,9 @@ class CHECKOUT_TIMES(models.TextChoices):
     TEN = "10pm"
     ELEVEN = "11pm"
     MIDNIGHT = "12am"
+
+
+class RATING_STATUS(models.TextChoices):
+    SUBMITTED = "Submitted"
+    DRAFT = "Draft"
+    DELETED = "Deleted"
