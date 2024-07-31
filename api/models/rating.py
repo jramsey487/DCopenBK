@@ -9,6 +9,7 @@ from datetime import datetime
 
 
 class Rating(models.Model):
+    created_at = models.DateTimeField(null=True, blank=True)
     ratee = models.ForeignKey(Ballkid, on_delete=models.CASCADE, related_name="ratee")
     rater = models.ForeignKey(Ballkid, on_delete=models.CASCADE, related_name="rater")
     date = models.DateField(default=datetime.today)

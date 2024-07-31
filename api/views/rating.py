@@ -332,6 +332,7 @@ class CreateRating(APIView):
 
         if serializer.is_valid():
             rating = Rating.objects.create(
+                created_at=datetime.now(),
                 rater=Ballkid.objects.get(id=serializer.data["rater"]),
                 ratee=Ballkid.objects.get(id=serializer.data["ratee"]),
                 date=serializer.data["date"],

@@ -67,3 +67,4 @@ class RATING_STATUS(models.TextChoices):
     SUBMITTED = "Submitted"
     DRAFT = "Draft"
     DELETED = "Deleted"
+    JOKE = "Joke"
