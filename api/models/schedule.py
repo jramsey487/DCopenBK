@@ -32,7 +32,7 @@ class Tournament(models.Model):
     on_rain_delay = models.BooleanField(default=False)
 
     rcal_ignore_outliers = models.FloatField(default=1.5)
-    rcal_year_threshold = models.IntegerField(default=0)
+    rcal_year_threshold = models.IntegerField(default=2000)
     rcal_bucket_size = models.IntegerField(default=3)
 
     def __str__(self):
