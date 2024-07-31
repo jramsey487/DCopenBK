@@ -20,6 +20,7 @@ import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
 import Close from "@mui/icons-material/Close";
 import AddCircle from "@mui/icons-material/AddCircle";
+import Warning from "@mui/icons-material/Warning";
 
 import {
   Alerts,
@@ -703,6 +704,9 @@ export default function TournamentSettings(props) {
               />
             </Grid>
           ))}
+          <Grid item xs={12} sx={{ mt: 2 }}>
+            <Typography variant="h6">Calibration Settings</Typography>
+          </Grid>
 
           <Grid item xs={12} className="justify">
             <Typography variant="subtitle1">
@@ -716,8 +720,7 @@ export default function TournamentSettings(props) {
           </Grid>
           <Grid item xs={12} className="justify">
             <Typography variant="subtitle1">
-              Change calibration year_threshold parameter (inclusive); 0
-              indicates all years of data
+              Change minimum (inclusive) year for which calibration trains
             </Typography>
             <YearThreshold
               tournament={tournament}
@@ -735,6 +738,14 @@ export default function TournamentSettings(props) {
               setSuccessMsg={setSuccessMsg}
               setErrorMsg={setErrorMsg}
             />
+          </Grid>
+
+          <Grid item xs={12} className="sxs" sx={{ mt: 2 }}>
+            <Warning color="error" />
+            <Typography variant="h6" color="error" sx={{ mx: 1 }}>
+              Proceed with Caution
+            </Typography>
+            <Warning color="error" />
           </Grid>
 
           <Grid item xs={12} className="justify">
