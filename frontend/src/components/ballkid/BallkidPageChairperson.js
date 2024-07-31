@@ -735,9 +735,32 @@ function DropdownComments({
       <Typography variant="body1" sx={{ mr: 1 }}>
         {commentType === "checkout" ? "Today's Checkout Time:" : "Last Day:"}
       </Typography>
-      {disabled ? (
-        <div className="sxs">
-          <Typography color="gray">{comments}</Typography>
+      <Box className="sxs">
+        <TextField
+          select
+          disabled={disabled}
+          value={comments}
+          variant="standard"
+          sx={{ mx: 0.5 }}
+          style={{ minWidth: 125 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onChange={(e) => setComments(e.target.value)}
+          onDoubleClick={() => setDisabled(false)}
+        >
+          {(commentType === "checkout"
+            ? CHECKOUT_OPTIONS
+            : LAST_DAY_OPTIONS
+          ).map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        {disabled ? (
           <IconButton
             size="small"
             disabled={!disabled}
@@ -748,78 +771,54 @@ function DropdownComments({
               <Edit />
             </Tooltip>
           </IconButton>
-        </div>
-      ) : (
-        <div className="sxs">
-          <TextField
-            select
-            value={comments}
-            disabled={disabled}
-            variant="standard"
-            sx={{ mx: 0.5 }}
-            style={{ minWidth: 125 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            onChange={(e) => setComments(e.target.value)}
-            onDoubleClick={() => setDisabled(false)}
-          >
-            {(commentType === "checkout"
-              ? CHECKOUT_OPTIONS
-              : LAST_DAY_OPTIONS
-            ).map((value) => (
-              <MenuItem key={value} value={value}>
-                {value}
-              </MenuItem>
-            ))}
-          </TextField>
+        ) : (
+          <Box>
+            <IconButton
+              size="small"
+              sx={{ ml: 2 }}
+              onClick={() => {
+                const commentsBody =
+                  commentType === "checkout"
+                    ? { checkout_comments: comments }
+                    : { last_day: comments };
 
-          <IconButton
-            size="small"
-            sx={{ ml: 2 }}
-            onClick={() => {
-              const commentsBody =
-                commentType === "checkout"
-                  ? { checkout_comments: comments }
-                  : { last_day: comments };
-
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  ...commentsBody,
-                }),
-              }).then((response) => {
-                if (response.ok) {
-                  setSuccessMsg("Comments saved!");
-                  setDisabled(true);
-                  setSavedComments(comments);
-                } else {
-                  setErrorMsg("Error saving comments.");
-                }
-              });
-            }}
-          >
-            <Tooltip title="Save">
-              <Done />
-            </Tooltip>
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => {
-              setComments(savedComments);
-              setDisabled(true);
-            }}
-          >
-            <Tooltip title="Cancel">
-              <Close />
-            </Tooltip>
-          </IconButton>
-        </div>
-      )}
+                fetch("/api/update-ballkid", {
+                  method: "PATCH",
+                  headers: getAuthHeader(),
+                  body: JSON.stringify({
+                    first_name: ballkid.first_name,
+                    last_name: ballkid.last_name,
+                    ...commentsBody,
+                  }),
+                }).then((response) => {
+                  if (response.ok) {
+                    setSuccessMsg("Comments saved!");
+                    setDisabled(true);
+                    setSavedComments(comments);
+                  } else {
+                    setErrorMsg("Error saving comments.");
+                  }
+                });
+              }}
+            >
+              <Tooltip title="Save">
+                <Done />
+              </Tooltip>
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => {
+                setComments(savedComments);
+                setDisabled(true);
+              }}
+            >
+              <Tooltip title="Cancel">
+                <Close />
+              </Tooltip>
+            </IconButton>
+          </Box>
+        )}
+      </Box>
     </div>
   );
 }
