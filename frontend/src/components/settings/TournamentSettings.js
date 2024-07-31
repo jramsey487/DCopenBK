@@ -407,6 +407,54 @@ function RemoveOutliers({ tournament, setSuccessMsg, setErrorMsg }) {
   );
 }
 
+function YearThreshold({ tournament, setSuccessMsg, setErrorMsg }) {
+  const [param, setParam] = useState(tournament.rcal_year_threshold);
+  const [disabled, setDisabled] = useState(true);
+
+  return (
+    <div className="sxs">
+      <TextField
+        variant="standard"
+        size="small"
+        value={param}
+        style={{ width: 80 }}
+        onChange={(e) => {
+          setParam(e.target.value);
+          setDisabled(false);
+        }}
+      />
+      <IconButton
+        color="primary"
+        disabled={disabled}
+        onClick={() => {
+          setDisabled(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              rcal_year_threshold: param,
+            }),
+          }).then((response) => {
+            if (response.ok) {
+              setSuccessMsg(
+                "Calibration year threshold parameter was updated!"
+              );
+            } else {
+              setErrorMsg(
+                "Error updating calibration year threshold parameter."
+              );
+            }
+          });
+        }}
+      >
+        <Tooltip title="Save">
+          <Done />
+        </Tooltip>
+      </IconButton>
+    </div>
+  );
+}
+
 function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [start, setStart] = useState(null);
@@ -617,6 +665,17 @@ export default function TournamentSettings(props) {
               Change calibration ignore_outliers parameter
             </Typography>
             <RemoveOutliers
+              tournament={tournament}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </Grid>
+          <Grid item xs={12} className="justify">
+            <Typography variant="subtitle1">
+              Change calibration year_threshold parameter (inclusive) - 0
+              indicates all years of data
+            </Typography>
+            <YearThreshold
               tournament={tournament}
               setSuccessMsg={setSuccessMsg}
               setErrorMsg={setErrorMsg}

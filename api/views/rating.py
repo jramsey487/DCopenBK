@@ -126,11 +126,17 @@ def remove_nonoverlapping_reviewers(data):
 
 
 def calibrate(ratings, year_ratings, rating_name="overall"):
+    tournament = Tournament.objects.get(year=get_current_year())
+    ignore_outliers = tournament.rcal_ignore_outliers
+    year_threshold = tournament.rcal_year_threshold
+
+    train_ratings = ratings.filter(date__year__gte=year_threshold)
+
     logger.info(
-        f"[calibrate] starting calibration for {len(ratings)} ratings and {len(year_ratings)} year_ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
+        f"[calibrate] starting calibration for {len(train_ratings)} ratings and {len(year_ratings)} year_ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
     )
 
-    train = queryset_to_rcal(ratings, rating_name, returnAveraged=True)
+    train = queryset_to_rcal(train_ratings, rating_name, returnAveraged=True)
     test = queryset_to_rcal(year_ratings, rating_name, returnAveraged=False)
 
     # test = queryset_to_rcal(year_ratings, rating_name, returnAveraged=False)
@@ -145,9 +151,6 @@ def calibrate(ratings, year_ratings, rating_name="overall"):
     test = {k: v for k, v in test.items() if k[0] not in excluded}
 
     try:
-        ignore_outliers = Tournament.objects.get(
-            year=get_current_year()
-        ).rcal_ignore_outliers
 
         cp = calibrate_parameters(train, rating_delta=(MAX_RATING - MIN_RATING))
         cp.rescale_parameters(
