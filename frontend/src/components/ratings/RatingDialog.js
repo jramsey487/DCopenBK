@@ -211,16 +211,55 @@ export default function RatingDialog({
         </Grid>
       </DialogContent>
 
-      <DialogActions>
+      <DialogActions sx={{ mb: 1, mr: 1 }}>
         <Button onClick={handleClose}>Cancel</Button>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() =>
+            fetch("/api/create-rating", {
+              method: "POST",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                status: "Draft",
+                rater: raterId,
+                ratee: ballkid.id,
+                date: date,
+                rating: rating,
+                athleticism_rating: athleticismRating,
+                rolling_rating: rollingRating,
+                awareness_rating: awarenessRating,
+                decision_rating: decisionRating,
+                effort_rating: effortRating,
+                comments: comments,
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setUpdated(true);
+                setSuccessMsg("Draft rating saved!");
+                setTimeout(() => {
+                  setOpen(false);
+                  setSuccessMsg("");
+                }, 2500);
+              } else {
+                setErrorMsg("Error saving draft rating.");
+              }
+            })
+          }
+        >
+          Save as Draft
+        </Button>
         <LoadingButton
           loading={loading}
+          variant="contained"
+          color="primary"
           onClick={(e) => {
             setLoading(true);
             fetch("/api/create-rating", {
               method: "POST",
               headers: getAuthHeader(),
               body: JSON.stringify({
+                status: "Complete",
                 rater: raterId,
                 ratee: ballkid.id,
                 date: date,

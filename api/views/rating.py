@@ -288,7 +288,7 @@ class RatingsList(generics.ListAPIView):
 
         return (
             Rating.objects.filter(date__year=year)
-            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.JOKE))
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDE))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -316,7 +316,7 @@ class MyRatings(generics.ListAPIView):
 
         return (
             Rating.objects.filter(rater_id=pk, date__year=year)
-            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.JOKE))
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDE))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -559,7 +559,19 @@ class ExcludeRating(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, pk, format=None):
-        pass
+        rating = Rating.objects.get(pk=pk)
+        # If currently excluded, not un-exclude
+        if rating.status == RATING_STATUS.EXCLUDE:
+            rating.status = RATING_STATUS.COMPLETE
+
+        # If currently including, then exclude
+        elif rating.status == RATING_STATUS.COMPLETE:
+            rating.status = RATING_STATUS.EXCLUDE
+
+        rating.save()
+
+        logger.info(f"[ExcludeRating] excluding rating {rating}")
+        return Response({"Success": f"Excluded rating"}, status=status.HTTP_200_OK)
 
 
 class DeleteRating(APIView):

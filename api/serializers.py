@@ -26,6 +26,7 @@ class BallkidSerializer(serializers.ModelSerializer):
     five_duration = serializers.DurationField(required=False)
     # Other fields
     num_my_ratings = serializers.IntegerField(required=False)
+    have_draft = serializers.BooleanField(required=False)
     self_cut = serializers.BooleanField(required=False)
     rank = serializers.IntegerField(required=False)
 

@@ -4,6 +4,9 @@ import Typography from "@mui/material/Typography";
 import Switch from "@mui/material/Switch";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+
+import Edit from "@mui/icons-material/Edit";
 
 import {
   LayoutButtons,
@@ -90,44 +93,73 @@ function BallkidsSection({ ballkids, layout, setUpdated }) {
           <BallkidCard
             ballkid={ballkid}
             renderAdditional={
-              <Box textAlign="center" sx={{ mt: layout === "grid" ? 1 : 0 }}>
-                {ballkid.id === getLocalStorage("ballkid_id") ? (
-                  ""
+              <Box className={layout === "grid" ? "" : "sxs"}>
+                {ballkid.have_draft && layout === "list" ? (
+                  <Button
+                    color="secondary"
+                    variant="outlined"
+                    size="small"
+                    endIcon={<Edit />}
+                    sx={{ mr: 3 }}
+                  >
+                    View Draft
+                  </Button>
                 ) : (
-                  <RatingButton
-                    ballkid={ballkid}
-                    setUpdated={setUpdated}
-                    isMobile={isMobile}
-                  />
+                  ""
                 )}
 
-                <Box>
-                  {!isChairperson ? (
-                    ""
-                  ) : (
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      Total ratings:{" "}
-                      <Box fontWeight="fontWeightRegular" display="inline">
-                        {ballkid.num_ratings}
-                      </Box>
-                    </Typography>
-                  )}
+                <Box textAlign="center" sx={{ mt: layout === "grid" ? 1 : 0 }}>
                   {ballkid.id === getLocalStorage("ballkid_id") ? (
                     ""
                   ) : (
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      My total ratings:{" "}
-                      <Box fontWeight="fontWeightRegular" display="inline">
-                        {ballkid.num_my_ratings}
-                      </Box>
-                    </Typography>
+                    <RatingButton
+                      ballkid={ballkid}
+                      setUpdated={setUpdated}
+                      isMobile={isMobile}
+                    />
                   )}
+
+                  <Box>
+                    {!isChairperson ? (
+                      ""
+                    ) : (
+                      <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+                        Total ratings:{" "}
+                        <Box fontWeight="fontWeightRegular" display="inline">
+                          {ballkid.num_ratings}
+                        </Box>
+                      </Typography>
+                    )}
+                    {ballkid.id === getLocalStorage("ballkid_id") ? (
+                      ""
+                    ) : (
+                      <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+                        My total ratings:{" "}
+                        <Box fontWeight="fontWeightRegular" display="inline">
+                          {ballkid.num_my_ratings}
+                        </Box>
+                      </Typography>
+                    )}
+                    {ballkid.have_draft && layout === "grid" ? (
+                      <Button
+                        color="secondary"
+                        variant="outlined"
+                        size="small"
+                        endIcon={<Edit />}
+                        sx={{ mt: 1 }}
+                      >
+                        View Draft
+                      </Button>
+                    ) : (
+                      ""
+                    )}
+                  </Box>
                 </Box>
               </Box>
             }
           />
         </Grid>
-      ))}{" "}
+      ))}
     </Grid>
   );
 }

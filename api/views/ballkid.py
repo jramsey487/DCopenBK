@@ -13,6 +13,7 @@ from django.db.models import (
     Case,
     Value,
     When,
+    Exists,
     Subquery,
     IntegerField,
 )
@@ -306,9 +307,24 @@ def annotate_ratings(ballkids, pk):
     current_year = get_current_year()
 
     return ballkids.annotate(
-        num_ratings=Count("ratee", filter=Q(ratee__date__year=current_year)),
+        num_ratings=Count(
+            "ratee",
+            filter=Q(ratee__date__year=current_year)
+            & Q(ratee__status=RATING_STATUS.COMPLETE),
+        ),
         num_my_ratings=Count(
-            "ratee", filter=Q(ratee__date__year=current_year) & Q(ratee__rater__id=pk)
+            "ratee",
+            filter=Q(ratee__date__year=current_year)
+            & Q(ratee__rater__id=pk)
+            & Q(ratee__status=RATING_STATUS.COMPLETE),
+        ),
+        have_draft=Exists(
+            Rating.objects.filter(
+                rater_id=pk,
+                ratee_id=OuterRef("id"),
+                date__year=current_year,
+                status=RATING_STATUS.DRAFT,
+            )
         ),
         # have_rated=Exists(
         #     Rating.objects.filter(
