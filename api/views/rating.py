@@ -357,14 +357,15 @@ class CreateRating(APIView):
             )
             logger.info(f"[CreateRating] Created rating {rating}")
 
-            draft_rating = Rating.objects.get(
+            draft_rating = Rating.objects.filter(
                 status=RATING_STATUS.DRAFT,
                 rater_id=rater_id,
                 ratee_id=ratee_id,
                 date__year=get_current_year(),
-            )
-            draft_rating.delete()
-            logger.info(f"[CreateRating] Deleing draft rating {draft_rating}")
+            ).first()
+            if draft_rating:
+                draft_rating.delete()
+                logger.info(f"[CreateRating] Deleing draft rating {draft_rating}")
 
             return Response(RatingSerializer(rating).data)
 
