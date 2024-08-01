@@ -189,7 +189,7 @@ def save_calibration_parameters(cp=None, calibrated=None, year=get_current_year(
     logger.info(f"[save_calibration_parameters] saving calibration params")
 
     # Filter to this year's ratings only
-    year_ratings = Rating.objects.filter(date__year=year)
+    year_ratings = Rating.objects.filter(date__year=year, status=RATING_STATUS.COMPLETE)
 
     # Filter to active ballkids only
     ballkids = Ballkid.objects.filter(is_active=True)
@@ -288,6 +288,7 @@ class RatingsList(generics.ListAPIView):
 
         return (
             Rating.objects.filter(date__year=year)
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.JOKE))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -315,6 +316,7 @@ class MyRatings(generics.ListAPIView):
 
         return (
             Rating.objects.filter(rater_id=pk, date__year=year)
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.JOKE))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -340,6 +342,7 @@ class CreateRating(APIView):
         if serializer.is_valid():
             rating = Rating.objects.create(
                 created_at=datetime.now(),
+                status=serializer.data["status"],
                 rater=Ballkid.objects.get(id=serializer.data["rater"]),
                 ratee=Ballkid.objects.get(id=serializer.data["ratee"]),
                 date=serializer.data["date"],
@@ -371,7 +374,7 @@ class CalibratedRatings(APIView):
     def get(self, request, year):
         cp_dict = {rating_name: None for rating_name in RATING_CATEGORIES}
         excluded = {rating_name: set() for rating_name in RATING_CATEGORIES}
-        ratings = Rating.objects.all()
+        ratings = Rating.objects.filter(status=RATING_STATUS.COMPLETE)
         year_ratings = ratings.filter(date__year=year)
 
         logger.info(
@@ -551,13 +554,23 @@ class GetAverageCalibrationParams(APIView):
         return Response(avgs)
 
 
+class ExcludeRating(APIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsChairperson]
+
+    def patch(self, request, pk, format=None):
+        pass
+
+
 class DeleteRating(APIView):
     serializer_class = RatingSerializer
     permission_classes = [IsChairperson]
 
-    def delete(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         rating = Rating.objects.get(pk=pk)
+        rating.status = RATING_STATUS.DELETED
+        rating.save()
         logger.info(f"[DeleteRating] deleting rating {rating}")
-        rating.delete()
+        # rating.delete()
 
         return Response(status=status.HTTP_200_OK)
