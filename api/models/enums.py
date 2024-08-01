@@ -64,7 +64,7 @@ class CHECKOUT_TIMES(models.TextChoices):
 
 
 class RATING_STATUS(models.TextChoices):
-    SUBMITTED = "Submitted"
+    COMPLETE = "Complete"
     DRAFT = "Draft"
     DELETED = "Deleted"
-    JOKE = "Joke"
+    EXCLUDE = "Exclude"

@@ -21,11 +21,11 @@ class Rating(models.Model):
     effort_rating = models.FloatField(null=True, blank=True)
     comments = models.TextField(default="", blank=True)
     status = models.CharField(
-        max_length=10, choices=RATING_STATUS.choices, default=RATING_STATUS.SUBMITTED
+        max_length=10, choices=RATING_STATUS.choices, default=RATING_STATUS.COMPLETE
     )
 
     def __str__(self):
-        return f"{self.rater.get_name()} rated {self.ratee.get_name()} {self.rating} on {self.date}"
+        return f"{self.status}: {self.rater.get_name()} rated {self.ratee.get_name()} {self.rating} on {self.date}"
 
 
 class CalibrationParams(models.Model):
