@@ -51,6 +51,7 @@ import {
   ON_COURT_GREEN,
   SUPERVET_THRESHOLD,
 } from "./Consts";
+import { Popover } from "@mui/material";
 
 export function Icons({ ballkid, margin, isTeamsPage = false }) {
   const group = getLocalStorage("group");
@@ -522,6 +523,8 @@ export function ConfirmDialog({
 }
 
 export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "ballkid",
     item: { ...ballkid },
@@ -566,7 +569,11 @@ export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
       }}
       className="hover-parent"
     >
-      <Box className="sxs">
+      <Box
+        className="sxs"
+        onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
+        onMouseLeave={() => setAnchorEl(null)}
+      >
         <BallkidLink
           id={ballkid.id}
           name={`${ballkid.first_name} ${ballkid.last_name}`}
@@ -576,24 +583,40 @@ export function DraggableBallkidAndIcon({ ballkid, commentTypes = [] }) {
         {commentTypes.map((commentType) => (
           <Box key={commentType}>{commentTypeToComment[commentType]}</Box>
         ))}
-        {/* <Card className="hovercard">
-          <CardActionArea
-            component={RouterLink}
-            to={
-              ballkid.id === getLocalStorage("ballkid_id")
-                ? "/me"
-                : `/ballkid/${ballkid.id}`
-            }
-          >
-            <AspectRatio ratio="1/1">
-              <CardMedia component="img" image={ballkid.image} />
-            </AspectRatio>
-            <CardContent>
-            <Typography>Years Experience: {ballkid.num_years_experience}</Typography>
-            <Typography>Calibrated Rank: {ballkid.rank}</Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card> */}
+        <Popover
+          open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          sx={{
+            pointerEvents: "none",
+          }}
+          onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
+          onMouseLeave={() => setAnchorEl(null)}
+        >
+          <Card>
+            <CardActionArea
+              component={RouterLink}
+              to={
+                ballkid.id === getLocalStorage("ballkid_id")
+                  ? "/me"
+                  : `/ballkid/${ballkid.id}`
+              }
+            >
+              <AspectRatio ratio="1/1">
+                <CardMedia component="img" image={ballkid.image} />
+              </AspectRatio>
+              <CardContent>
+                <Typography>
+                  Years Experience: {ballkid.num_years_experience}
+                </Typography>
+                <Typography>Calibrated Rank: {ballkid.rank}</Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Popover>
       </Box>
     </Box>
   );
