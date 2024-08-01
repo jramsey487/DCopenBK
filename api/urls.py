@@ -123,8 +123,14 @@ tournament_urls = [
 # Rating URLs
 rating_urls = [
     path("create-rating", CreateRating.as_view(), name="create-rating"),
+    path("save-draft-rating", SaveDraftRating.as_view(), name="save-draft-rating"),
     path("exclude-rating/<int:pk>", ExcludeRating.as_view(), name="exclude-rating"),
     path("delete-rating/<int:pk>", DeleteRating.as_view(), name="delete-rating"),
+    path(
+        "get-draft-rating/<int:pk>/<int:ballkid>",
+        GetDraftRating.as_view(),
+        name="get-draft-rating",
+    ),
     path("ratings/<int:year>", RatingsList.as_view(), name="ratings"),
     path(
         "calibrated-ratings/<int:year>",

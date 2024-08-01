@@ -340,11 +340,12 @@ class CreateRating(APIView):
         serializer = self.serializer_class(data=data)
 
         if serializer.is_valid():
+            rater_id = serializer.data["rater"]
+            ratee_id = serializer.data["ratee"]
             rating = Rating.objects.create(
                 created_at=datetime.now(),
-                status=serializer.data["status"],
-                rater=Ballkid.objects.get(id=serializer.data["rater"]),
-                ratee=Ballkid.objects.get(id=serializer.data["ratee"]),
+                rater_id=rater_id,
+                ratee_id=ratee_id,
                 date=serializer.data["date"],
                 rating=serializer.data["rating"],
                 athleticism_rating=serializer.data["athleticism_rating"],
@@ -354,8 +355,16 @@ class CreateRating(APIView):
                 effort_rating=serializer.data["effort_rating"],
                 comments=serializer.data["comments"],
             )
-
             logger.info(f"[CreateRating] Created rating {rating}")
+
+            draft_rating = Rating.objects.get(
+                status=RATING_STATUS.DRAFT,
+                rater_id=rater_id,
+                ratee_id=ratee_id,
+                date__year=get_current_year(),
+            )
+            draft_rating.delete()
+            logger.info(f"[CreateRating] Deleing draft rating {draft_rating}")
 
             return Response(RatingSerializer(rating).data)
 
@@ -365,6 +374,39 @@ class CreateRating(APIView):
         return Response(
             {"Invalid serializer": f"Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class SaveDraftRating(APIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsChairpersonOrCaptain]
+
+    def patch(self, request, format=None):
+        rater_id = request.data["rater"]
+        ratee_id = request.data["ratee"]
+        date = datetime.strptime(request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR)
+
+        rating = Rating.objects.update_or_create(
+            date__year=get_current_year(),
+            status=RATING_STATUS.DRAFT,
+            rater_id=rater_id,
+            ratee_id=ratee_id,
+            defaults={
+                "created_at": datetime.now(),
+                "date": datetime.strftime(date, HYPHEN_YEAR_MONTH_DAY_FORMAT_STR),
+                "rating": request.data["rating"],
+                "athleticism_rating": request.data["athleticism_rating"],
+                "rolling_rating": request.data["rolling_rating"],
+                "awareness_rating": request.data["awareness_rating"],
+                "decision_rating": request.data["decision_rating"],
+                "effort_rating": request.data["effort_rating"],
+                "comments": request.data["comments"],
+            },
+        )
+
+        logger.info(f"[SaveDraftRating] Saving draft rating {rating}")
+        return Response(
+            {"Success": f"Saved draft rating {rating}"}, status=status.HTTP_200_OK
         )
 
 
@@ -572,6 +614,43 @@ class ExcludeRating(APIView):
 
         logger.info(f"[ExcludeRating] excluding rating {rating}")
         return Response({"Success": f"Excluded rating"}, status=status.HTTP_200_OK)
+
+
+# class GetDraftRating(APIView):
+#     serializer_class = RatingSerializer
+#     permission_classes = [IsChairpersonOrCaptain]
+
+#     def get(self, request, pk, format=None):
+#         rating = Rating.objects.get(pk=pk)
+#         # If currently excluded, not un-exclude
+#         if rating.status == RATING_STATUS.EXCLUDE:
+#             rating.status = RATING_STATUS.COMPLETE
+
+#         # If currently including, then exclude
+#         elif rating.status == RATING_STATUS.COMPLETE:
+#             rating.status = RATING_STATUS.EXCLUDE
+
+#         rating.save()
+
+#         logger.info(f"[ExcludeRating] excluding rating {rating}")
+#         return Response({"Success": f"Excluded rating"}, status=status.HTTP_200_OK)
+
+
+class GetDraftRating(generics.RetrieveAPIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsChairpersonOrCaptain]
+
+    def get_object(self):
+        me = self.kwargs.get("pk")
+        ballkid_id = self.kwargs.get("ballkid")
+
+        queryset = Rating.objects.filter(
+            rater__id=me,
+            ratee__id=ballkid_id,
+            date__year=get_current_year(),
+            status=RATING_STATUS.DRAFT,
+        ).first()
+        return queryset
 
 
 class DeleteRating(APIView):

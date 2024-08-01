@@ -36,6 +36,7 @@ import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 import AspectRatio from "@mui/joy/AspectRatio";
 
 import GridView from "@mui/icons-material/GridView";
+import Edit from "@mui/icons-material/Edit";
 import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
 import Help from "@mui/icons-material/Help";
@@ -162,6 +163,51 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
         sx={{ my: isMobile ? 1 : 0.2 }}
       >
         Give rating
+      </Button>
+    </div>
+  );
+}
+
+export function DraftRatingButton({ ballkid, setUpdated }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState();
+
+  const pk = getLocalStorage("ballkid_id");
+
+  useEffect(() => {
+    fetch(`/api/get-draft-rating/${pk}/${ballkid.id}`, {
+      headers: getAuthHeader(),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setDraft(data);
+      });
+  }, [pk, ballkid.id]);
+
+  return draft === null || draft === undefined ? (
+    ""
+  ) : (
+    <div>
+      <RatingDialog
+        open={open}
+        setOpen={setOpen}
+        ballkid={ballkid}
+        setUpdated={setUpdated}
+        draft={draft}
+      />
+      <Button
+        color="secondary"
+        variant="contained"
+        size="small"
+        endIcon={<Edit />}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setOpen(true);
+        }}
+      >
+        View Draft
       </Button>
     </div>
   );
@@ -852,6 +898,19 @@ export function getDay(dateStr) {
   const date = new Date(`${dateStr.slice(5)}, ${yyyy}`);
   const dd = String(date.getDate());
   const mm = String(date.getMonth() + 1); //January is 0!
+  return `${mm}/${dd}/${yyyy}`;
+}
+
+// Returns date in the format: [year]-[month]-[day]
+//  as a string of the format: [month]/[day]/[year]
+export function getDayFromHyphenated(dateStr) {
+  if (dateStr === null || dateStr === undefined) {
+    return null;
+  }
+
+  const yyyy = dateStr.slice(0, 4);
+  const mm = dateStr.slice(5, 7);
+  const dd = dateStr.slice(8);
   return `${mm}/${dd}/${yyyy}`;
 }
 

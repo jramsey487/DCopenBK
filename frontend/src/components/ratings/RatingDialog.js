@@ -20,6 +20,7 @@ import {
   getToday,
   getLocalStorage,
   useIsMobile,
+  getDayFromHyphenated,
 } from "../Utils";
 
 export function RatingAndLabel({ label, rating, setRating }) {
@@ -54,18 +55,29 @@ export default function RatingDialog({
   ballkid,
   setUpdated,
   inputDate = null,
+  draft = {},
 }) {
   const raterId = getLocalStorage("ballkid_id");
   const isMobile = useIsMobile();
 
-  const [date, setDate] = useState(inputDate ?? getToday("slash", true));
-  const [rating, setRating] = useState(null);
-  const [comments, setComments] = useState("");
-  const [athleticismRating, setAthleticismRating] = useState(null);
-  const [rollingRating, setRollingRating] = useState(null);
-  const [awarenessRating, setAwarenessRating] = useState(null);
-  const [decisionRating, setDecisionRating] = useState(null);
-  const [effortRating, setEffortRating] = useState(null);
+  const [date, setDate] = useState(
+    getDayFromHyphenated(draft.date) ?? inputDate ?? getToday("slash", true)
+  );
+  const [rating, setRating] = useState(draft.rating ?? null);
+  const [comments, setComments] = useState(draft.comments ?? "");
+  const [athleticismRating, setAthleticismRating] = useState(
+    draft.athleticism_rating ?? null
+  );
+  const [rollingRating, setRollingRating] = useState(
+    draft.rolling_rating ?? null
+  );
+  const [awarenessRating, setAwarenessRating] = useState(
+    draft.awareness_rating ?? null
+  );
+  const [decisionRating, setDecisionRating] = useState(
+    draft.decision_rating ?? null
+  );
+  const [effortRating, setEffortRating] = useState(draft.effort_rating ?? null);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -217,11 +229,10 @@ export default function RatingDialog({
           variant="outlined"
           color="secondary"
           onClick={() =>
-            fetch("/api/create-rating", {
-              method: "POST",
+            fetch("/api/save-draft-rating", {
+              method: "PATCH",
               headers: getAuthHeader(),
               body: JSON.stringify({
-                status: "Draft",
                 rater: raterId,
                 ratee: ballkid.id,
                 date: date,
