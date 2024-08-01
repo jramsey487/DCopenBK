@@ -596,15 +596,22 @@ class BulkCreateCheckins(APIView):
         histories = []
 
         for line in reader:
-            ballkid_id = int(line["ballkid"])
+            first_name = line["first_name"]
+            last_name = line["last_name"]
             try:
-                ballkid = Ballkid.objects.get(id=ballkid_id)
+                ballkid = Ballkid.objects.get(
+                    first_name=first_name, last_name=last_name
+                )
             except Exception:
                 continue
 
             start = datetime.strptime(line["start"], "%Y-%m-%d %H:%M:%S")
-            end = datetime.strptime(line["end"], "%Y-%m-%d %H:%M:%S")
-            duration = end - start
+            end = (
+                datetime.strptime(line["end"], "%Y-%m-%d %H:%M:%S")
+                if line["end"] != ""
+                else None
+            )
+            duration = end - start if end else "00:00:00"
             is_first_checkin = line["is_first_checkin"]
 
             history = CheckinHistory(
