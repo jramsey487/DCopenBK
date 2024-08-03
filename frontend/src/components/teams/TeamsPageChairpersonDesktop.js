@@ -152,6 +152,11 @@ export function UnassignedDesktop({
                                     ? ["rank", "experience"]
                                     : ["checkout_teams"]
                                 }
+                                hoverCommentTypes={
+                                  isFinalsPage
+                                    ? ["experience", "rank", "calibrated_avg"]
+                                    : []
+                                }
                               />
                             </Grid>
                           ))}

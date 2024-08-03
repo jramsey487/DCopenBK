@@ -298,6 +298,7 @@ function ActiveSection({ active, setUpdated }) {
                             hoverCommentTypes={[
                               "experience",
                               "rank",
+                              "calibrated_avg",
                               "last_day",
                             ]}
                           />

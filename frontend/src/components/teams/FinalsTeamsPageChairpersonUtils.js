@@ -115,6 +115,7 @@ function renderBallkidsOnTeam(assigned, setUpdated) {
           <DraggableBallkidAndIcon
             ballkid={ballkid}
             commentTypes={["rank", "experience"]}
+            hoverCommentTypes={["experience", "rank", "calibrated_avg"]}
           />
 
           <div className="sxs">

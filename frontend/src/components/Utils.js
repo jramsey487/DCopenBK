@@ -531,11 +531,23 @@ export function DraggableBallkidAndIcon({
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
+  const [delayHandler, setDelayHandler] = useState(null);
+
+  const handleMouseEnter = (e) => {
+    setDelayHandler(
+      setTimeout(() => {
+        setAnchorEl(e.currentTarget);
+      }, 50)
+    );
+  };
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "ballkid",
     item: { ...ballkid },
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   }));
+
+  console.log(ballkid);
 
   return (
     <Box
@@ -846,6 +858,32 @@ export function CommentsText({
                 : ballkid.last_day.substring(0, 3)}
             </Typography>
           )}
+        </Box>
+      );
+
+    case "calibrated_avg":
+      return (
+        <Box className="sxs">
+          {showLabel ? (
+            <Typography variant="subtitle2">Calibrated Average: </Typography>
+          ) : (
+            ""
+          )}
+
+          <Typography
+            sx={{ mx: 0.5, px: 0.5, my: 0.1 }}
+            bgcolor={
+              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD ? "" : "pink"
+            }
+            color={
+              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD
+                ? "gray"
+                : "black"
+            }
+            variant="body2"
+          >
+            {Number(ballkid.calibrated_avg).toFixed(3)}
+          </Typography>
         </Box>
       );
 
