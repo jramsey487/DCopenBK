@@ -18,7 +18,7 @@ import {
 } from "../Utils";
 import {
   renderBallkidCutHistory,
-  renderBallkidFinalsHistory,
+  FinalsHistoryTable,
   AggregateMetrics,
 } from "./BallkidPageChairperson";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
@@ -71,7 +71,6 @@ export default function MyProfile(props) {
   const [ballkid, setBallkid] = useState(null);
   const [showTeams, setShowTeams] = useState(false);
 
-  const [finals, setFinals] = useState([]);
   const [cuts, setCuts] = useState([]);
 
   const [updated, setUpdated] = useState(false);
@@ -84,10 +83,6 @@ export default function MyProfile(props) {
       .then((response) => response.json())
       .then((data) => setBallkid(data))
       .then(() => setUpdated(false));
-
-    fetch("/api/get-finals-history/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setFinals(data));
 
     fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -191,7 +186,7 @@ export default function MyProfile(props) {
         )}
       </Grid>
       <Grid container>
-        {renderBallkidFinalsHistory(finals)}
+        <FinalsHistoryTable pk={pk} />
         {renderBallkidCutHistory(cuts)}
       </Grid>
     </div>

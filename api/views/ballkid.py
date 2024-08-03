@@ -920,7 +920,7 @@ class GetFinalsHistory(generics.ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
-        return FinalsHistory.objects.filter(ballkid_id=pk).order_by("match_type")
+        return FinalsHistory.objects.filter(ballkid_id=pk).order_by("-year")
 
 
 class GetCutHistory(generics.ListAPIView):

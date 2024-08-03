@@ -1,100 +1,60 @@
-First Name,Last Name,MS,MS_Years,MD,MD_Years,WS,WS_Years,SINCE 2013
-Benjy,Apelbaum,2,2021,1,2017,2,"2019, 2022",
-Reem,Araji,,,1,2019,,,
-Saman,Bahadorie,,,,,1,2013,
-Robbie,Baker,,,,,1,2014,
-Jess,Beattie,1,2013,,,,,
-Ali,Belinkie,3,2019,1,2013,1,2015,
-Stu,Berlin,1,2015,1,2014,,,
-Debbie,Berlin,1,2015,1,2014,,,
-Leo,Blumberg-Woll,,,1,2014,1,2013,
-Russell,Broman,,,1,2018,,,
-Stephanie,Broussard,,,,,1,2016,
-Evan,Chang,1,2019,,,2,2017,
-Mary,Chang,,,,,1,2018,
-Jonathan,Chen,3,"2021, 2022",1,2017,2,2015,
-Evan,Costanza,3,"2021, 2022",,,2,2018,
-Disha,Das,,,1,2019,,,
-Judie,Fien-Helfman,,,1,2019,,,
-McLean,Fonvielle,4,2019,,,2,2015,
-Catherine,Fonvielle,1,2014,,,1,2013,
-Ally,Freeland,1,2016,1,2015,2,2017,
-Nikki,Furst,1,2019,2,2014,1,2015,
-Ryan,Gates,5,2021,1,2015,1,2022,
-Matthew,Gates,2,2016,2,2015,,,
-Gary,Guy,2,2015,,,,,
-Garth,Herbert,4,2017,1,2013,,,
-Peter,Ho,,,,,1,2016,
-Joe,Iosue,4,"2021, 2022",1,2017,,,
-Tucker,Kelly,,,1,2013,,,
-Neil,Ketkar,,,1,2015,1,2013,
-Katie,Kolodner,,,,,2,2019,
-Matthew,Kolodner,2,2021,2,"2018, 2022",,,
-Anna,Kuligowski,,,,,2,2017,
-Ted,Kuligowski,1,2022,2,2021,1,2016,
-Mitch,Lawhorn,1,2017,1,2015,1,2016,
-Geoff,Lawhorn,1,2013,,,,,
-Don,Lawhorn,1,2013,,,,,
-Matthew,Lawrenz,,,,,1,2019,
-Andrew,Lee,1,2016,,,,,
-Ashton,Legum,1,2022,,,1,2019,
-Artavius,Lincoln,,,2,2014,,,
-Jenny,Liu,1,2013,,,2,2017,
-Diana,Lozonova,,,2,2021,1,2018,
-Jason,Lustine,3,2017,,,2,2014,
-Julia,Marcotte,,,1,2019,,,
-Lucas,Murphy,,,1,2019,,,
-Joe,Nahra,2,2015,1,2013,,,
-Francis,Ngobounan,6,2019,,,,,
-Maddie,Nguyen,,,1,2015,1,2014,
-Matthew,Nicholson,3,"2021, 2022",1,2018,,,
-John,Niswander,6,2021,2,"2013, 2022",1,2015,
-Shota,Ono,,,1,2018,2,2017,
-Billy,Owens,3,"2021, 2022",,,2,2019,
-Handong,Park,,,1,2015,1,2014,
-Ryan,Perry,,,1,2021,,,
-Tammy,Peyton,,,5,"2021, 2022",1,2013,
-Piyush,Pokala,,,1,2019,,,
-Carolyn,Quetsch,1,2022,,,1,2019,
-Siddarth,Ravikanti,,,1,2019,,,
-Sharon,Sabasteanski,3,"2021, 2022",2,2014,1,2016,
-Alexis,Salcedo,2,2018,1,2014,1,2013,
-Lucas,Salcedo,1,2016,,,1,2015,
-Anna,Schmitt,1,2018,1,2017,1,2016,
-Jacob,Schreiman,,,,,1,2013,
-Mike,Shapiro,3,2021,,,,,
-Alok,Shetty,1,2016,,,,,
-Will,Siegal,,,1,2017,2,2015,
-Zach,Spahr,3,2018,3,"2021, 2022",2,2017,
-Iah,Spraker,,,,,1,2017,
-Shruti,Srinivasan,,,,,1,2019,
-Elena,Staguhn,,,,,1,2016,
-Aidan,Steinly,,,,,1,2017,
-Rachel,Summers,,,,,1,2016,
-Frank,Sun,,,2,2021,,,
-Jeff,Tseng,1,2015,,,,,
-Gordon,Turner,,,,,1,2019,
-Austin,Urch,,,,,1,2017,
-Megan,Vu,,,1,2018,,,
-Dilavar,Waraich,,,2,2021,1,2018,
-Jasjeet,Waraich,1,2021,,,2,2019,
-Matias,Weikert,,,2,2018,,,
-Mike,White,5,2021,,,1,2015,
-Richie,Wismer,,,1,2013,,,
-Sydney,Wood,,,1,2019,1,2018,
-Sam,Woodbury,1,2013,,,,,
-Kelly,Xie,2,2017,2,2021,2,"2018, 2022",
-Adriana,Yenchochic,,,1,2019,,,
-Jeff,Zhang,4,2021,,,4,"2019, 2022",
-Ethan,Rosenberg,1,2022,,,,,
-Aaron,Zhao,,,1,2022,,,
-Debananda,Das,,,1,2022,,,
-Dhruv,Das,,,1,2022,,,
-Arul,Gupta,,,1,2022,,,
-Shawn,Lisann,,,1,2022,,,
-Gennaro,Tenore,,,,,1,2022,
-Pooja,Swamykumar,,,,,1,2022,
-Andrea,Iosue,,,,,1,2022,
-Joy,Jiang,,,,,1,2022,
-Carly,Mew,,,,,1,2022,
-Henry,Byrne-kvalsvik,,,,,1,2022,
+first_name,last_name,position,year,match_type
+Sharon,Sabasteanski,Back,2023,Men's Doubles
+Benjamin,Apelbaum,Back,2023,Men's Doubles
+Carolyn,Quetsch,Back,2023,Men's Doubles
+Judie,Fien-helfman,Back,2023,Men's Doubles
+Jeremy,Chung,Back,2023,Men's Doubles
+Kayla ,Wright,Back,2023,Men's Doubles
+Ethan ,Rosenberg,Net,2023,Men's Doubles
+Srivanth ,Reddy,Net,2023,Men's Doubles
+Ashu ,Machida,Net,2023,Men's Doubles
+Michael ,Sabasteanski,Net,2023,Men's Doubles
+John,Niswander,Back,2023,Men's Doubles
+Evan,Costanza,Back,2023,Women's Singles
+Joy,Jiang,Back,2023,Women's Singles
+Emma,Fradlin,Back,2023,Women's Singles
+Michelle,Fradlin,Back,2023,Women's Singles
+Rebecca,White,Back,2023,Women's Singles
+Zachary,Spahr,Net,2023,Women's Singles
+Joe,Iosue,Net,2023,Women's Singles
+Matthew,Lawrenz,Net,2023,Women's Singles
+Connor,Akiyama,Net,2023,Women's Singles
+Billy,Owens,Back,2023,Women's Singles
+Diana,Lozanova,Back,2023,Men's Singles
+Jasjeet,Waraich,Back,2023,Men's Singles
+Dhruv,Das,Back,2023,Men's Singles
+Andrea,Iosue,Back,2023,Men's Singles
+Gennaro,Tenore,Back,2023,Men's Singles
+Jeff,Zhang,Net,2023,Men's Singles
+Jonathan,Chen,Net,2023,Men's Singles
+Ryan,Gates,Net,2023,Men's Singles
+Dilavar,Waraich,Net,2023,Men's Singles
+Gennaro,Tenore,Back,2022,Women's Singles
+Pooja,Swamykumar,Back,2022,Women's Singles
+Kelly,Xie,Back,2022,Women's Singles
+Benjamin,Apelbaum,Back,2022,Women's Singles
+Andrea,Iosue,Back,2022,Women's Singles
+Joy,Jiang,Back,2022,Women's Singles
+Jeff,Zhang,Net,2022,Women's Singles
+Carly,Mew,Net,2022,Women's Singles
+Ryan,Gates,Net,2022,Women's Singles
+Henry,Byrne-Kvalsvik,Net,2022,Women's Singles
+Billy,Owens,Back,2022,Men's Singles
+Evan,Costanza,Back,2022,Men's Singles
+Sharon,Sabasteanski,Back,2022,Men's Singles
+Carolyn,Quetsch,Back,2022,Men's Singles
+Ethan,Rosenberg,Back,2022,Men's Singles
+Matthew,Nicholson,Back,2022,Men's Singles
+Ashton,Legum,Net,2022,Men's Singles
+Joe,Iosue,Net,2022,Men's Singles
+Ted,Kuligowski,Net,2022,Men's Singles
+Jonathan,Chen,Net,2022,Men's Singles
+John,Niswander,Back,2022,Men's Doubles
+Aaron,Zhao,Back,2022,Men's Doubles
+Debananda,Das,Back,2022,Men's Doubles
+Dhruv,Das,Back,2022,Men's Doubles
+Tammy,Peyton,Back,2022,Men's Doubles
+Arul,Gupta,Back,2022,Men's Doubles
+Matthew,Kolodner,Net,2022,Men's Doubles
+Shawn,Lisann,Net,2022,Men's Doubles
+Zachary,Spahr,Net,2022,Men's Doubles

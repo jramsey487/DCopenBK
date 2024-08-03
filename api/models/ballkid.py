@@ -374,38 +374,15 @@ class Ballkid(models.Model):
             now = datetime.now()
         current_year = get_current_year()
 
-        # Filter to any existing finals history which has the current year
-        # TODO: consider changing this to filter on ballkid and match type
-        histories = FinalsHistory.objects.filter(
-            ballkid=self, years__contains=[current_year]
+        # Update or create finals history entry for the current year
+        history, created = FinalsHistory.objects.update_or_create(
+            ballkid=self,
+            year=current_year,
+            defaults={"match_type": value},
         )
-        if histories.count() > 1:
-            raise Exception(
-                f"Found multiple histories {histories} for ballkid {self} containing year {current_year}"
-            )
-
-        # Remove old finals history item because ballkid has been unassigned
-        # from the previous finals history
-        if histories.count() > 0:
-            history = histories[0]
-            if history.count == 1:
-                history.delete()
-            else:
-                history.count -= 1
-                history.years.remove(current_year)
-                history.save()
-
-        # If assigning a new finals team to the ballkid, then update finals
-        # history with a new row
-        if value != "":
-            history, created = FinalsHistory.objects.get_or_create(
-                ballkid=self,
-                match_type=value,
-                defaults={"count": 0, "years": []},
-            )
-            history.count += 1
-            history.years.append(current_year)
-            history.save()
+        logger.info(
+            f"[handle_finals_history_team] Finals history {history} created {created} for ballkid {self}"
+        )
 
     def handle_finals_history_hideshow(self, value, now=None):
         if now is None:
@@ -420,47 +397,28 @@ class Ballkid(models.Model):
         # If the ballkid has an assigned finals team and showing teams,
         # then create a finals history entry with the finals team assigned
         if value:
-            history, created = FinalsHistory.objects.get_or_create(
+            history, created = FinalsHistory.objects.update_or_create(
                 ballkid=self,
-                match_type=self.finals_team,
-                defaults={"count": 0, "years": []},
+                year=get_current_year(),
+                defaults={"match_type": self.finals_team},
             )
-            history.count += 1
-            history.years.append(current_year)
             logger.info(
-                f"[handle_finals_history_hideshow] Finals history created {created} for ballkid {self}: {history}"
+                f"[handle_finals_history_hideshow] Finals history {history} created {created} for ballkid {self}"
             )
-            history.save()
 
         # If hiding teams, then delete the current year from the
         # ballkid's finals history
         else:
             # Filter to any existing finals history which has the current year
             # TODO: consider changing this to filter on ballkid and match type
-            histories = FinalsHistory.objects.filter(
-                ballkid=self, years__contains=[current_year]
-            )
-            if histories.count() > 1:
-                logger.warn(
-                    f"[handle_finals_history_hideshow] Found multiple histories {histories} for ballkid {self} containing year {current_year}"
+            history = FinalsHistory.objects.filter(
+                ballkid=self, year=get_current_year()
+            ).first()
+            if history:
+                logger.info(
+                    f"[handle_finals_history_hideshow] Deleting history {history} due to hiding finals teams"
                 )
-
-            # Remove old finals history item because ballkid has been unassigned
-            # from the previous finals history
-            if histories.count() == 1:
-                history = histories[0]
-                if history.count == 1:
-                    logger.info(
-                        f"[handle_finals_history_hideshow] Deleting history {history} due to hiding finals teams"
-                    )
-                    history.delete()
-                else:
-                    logger.info(
-                        f"[handle_finals_history_hideshow] Removing {current_year} from history {history} due to hiding finals teams"
-                    )
-                    history.count -= 1
-                    history.years.remove(current_year)
-                    history.save()
+                history.delete()
 
     def set_field(self, field, value, self_cut=False):
         """
@@ -618,14 +576,13 @@ class Ballkid(models.Model):
 class FinalsHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     match_type = models.CharField(max_length=20, choices=MATCH_TYPE.choices)
-    count = models.IntegerField()
-    years = ArrayField(models.IntegerField(), blank=True, null=True)
+    year = models.IntegerField()
 
     class Meta:
-        unique_together = ("ballkid", "match_type")
+        unique_together = ("ballkid", "year")
 
     def __str__(self):
-        return f"{self.ballkid.get_name()} worked {self.match_type} {self.count} times in years {self.years}"
+        return f"{self.ballkid.get_name()} worked {self.match_type} in {self.year}"
 
 
 class CutHistory(models.Model):
