@@ -25,6 +25,7 @@ import {
 export function UnassignedDesktop({
   unassigned,
   setUpdated,
+  showHovercard = false,
   isFinalsPage = false,
 }) {
   const [open, setOpen] = useState(false);
@@ -152,6 +153,7 @@ export function UnassignedDesktop({
                                     ? ["rank", "experience"]
                                     : ["checkout_teams"]
                                 }
+                                showHovercard={showHovercard}
                                 hoverCommentTypes={
                                   isFinalsPage
                                     ? ["experience", "rank", "calibrated_avg"]

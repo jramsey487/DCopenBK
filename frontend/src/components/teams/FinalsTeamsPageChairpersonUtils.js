@@ -19,12 +19,13 @@ import {
   DraggableBallkidAndIcon,
   ConfirmDialog,
   HelpIcon,
+  renderSwitch,
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
 import { POSITIONS } from "../Consts";
 import { Tooltip } from "@mui/material";
 
-function Team({ team, assigned, setUpdated }) {
+function Team({ team, assigned, showHovercard, setUpdated }) {
   const [clearOpen, setClearOpen] = useState(false);
 
   const [{ isOver }, dropRef] = useDrop({
@@ -97,6 +98,7 @@ function Team({ team, assigned, setUpdated }) {
                 assigned.filter(
                   (ballkid) => ballkid.finals_position === position
                 ),
+                showHovercard,
                 setUpdated
               )}
             </div>
@@ -107,7 +109,7 @@ function Team({ team, assigned, setUpdated }) {
   );
 }
 
-function renderBallkidsOnTeam(assigned, setUpdated) {
+function renderBallkidsOnTeam(assigned, showHovercard, setUpdated) {
   return (
     <div>
       {assigned.map((ballkid) => (
@@ -115,6 +117,7 @@ function renderBallkidsOnTeam(assigned, setUpdated) {
           <DraggableBallkidAndIcon
             ballkid={ballkid}
             commentTypes={["rank", "experience"]}
+            showHovercard={showHovercard}
             hoverCommentTypes={["experience", "rank", "calibrated_avg"]}
           />
 
@@ -174,7 +177,7 @@ function renderBallkidsOnTeam(assigned, setUpdated) {
   );
 }
 
-export function renderTeams(assigned, teams, setUpdated) {
+export function renderTeams(assigned, teams, showHovercard, setUpdated) {
   return (
     <Grid container spacing={2}>
       {teams.map((team) => (
@@ -182,6 +185,7 @@ export function renderTeams(assigned, teams, setUpdated) {
           key={team}
           team={team}
           assigned={assigned.filter((ballkid) => ballkid.finals_team === team)}
+          showHovercard={showHovercard}
           setUpdated={setUpdated}
         />
       ))}
@@ -189,7 +193,7 @@ export function renderTeams(assigned, teams, setUpdated) {
   );
 }
 
-export function Header() {
+export function Header({ showHovercard, setShowHovercard }) {
   const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -229,6 +233,12 @@ export function Header() {
           setErrorMsg={setErrorMsg}
         />
       </div>
+      {renderSwitch(
+        showHovercard,
+        setShowHovercard,
+        "Disable Hovercard",
+        "Enable Hovercard"
+      )}
     </div>
   );
 }

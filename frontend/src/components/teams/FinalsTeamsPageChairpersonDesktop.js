@@ -12,6 +12,8 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
   const [unassigned, setUnassigned] = useState([]);
   const [updated, setUpdated] = useState(false);
 
+  const [showHovercard, setShowHovercard] = useState(false);
+
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
   useEffect(() => {
@@ -45,8 +47,11 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
           xl={9}
           style={{ maxHeight: "85vh", overflow: "auto" }}
         >
-          <Header />
-          {renderTeams(assigned, teams, setUpdated)}
+          <Header
+            showHovercard={showHovercard}
+            setShowHovercard={setShowHovercard}
+          />
+          {renderTeams(assigned, teams, showHovercard, setUpdated)}
         </Grid>
 
         <Grid
@@ -60,6 +65,7 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
           <UnassignedDesktop
             unassigned={unassigned}
             setUpdated={setUpdated}
+            showHovercard={showHovercard}
             isFinalsPage={true}
           />
         </Grid>
