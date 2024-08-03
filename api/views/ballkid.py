@@ -480,21 +480,32 @@ class SelfCutList(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
+        # Update all ballkids who are self-cutting today to have
+        # a cut status of self-cut
         current_day = datetime.strftime(
             (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
         )
-        ballkids = Ballkid.objects.filter(
+        today_self_cuts = Ballkid.objects.filter(
             is_active=True, is_cut=False, last_day=current_day
-        ).order_by("last_name", "first_name")
-
-        for ballkid in ballkids:
-            ballkid.cut_status = "self_cut"
+        )
+        for ballkid in today_self_cuts:
+            ballkid.cut_status = "Self-Cut"
             ballkid.save()
 
-        logger.info(
-            f"[SelfCutList] for current_day {current_day}, self cut list is {ballkids}"
+        # Return all self-cuts including automatically categorized
+        # and manually indicated
+        self_cuts = Ballkid.objects.filter(
+            is_active=True, is_cut=False, cut_status=CUT_STATUS.SELF_CUT
+        ).order_by(
+            "-is_captain",
+            "last_name",
+            "first_name",
         )
-        return ballkids
+
+        logger.info(
+            f"[SelfCutList] for current_day {current_day}, self cut list is {self_cuts}"
+        )
+        return self_cuts
 
 
 class BallkidsSortedList(generics.ListAPIView):

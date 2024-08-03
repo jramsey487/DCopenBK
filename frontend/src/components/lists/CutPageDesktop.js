@@ -384,8 +384,25 @@ export function SelfCutCard({ updated, showHovercard, setUpdated }) {
       .then((data) => setSelfCut(data));
   }, [updated]);
 
+  const [{ isOver }, dropRef] = useDrop({
+    accept: "ballkid",
+    drop: (ballkid) =>
+      fetch("/api/update-ballkid", {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: JSON.stringify({
+          first_name: ballkid.first_name,
+          last_name: ballkid.last_name,
+          cut_status: "Self-Cut",
+        }),
+      })
+        .then((response) => response.json())
+        .then(() => setUpdated(true)),
+    collect: (monitor) => ({ isOver: monitor.isOver() }),
+  });
+
   return (
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
+    <Grid item xs={12} sm={12} md={6} lg={6} xl={3} ref={dropRef}>
       <ConfirmDialog
         message={`You are about to cut all ${selfCut.length} ballkid${
           selfCut.length > 1 ? "s" : ""
@@ -400,7 +417,7 @@ export function SelfCutCard({ updated, showHovercard, setUpdated }) {
         setUpdated={setUpdated}
       />
 
-      <Card sx={{ mb: 2 }} elevation={1}>
+      <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
         <CardContent>
           <div className="justify">
             <div className="sxs">
