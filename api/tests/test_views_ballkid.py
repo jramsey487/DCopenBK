@@ -78,7 +78,7 @@ class TestBallkidListView(APITestCase):
         ballkid = response.data[0]
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(self.ballkid5.first_name, ballkid["first_name"])
-        self.assertEqual("self_cut", ballkid["cut_status"])
+        self.assertEqual("Self-Cut", ballkid["cut_status"])
 
     def test_inactive_list(self):
         response = self.client.get(reverse("inactive-list"))
