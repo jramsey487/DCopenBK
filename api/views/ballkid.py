@@ -923,6 +923,15 @@ class GetFinalsHistory(generics.ListAPIView):
         return FinalsHistory.objects.filter(ballkid_id=pk).order_by("-year")
 
 
+class GetPastFinals(generics.ListAPIView):
+    serializer_class = FinalsHistorySerializer
+    permission_classes = [IsChairperson]
+
+    def get_queryset(self):
+        year = self.kwargs.get("year")
+        return FinalsHistory.objects.filter(year=year).order_by("match_type", 'position')
+
+
 class GetCutHistory(generics.ListAPIView):
     serializer_class = CutHistorySerializer
     permission_classes = [IsChairpersonOrSelf]
