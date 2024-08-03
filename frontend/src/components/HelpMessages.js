@@ -228,6 +228,16 @@ export const finalsTeams = (
   </DialogContentText>
 );
 
+export const pastFinalsTeams = (
+  <DialogContentText>
+    This page allows you to view past finals teams.
+    <br /> <br />
+    Ballkids will ONLY show up if they have an associated ballkid created in the
+    system. As such, teams may be incomplete if they included a ballkid who has
+    not been created in the system.
+  </DialogContentText>
+);
+
 export const finalsTeamsNonchairperson = (
   <DialogContentText>
     This page allows you to view finals teams.

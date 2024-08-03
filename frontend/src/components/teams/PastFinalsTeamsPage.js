@@ -8,8 +8,15 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Divider from "@mui/material/Divider";
 
-import { BallkidLink, Banners, getAuthHeader, getCurrentYear } from "../Utils";
+import {
+  BallkidLink,
+  Banners,
+  getAuthHeader,
+  getCurrentYear,
+  HelpIcon,
+} from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
+import { pastFinalsTeams } from "../HelpMessages";
 
 function Team({ team, ballkids }) {
   return (
@@ -79,6 +86,7 @@ export default function PastFinalsTeamsPageDesktop() {
       <Box className="sxs" sx={{ mb: 2 }}>
         <Typography variant="h4">Past Finals Teams</Typography>
         &thinsp;
+        <HelpIcon page="Past Finals Teams" message={pastFinalsTeams} />
       </Box>
 
       <Box className="sxs">

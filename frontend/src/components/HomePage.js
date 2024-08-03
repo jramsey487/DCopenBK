@@ -41,10 +41,9 @@ import FeedbackPage from "./settings/FeedbackPage";
 import GamePage from "./settings/GamePage";
 import AccountSettings from "./settings/AccountSettings";
 import TicketsPage from "./lists/TicketsPage";
+import PastFinalsTeamsPage from "./teams/PastFinalsTeamsPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
-import PastFinalsTeamsPageMobile from "./teams/PastFinalsTeamsPageMobile";
-import PastFinalsTeamsPageDesktop from "./teams/PastFinalsTeamsPageDesktop";
 
 function chairpersonRoutes(isMobile, setToken) {
   return (
@@ -78,16 +77,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
       <Route path="/me" element={<BallkidPageChairperson />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />
-      <Route
-        path="/past-finals"
-        element={
-          isMobile ? (
-            <PastFinalsTeamsPageMobile />
-          ) : (
-            <PastFinalsTeamsPageDesktop />
-          )
-        }
-      />
+      <Route path="/past-finals" element={<PastFinalsTeamsPage />} />
       <Route path="/rate-by-name" element={<RateByNamePage />} />
       <Route path="/rate-by-team" element={<RateByCurrentTeamsPage />} />
       <Route path="/rate-by-past-team" element={<RateByPastTeamPage />} />
