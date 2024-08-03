@@ -34,6 +34,7 @@ class CUT_STATUS(models.TextChoices):
     POSSIBLY_KEEP = "Possibly Keep"
     POSSIBLY_CUT = "Possibly Cut"
     DEFINITELY_CUT = "Definitely Cut"
+    SELF_CUT = "Self-Cut"
 
 
 class DAY_OF_WEEK(models.TextChoices):
