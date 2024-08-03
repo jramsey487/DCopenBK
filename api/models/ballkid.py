@@ -378,7 +378,7 @@ class Ballkid(models.Model):
         history, created = FinalsHistory.objects.update_or_create(
             ballkid=self,
             year=current_year,
-            defaults={"match_type": value},
+            defaults={"match_type": value, "position": self.finals_position},
         )
         logger.info(
             f"[handle_finals_history_team] Finals history {history} created {created} for ballkid {self}"
@@ -400,7 +400,10 @@ class Ballkid(models.Model):
             history, created = FinalsHistory.objects.update_or_create(
                 ballkid=self,
                 year=get_current_year(),
-                defaults={"match_type": self.finals_team},
+                defaults={
+                    "match_type": self.finals_team,
+                    "position": self.finals_position,
+                },
             )
             logger.info(
                 f"[handle_finals_history_hideshow] Finals history {history} created {created} for ballkid {self}"
@@ -575,8 +578,11 @@ class Ballkid(models.Model):
 
 class FinalsHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
-    match_type = models.CharField(max_length=20, choices=MATCH_TYPE.choices)
     year = models.IntegerField()
+    match_type = models.CharField(max_length=20, choices=MATCH_TYPE.choices)
+    position = models.CharField(
+        max_length=10, choices=POSITION.choices, default=POSITION.B
+    )
 
     class Meta:
         unique_together = ("ballkid", "year")

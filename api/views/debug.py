@@ -563,7 +563,10 @@ class BulkCreateFinals(APIView):
                 continue
 
             final = FinalsHistory(
-                ballkid=ballkid, year=int(line["year"]), match_type=line["match_type"]
+                ballkid=ballkid,
+                year=int(line["year"]),
+                match_type=line["match_type"],
+                position=line["position"],
             )
             finals.append(final)
 
