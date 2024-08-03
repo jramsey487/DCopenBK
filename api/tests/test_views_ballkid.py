@@ -236,6 +236,9 @@ class TestCreateBallkidView(APITestCase):
         self.client = setup_testing_client()
 
         self.url = reverse("create-ballkid")
+        self.tournament = Tournament.objects.create(
+            year=get_current_year(), show_teams=True, show_finals_teams=True
+        )
 
     def test_new_ballkid(self):
         data = {
@@ -735,6 +738,9 @@ class TestCheckoutAllView(APITestCase):
         self.ballkid3 = Ballkid.objects.create(
             first_name="Joe", last_name="Iosue", preferred_position=POSITION.NB
         )
+        self.tournament = Tournament.objects.create(
+            year=get_current_year(), show_teams=True, show_finals_teams=True
+        )
 
     def test_none_checked_in(self):
         response = self.client.patch(self.url, {"checkout_group": "all"}, format="json")
@@ -872,6 +878,10 @@ class TestCutAllView(APITestCase):
             is_checked_in=True,
             current_team=2,
             position=POSITION.N,
+        )
+
+        self.tournament = Tournament.objects.create(
+            year=get_current_year(), show_teams=True, show_finals_teams=True
         )
 
     def test_none_with_cut_status(self):

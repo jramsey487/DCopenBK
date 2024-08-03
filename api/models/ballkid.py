@@ -463,7 +463,6 @@ class Ballkid(models.Model):
         logger.info(
             f"Updating ballkid {self.get_name()} field {field} with value {value}"
         )
-        show_teams = Tournament.objects.get(year=get_current_year()).show_finals_teams
 
         if field == "is_checked_in":
             self.handle_checkin_history(value)
@@ -482,6 +481,9 @@ class Ballkid(models.Model):
             self.position = value
 
         elif field == "finals_position":
+            show_teams = Tournament.objects.get(
+                year=get_current_year()
+            ).show_finals_teams
             self.handle_finals_history_position(value, show_teams)
             self.finals_position = value
 
@@ -494,6 +496,9 @@ class Ballkid(models.Model):
             self.current_team = value
 
         elif field == "finals_team":
+            show_teams = Tournament.objects.get(
+                year=get_current_year()
+            ).show_finals_teams
             self.handle_finals_history_team(value, show_teams)
             self.finals_team = value
 
