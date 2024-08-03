@@ -34,23 +34,28 @@ class TestGetFinalsHistory(APITestCase):
 
     def test_mult_ballkids_mult_histories(self):
         history1 = FinalsHistory.objects.create(
-            ballkid=self.ballkid1, match_type=MATCH_TYPE.MD, count=1, years=[2022]
+            ballkid=self.ballkid1, match_type=MATCH_TYPE.MD, year=2022
         )
-        history2 = FinalsHistory.objects.create(
-            ballkid=self.ballkid1, match_type=MATCH_TYPE.MS, count=2, years=[2020, 2021]
+        history2a = FinalsHistory.objects.create(
+            ballkid=self.ballkid1, match_type=MATCH_TYPE.MS, year=2021
+        )
+        history2b = FinalsHistory.objects.create(
+            ballkid=self.ballkid1, match_type=MATCH_TYPE.MS, year=2020
         )
         history3 = FinalsHistory.objects.create(
-            ballkid=self.ballkid2, match_type=MATCH_TYPE.MD, count=1, years=[2022]
+            ballkid=self.ballkid2, match_type=MATCH_TYPE.MD, year=2022
         )
         history4 = FinalsHistory.objects.create(
-            ballkid=self.ballkid2, match_type=MATCH_TYPE.WS, count=1, years=[2022]
+            ballkid=self.ballkid2, match_type=MATCH_TYPE.WS, year=2021
         )
 
         response = self.client.get(
             reverse("get-finals-history", kwargs={"pk": self.ballkid1.id}),
             format="json",
         )
-        serializer = FinalsHistorySerializer([history1, history2], many=True)
+        serializer = FinalsHistorySerializer(
+            [history1, history2a, history2b], many=True
+        )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer.data, response.data)
