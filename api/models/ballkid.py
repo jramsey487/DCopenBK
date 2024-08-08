@@ -618,6 +618,19 @@ class FinalsHistory(models.Model):
         return f"{self.ballkid.get_name()} worked {self.match_type} in {self.year}"
 
 
+class FinalsAnalytics(models.Model):
+    ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
+    match_type = models.CharField(max_length=20, choices=MATCH_TYPE.choices)
+    count = models.IntegerField(default=0)
+    last_year = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ("ballkid", "match_type")
+
+    def __str__(self):
+        return f"{self.ballkid.get_name()} worked {self.match_type} {self.count} times, most recently in {self.last_year}"
+
+
 class CutHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     year = models.IntegerField()
