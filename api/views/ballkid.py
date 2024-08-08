@@ -315,14 +315,15 @@ def recalc_finals_analytics(ballkid):
         f"[recalc-finals-analytics] {ballkid.get_name()} with {len(histories)} finals histories: {histories}"
     )
 
-    for match_type in MATCH_TYPE.choices:
+    for match_type_tup in MATCH_TYPE.choices:
+        match_type = match_type_tup[0]
         match_type_histories = histories.filter(match_type=match_type)
         analytic, created = FinalsAnalytics.objects.update_or_create(
             ballkid=ballkid,
             match_type=match_type,
             defaults={
                 "count": match_type_histories.count(),
-                "last_year": match_type_histories.aggregate(Max("year")),
+                "last_year": match_type_histories.aggregate(Max("year"))["year__max"],
             },
         )
         logger.info(
@@ -1054,7 +1055,14 @@ class GetFinalsAnalytics(APIView):
         recalc_finals_analytics(ballkid)
         analytics = FinalsAnalytics.objects.filter(
             ballkid_id=pk,
-        ).order_by("match_type")
+        ).order_by(
+            Case(
+                When(match_type=MATCH_TYPE.MS, then=Value(0)),
+                When(match_type=MATCH_TYPE.WS, then=Value(1)),
+                When(match_type=MATCH_TYPE.MD, then=Value(2)),
+                default=Value(3),
+            )
+        )
         return Response(FinalsAnalyticsSerializer(analytics, many=True).data)
 
 
