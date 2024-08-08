@@ -68,6 +68,7 @@ import {
   CHECKOUT_OPTIONS,
   LAST_DAY_OPTIONS,
 } from "../Consts";
+import { Divider } from "@mui/material";
 
 function renderHeader(ballkid, setUpdated, isMobile) {
   const overflowMenu =
@@ -318,6 +319,9 @@ export function FinalsHistoryTable({ pk }) {
         <Typography>No finals history to show.</Typography>
       ) : (
         <Box>
+          <Typography variant="subtitle1" fontWeight="medium">
+            Aggregated:
+          </Typography>
           <TableContainer sx={{ mb: 5 }}>
             <Table size="small">
               <TableHead>
@@ -361,6 +365,9 @@ export function FinalsHistoryTable({ pk }) {
             </Table>
           </TableContainer>
 
+          <Typography variant="subtitle1" fontWeight="medium">
+            Detailed History:
+          </Typography>
           <TableContainer>
             <Table size="small">
               <TableHead>
