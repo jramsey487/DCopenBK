@@ -59,59 +59,59 @@ schedule_urls = [
 # Analytics URLs
 analytics_urls = [
     path(
-        "get-checkin-court-analytics/<int:pk>",
-        GetCheckinCourtAnalytics.as_view(),
-        name="get-checkin-court-analytics",
-    ),
-    # path(
-    #     "get-average-checkin-court-analytics",
-    #     GetAverageCheckinCourtAnalytics.as_view(),
-    #     name="get-average-checkin-court-analytics",
-    # ),
-    path(
-        "get-average-checkin-time/<int:pk>",
-        GetAverageCheckinTime.as_view(),
-        name="get-average-checkin-time",
-    ),
-    path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
-    path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
-    path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),
-    path(
-        "get-finals-history/<int:pk>",
-        GetFinalsHistory.as_view(),
-        name="get-finals-history",
-    ),
-    path("get-cut-history/<int:pk>", GetCutHistory.as_view(), name="get-cut-history"),
-    path(
-        "get-checkin-leaderboard",
-        GetCheckinLeaderboard.as_view(),
-        name="get-checkin-leaderboard",
-    ),
-    path(
         "get-average-checkin-leaderboard",
         GetAverageCheckinLeaderboard.as_view(),
         name="get-average-checkin-leaderboard",
     ),
     path(
-        "get-captain-leaderboard",
-        GetRatingsCaptainLeaderboard.as_view(),
-        name="get-captain-leaderboard",
-    ),
-    path(
-        "get-ballkid-leaderboard",
-        GetRatingsBallkidLeaderboard.as_view(),
-        name="get-ballkid-leaderboard",
-    ),
-    path(
-        "get-court-leaderboard",
-        GetCourtLeaderboard.as_view(),
-        name="get-court-leaderboard",
+        "get-average-checkin-time/<int:pk>",
+        GetAverageCheckinTime.as_view(),
+        name="get-average-checkin-time",
     ),
     path(
         "get-average-court-leaderboard",
         GetAverageCourtLeaderboard.as_view(),
         name="get-average-court-leaderboard",
     ),
+    path(
+        "get-ballkid-leaderboard",
+        GetRatingsBallkidLeaderboard.as_view(),
+        name="get-ballkid-leaderboard",
+    ),
+    path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),
+    path(
+        "get-captain-leaderboard",
+        GetRatingsCaptainLeaderboard.as_view(),
+        name="get-captain-leaderboard",
+    ),
+    path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
+    path(
+        "get-checkin-court-analytics/<int:pk>",
+        GetCheckinCourtAnalytics.as_view(),
+        name="get-checkin-court-analytics",
+    ),
+    path(
+        "get-checkin-leaderboard",
+        GetCheckinLeaderboard.as_view(),
+        name="get-checkin-leaderboard",
+    ),
+    path(
+        "get-court-leaderboard",
+        GetCourtLeaderboard.as_view(),
+        name="get-court-leaderboard",
+    ),
+    path("get-cut-history/<int:pk>", GetCutHistory.as_view(), name="get-cut-history"),
+    path(
+        "get-finals-history/<int:pk>",
+        GetFinalsHistory.as_view(),
+        name="get-finals-history",
+    ),
+    path(
+        "get-finals-analytics/<int:pk>",
+        GetFinalsAnalytics.as_view(),
+        name="get-finals-analytics",
+    ),
+    path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
 ]
 
 # Tournament URLs

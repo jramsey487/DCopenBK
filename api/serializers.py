@@ -94,6 +94,15 @@ class FinalsHistorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class FinalsAnalyticsSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(max_length=60, required=False)
+    last_name = serializers.CharField(max_length=60, required=False)
+
+    class Meta:
+        model = FinalsAnalytics
+        fields = "__all__"
+
+
 class CutHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CutHistory

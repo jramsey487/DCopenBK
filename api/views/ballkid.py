@@ -303,6 +303,33 @@ def recalc_captain_analytics(ballkid, now=None, year=None):
                 )
 
 
+def recalc_finals_analytics(ballkid):
+    """Recalculate finals analytics for ballkid"""
+
+    logger.info(f"[recalc-finals-analytics] for ballkid {ballkid}")
+
+    # When updating a specific ballkid, only get that ballkid's histories and only
+    # create 1 analytic
+    histories = FinalsHistory.objects.filter(ballkid_id=ballkid.id)
+    logger.info(
+        f"[recalc-finals-analytics] {ballkid.get_name()} with {len(histories)} finals histories: {histories}"
+    )
+
+    for match_type in MATCH_TYPE.choices:
+        match_type_histories = histories.filter(match_type=match_type)
+        analytic, created = FinalsAnalytics.objects.update_or_create(
+            ballkid=ballkid,
+            match_type=match_type,
+            defaults={
+                "count": match_type_histories.count(),
+                "last_year": match_type_histories.aggregate(Max("year")),
+            },
+        )
+        logger.info(
+            f"[recalc-finals-analytics] {ballkid.get_name()} and match_type {match_type} created {created} analytic: {analytic}"
+        )
+
+
 def annotate_ratings(ballkids, pk):
     current_year = get_current_year()
 
@@ -1017,6 +1044,18 @@ class GetCaptainAnalytics(APIView):
             year=get_current_year(),
         ).order_by("-duration")
         return Response(CaptainAnalyticsSerializer(analytics, many=True).data)
+
+
+class GetFinalsAnalytics(APIView):
+    permission_classes = [IsChairpersonOrSelf]
+
+    def get(self, request, pk):
+        ballkid = get_object_or_404(Ballkid, id=pk)
+        recalc_finals_analytics(ballkid)
+        analytics = FinalsAnalytics.objects.filter(
+            ballkid_id=pk,
+        ).order_by("match_type")
+        return Response(FinalsAnalyticsSerializer(analytics, many=True).data)
 
 
 class GetCheckinCourtAnalytics(APIView):
