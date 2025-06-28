@@ -277,7 +277,7 @@ class BulkCreateSignups(APIView):
                 ].strip(),
                 SLASH_MONTH_DAY_YEAR_FORMAT_STR,
             )
-            first_day = datetime.strptime("07/27/2024", SLASH_MONTH_DAY_YEAR_FORMAT_STR)
+            first_day = datetime.strptime("07/19/2025", SLASH_MONTH_DAY_YEAR_FORMAT_STR)
             age = (first_day - dob) // timedelta(days=365.2425)
             image = f"static/img/{first_name.lower()}_{last_name.lower()}.jpg"
             image = image if os.path.isfile(image) else DEFAULT_IMAGE_FILE
