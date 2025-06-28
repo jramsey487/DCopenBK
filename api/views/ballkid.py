@@ -767,6 +767,9 @@ class ArchiveAll(APIView):
 
         for ballkid in queryset:
             ballkid.set_field("is_active", False)
+            ballkid.set_field("num_tickets", 0)
+            ballkid.set_field("last_day", None)
+            ballkid.set_field("comments", "")
             ballkid.validate()
             ballkid.save()
 

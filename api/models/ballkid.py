@@ -524,7 +524,7 @@ class Ballkid(models.Model):
 
         elif field == "last_day":
             self.last_day = value
-            self.cut_status = ""
+            # self.cut_status = ""
 
         elif field == "num_tickets":
             self.num_tickets = value
