@@ -281,6 +281,7 @@ class BulkCreateSignups(APIView):
             age = (first_day - dob) // timedelta(days=365.2425)
             image = f"static/img/{first_name.lower()}_{last_name.lower()}.jpg"
             image = image if os.path.isfile(image) else DEFAULT_IMAGE_FILE
+            # TODO: Add a test for an upper case email getting created as lower case
             email = line["Email Address"].strip().lower()
 
             # If user does not yet exist, then create one
