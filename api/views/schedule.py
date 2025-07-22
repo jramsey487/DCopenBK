@@ -315,6 +315,11 @@ class GetTournament(APIView):
             for ballkid in Ballkid.objects.filter(is_active=True, is_cut=False):
                 ballkid.handle_finals_history_hideshow(show_teams)
 
+        if "rcal_calibration_threshold" in request.data:
+            tournament.rcal_calibration_threshold = float(
+                request.data["rcal_calibration_threshold"]
+            )
+
         if "rcal_ignore_outliers" in request.data:
             tournament.rcal_ignore_outliers = float(
                 request.data["rcal_ignore_outliers"]

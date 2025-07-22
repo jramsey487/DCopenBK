@@ -129,6 +129,7 @@ def remove_nonoverlapping_reviewers(data):
 
 def calibrate(ratings, year_ratings, rating_name="overall"):
     tournament = Tournament.objects.get(year=get_current_year())
+    calibration_threshold = tournament.rcal_calibration_threshold
     ignore_outliers = tournament.rcal_ignore_outliers
     year_threshold = tournament.rcal_year_threshold
     bucket_size = tournament.rcal_bucket_size

@@ -24,6 +24,7 @@ class Tournament(models.Model):
     show_finals_teams = models.BooleanField(default=False)
     on_rain_delay = models.BooleanField(default=False)
 
+    rcal_calibration_threshold = models.FloatField(default=1)
     rcal_ignore_outliers = models.FloatField(default=1.5)
     rcal_year_threshold = models.IntegerField(default=2000)
     rcal_bucket_size = models.IntegerField(default=3)

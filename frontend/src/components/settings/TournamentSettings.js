@@ -501,6 +501,54 @@ function BucketSize({ tournament, setSuccessMsg, setErrorMsg }) {
   );
 }
 
+function CalibrationThreshold({ tournament, setSuccessMsg, setErrorMsg }) {
+  const [param, setParam] = useState(tournament.rcal_calibration_threshold);
+  const [disabled, setDisabled] = useState(true);
+
+  return (
+    <div className="sxs">
+      <TextField
+        variant="standard"
+        size="small"
+        value={param}
+        style={{ width: 80 }}
+        onChange={(e) => {
+          setParam(e.target.value);
+          setDisabled(false);
+        }}
+      />
+      <IconButton
+        color="primary"
+        disabled={disabled}
+        onClick={() => {
+          setDisabled(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              rcal_calibration_threshold: param,
+            }),
+          }).then((response) => {
+            if (response.ok) {
+              setSuccessMsg(
+                "Calibration distance to ideal threshold was updated!"
+              );
+            } else {
+              setErrorMsg(
+                "Error updating calibration distance to ideal threshold."
+              );
+            }
+          });
+        }}
+      >
+        <Tooltip title="Save">
+          <Done />
+        </Tooltip>
+      </IconButton>
+    </div>
+  );
+}
+
 function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [year, setYear] = useState(getCurrentYear());
   const [start, setStart] = useState(null);
@@ -707,6 +755,18 @@ export default function TournamentSettings(props) {
           ))}
           <Grid item xs={12} sx={{ mt: 2 }}>
             <Typography variant="h6">Calibration Settings</Typography>
+          </Grid>
+
+          <Grid item xs={12} className="justify">
+            <Typography variant="subtitle1">
+              Change calibration distance to ideal threshold (to exclude
+              captains' ratings)
+            </Typography>
+            <CalibrationThreshold
+              tournament={tournament}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
           </Grid>
 
           <Grid item xs={12} className="justify">
