@@ -41,6 +41,7 @@ class CalibrationParams(models.Model):
     rater_raw_stdev = models.FloatField(blank=True, null=True)
     rater_scale = models.FloatField(blank=True, null=True)
     rater_offset = models.FloatField(blank=True, null=True)
+    rater_distance_to_ideal = models.FloatField(blank=True, null=True)
     num_ratee_ratings = models.IntegerField(default=0)
     num_rater_ratings = models.IntegerField(default=0)
     num_raters = models.IntegerField(default=0)

@@ -178,13 +178,18 @@ def calibrate(ratings, year_ratings, rating_name="overall"):
     return cp, excluded, None
 
 
-def save_calibration_parameters(cp=None, calibrated=None, year=get_current_year()):
+def save_calibration_parameters(
+    cp=None,
+    calibrated=None,
+    year=get_current_year(),
+    distance_to_ideal_threshold=float("inf"),
+):
     """
     Save calibration params as a CalibrationParams object.
 
     Arguments:
     cp: rcal cp object to represent calibration
-    calibrated: Dict mapping (rating id, ratee name) to calibrated rating. Used
+    calibrated: Dict mapping (rating id, ratee name, rater name) to calibrated rating. Used
     for saving calibrated parameters
     """
     logger.info(f"[save_calibration_parameters] saving calibration params")
@@ -195,11 +200,45 @@ def save_calibration_parameters(cp=None, calibrated=None, year=get_current_year(
     # Filter to active ballkids only
     ballkids = Ballkid.objects.filter(is_active=True)
 
+    # Set of raters with distance to ideal > threshold whose ratings should be excluded
+    excluded_raters = set()
+
+    # First, update the rater's metrics. Note that this NEEDS to go before ratee metrics
+    # due to excluding raters' ratings with too high distance to ideal
     for ballkid in ballkids:
         name = ballkid.get_name()
 
-        ratee_ratings = year_ratings.filter(ratee=ballkid)
+        if cp is not None:
+            # distance to ideal is 1/(4.5) int_{.5}^5 (ax + b - x)**2, where a is scale, b is offset
+            a = cp.reviewer_scales().get(name)
+            b = cp.reviewer_offsets().get(name)
+            distance = (1 / 4) * (
+                37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
+            )
+            if distance > distance_to_ideal_threshold:
+                excluded_raters.add(name)
+
+            params, _ = CalibrationParams.objects.update_or_create(
+                ballkid=ballkid,
+                year=year,
+                defaults={
+                    "ratee_improvement": cp.improvement_rates().get(name),
+                    "ratee_offset": cp.person_offsets().get(name),
+                    "rater_scale": a,
+                    "rater_offset": b,
+                    "rater_distance_to_ideal": distance,
+                },
+            )
+            logger.info(
+                f"[save_calibration_parameters] params for ballkid {ballkid} updated with rcal metrics: {params}"
+            )
+
+    # Update the ratee's metrics, including EXCLUDING excluded raters' ratings
+    for ballkid in ballkids:
+        name = ballkid.get_name()
+
         rater_ratings = year_ratings.filter(rater=ballkid)
+        ratee_ratings = year_ratings.filter(ratee=ballkid)
 
         num_ratee_ratings = ratee_ratings.count()
         num_rater_ratings = rater_ratings.count()
@@ -229,7 +268,9 @@ def save_calibration_parameters(cp=None, calibrated=None, year=get_current_year(
 
         if calibrated:
             ratee_calibrated = [
-                val for key, val in calibrated.items() if key[1] == name
+                val
+                for key, val in calibrated.items()
+                if key[1] == name and key[2] not in excluded_raters
             ]
             calibrated_avg = (
                 statistics.mean(ratee_calibrated) if len(ratee_calibrated) > 0 else None
@@ -250,21 +291,6 @@ def save_calibration_parameters(cp=None, calibrated=None, year=get_current_year(
             )
             logger.info(
                 f"[save_calibration_parameters] params for ballkid {ballkid} updated with calibrated metrics: {params}"
-            )
-
-        if cp is not None:
-            params, _ = CalibrationParams.objects.update_or_create(
-                ballkid=ballkid,
-                year=year,
-                defaults={
-                    "ratee_improvement": cp.improvement_rates().get(name),
-                    "ratee_offset": cp.person_offsets().get(name),
-                    "rater_scale": cp.reviewer_scales().get(name),
-                    "rater_offset": cp.reviewer_offsets().get(name),
-                },
-            )
-            logger.info(
-                f"[save_calibration_parameters] params for ballkid {ballkid} updated with rcal metrics: {params}"
             )
 
 
@@ -416,6 +442,8 @@ class CalibratedRatings(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request, year):
+        tournament = Tournament.objects.get(year=year)
+
         cp_dict = {rating_name: None for rating_name in RATING_CATEGORIES}
         excluded = {rating_name: set() for rating_name in RATING_CATEGORIES}
         ratings = Rating.objects.filter(status=RATING_STATUS.COMPLETE)
@@ -448,7 +476,11 @@ class CalibratedRatings(APIView):
 
         # Get dict of all calibrated overall ratings for saving calibration params
         calibrated = {
-            (rating.id, rating.ratee.get_name()): get_postprocessed_rating(
+            (
+                rating.id,
+                rating.ratee.get_name(),
+                rating.rater.get_name(),
+            ): get_postprocessed_rating(
                 cp_dict["overall"],
                 rating.rating,
                 rating.rater.get_name(),
@@ -460,7 +492,9 @@ class CalibratedRatings(APIView):
         )
 
         # Save calibration parameters for overall ratings only
-        save_calibration_parameters(cp_dict["overall"], calibrated, year)
+        save_calibration_parameters(
+            cp_dict["overall"], calibrated, year, tournament.rcal_calibration_threshold
+        )
 
         # Calibrate each rating to put together a list of calibrated ratings
         # to return
