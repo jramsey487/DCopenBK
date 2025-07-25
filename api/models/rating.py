@@ -37,14 +37,20 @@ class CalibrationParams(models.Model):
     ratee_raw_stdev = models.FloatField(blank=True, null=True)
     ratee_calibrated_avg = models.FloatField(blank=True, null=True)
     ratee_calibrated_stdev = models.FloatField(blank=True, null=True)
+    ratee_calibrated_avg_unexcluded = models.FloatField(blank=True, null=True)
+    ratee_calibrated_stdev_unexcluded = models.FloatField(blank=True, null=True)
+
     rater_raw_avg = models.FloatField(blank=True, null=True)
     rater_raw_stdev = models.FloatField(blank=True, null=True)
     rater_scale = models.FloatField(blank=True, null=True)
     rater_offset = models.FloatField(blank=True, null=True)
     rater_distance_to_ideal = models.FloatField(blank=True, null=True)
-    num_ratee_ratings = models.IntegerField(default=0)
+
     num_rater_ratings = models.IntegerField(default=0)
+    num_ratee_ratings = models.IntegerField(default=0)
+    num_ratee_ratings_unexcluded = models.IntegerField(default=0)
     num_raters = models.IntegerField(default=0)
+    num_raters_unexcluded = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ("ballkid", "year")
