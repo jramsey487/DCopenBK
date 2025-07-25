@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.10-buster
+ARG PYTHON_VERSION=3.10-bullseye
 
 FROM python:${PYTHON_VERSION}
 
@@ -14,7 +14,6 @@ WORKDIR /code
 
 COPY requirements.txt /tmp/requirements.txt
 
-RUN apt-get --allow-releaseinfo-change update
 RUN apt-get update && apt-get install -y git
 
 RUN set -ex && \
