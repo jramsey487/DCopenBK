@@ -310,7 +310,7 @@ function ActiveSection({ active, showHovercard, setUpdated }) {
                         <Grid key={ballkid.id} item sx={{ px: 1 }}>
                           <DraggableBallkidAndIcon
                             ballkid={ballkid}
-                            commentTypes={["rank", "last_day"]}
+                            commentTypes={["experience", "rank", "last_day"]}
                             showHovercard={showHovercard}
                             hoverCommentTypes={[
                               "experience",
