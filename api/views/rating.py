@@ -129,7 +129,6 @@ def remove_nonoverlapping_reviewers(data):
 
 def calibrate(ratings, year_ratings, rating_name="overall"):
     tournament = Tournament.objects.get(year=get_current_year())
-    calibration_threshold = tournament.rcal_calibration_threshold
     ignore_outliers = tournament.rcal_ignore_outliers
     year_threshold = tournament.rcal_year_threshold
     bucket_size = tournament.rcal_bucket_size
@@ -212,10 +211,13 @@ def save_calibration_parameters(
             # distance to ideal is 1/(4.5) int_{.5}^5 (ax + b - x)**2, where a is scale, b is offset
             a = cp.reviewer_scales().get(name)
             b = cp.reviewer_offsets().get(name)
-            distance = (1 / 4) * (
-                37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
-            )
-            if distance > distance_to_ideal_threshold:
+            if a is None or b is None:
+                distance = None
+            else:
+                distance = (1 / 4) * (
+                    37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
+                )
+            if distance and distance > distance_to_ideal_threshold:
                 excluded_raters.add(name)
 
             params, _ = CalibrationParams.objects.update_or_create(
@@ -504,7 +506,9 @@ class CalibratedRatings(APIView):
                 "rater": rating.rater,
                 "ratee": rating.ratee,
                 "date": rating.date,
-                "rating": calibrated[(rating.id, rating.ratee.get_name())],
+                "rating": calibrated[
+                    (rating.id, rating.ratee.get_name(), rating.rater.get_name())
+                ],
                 "athleticism_rating": get_postprocessed_rating(
                     cp_dict["athleticism"],
                     rating.athleticism_rating,

@@ -1,12 +1,17 @@
 from django.test import TestCase
+from django.urls import reverse
 from datetime import datetime, timedelta, date
+from rest_framework.test import APITestCase, APIClient
+
 from api.views.rating import *
 from api.models.rating import Rating
 from api.models.ballkid import Ballkid
+from api.serializers import BallkidSerializer
+from api.utils.utils import *
 from rcal import CalibrationParameters
 
 
-class TestViewsRating(TestCase):
+class TestViewsRatingHelpers(TestCase):
     def setUp(self):
         self.tournament = Tournament(year=get_current_year())
         self.tournament.save()
@@ -431,3 +436,163 @@ class TestViewsRating(TestCase):
         cp, excluded, error = calibrate(ratings, year_ratings)
         self.assertIsNone(cp)
         self.assertIsNotNone(error)
+
+
+class TestCalibratedRatingsView(APITestCase):
+    def setUp(self):
+        self.client = setup_testing_client()
+        self.year = get_current_year()
+
+        self.tournament = Tournament(year=self.year)
+        self.tournament.save()
+
+        self.ratee1 = Ballkid(first_name="Ballkid", last_name="Iosue")
+        self.ratee2 = Ballkid(first_name="Andrea", last_name="Iosue")
+        self.ratee3 = Ballkid(first_name="Lacy", last_name="Iosue")
+        self.rater1 = Ballkid(first_name="Captain", last_name="Iosue")
+        self.rater2 = Ballkid(first_name="Joe", last_name="Iosue")
+        self.rater3 = Ballkid(first_name="Ridiculous", last_name="Iosue")
+        self.ratee1.save()
+        self.ratee2.save()
+        self.ratee3.save()
+        self.rater1.save()
+        self.rater2.save()
+        self.rater3.save()
+
+        # Rater 1 uses the full spectrum
+        Rating.objects.create(
+            ratee=self.ratee1,
+            rater=self.rater1,
+            date=date.today(),
+            rating=1,
+        )
+        Rating.objects.create(
+            ratee=self.ratee2,
+            rater=self.rater1,
+            date=date.today(),
+            rating=3,
+        )
+        Rating.objects.create(
+            ratee=self.ratee3,
+            rater=self.rater1,
+            date=date.today(),
+            rating=5,
+        )
+        # Rater 2 uses the full spectrum
+        Rating.objects.create(
+            ratee=self.ratee1,
+            rater=self.rater2,
+            date=date.today(),
+            rating=1,
+        )
+        Rating.objects.create(
+            ratee=self.ratee2,
+            rater=self.rater2,
+            date=date.today(),
+            rating=3,
+        )
+        Rating.objects.create(
+            ratee=self.ratee3,
+            rater=self.rater2,
+            date=date.today(),
+            rating=5,
+        )
+        # Rater 3 is ridiculous
+        Rating.objects.create(
+            ratee=self.ratee1,
+            rater=self.rater3,
+            date=date.today(),
+            rating=5,
+        )
+        Rating.objects.create(
+            ratee=self.ratee2,
+            rater=self.rater3,
+            date=date.today(),
+            rating=5,
+        )
+        Rating.objects.create(
+            ratee=self.ratee3,
+            rater=self.rater3,
+            date=date.today(),
+            rating=5,
+        )
+
+    def test_num_calibrated_ratings(self):
+        response = self.client.get(
+            reverse("calibrated-ratings", kwargs={"year": self.year})
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(9, len(response.data))
+
+    def test_calibrated_ratee_avg(self):
+        response = self.client.get(
+            reverse("calibrated-ratings", kwargs={"year": self.year})
+        )
+
+        ratee_params1 = CalibrationParams.objects.get(ballkid=self.ratee1)
+        ratee_params2 = CalibrationParams.objects.get(ballkid=self.ratee2)
+        ratee_params3 = CalibrationParams.objects.get(ballkid=self.ratee3)
+
+        self.assertLess(
+            ratee_params1.ratee_calibrated_avg, ratee_params2.ratee_calibrated_avg
+        )
+        self.assertLess(
+            ratee_params2.ratee_calibrated_avg, ratee_params3.ratee_calibrated_avg
+        )
+
+    def test_calibrated_rater_distance_to_ideal(self):
+        response = self.client.get(
+            reverse("calibrated-ratings", kwargs={"year": self.year})
+        )
+
+        params1 = CalibrationParams.objects.get(ballkid=self.rater1)
+        params2 = CalibrationParams.objects.get(ballkid=self.rater2)
+        params3 = CalibrationParams.objects.get(ballkid=self.rater3)
+
+        self.assertLess(
+            params1.rater_distance_to_ideal, params3.rater_distance_to_ideal
+        )
+        self.assertLess(
+            params2.rater_distance_to_ideal, params3.rater_distance_to_ideal
+        )
+        self.assertLess(1, params3.rater_distance_to_ideal)
+
+    def test_calibrated_rater_distance_to_ideal(self):
+        self.client.get(reverse("calibrated-ratings", kwargs={"year": self.year}))
+        excluding_avg = CalibrationParams.objects.get(
+            ballkid=self.ratee3
+        ).ratee_calibrated_avg
+
+        self.tournament.rcal_calibration_threshold = float("inf")
+        self.tournament.save()
+
+        self.client.get(reverse("calibrated-ratings", kwargs={"year": self.year}))
+        including_avg = CalibrationParams.objects.get(
+            ballkid=self.ratee3
+        ).ratee_calibrated_avg
+
+        self.assertGreater(excluding_avg, including_avg)
+
+    def test_calibrationparams_ratee(self):
+        response = self.client.get(
+            reverse("calibrated-ratings", kwargs={"year": self.year})
+        )
+
+        params = CalibrationParams.objects.get(ballkid=self.ratee1)
+
+        self.assertEqual(3, params.num_ratee_ratings)
+        self.assertEqual(3, params.num_raters)
+        self.assertEqual(statistics.mean([1, 1, 5]), params.ratee_raw_avg)
+        self.assertGreater(statistics.mean([1, 1, 5]), params.ratee_calibrated_avg)
+
+    def test_calibrationparams_rater(self):
+        response = self.client.get(
+            reverse("calibrated-ratings", kwargs={"year": self.year})
+        )
+
+        params = CalibrationParams.objects.get(ballkid=self.rater1)
+
+        self.assertEqual(3, params.num_rater_ratings)
+        self.assertEqual(0, params.num_ratee_ratings)
+        self.assertEqual(3, params.rater_raw_avg)
