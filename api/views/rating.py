@@ -282,6 +282,13 @@ def save_calibration_parameters(
                 if len(ratee_calibrated) > 1
                 else None
             )
+            ratee_raters = set(
+                [
+                    key[2]
+                    for key in calibrated.keys()
+                    if key[1] == name and key[2] not in excluded_raters
+                ]
+            )
 
             params, _ = CalibrationParams.objects.update_or_create(
                 ballkid=ballkid,
@@ -289,6 +296,8 @@ def save_calibration_parameters(
                 defaults={
                     "ratee_calibrated_avg": calibrated_avg,
                     "ratee_calibrated_stdev": calibrated_stdev,
+                    "num_raters": len(ratee_raters),
+                    "num_ratee_ratings": len(ratee_calibrated),
                 },
             )
             logger.info(

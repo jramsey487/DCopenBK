@@ -581,8 +581,8 @@ class TestCalibratedRatingsView(APITestCase):
 
         params = CalibrationParams.objects.get(ballkid=self.ratee1)
 
-        self.assertEqual(3, params.num_ratee_ratings)
-        self.assertEqual(3, params.num_raters)
+        self.assertEqual(2, params.num_ratee_ratings)
+        self.assertEqual(2, params.num_raters)
         self.assertEqual(statistics.mean([1, 1, 5]), params.ratee_raw_avg)
         self.assertGreater(statistics.mean([1, 1, 5]), params.ratee_calibrated_avg)
 
