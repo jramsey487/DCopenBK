@@ -153,7 +153,9 @@ export function renderBallkidsInSection(
             <DraggableBallkidAndIcon
               ballkid={ballkid}
               commentTypes={
-                section === "Self-Cut" ? ["last_day"] : ["rank", "last_day"]
+                section === "Self-Cut"
+                  ? ["last_day"]
+                  : ["experience", "rank", "last_day"]
               }
               showHovercard={showHovercard}
               hoverCommentTypes={["experience", "rank", "last_day"]}
