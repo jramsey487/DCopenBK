@@ -58,7 +58,6 @@ import {
   toPercent,
   getTimeStr,
   Banners,
-  calcDistanceToIdeal,
 } from "../Utils";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
@@ -465,9 +464,7 @@ function renderRatingsCaptainSection(ballkid, ballkidGroup, params) {
           </Typography>
           <Typography variant="body1">
             Distance to ideal:{" "}
-            {Number(
-              calcDistanceToIdeal(params.rater_scale, params.rater_offset)
-            ).toFixed(3)}
+            {Number(params.rater_distance_to_ideal).toFixed(3)}
           </Typography>
 
           <RaterParamsChart

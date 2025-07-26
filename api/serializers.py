@@ -17,6 +17,7 @@ class BallkidSerializer(serializers.ModelSerializer):
     calibrated_stdev = serializers.FloatField(required=False)
     scale = serializers.FloatField(required=False)
     offset = serializers.FloatField(required=False)
+    distance_to_ideal = serializers.FloatField(required=False)
     # Court leaderboard fields
     court_duration = serializers.DurationField(required=False)
     stadium_duration = serializers.DurationField(required=False)
