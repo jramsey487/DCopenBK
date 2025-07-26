@@ -326,7 +326,7 @@ class RatingsList(generics.ListAPIView):
 
         return (
             Rating.objects.filter(date__year=year)
-            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDE))
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDED))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -354,7 +354,7 @@ class MyRatings(generics.ListAPIView):
 
         return (
             Rating.objects.filter(rater_id=pk, date__year=year)
-            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDE))
+            .filter(Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.EXCLUDED))
             .annotate(
                 ratee_name=Concat("ratee__first_name", Value(" "), "ratee__last_name"),
                 rater_name=Concat("rater__first_name", Value(" "), "rater__last_name"),
@@ -652,37 +652,17 @@ class ExcludeRating(APIView):
     def patch(self, request, pk, format=None):
         rating = Rating.objects.get(pk=pk)
         # If currently excluded, not un-exclude
-        if rating.status == RATING_STATUS.EXCLUDE:
+        if rating.status == RATING_STATUS.EXCLUDED:
             rating.status = RATING_STATUS.COMPLETE
 
         # If currently including, then exclude
         elif rating.status == RATING_STATUS.COMPLETE:
-            rating.status = RATING_STATUS.EXCLUDE
+            rating.status = RATING_STATUS.EXCLUDED
 
         rating.save()
 
         logger.info(f"[ExcludeRating] excluding rating {rating}")
         return Response({"Success": f"Excluded rating"}, status=status.HTTP_200_OK)
-
-
-# class GetDraftRating(APIView):
-#     serializer_class = RatingSerializer
-#     permission_classes = [IsChairpersonOrCaptain]
-
-#     def get(self, request, pk, format=None):
-#         rating = Rating.objects.get(pk=pk)
-#         # If currently excluded, not un-exclude
-#         if rating.status == RATING_STATUS.EXCLUDE:
-#             rating.status = RATING_STATUS.COMPLETE
-
-#         # If currently including, then exclude
-#         elif rating.status == RATING_STATUS.COMPLETE:
-#             rating.status = RATING_STATUS.EXCLUDE
-
-#         rating.save()
-
-#         logger.info(f"[ExcludeRating] excluding rating {rating}")
-#         return Response({"Success": f"Excluded rating"}, status=status.HTTP_200_OK)
 
 
 class GetDraftRating(generics.RetrieveAPIView):

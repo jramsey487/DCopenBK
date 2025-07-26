@@ -76,4 +76,5 @@ class RATING_STATUS(models.TextChoices):
     COMPLETE = "Complete"
     DRAFT = "Draft"
     DELETED = "Deleted"
-    EXCLUDE = "Exclude"
+    EXCLUDED = "Excluded"
+    AUTO_EXCLUDED = "Auto-excluded"

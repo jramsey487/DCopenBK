@@ -21,7 +21,7 @@ class Rating(models.Model):
     effort_rating = models.FloatField(null=True, blank=True)
     comments = models.TextField(default="", blank=True)
     status = models.CharField(
-        max_length=10, choices=RATING_STATUS.choices, default=RATING_STATUS.COMPLETE
+        max_length=15, choices=RATING_STATUS.choices, default=RATING_STATUS.COMPLETE
     )
 
     def __str__(self):

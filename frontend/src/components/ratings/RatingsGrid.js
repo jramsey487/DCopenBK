@@ -119,11 +119,11 @@ export default function RatingsGrid({ ratings, setUpdated }) {
           </Tooltip>
 
           <Tooltip
-            title={rowData.row.status === "Exclude" ? "Un-Exclude" : "Exclude"}
+            title={rowData.row.status === "Excluded" ? "Un-Exclude" : "Exclude"}
           >
             <IconButton
               size="small"
-              color={rowData.row.status === "Exclude" ? "error" : ""}
+              color={rowData.row.status === "Excluded" ? "error" : ""}
               onClick={() =>
                 fetch(`/api/exclude-rating/${rowData.id}`, {
                   method: "PATCH",
