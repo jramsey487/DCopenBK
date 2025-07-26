@@ -1185,11 +1185,10 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        start = datetime.now()
         year = get_current_year()
         run_calibration_and_save_params(year)
 
-        obj = (
+        return (
             Ballkid.objects.filter(is_active=True)
             .filter(Q(is_captain=True) | Q(is_chairperson=True))
             .annotate(
@@ -1239,8 +1238,6 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
             )
             .order_by("-num_ratings")
         )
-        print(datetime.now() - start)
-        return obj
 
 
 class GetRatingsBallkidLeaderboard(generics.ListAPIView):
@@ -1248,11 +1245,10 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        start = datetime.now()
         year = get_current_year()
         run_calibration_and_save_params(year)
 
-        obj = (
+        return (
             Ballkid.objects.filter(is_active=True)
             .annotate(
                 num_ratings=Coalesce(
@@ -1294,8 +1290,6 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
             )
             .order_by("-calibrated_avg", "-raw_avg")
         )
-        print(datetime.now() - start)
-        return obj
 
 
 class GetCourtLeaderboard(generics.ListAPIView):
