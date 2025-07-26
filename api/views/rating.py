@@ -23,32 +23,28 @@ def get_min_dates(ratings):
     """
     For a queryset ratings, returns a dict mapping year to min_date in that year
     """
-    years = ratings.values_list("date__year", flat=True).distinct()
+    years = set(ratings.values_list("date__year", flat=True))
     return {
         year: min([rating.date for rating in ratings.filter(date__year=year)])
         for year in years
     }
 
 
-def queryset_to_rcal(
-    ratings, rating_name="overall", bucket_size=DAYS_PER_BUCKET, returnAveraged=True
-):
+def queryset_to_rcal(ratings, bucket_size=DAYS_PER_BUCKET, returnAveraged=True):
     """
     Converts a Django queryset into the appropriate format for review calibration:
         Queryset of Rating objects => dict of (captain, ballkid, day) : rating
 
-    Returns the minimum date and the averaged rcal dict format
-
-    NOTE THAT RATINGS OF 0 ARE CONSIDERED EMPTY AND ARE NOT INCLUDED
+    Returns the averaged rcal dict format
     """
-    logger.info(f"[queryset_to_rcal] ratings {ratings} with rating_name {rating_name}")
+    logger.info(f"[queryset_to_rcal] ratings {ratings}")
 
     if len(ratings) == 0:
         logger.info(f"[queryset_to_rcal] empty ratings returning empty rcal dict")
         return {}
 
     rcal_dict = {}
-    print("before min dates", datetime.now())
+    current_year = get_current_year()
     min_dates = get_min_dates(ratings)
     logger.info(f"[queryset_to_rcal] ratings {ratings} have min_dates {min_dates}")
 
@@ -56,34 +52,16 @@ def queryset_to_rcal(
         mapped_date = bucket_size * (
             (rating.date - min_dates[rating.date.year]).days // bucket_size
         )
-
         key = (
-            rating.rater.get_name(),
+            rating.rater_name,
             (
-                rating.ratee.get_name()
-                if rating.date.year == get_current_year()
-                else f"{rating.ratee.get_name()}{rating.date.year}"
+                rating.ratee_name
+                if rating.date.year == current_year
+                else f"{rating.ratee_name}_{rating.date.year}"
             ),
             mapped_date,
         )
-
-        if rating_name == "overall":
-            rating_val = rating.rating
-        elif rating_name == "athleticism":
-            rating_val = rating.athleticism_rating
-        elif rating_name == "rolling":
-            rating_val = rating.rolling_rating
-        elif rating_name == "awareness":
-            rating_val = rating.awareness_rating
-        elif rating_name == "decision":
-            rating_val = rating.decision_rating
-        elif rating_name == "effort":
-            rating_val = rating.effort_rating
-        else:
-            raise Exception(f"Unrecognized rating name {rating_name}")
-
-        if rating_val:
-            rcal_dict.setdefault(key, []).append(float(rating_val))
+        rcal_dict.setdefault(key, []).append(float(rating.rating))
 
     logger.info(
         f"[queryset_to_rcal] return dict {rcal_dict} with averaging: {returnAveraged}"
@@ -128,7 +106,7 @@ def remove_nonoverlapping_reviewers(data):
     return new_data, excluded
 
 
-def calibrate(ratings, year_ratings, rating_name="overall"):
+def calibrate(ratings, year_ratings):
     tournament = Tournament.objects.get(year=get_current_year())
     ignore_outliers = tournament.rcal_ignore_outliers
     year_threshold = tournament.rcal_year_threshold
@@ -137,17 +115,10 @@ def calibrate(ratings, year_ratings, rating_name="overall"):
     train_ratings = ratings.filter(date__year__gte=year_threshold)
 
     logger.info(
-        f"[calibrate] starting calibration for {len(train_ratings)} ratings and {len(year_ratings)} year_ratings and rating_name {rating_name}. First 10: {ratings[:10]}"
+        f"[calibrate] starting calibration for {len(train_ratings)} ratings and {len(year_ratings)} year_ratings"
     )
-    print("before queryset to rcal train", datetime.now())
-    train = queryset_to_rcal(
-        train_ratings, rating_name, bucket_size, returnAveraged=True
-    )
-
-    print("before queryset test", datetime.now())
-    test = queryset_to_rcal(
-        year_ratings, rating_name, bucket_size, returnAveraged=False
-    )
+    train = queryset_to_rcal(train_ratings, bucket_size, returnAveraged=True)
+    test = queryset_to_rcal(year_ratings, bucket_size, returnAveraged=False)
 
     # test = queryset_to_rcal(year_ratings, rating_name, returnAveraged=False)
     # train = {key: sum(val) / len(val) for key, val in test.items()}
@@ -189,21 +160,21 @@ def save_rater_params(cp, year_ratings, year):
         excluded and draft ratings)
     autoexclude_threshold: threshold above which a rater's ratings should be excluded
     """
-    raters = set(year_ratings.values_list("rater", flat=True))
+    raters = set(year_ratings.values_list("rater", "rater_name"))
 
-    for rater_id in raters:
-        ballkid = Ballkid.objects.get(id=rater_id)
-        name = ballkid.get_name()
+    for rater_id, name in raters:
+        # ballkid = Ballkid.objects.get(id=rater_id)
+        # name = ballkid.get_name()
 
         # Update all non-calibration related parameters
-        rater_ratings = year_ratings.filter(rater=ballkid)
+        rater_ratings = year_ratings.filter(rater__id=rater_id)
 
         num_rater_ratings = rater_ratings.count()
         rater_raw_avg = rater_ratings.aggregate(val=Avg("rating"))["val"]
         rater_raw_stdev = rater_ratings.aggregate(val=StdDev("rating"))["val"]
 
         params, _ = CalibrationParams.objects.update_or_create(
-            ballkid=ballkid,
+            ballkid_id=rater_id,
             year=year,
             defaults={
                 "num_rater_ratings": num_rater_ratings,
@@ -228,7 +199,7 @@ def save_rater_params(cp, year_ratings, year):
                 )
 
             params, _ = CalibrationParams.objects.update_or_create(
-                ballkid=ballkid,
+                ballkid_id=rater_id,
                 year=year,
                 defaults={
                     "rater_scale": a,
@@ -266,7 +237,7 @@ def autoexclude(year_ratings, autoexclude_threshold):
     )
 
 
-def save_ratee_parameters():
+def save_ratee_params():
     pass
 
 
@@ -554,10 +525,7 @@ class CalibratedRatings(APIView):
         tournament = Tournament.objects.get(year=year)
         cp, excluded, failed_categories = None, set(), None
 
-        ## STEP 1: Get ratings
-
-        # Exclude manually excluded ratings from calibration; include auto-excluded
-        # in calibration for raters that might go from excluded back to included
+        ## STEP 1: Get all ratings and annotate
         ratings = (
             Rating.objects.filter(
                 Q(status=RATING_STATUS.COMPLETE) | Q(status=RATING_STATUS.AUTO_EXCLUDED)
@@ -581,7 +549,7 @@ class CalibratedRatings(APIView):
             f"[CalibratedRatings] Starting rating calibration for {len(ratings)} ratings"
         )
 
-        ## STEP 2: Train / calibrate on all years' ratings
+        ## STEP 2: Train on all ratings with year > year_threshold and calibrate for year_ratings
         (cp, excluded, failed_categories) = calibrate(ratings, year_ratings)
 
         logger.warning(
@@ -595,36 +563,18 @@ class CalibratedRatings(APIView):
         autoexclude(year_ratings, tournament.rcal_calibration_threshold)
 
         ## STEP 5: Save ratee params
+        save_ratee_params()
 
-        # Get dict of all calibrated overall ratings for saving calibration params
-        calibrated = {
-            (
-                rating.id,
-                rating.ratee.get_name(),
-                rating.rater.get_name(),
-            ): get_postprocessed_rating(cp, rating.rating, rating.rater.get_name())
-            for rating in year_ratings
-        }
-        logger.info(
-            f"[CalibratedRatings] completed calibration for {len(calibrated)} ratings"
-        )
-
-        # Save calibration parameters for overall ratings only
-        # save_calibration_parameters(
-        #     cp_dict["overall"], calibrated, year, tournament.rcal_calibration_threshold
-        # )
-
-        # Calibrate each rating to put together a list of calibrated ratings
-        # to return
+        # Calibrate each rating to put together a list of calibrated ratings to return
         postprocessed = [
             {
                 "id": rating.id,
                 "rater": rating.rater,
                 "ratee": rating.ratee,
                 "date": rating.date,
-                "rating": calibrated[
-                    (rating.id, rating.ratee.get_name(), rating.rater.get_name())
-                ],
+                "rating": get_postprocessed_rating(
+                    cp, rating.rating, rating.rater_name
+                ),
                 "athleticism_rating": rating.athleticism_rating,
                 "rolling_rating": rating.rolling_rating,
                 "awareness_rating": rating.awareness_rating,
@@ -632,8 +582,8 @@ class CalibratedRatings(APIView):
                 "effort_rating": rating.effort_rating,
                 "comments": rating.comments,
                 # Annotated values
-                "rater_name": rating.rater.get_name(),
-                "ratee_name": rating.ratee.get_name(),
+                "rater_name": rating.rater_name,
+                "ratee_name": rating.ratee_name,
                 "year": rating.date.year,
                 "month": rating.date.month,
                 "day": rating.date.day,
