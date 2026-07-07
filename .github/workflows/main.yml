@@ -40,4 +40,11 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate
       - name: Run tests
+        # PYTHONHASHSEED=0 pins Python's hash randomization so that set
+        # iteration order is deterministic. rcal's _calibrate.py enumerates
+        # unordered sets to decide which rater's offset is pinned to zero when
+        # solving the calibration linear system, which makes
+        # TestCalibratedRatingsView flaky under the default random seed.
+        env:
+          PYTHONHASHSEED: "0"
         run: python manage.py test
