@@ -101,7 +101,7 @@ export default function LoginPage(props) {
           <form className="login-form" onSubmit={onSubmit}>
             <div className="login-field">
               <label className="login-label" htmlFor="login-username">
-                username
+                Username
               </label>
               <input
                 id="login-username"
