@@ -1,0 +1,225 @@
+:root {
+    --brand-nav: #0d1b3e;
+    --brand-red: #c8102e;
+    --navbar-inner-height: 54px;
+  }
+  
+  @media (min-width: 900px) {
+    :root {
+      --navbar-inner-height: 60px;
+    }
+  }
+  
+  .app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    width: 100%;
+    background: var(--brand-nav);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  }
+  
+  .app-navbar-inner {
+    height: var(--navbar-inner-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    gap: 12px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .app-navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+  
+  .app-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  
+  .ballcrew-logo-img {
+    display: block;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .app-navbar-title {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  @media (min-width: 900px) {
+    .app-navbar-inner {
+      padding: 0 24px;
+    }
+  
+    .app-navbar-title {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      max-width: none;
+    }
+  }
+  
+  .app-navbar-desktop-tabs {
+    display: none;
+    align-items: center;
+    gap: 2px;
+    margin-left: 16px;
+    flex-wrap: wrap;
+  }
+  
+  @media (min-width: 900px) {
+    .app-navbar-desktop-tabs {
+      display: flex;
+    }
+  }
+  
+  .app-navbar-tab-btn {
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-family: Inter, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: 0.01em !important;
+    min-width: 0 !important;
+    padding: 6px 10px !important;
+  }
+  
+  .app-navbar-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  .app-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  .app-navbar-account-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+  }
+  
+  .app-navbar-account-btn:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+  
+  .app-navbar-account-btn:focus-visible {
+    outline: 2px solid var(--brand-red);
+    outline-offset: 2px;
+  }
+  
+  .app-navbar-account-initials {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    user-select: none;
+  }
+  
+  .app-navbar-dropdown-paper {
+    margin-top: 10px !important;
+    border: 0.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 32px rgba(13, 27, 62, 0.14) !important;
+    min-width: 220px;
+    overflow: hidden;
+  }
+  
+  .app-navbar-dropdown-list {
+    padding: 6px !important;
+  }
+  
+  .app-navbar-dropdown-item {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    margin: 2px 0 !important;
+    min-height: 0 !important;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  
+  .app-navbar-dropdown-item:hover {
+    background: #eef2ff !important;
+    color: #0d1b3e !important;
+  }
+  
+  .app-navbar-dropdown-item.logout {
+    color: #c8102e !important;
+    margin-top: 4px !important;
+    border-top: 0.5px solid #e2e8f0;
+    border-radius: 0 0 8px 8px !important;
+    padding-top: 12px !important;
+  }
+  
+  .app-navbar-dropdown-item.logout:hover {
+    background: #fff1f2 !important;
+    color: #9f1239 !important;
+  }
+  
+  /* Mobile hamburger */
+  .app-navbar-menu-btn {
+    color: #fff !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.28) !important;
+    border-radius: 8px !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+  }
+  
+  .app-navbar-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+  }
+  
+  .app-navbar-menu-btn .MuiTouchRipple-root {
+    display: none;
+  }
+  
+  .app-navbar-login {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+  }
+  
+  .app-navbar-accent {
+    height: 3px;
+    background: var(--brand-red);
+    width: 100%;
+  }
+  
