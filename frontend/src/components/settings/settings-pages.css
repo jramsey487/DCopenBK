@@ -1,0 +1,227 @@
+.settings-shell {
+    --sp-nav: #0d1b3e;
+    --sp-red: #c8102e;
+    --sp-bg0: #f8fafc;
+    --sp-bg1: #fff;
+    --sp-text1: #0d1b3e;
+    --sp-text2: #64748b;
+    --sp-border: #e2e8f0;
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    width: 100%;
+    min-height: calc(100vh - var(--navbar-inner-height) - 3px);
+    min-height: calc(100dvh - var(--navbar-inner-height) - 3px);
+    background: var(--sp-bg0);
+    box-sizing: border-box;
+    padding: 0 !important;
+  }
+  
+  .settings-page {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    box-sizing: border-box;
+  }
+  
+  .settings-page--wide {
+    max-width: 1100px;
+  }
+  
+  .settings-header {
+    margin-bottom: 20px;
+  }
+  
+  .settings-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--sp-text1);
+    line-height: 1.25;
+  }
+  
+  .settings-subtitle {
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--sp-text2);
+    line-height: 1.45;
+  }
+  
+  .settings-card {
+    background: var(--sp-bg1);
+    border: 0.5px solid var(--sp-border);
+    border-radius: 12px;
+    padding: 20px 18px 22px;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
+  }
+  
+  .settings-card--flush {
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .settings-card--flush .settings-tab-select {
+    margin: 16px 16px 12px !important;
+    width: calc(100% - 32px);
+  }
+  
+  .settings-card--flush .settings-tab-panel {
+    padding: 0 16px 24px;
+  }
+  
+  .settings-body-text {
+    margin: 0 0 18px;
+    font-size: 15px;
+    color: var(--sp-text2);
+    line-height: 1.55;
+  }
+  
+  .settings-link-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .settings-link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 0.5px solid var(--sp-border);
+    background: var(--sp-bg0);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .settings-link-card:hover {
+    border-color: rgba(13, 27, 62, 0.2);
+    background: #eef2ff;
+    box-shadow: 0 2px 8px rgba(13, 27, 62, 0.06);
+  }
+  
+  .settings-link-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sp-text1);
+  }
+  
+  .settings-link-card-desc {
+    font-size: 13px;
+    color: var(--sp-text2);
+  }
+  
+  .settings-tab-select {
+    margin-bottom: 12px !important;
+  }
+  
+  .settings-shell .settings-tab-select .MuiOutlinedInput-root {
+    border-radius: 10px !important;
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+    background: var(--sp-bg1);
+  }
+  
+  .settings-tab-panel {
+    padding: 4px 2px 8px;
+  }
+  
+  .settings-tabbed-layout {
+    display: flex !important;
+    width: 100% !important;
+    min-height: min(72vh, 680px) !important;
+    background: var(--sp-bg1) !important;
+  }
+  
+  .settings-shell .settings-tabbed-layout .MuiTabs-root {
+    background: var(--sp-bg0);
+    border-right: 0.5px solid var(--sp-border);
+    min-width: 200px !important;
+    max-width: 280px;
+    flex-shrink: 0;
+  }
+  
+  .settings-shell .settings-tabbed-layout .MuiTab-root {
+    align-items: flex-start;
+    text-align: left;
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: var(--sp-text2) !important;
+    min-height: 42px !important;
+    padding: 10px 14px !important;
+    line-height: 1.35 !important;
+  }
+  
+  .settings-shell .settings-tabbed-layout .MuiTab-root.Mui-selected {
+    color: var(--sp-text1) !important;
+    font-weight: 600 !important;
+    background: #eef2ff;
+  }
+  
+  .settings-shell .settings-tabbed-layout .MuiTabs-indicator {
+    background-color: var(--sp-red);
+    width: 3px;
+    left: 0;
+  }
+  
+  .settings-shell .settings-tab-panel-desktop {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    padding: 20px 24px 28px !important;
+  }
+  
+  .settings-shell .settings-tab-panel-desktop .MuiTypography-h4 {
+    font-family: var(--font-sans) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: var(--sp-text1) !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .settings-shell .MuiButton-containedPrimary {
+    background-color: var(--sp-nav) !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    font-family: var(--font-sans) !important;
+  }
+  
+  .settings-shell .MuiButton-containedPrimary:hover {
+    background-color: #152a5c !important;
+  }
+  
+  .settings-shell .MuiFormLabel-root,
+  .settings-shell .MuiInputLabel-root {
+    font-family: var(--font-sans);
+    color: var(--sp-text2);
+  }
+  
+  .settings-shell .MuiInput-root {
+    font-family: inherit;
+    font-size: 15px;
+  }
+  
+  .settings-shell .MuiAlert-root {
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-family: var(--font-sans);
+  }
+  
+  @media (min-width: 600px) {
+    .settings-page {
+      padding: 28px 24px 48px;
+    }
+  
+    .settings-title {
+      font-size: 24px;
+    }
+  }
+  
