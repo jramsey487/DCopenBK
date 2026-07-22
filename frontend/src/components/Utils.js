@@ -1107,6 +1107,28 @@ export function setSessionFromLogin(setToken, username, data) {
   setLocalStorage("group", data?.group ?? "");
 }
 
+/** Resolve ballkid image for CRA dev (proxied to Django static). */
+export function ballkidImageSrc(image) {
+  if (!image) {
+    return "";
+  }
+  if (String(image).startsWith("http")) {
+    return image;
+  }
+  const normalized = String(image).replace(/^\.\.\//, "");
+  return normalized.startsWith("/") ? normalized : `/${normalized}`;
+}
+
+/** Logged-in user's ballkid primary key, or null if missing / invalid. */
+export function getBallkidId() {
+  const raw = getLocalStorage("ballkid_id");
+  if (raw === null || raw === undefined || raw === "") {
+    return null;
+  }
+  const id = typeof raw === "number" ? raw : parseInt(String(raw), 10);
+  return Number.isFinite(id) ? id : null;
+}
+
 export function setLocalStorage(key, val) {
   localStorage.setItem(key, JSON.stringify(val));
 }
