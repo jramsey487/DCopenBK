@@ -79,7 +79,7 @@ export default function LoginPage(props) {
     <div className="page login-shell">
       <div className="login-page">
         <div className="login-brand">
-          <BallcrewLogo variant="crest" height={68} />
+          <BallcrewLogo variant="crest" height={60} />
           <p className="login-brand-title">Mubadala DC Open Ballcrew</p>
         </div>
 
