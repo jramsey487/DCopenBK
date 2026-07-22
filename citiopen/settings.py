@@ -36,9 +36,9 @@ except Exception:
 # DEBUG = True
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "citiopenballkids.fly.dev"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "dcopenbk.fly.dev"]
 
-CSRF_TRUSTED_ORIGINS = ["https://citiopenballkids.fly.dev"]
+CSRF_TRUSTED_ORIGINS = ["https://dcopenbk.fly.dev"]
 
 # Application definition
 
@@ -155,7 +155,7 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
-DOMAIN = "citiopenballkids.fly.dev"
+DOMAIN = "dcopenbk.fly.dev"
 SITE_NAME = "Mubadala Citi Open Ballcrew"
 DJOSER = {
     "USER_ID_FIELD": "username",

@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for citiopenballkids on 2023-06-11T23:35:06-04:00
+# fly.toml app configuration file generated for dcopenbk on 2026-07-21
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "citiopenballkids"
+app = "dcopenbk"
 primary_region = "iad"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
