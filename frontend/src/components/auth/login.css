@@ -79,20 +79,21 @@
 }
 
 .login-card-title {
-  margin: 0 0 4px;
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--login-text1);
-  text-align: center;
-}
-
-.login-card-subtitle {
-  margin: 0 0 20px;
-  font-size: 14px;
-  color: var(--login-text2);
-  text-align: center;
-  line-height: 1.4;
-}
+    margin: 0 0 12px; /* Bumped from 4px to 12px for better title breathing room */
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--login-text1);
+    text-align: center;
+    line-height: 1.3;
+  }
+  
+  .login-card-subtitle {
+    margin: 0 0 24px; /* Bumped from 20px to 24px to separate from the input field */
+    font-size: 14px;
+    color: var(--login-text2);
+    text-align: center;
+    line-height: 1.5; /* Improved line spacing for multi-line text */
+  }
 
 .login-alert {
   padding: 10px 12px;
