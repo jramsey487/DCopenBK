@@ -1094,6 +1094,19 @@ export function getLocalStorage(key) {
   return JSON.parse(valString);
 }
 
+/** Persist login response before navigation so /me and API calls see ballkid_id. */
+export function setSessionFromLogin(setToken, username, data) {
+  setToken(data?.token ?? "");
+  const rawId = data?.ballkid_id;
+  const ballkidId =
+    rawId !== null && rawId !== undefined && rawId !== ""
+      ? Number(rawId)
+      : null;
+  setLocalStorage("username", (username ?? "").toLowerCase());
+  setLocalStorage("ballkid_id", Number.isFinite(ballkidId) ? ballkidId : null);
+  setLocalStorage("group", data?.group ?? "");
+}
+
 export function setLocalStorage(key, val) {
   localStorage.setItem(key, JSON.stringify(val));
 }

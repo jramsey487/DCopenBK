@@ -1,43 +1,45 @@
 import React, { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Link from "@mui/material/Link";
+import BallcrewLogo from "../BallcrewLogo";
+import { handleChange, setSessionFromLogin } from "../Utils";
+import "./login.css";
 
-import { Alerts, handleChange, setLocalStorage } from "../Utils";
-
-function submitPassword(state, setSuccessMsg, setErrorMsg, setToken, navigate) {
-  fetch("/accounts/get-token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: state.username,
-      password: state.password,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        setSuccessMsg("Logged in");
-        if (window.location.pathname === "/login") {
-          navigate("/teams");
-        }
-      } else {
-        setErrorMsg("Incorrect username or password.");
-        throw new Error("Incorrect username or password");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      setToken(data?.token ?? "");
-      setLocalStorage("username", state?.username ?? "");
-      setLocalStorage("ballkid_id", data?.ballkid_id ?? "");
-      setLocalStorage("group", data?.group ?? "");
-      console.log(data);
-    })
-    .catch((error) => {});
+async function submitPassword(
+  state,
+  setSuccessMsg,
+  setErrorMsg,
+  setToken,
+  navigate,
+  setSubmitting
+) {
+  setSuccessMsg("");
+  setErrorMsg("");
+  setSubmitting(true);
+  try {
+    const response = await fetch("/accounts/get-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: state.username,
+        password: state.password,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setErrorMsg("Incorrect username or password.");
+      return;
+    }
+    setSessionFromLogin(setToken, state.username, data);
+    setSuccessMsg("Logged in");
+    if (window.location.pathname === "/login") {
+      navigate("/teams");
+    }
+  } catch {
+    setErrorMsg("Could not reach the server. Is the backend running?");
+  } finally {
+    setSubmitting(false);
+  }
 }
 
 export default function LoginPage(props) {
@@ -48,87 +50,99 @@ export default function LoginPage(props) {
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const setToken = props.setToken;
   const navigate = useNavigate();
 
-  return (
-    <div className="page">
-      <div className="center">
-        <Grid
-          container
-          spacing={2}
-          alignItems="center"
-          direction="column"
-          justifyContent="center"
-        >
-          <Grid item xs={12}>
-            <Alerts
-              successMsg={successMsg}
-              errorMsg={errorMsg}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography component="h4" variant="h4">
-              Log In
-            </Typography>
-          </Grid>
+  const canSubmit =
+    state.username.trim().length > 0 &&
+    state.password.length > 0 &&
+    !submitting;
 
-          <Grid item xs={12}>
-            <TextField
-              label="Username"
-              name="username"
-              variant="standard"
-              required={true}
-              onChange={(e) => handleChange(e, state, setState)}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Password"
-              name="password"
-              variant="standard"
-              type="password"
-              required={true}
-              onChange={(e) => handleChange(e, state, setState)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  submitPassword(
-                    state,
-                    setSuccessMsg,
-                    setErrorMsg,
-                    setToken,
-                    navigate
-                  );
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              color="primary"
-              variant="contained"
-              onClick={(e) =>
-                submitPassword(
-                  state,
-                  setSuccessMsg,
-                  setErrorMsg,
-                  setToken,
-                  navigate
-                )
-              }
+  function onSubmit(e) {
+    e.preventDefault();
+    if (!canSubmit) {
+      return;
+    }
+    submitPassword(
+      state,
+      setSuccessMsg,
+      setErrorMsg,
+      setToken,
+      navigate,
+      setSubmitting
+    );
+  }
+
+  return (
+    <div className="page login-shell">
+      <div className="login-page">
+        <div className="login-brand">
+          <BallcrewLogo variant="crest" height={68} />
+          <p className="login-brand-title">Mubadala DC Open Ballcrew</p>
+        </div>
+
+        <section className="login-card">
+          <div className="login-accent-bar" aria-hidden="true" />
+          <h1 className="login-card-title">Log In</h1>
+
+          {successMsg ? (
+            <div className="login-alert success" role="status">
+              {successMsg}
+            </div>
+          ) : null}
+          {errorMsg ? (
+            <div className="login-alert error" role="alert">
+              {errorMsg}
+            </div>
+          ) : null}
+
+          <form className="login-form" onSubmit={onSubmit}>
+            <div className="login-field">
+              <label className="login-label" htmlFor="login-username">
+                username
+              </label>
+              <input
+                id="login-username"
+                className="login-input"
+                name="username"
+                autoComplete="username"
+                required
+                value={state.username}
+                onChange={(e) => handleChange(e, state, setState)}
+              />
+            </div>
+            <div className="login-field">
+              <label className="login-label" htmlFor="login-password">
+                Password
+              </label>
+              <input
+                id="login-password"
+                className="login-input"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={state.password}
+                onChange={(e) => handleChange(e, state, setState)}
+              />
+            </div>
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={!canSubmit}
             >
-              Submit
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Link variant="body1" component={RouterLink} to="/forgot-password">
+              {submitting ? "Signing In…" : "Sign In"}
+            </button>
+          </form>
+
+          <div className="login-footer">
+            <RouterLink className="login-forgot" to="/forgot-password">
               Forgot password?
-            </Link>
-          </Grid>
-        </Grid>
+            </RouterLink>
+          </div>
+        </section>
       </div>
     </div>
   );
