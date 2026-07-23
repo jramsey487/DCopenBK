@@ -418,6 +418,15 @@ pip install -r requirements.txt
 # Set environment variables (see citiopen/settings.py for required vars)
 cp .env.example .env
 
+# Create your virtual environment folder
+python -m venv .venv
+
+# Start your virtual environment
+source .venv/bin/activate
+
+# Insteall django in the virtual environment
+pip install django
+
 # Run migrations
 python manage.py migrate
 
