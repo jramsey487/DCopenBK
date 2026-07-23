@@ -409,13 +409,10 @@ Body: { "username": "first.last", "password": "..." }
 
 ### Backend
 
-Make sure you have postgres installed!
+Make sure you have postgres installed and are using Python 3.10
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables (see citiopen/settings.py for required vars)
+# Set environment variables (see citiopen/settings.py for required vars) (is this needed?)
 cp .env.example .env
 
 # Create your virtual environment folder
@@ -424,8 +421,14 @@ python -m venv .venv
 # Start your virtual environment
 source .venv/bin/activate
 
-# Insteall django in the virtual environment
+# Install django in the virtual environment
 pip install django
+
+# You may need to run this
+pip install --upgrade setuptools wheel
+
+# Install dependencies
+pip install -r requirements.txt
 
 # Run migrations
 python manage.py migrate
