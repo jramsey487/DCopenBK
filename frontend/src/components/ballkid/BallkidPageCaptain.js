@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
-
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-
-import Shortcut from "@mui/icons-material/Shortcut";
-import AspectRatio from "@mui/joy/AspectRatio";
+import { useParams } from "react-router-dom";
 
 import {
-  Icons,
   getAuthHeader,
   RatingButton,
+  DraftRatingButton,
   getLocalStorage,
   useIsMobile,
-  Banners,
-  DraftRatingButton,
 } from "../Utils";
+import {
+  ProfilePageShell,
+  ProfileLoadingState,
+  ProfileBrandedHero,
+  ProfileTabs,
+  ProfileContent,
+  ProfilePanel,
+  ProfileCard,
+  ProfileInfoRow,
+} from "./BallkidProfileLayout";
+
+const TABS = [{ id: "info", label: "Info" }];
 
 export default function BallkidPageCaptain(props) {
   const [ballkid, setBallkid] = useState(null);
   const [updated, setUpdated] = useState(false);
-
   const [showTeams, setShowTeams] = useState(false);
+  const [tab, setTab] = useState("info");
 
   const isMobile = useIsMobile();
   const { pk } = useParams();
@@ -44,91 +46,60 @@ export default function BallkidPageCaptain(props) {
       .then((data) => setShowTeams(data["show_teams"]));
   }, [updated, pk]);
 
-  return ballkid == null ? (
-    ""
+  if (ballkid == null) {
+    return <ProfileLoadingState />;
+  }
+
+  const isOwnProfile = ballkid.id === getLocalStorage("ballkid_id");
+
+  const ratingButton = isOwnProfile ? null : ballkid.have_draft ? (
+    <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
   ) : (
-    <div className="page">
-      <Banners />
+    <RatingButton
+      ballkid={ballkid}
+      setUpdated={setUpdated}
+      isMobile={isMobile}
+    />
+  );
 
-      <div className={isMobile ? "" : "justify"}>
-        <div className="sxs">
-          <Typography variant="h4">
-            {ballkid.first_name} {ballkid.last_name}
-          </Typography>
-          &ensp;
-          <Icons ballkid={ballkid} margin={0} />
-        </div>
+  const showCurrentInfo = !ballkid.is_cut && ballkid.is_active && showTeams;
 
-        {ballkid.id === getLocalStorage("ballkid_id") ? (
-          ""
-        ) : ballkid.have_draft ? (
-          <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
-        ) : (
-          <RatingButton
-            ballkid={ballkid}
-            setUpdated={setUpdated}
-            isMobile={isMobile}
-          />
-        )}
-      </div>
+  return (
+    <ProfilePageShell>
+      <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
 
-      <Grid container>
-        <Grid
-          item
-          xs={12}
-          sm={4}
-          md={3}
-          lg={2}
-          sx={{ pr: 2, pl: isMobile ? 2 : 0, mb: 1 }}
-        >
-          <AspectRatio ratio="1/1">
-            <Box width="95%" component="img" src={"../" + ballkid.image} />
-          </AspectRatio>
-        </Grid>
+      <ProfileTabs tabs={TABS} active={tab} onChange={setTab} />
 
-        <Grid item xs={12} sm={8} md={9} lg={10}>
-          <Typography variant="h6"> Info:</Typography>
-          <Typography variant="body1"> Age: {ballkid.age} </Typography>
-          <Typography variant="body1">
-            Years experience: {ballkid.num_years_experience}
-          </Typography>
-          <Typography variant="body1">Phone number: {ballkid.phone}</Typography>
-          <Typography variant="body1">
-            Preferred position: {ballkid.preferred_position}
-          </Typography>
-          <br />
+      <ProfileContent>
+        <ProfilePanel id="info" active={tab}>
+          <ProfileCard title="Personal info">
+            <ProfileInfoRow label="Age" value={ballkid.age} />
+            <ProfileInfoRow
+              label="Experience"
+              value={`${ballkid.num_years_experience} years`}
+            />
+            <ProfileInfoRow label="Phone" value={ballkid.phone} />
+            <ProfileInfoRow
+              label="Preferred position"
+              value={ballkid.preferred_position}
+            />
+          </ProfileCard>
 
-          {ballkid.is_cut || !ballkid.is_active || !showTeams ? (
-            ""
-          ) : (
-            <div>
-              <Typography variant="h6"> Current Info: </Typography>
-              <Typography variant="body1">
-                Position: {ballkid.position}
-              </Typography>
-              <Typography variant="body1">
-                Current Team:{" "}
-                {ballkid.current_team === 0
-                  ? "Unassigned"
-                  : ballkid.current_team}
-              </Typography>
-              <br />
-
-              <Typography variant="h6">Ratings:</Typography>
-              <Button
-                size="small"
-                variant="outlined"
-                component={RouterLink}
-                to={`/my-ratings?ratee=${ballkid.id}`}
-                endIcon={<Shortcut />}
-                sx={{ my: 1 }}
-              >
-                View my {ballkid.num_my_ratings} rating(s) for this ballkid
-              </Button>
-            </div>
+          {!showCurrentInfo ? null : (
+            <ProfileCard title="Current tournament">
+              <ProfileInfoRow label="Position" value={ballkid.position} />
+              <ProfileInfoRow
+                label="Current team"
+                value={
+                  ballkid.current_team === 0
+                    ? "Unassigned"
+                    : ballkid.current_team
+                }
+              />
+            </ProfileCard>
           )}
-        </Grid>
-      </Grid>
-    </div>
+        </ProfilePanel>
+      </ProfileContent>
+    </ProfilePageShell>
   );
 }

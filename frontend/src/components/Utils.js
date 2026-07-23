@@ -141,6 +141,8 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
 export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
   const [open, setOpen] = useState(false);
 
+  const hasRated = ballkid.num_my_ratings > 0;
+
   return (
     <div>
       <RatingDialog
@@ -152,7 +154,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
       />
 
       <Button
-        variant={ballkid.num_my_ratings > 0 ? "outlined" : "contained"}
+        variant={hasRated ? "outlined" : "contained"}
         disableElevation
         color="primary"
         size="small"
@@ -162,8 +164,39 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={ballkid.num_my_ratings > 0 ? <Check /> : ""}
-        sx={{ my: isMobile ? 1 : 0.2 }}
+        endIcon={hasRated ? <Check /> : ""}
+        sx={{
+          my: isMobile ? 1 : 0.2,
+          fontFamily:
+            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: 600,
+          fontSize: 13,
+          letterSpacing: "0.03em",
+          borderRadius: "8px",
+          px: 2.25,
+          py: 0.75,
+          transition: "all 0.15s ease",
+          ...(hasRated
+            ? {
+                color: "#0d1b3e",
+                borderColor: "#e2e8f0",
+                backgroundColor: "#fff",
+                boxShadow: "none",
+                "&:hover": {
+                  borderColor: "#0d1b3e",
+                  backgroundColor: "#f8fafc",
+                },
+              }
+            : {
+                backgroundColor: "#0d1b3e",
+                boxShadow: "0 1px 2px rgba(13, 27, 62, 0.15)",
+                "&:hover": {
+                  backgroundColor: "#152a5c",
+                  boxShadow: "0 4px 10px rgba(13, 27, 62, 0.25)",
+                  transform: "translateY(-1px)",
+                },
+              }),
+        }}
       >
         Give rating
       </Button>
