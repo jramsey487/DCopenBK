@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -11,41 +10,80 @@ import Rating from "@mui/material/Rating";
 import Link from "@mui/material/Link";
 import LoadingButton from "@mui/lab/LoadingButton";
 
-import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import ScheduleCalendar from "../schedule/ScheduleCalendar";
 import {
   Alerts,
   getAuthHeader,
   getToday,
   getLocalStorage,
-  useIsMobile,
   getDayFromHyphenated,
 } from "../Utils";
+import "./rating-dialog.css";
 
 export function RatingAndLabel({ label, rating, setRating }) {
-  const isMobile = useIsMobile();
-
   return (
-    <Grid
-      item
-      className={isMobile ? "justify" : "sxs"}
-      sx={{ mt: 1, mb: 0.5, mx: isMobile ? 1 : 2 }}
-    >
-      <Typography
-        variant="subtitle2"
-        sx={{ ml: isMobile ? 3 : 0, mx: isMobile ? 0 : 2 }}
-      >
-        {label}
-      </Typography>
+    <div className="rating-dialog-grade-row">
+      <span className="rating-dialog-grade-label">{label}</span>
       <Rating
         precision={0.5}
         value={rating}
         onChange={(e, newVal) => setRating(newVal)}
-        size={isMobile ? "large" : ""}
-        sx={{ mr: isMobile ? 3 : 0 }}
       />
-    </Grid>
+    </div>
+  );
+}
+
+function formatDateDisplay(dateStr) {
+  const [mm, dd, yyyy] = dateStr.split("/");
+  const d = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function RatingDateField({ date, setDate }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rating-dialog-field rating-dialog-date-field">
+      <span className="rating-dialog-field-label">Date *</span>
+      <button
+        type="button"
+        className="rating-dialog-date-btn"
+        onClick={() => setOpen(true)}
+      >
+        <span>{formatDateDisplay(date)}</span>
+        <svg viewBox="0 0 24 24" fill="none" width="17" height="17">
+          <rect
+            x="3.5"
+            y="5"
+            width="17"
+            height="16"
+            rx="3"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+          <path d="M3.5 9.5H20.5" stroke="currentColor" strokeWidth="1.6" />
+          <path
+            d="M8 3V6.5M16 3V6.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {open ? (
+        <ScheduleCalendar
+          date={date}
+          today={getToday("slash", true)}
+          onSelect={(dateStr) => setDate(dateStr)}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -58,7 +96,6 @@ export default function RatingDialog({
   draft = {},
 }) {
   const raterId = getLocalStorage("ballkid_id");
-  const isMobile = useIsMobile();
 
   const [date, setDate] = useState(
     getDayFromHyphenated(draft.date) ?? inputDate ?? getToday("slash", true)
@@ -94,136 +131,91 @@ export default function RatingDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      PaperProps={{ onClick: (e) => e.stopPropagation() }}
+      PaperProps={{
+        onClick: (e) => e.stopPropagation(),
+        className: "rating-dialog-paper",
+      }}
     >
-      <DialogContent>
-        <Grid
-          container
-          alignItems="center"
-          direction="column"
-          justifyContent="center"
-        >
-          <Grid item xs={12}>
-            <Alerts
-              successMsg={successMsg}
-              errorMsg={errorMsg}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography component="h4" variant="h4" sx={{ my: 1 }}>
-              Give Rating
-            </Typography>
-          </Grid>
+      <DialogContent className="rating-dialog-content">
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              sx={{ minWidth: 250, my: 0.5, mx: 1 }}
-              variant="standard"
-              label="Ratee"
-              value={ballkid.first_name + " " + ballkid.last_name}
-              required
-              disabled
-            />
-          </Grid>
+        <Typography className="rating-dialog-title">Give Rating</Typography>
 
-          <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterLuxon}>
-              <DatePicker
-                renderInput={(props) => (
-                  <TextField
-                    sx={{ my: 0.5, mx: 1 }}
-                    required={true}
-                    variant="standard"
-                    {...props}
-                  />
-                )}
-                label="Date"
-                value={date}
-                mask={"__/__/____"}
-                onChange={(newVal) => {
-                  setDate(newVal.toLocaleString());
-                }}
-              />
-            </LocalizationProvider>
-          </Grid>
+        <div className="rating-dialog-fields-row">
+          <div className="rating-dialog-field">
+            <span className="rating-dialog-field-label">Ratee *</span>
+            <div className="rating-dialog-ratee-value">
+              {ballkid.first_name + " " + ballkid.last_name}
+            </div>
+          </div>
 
-          <Grid container>
-            <Grid item xs={12} sm={5.5}>
-              <RatingAndLabel
-                label={"Overall*"}
-                rating={rating}
-                setRating={setRating}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6.5}>
-              <RatingAndLabel
-                label={"Athleticism"}
-                rating={athleticismRating}
-                setRating={setAthleticismRating}
-              />
-            </Grid>
-            <Grid item xs={12} sm={5.5}>
-              <RatingAndLabel
-                label={"Rolling"}
-                rating={rollingRating}
-                setRating={setRollingRating}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6.5}>
-              <RatingAndLabel
-                label={"Awareness"}
-                rating={awarenessRating}
-                setRating={setAwarenessRating}
-              />
-            </Grid>
-            <Grid item xs={12} sm={5.5}>
-              <RatingAndLabel
-                label={"Effort"}
-                rating={effortRating}
-                setRating={setEffortRating}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6.5}>
-              <RatingAndLabel
-                label={"Decision-making"}
-                rating={decisionRating}
-                setRating={setDecisionRating}
-              />
-            </Grid>
-          </Grid>
+          <RatingDateField date={date} setDate={setDate} />
+        </div>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Comments"
-              variant="standard"
-              sx={{ width: isMobile ? 250 : 400 }}
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              multiline
-            />
-          </Grid>
+        <div className="rating-dialog-grades">
+          <RatingAndLabel
+            label={"Overall*"}
+            rating={rating}
+            setRating={setRating}
+          />
+          <RatingAndLabel
+            label={"Athleticism"}
+            rating={athleticismRating}
+            setRating={setAthleticismRating}
+          />
+          <RatingAndLabel
+            label={"Rolling"}
+            rating={rollingRating}
+            setRating={setRollingRating}
+          />
+          <RatingAndLabel
+            label={"Awareness"}
+            rating={awarenessRating}
+            setRating={setAwarenessRating}
+          />
+          <RatingAndLabel
+            label={"Effort"}
+            rating={effortRating}
+            setRating={setEffortRating}
+          />
+          <RatingAndLabel
+            label={"Decision-making"}
+            rating={decisionRating}
+            setRating={setDecisionRating}
+          />
+        </div>
 
-          <Grid item xs={12} sx={{ mt: 3 }}>
-            <Typography variant="body1">
-              Note: Ratings are required to be between 0.5 and 5 stars. Zero
-              star ratings are considered empty. Overall rating is required. All
-              other rating categories are optional. For information on how
-              ratings are calibrated across reviewers, see{" "}
-              <Link
-                target="_blank"
-                href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
-              >
-                here
-              </Link>
-              .
-            </Typography>
-          </Grid>
-        </Grid>
+        <TextField
+          className="rating-dialog-comments"
+          label="Comments"
+          variant="standard"
+          fullWidth
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          multiline
+        />
+
+        <div className="rating-dialog-note">
+          Note: Ratings are required to be between 0.5 and 5 stars. Zero star
+          ratings are considered empty. Overall rating is required. All other
+          rating categories are optional. For information on how ratings are
+          calibrated across reviewers, see{" "}
+          <Link
+            target="_blank"
+            href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
+          >
+            here
+          </Link>
+          .
+        </div>
       </DialogContent>
 
-      <DialogActions sx={{ mb: 1, mr: 1 }}>
+      <DialogActions className="rating-dialog-actions">
         <Button onClick={handleClose}>Cancel</Button>
         <Button
           variant="outlined"

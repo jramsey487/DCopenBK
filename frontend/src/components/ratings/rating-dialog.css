@@ -1,0 +1,227 @@
+.rating-dialog-paper {
+    --rd-nav: #0d1b3e;
+    --rd-red: #c8102e;
+    --rd-bg0: #f8fafc;
+    --rd-bg1: #fff;
+    --rd-bg2: #f1f5f9;
+    --rd-text1: #0d1b3e;
+    --rd-text2: #64748b;
+    --rd-border: #e2e8f0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: -0.01em;
+    border-radius: 16px !important;
+    max-width: 560px;
+  }
+  
+  .rating-dialog-content {
+    padding: 28px 28px 8px !important;
+  }
+  
+  /* Force Inter everywhere inside the dialog — MUI's Typography and form
+     components carry their own Roboto font-family with high specificity,
+     which otherwise wins over the plain .rating-dialog-paper rule. */
+  .rating-dialog-paper .MuiTypography-root,
+  .rating-dialog-paper .MuiFormLabel-root,
+  .rating-dialog-paper .MuiInputBase-root,
+  .rating-dialog-paper .MuiButton-root {
+    font-family: inherit !important;
+  }
+  
+  .rating-dialog-title {
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: var(--rd-nav) !important;
+    text-align: center;
+    margin-bottom: 18px !important;
+  }
+  
+  .rating-dialog-fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    .rating-dialog-fields-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .rating-dialog-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+  }
+  
+  .rating-dialog-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rd-text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  
+  .rating-dialog-ratee-value {
+    padding: 10px 12px;
+    background: var(--rd-bg0);
+    border: 1px solid var(--rd-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--rd-text2);
+    box-sizing: border-box;
+    cursor: not-allowed;
+  }
+  
+  .rating-dialog-date-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--rd-bg0);
+    border: 1px solid var(--rd-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--rd-text1);
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+  }
+  
+  .rating-dialog-date-btn:hover {
+    border-color: var(--rd-nav);
+  }
+  
+  .rating-dialog-date-btn svg {
+    color: var(--rd-text2);
+    flex-shrink: 0;
+  }
+  
+  .rating-dialog-comments .MuiFormLabel-root {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--rd-text2) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  
+  .rating-dialog-comments .MuiFormLabel-root.Mui-focused {
+    color: var(--rd-nav) !important;
+  }
+
+  .rating-dialog-comments .MuiInput-underline:after {
+    border-bottom-color: var(--rd-nav);
+  }
+  
+  .rating-dialog-grades {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px; /* was 24px — now matches .rating-dialog-fields-row */
+    row-gap: 8px;
+  }
+  
+  @media (max-width: 520px) {
+    .rating-dialog-grades {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .rating-dialog-grade-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px; /* was 8px 10px — now matches .rating-dialog-ratee-value / .rating-dialog-date-btn */
+    border-radius: 8px;
+    background: var(--rd-bg0);
+    border: 1px solid var(--rd-border); /* was 0.5px — matches the 1px border on the boxes above */
+  }
+  
+  .rating-dialog-grade-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--rd-text1);
+    white-space: nowrap;
+  }
+  
+  .rating-dialog-grade-row .MuiRating-root {
+    color: var(--rd-red);
+  }
+  
+  .rating-dialog-grade-row .MuiRating-iconEmpty {
+    color: var(--rd-border);
+  }
+  
+  .rating-dialog-comments {
+    margin-top: 32px !important;
+  }
+  
+  .rating-dialog-comments .MuiInputBase-root {
+    font-family: inherit;
+    font-size: 14px;
+  }
+  
+  .rating-dialog-note {
+    margin-top: 20px;
+    padding: 12px 14px;
+    background: var(--rd-bg2);
+    border: 0.5px solid var(--rd-border);
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--rd-text2);
+  }
+  
+  .rating-dialog-note a {
+    color: var(--rd-nav);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .rating-dialog-note a:hover {
+    text-decoration: underline;
+  }
+  
+  .rating-dialog-actions {
+    padding: 16px 24px 22px !important;
+    gap: 8px;
+  }
+  
+  .rating-dialog-actions .MuiButton-root {
+    font-family: inherit;
+    text-transform: none;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: none !important;
+  }
+  
+  .rating-dialog-actions .MuiButton-text {
+    color: var(--rd-text2);
+  }
+  
+  .rating-dialog-actions .MuiButton-outlinedSecondary {
+    border-color: var(--rd-border);
+    color: var(--rd-nav);
+  }
+  
+  .rating-dialog-actions .MuiButton-outlinedSecondary:hover {
+    border-color: var(--rd-nav);
+    background: var(--rd-bg0);
+  }
+  
+  .rating-dialog-actions .MuiButton-containedPrimary,
+  .rating-dialog-actions .MuiLoadingButton-containedPrimary {
+    background-color: var(--rd-nav);
+  }
+  
+  .rating-dialog-actions .MuiButton-containedPrimary:hover,
+  .rating-dialog-actions .MuiLoadingButton-containedPrimary:hover {
+    background-color: #152a5c;
+  }
