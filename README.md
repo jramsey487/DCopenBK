@@ -409,6 +409,8 @@ Body: { "username": "first.last", "password": "..." }
 
 ### Backend
 
+Make sure you have postgres installed!
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
