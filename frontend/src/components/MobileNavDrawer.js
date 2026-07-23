@@ -65,64 +65,67 @@ function pathActive(pathname, item) {
   return pathname === item.url || pathname.startsWith(item.url + "/");
 }
 
-function getNavItems(group) {
-  const roster = {
-    label: "Roster",
-    url: "/list",
-    match: ["/list", "/checkin", "/ballkid", "/cut", "/inactive"],
+function getNavSections(group) {
+  const list = {
+    label: "List",
     Icon: NavIconRoster,
+    items: [
+      { label: "Check-In", url: "/checkin" },
+      { label: "By Name", url: "/list" },
+      { label: "Cut", url: "/cut" },
+      { label: "Inactive", url: "/inactive" },
+    ],
   };
   const teams = {
     label: "Teams",
-    url: "/teams",
-    match: ["/teams", "/finals-teams", "/past-finals"],
     Icon: NavIconTeams,
+    items: [
+      { label: "Teams", url: "/teams" },
+      { label: "Finals Teams", url: "/finals-teams" },
+      { label: "Past Finals Teams", url: "/past-finals" },
+    ],
   };
   const schedule = {
     label: "Schedule",
     url: "/schedule",
     Icon: NavIconSchedule,
   };
+  const ratings = {
+    label: "Ratings",
+    Icon: NavIconRatings,
+    items: [
+      { label: "View Ratings", url: "/ratings" },
+      { label: "View My Ratings", url: "/my-ratings" },
+      { label: "Rate By Name", url: "/rate-by-name" },
+      { label: "Rate By Current Team", url: "/rate-by-team" },
+      { label: "Rate By Past Team", url: "/rate-by-past-team" },
+    ],
+  };
+  const leaderboards = {
+    label: "Leaderboards",
+    Icon: NavIconRatings,
+    items: [
+      { label: "Check-in", url: "/leaderboards/checkin" },
+      { label: "Court Time", url: "/leaderboards/court" },
+      { label: "Ratings - Ballkid", url: "/leaderboards/ballkid" },
+      { label: "Ratings - Captain", url: "/leaderboards/captain" },
+    ],
+  };
 
   switch (group) {
     case "chairperson":
-      return [
-        roster,
-        teams,
-        schedule,
-        {
-          label: "Ratings",
-          url: "/ratings",
-          match: [
-            "/ratings",
-            "/rate-by-name",
-            "/rate-by-team",
-            "/rate-by-past-team",
-            "/my-ratings",
-          ],
-          Icon: NavIconRatings,
-        },
-      ];
+      return [list, teams, schedule, ratings, leaderboards];
     case "captain":
       return [
-        { ...roster, match: ["/list", "/ballkid"] },
+        { ...list, items: [{ label: "By Name", url: "/list" }] },
         teams,
         schedule,
-        {
-          label: "Ratings",
-          url: "/rate-by-name",
-          match: [
-            "/rate-by-name",
-            "/rate-by-team",
-            "/rate-by-past-team",
-            "/my-ratings",
-          ],
-          Icon: NavIconRatings,
-        },
+        ratings,
+        leaderboards,
       ];
     default:
       return [
-        { ...roster, match: ["/list", "/ballkid"] },
+        { ...list, items: [{ label: "By Name", url: "/list" }] },
         teams,
         schedule,
       ];
@@ -142,6 +145,7 @@ function getAccountItems(group) {
         url: "/tournament-settings",
         Icon: NavIconSettings,
       },
+      { label: "Debug", url: "/debug", Icon: NavIconSettings },
       { label: "Feedback", url: "/feedback", Icon: NavIconProfile },
     ];
   }
@@ -154,10 +158,14 @@ function getAccountItems(group) {
 export default function MobileNavDrawer({ group, setToken }) {
   const [open, setOpen] = useState(false);
   const [ballkid, setBallkid] = useState(null);
+  const [openSections, setOpenSections] = useState({});
   const location = useLocation();
 
   const pk = getLocalStorage("ballkid_id");
   const username = getLocalStorage("username");
+
+  const toggleSection = (label) =>
+    setOpenSections((s) => ({ ...s, [label]: !s[label] }));
 
   useEffect(() => {
     if (!pk || !open) {
@@ -185,7 +193,7 @@ export default function MobileNavDrawer({ group, setToken }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const navItems = useMemo(() => getNavItems(group), [group]);
+  const navSections = useMemo(() => getNavSections(group), [group]);
   const accountItems = useMemo(() => getAccountItems(group), [group]);
 
   const displayName = ballkid
@@ -247,21 +255,74 @@ export default function MobileNavDrawer({ group, setToken }) {
 
           <div className="mobile-nav-drawer-body">
             <div className="mobile-nav-section-label">Navigation</div>
-            {navItems.map((item) => {
-              const Icon = item.Icon;
-              const isOn = pathActive(location.pathname, item);
+            {navSections.map((section) => {
+              const Icon = section.Icon;
+
+              // Plain single-link item (like Schedule) — no expand/collapse
+              if (section.url) {
+                const isOn = pathActive(location.pathname, section);
+                return (
+                  <Link
+                    key={section.label}
+                    to={section.url}
+                    className={`mobile-nav-category-header mobile-nav-link${
+                      isOn ? " is-active" : ""
+                    }`}
+                    onClick={() => setOpen(false)}
+                  >
+                    <span className="mobile-nav-item-icon">
+                      <Icon />
+                    </span>
+                    <span className="mobile-nav-category-label">{section.label}</span>
+                  </Link>
+                );
+              }
+
+              // Expandable category
+              const isOpen = !!openSections[section.label];
               return (
-                <Link
-                  key={item.label}
-                  to={item.url}
-                  className={`mobile-nav-item${isOn ? " on" : ""}`}
-                  onClick={() => setOpen(false)}
-                >
-                  <span className="mobile-nav-item-icon">
-                    <Icon />
-                  </span>
-                  {item.label}
-                </Link>
+                <div key={section.label} className="mobile-nav-category">
+                  <button
+                    type="button"
+                    className="mobile-nav-category-header"
+                    onClick={() => toggleSection(section.label)}
+                    aria-expanded={isOpen}
+                  >
+                    <span className="mobile-nav-item-icon">
+                      <Icon />
+                    </span>
+                    <span className="mobile-nav-category-label">
+                      {section.label}
+                    </span>
+                    <span
+                      className={`mobile-nav-chevron${
+                        isOpen ? " is-open" : ""
+                      }`}
+                      aria-hidden
+                    >
+                      ⌄
+                    </span>
+                  </button>
+                  {isOpen ? (
+                    <div className="mobile-nav-subitems">
+                      {section.items.map((item) => {
+                        const isOn = pathActive(location.pathname, item);
+                        return (
+                          <Link
+                            key={item.label}
+                            to={item.url}
+                            className={`mobile-nav-subitem${
+                              isOn ? " on" : ""
+                            }`}
+                            onClick={() => setOpen(false)}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
 

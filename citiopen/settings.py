@@ -156,7 +156,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DOMAIN = "dcopenbk.fly.dev"
-SITE_NAME = "Mubadala Citi Open Ballcrew"
+SITE_NAME = "Mubadala DC Open Ballcrew"
 DJOSER = {
     "USER_ID_FIELD": "username",
     "LOGIN_FIELD": "email",

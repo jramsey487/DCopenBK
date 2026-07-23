@@ -1,151 +1,242 @@
 .mobile-nav-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    z-index: 1250;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-  
-  .mobile-nav-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(88vw, 340px);
-    z-index: 1300;
-    background: #fff;
-    border-radius: 16px 0 0 16px;
-    box-shadow: -8px 0 32px rgba(13, 27, 62, 0.12);
-    display: flex;
-    flex-direction: column;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-    overflow: hidden;
-  }
-  
-  .mobile-nav-drawer-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 24px 18px 20px;
-    border-bottom: 0.5px solid #e2e8f0;
-    gap: 14px;
-  }
-  
-  .mobile-nav-drawer-user {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-    flex: 1;
-  }
-  
-  .mobile-nav-drawer-avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: #0d1b3e;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  
-  .mobile-nav-drawer-name {
-    font-size: 17px;
-    font-weight: 600;
-    color: #0d1b3e;
-    line-height: 1.3;
-  }
-  
-  .mobile-nav-drawer-meta {
-    font-size: 13px;
-    color: #64748b;
-    margin-top: 3px;
-    line-height: 1.35;
-  }
-  
-  .mobile-nav-drawer-close {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: #f1f5f9;
-    color: #64748b;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .mobile-nav-drawer-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0 24px;
-  }
-  
-  .mobile-nav-section-label {
-    padding: 14px 20px 8px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: #94a3b8;
-    text-transform: uppercase;
-  }
-  
-  .mobile-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    text-decoration: none;
-    color: #64748b;
-    font-size: 15px;
-    font-weight: 500;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-family: inherit;
-    box-sizing: border-box;
-  }
-  
-  .mobile-nav-item .mobile-nav-item-icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    color: #94a3b8;
-  }
-  
-  .mobile-nav-item.on {
-    background: #eef2ff;
-    color: #0d1b3e;
-    font-weight: 600;
-  }
-  
-  .mobile-nav-item.on .mobile-nav-item-icon {
-    color: #c8102e;
-  }
-  
-  .mobile-nav-item.logout {
-    color: #c8102e;
-  }
-  
-  .mobile-nav-item.logout .mobile-nav-item-icon {
-    color: #c8102e;
-  }
-  
-  .mobile-nav-divider {
-    height: 0.5px;
-    background: #e2e8f0;
-    margin: 8px 0;
-  }
-  
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1250;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(88vw, 340px);
+  z-index: 1300;
+  background: #fff;
+  border-radius: 16px 0 0 16px;
+  box-shadow: -8px 0 32px rgba(13, 27, 62, 0.12);
+  display: flex;
+  flex-direction: column;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.mobile-nav-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 18px 20px;
+  border-bottom: 0.5px solid #e2e8f0;
+  gap: 14px;
+}
+
+.mobile-nav-drawer-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mobile-nav-drawer-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #0d1b3e;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-nav-drawer-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #0d1b3e;
+  line-height: 1.3;
+}
+
+.mobile-nav-drawer-meta {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.mobile-nav-drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-nav-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 24px;
+}
+
+.mobile-nav-section-label {
+  padding: 14px 20px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.mobile-nav-item .mobile-nav-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.mobile-nav-item.on {
+  background: #eef2ff;
+  color: #0d1b3e;
+  font-weight: 600;
+}
+
+.mobile-nav-item.on .mobile-nav-item-icon {
+  color: #c8102e;
+}
+
+.mobile-nav-item.logout {
+  color: #c8102e;
+}
+
+.mobile-nav-item.logout .mobile-nav-item-icon {
+  color: #c8102e;
+}
+
+.mobile-nav-divider {
+  height: 0.5px;
+  background: #e2e8f0;
+  margin: 8px 0;
+}
+
+.mobile-nav-category {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav-category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #64748b;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.mobile-nav-category-header:hover {
+  background: rgba(13, 27, 62, 0.05);
+}
+
+.mobile-nav-category-label {
+  flex: 1;
+  min-width: 0;
+  line-height: 1;
+}
+
+.mobile-nav-chevron {
+  font-size: 14px;
+  line-height: 1;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.mobile-nav-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.mobile-nav-subitems {
+  display: flex;
+  flex-direction: column;
+  padding-left: 40px;
+  padding-bottom: 4px;
+}
+
+.mobile-nav-subitem {
+  padding: 8px 12px;
+  font-size: 13.5px;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.mobile-nav-subitem:hover {
+  background: rgba(13, 27, 62, 0.05);
+  color: #0d1b3e;
+}
+
+.mobile-nav-subitem.on {
+  color: #0d1b3e;
+  font-weight: 600;
+  background: rgba(13, 27, 62, 0.06);
+}
+
+.mobile-nav-category-header.mobile-nav-link.is-active {
+  color: #0d1b3e;
+  font-weight: 600;
+  background: rgba(13, 27, 62, 0.06);
+}
+
+.mobile-nav-category-header.mobile-nav-link {
+  text-decoration: none;
+}
+
+/* Icon/text vertical alignment fix — collapses line-height so icon
+   glyphs and labels share the same optical center across List (which
+   uses .mobile-nav-item) and Teams/Schedule/Ratings/Leaderboards
+   (which use .mobile-nav-category-header). */
+.mobile-nav-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
