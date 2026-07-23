@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -11,10 +10,6 @@ import Button from "@mui/material/Button";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-
 import Done from "@mui/icons-material/Done";
 import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
@@ -23,7 +18,6 @@ import AddCircle from "@mui/icons-material/AddCircle";
 import Warning from "@mui/icons-material/Warning";
 
 import {
-  Alerts,
   HelpIcon,
   HideShowToggle,
   getAuthHeader,
@@ -32,6 +26,8 @@ import {
   getCurrentYear,
 } from "../Utils";
 import { tournamentSettings } from "../HelpMessages";
+import "./tournament-settings.css";
+import ScheduleCalendar from "../schedule/ScheduleCalendar";
 
 function DownloadButton({ setSuccessMsg, setErrorMsg }) {
   const [loading, setLoading] = useState(false);
@@ -145,20 +141,24 @@ function Banner({
 
   return disabled ? (
     newBanner ? (
-      <IconButton
-        size="small"
+      <button
+        type="button"
+        className="tournament-settings-add-banner"
         onClick={() => {
           setDisabled(false);
           setTimeout(() => bannerInput.current.focus(), 100);
         }}
       >
         <Tooltip title="Add Banner">
-          <AddCircle />
+          <span className="tournament-settings-add-banner-inner">
+            <AddCircle fontSize="small" />
+            <span>Add banner</span>
+          </span>
         </Tooltip>
-      </IconButton>
+      </button>
     ) : (
-      <Box className="sxs">
-        <Typography color="gray" style={{ width: "90%" }} sx={{ mr: 2 }}>
+      <Box className="tournament-settings-banner-row">
+        <Typography className="tournament-settings-banner-text">
           {audience !== "ballkid" ? "" : `${banner?.ballkid_name}: `}
           {banner.message}
         </Typography>
@@ -204,7 +204,7 @@ function Banner({
       </Box>
     )
   ) : (
-    <Box className="sxs">
+    <Box className="tournament-settings-banner-row">
       {audience !== "ballkid" ? (
         ""
       ) : (
@@ -319,17 +319,16 @@ function BannerSection({ audience, setSuccessMsg, setErrorMsg }) {
   }, [audience, updated]);
 
   return (
-    <Grid item xs={12} className="justify-top">
-      <Typography variant="subtitle1">
+    <div className="tournament-settings-subsection">
+      <h3 className="tournament-settings-subsection-title">
         {audience === "all"
-          ? "Site-wide "
+          ? "Site-wide banners"
           : audience === "captains"
-          ? "Captains-wide "
-          : "Ballkid-specific "}
-        banner(s)
-      </Typography>
+          ? "Captains-wide banners"
+          : "Ballkid-specific banners"}
+      </h3>
 
-      <Box style={{ width: "75%" }} sx={{ ml: 2 }}>
+      <div className="tournament-settings-banner-list">
         {banners.map((banner, index) => (
           <Banner
             key={index}
@@ -351,7 +350,7 @@ function BannerSection({ audience, setSuccessMsg, setErrorMsg }) {
           setUpdated={setUpdated}
           newBanner={true}
         />
-      </Box>
+      </div>
       {/* {disabled ? (
         ""
       ) : (
@@ -359,7 +358,7 @@ function BannerSection({ audience, setSuccessMsg, setErrorMsg }) {
           Cancel
         </Button>
       )} */}
-    </Grid>
+    </div>
   );
 }
 
@@ -368,12 +367,13 @@ function RemoveOutliers({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
 
   return (
-    <div className="sxs">
+    <div className="tournament-settings-row-control">
       <TextField
+        className="tournament-settings-param-input"
         variant="standard"
         size="small"
         value={param}
-        style={{ width: 80 }}
+        style={{ width: 88 }}
         onChange={(e) => {
           setParam(e.target.value);
           setDisabled(false);
@@ -414,12 +414,13 @@ function YearThreshold({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
 
   return (
-    <div className="sxs">
+    <div className="tournament-settings-row-control">
       <TextField
+        className="tournament-settings-param-input"
         variant="standard"
         size="small"
         value={param}
-        style={{ width: 80 }}
+        style={{ width: 88 }}
         onChange={(e) => {
           setParam(e.target.value);
           setDisabled(false);
@@ -462,12 +463,13 @@ function BucketSize({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
 
   return (
-    <div className="sxs">
+    <div className="tournament-settings-row-control">
       <TextField
+        className="tournament-settings-param-input"
         variant="standard"
         size="small"
         value={param}
-        style={{ width: 80 }}
+        style={{ width: 88 }}
         onChange={(e) => {
           setParam(e.target.value);
           setDisabled(false);
@@ -506,12 +508,13 @@ function CalibrationThreshold({ tournament, setSuccessMsg, setErrorMsg }) {
   const [disabled, setDisabled] = useState(true);
 
   return (
-    <div className="sxs">
+    <div className="tournament-settings-row-control">
       <TextField
+        className="tournament-settings-param-input"
         variant="standard"
         size="small"
         value={param}
-        style={{ width: 80 }}
+        style={{ width: 88 }}
         onChange={(e) => {
           setParam(e.target.value);
           setDisabled(false);
@@ -549,99 +552,161 @@ function CalibrationThreshold({ tournament, setSuccessMsg, setErrorMsg }) {
   );
 }
 
+function todayStr() {
+  const d = new Date();
+  return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(
+    d.getDate()
+  ).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+function dateToSlash(d) {
+  if (!d) return null;
+  return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(
+    d.getDate()
+  ).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+function TournamentDateField({ label, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const display = value
+    ? value.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <div className="tournament-settings-date-field">
+      <span className="tournament-settings-date-field-label">{label}</span>
+      <button
+        type="button"
+        className="tournament-settings-date-field-btn"
+        onClick={() => setOpen(true)}
+      >
+        <span
+          className={
+            display
+              ? "tournament-settings-date-field-value"
+              : "tournament-settings-date-field-placeholder"
+          }
+        >
+          {display ?? "Select date"}
+        </span>
+        <span className="tournament-settings-date-field-icon" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+            <rect
+              x="3.5"
+              y="5"
+              width="17"
+              height="16"
+              rx="3"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path
+              d="M3.5 9.5H20.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path
+              d="M8 3V6.5M16 3V6.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
+      </button>
+
+      {open ? (
+        <ScheduleCalendar
+          date={dateToSlash(value) ?? todayStr()}
+          today={todayStr()}
+          onSelect={(dateStr) => {
+            const [mm, dd, yyyy] = dateStr.split("/");
+            onChange(new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10)));
+          }}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [year, setYear] = useState(getCurrentYear());
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}></Grid>
-      <Grid item xs={12}>
-        <Typography>No tournament currently exists for this year.</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography>Create one now:</Typography>
-      </Grid>
+    <div className="tournament-settings-create-grid">
+      <p className="tournament-settings-create-note">
+        No tournament currently exists for this year. Create one to configure
+        dates and settings.
+      </p>
 
-      <Grid item xs={12}>
-        <TextField
-          value={year}
-          label="Year"
-          variant="standard"
-          type="number"
-          required
-          onChange={(e) => setYear(parseInt(e.target.value))}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+      <div className="tournament-settings-create-fields">
+        <div className="tournament-settings-year-field">
+          <span className="tournament-settings-date-field-label">Year</span>
+          <TextField
+            className="tournament-settings-param-input"
+            value={year}
+            variant="standard"
+            type="number"
+            required
+            onChange={(e) => setYear(parseInt(e.target.value, 10))}
+          />
+        </div>
+
+        <div className="tournament-settings-date-row">
+          <TournamentDateField
             label="Start Date"
             value={start}
-            mask={"__/__/____"}
-            onChange={(newValue) => setStart(newValue)}
+            onChange={setStart}
           />
-        </LocalizationProvider>
-      </Grid>
+          <TournamentDateField label="End Date" value={end} onChange={setEnd} />
+        </div>
+      </div>
 
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
-            label="End Date"
-            value={end}
-            mask={"__/__/____"}
-            onChange={(newValue) => setEnd(newValue)}
-          />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={() => {
-            if (start === null || end === null) {
-              setErrorMsg("Start and end dates are required.");
-            } else if (Date.parse(start) >= Date.parse(end)) {
-              setErrorMsg(
-                "Tournament start date cannot be on or after the end date."
-              );
-            } else {
-              fetch("/api/get-tournament", {
-                method: "POST",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  year: year,
-                  start: start,
-                  end: end,
-                }),
-              }).then((response) => {
-                if (response.ok) {
-                  setSuccessMsg("Tournament created!");
-                  setErrorMsg("");
-                  setTimeout(() => setUpdated(true), 1000);
-                } else {
-                  setSuccessMsg("");
-                  setErrorMsg("Error creating tournament.");
-                }
-                setYear("");
-                setStart(null);
-                setEnd(null);
-              });
-            }
-          }}
-        >
-          Create Tournament
-        </Button>
-      </Grid>
-    </Grid>
+      <Button
+        color="primary"
+        variant="contained"
+        onClick={() => {
+          if (start === null || end === null) {
+            setErrorMsg("Start and end dates are required.");
+          } else if (start.getTime() >= end.getTime()) {
+            setErrorMsg(
+              "Tournament start date cannot be on or after the end date."
+            );
+          } else {
+            fetch("/api/get-tournament", {
+              method: "POST",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                year: year,
+                start: start,
+                end: end,
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setSuccessMsg("Tournament created!");
+                setErrorMsg("");
+                setTimeout(() => setUpdated(true), 1000);
+              } else {
+                setSuccessMsg("");
+                setErrorMsg("Error creating tournament.");
+              }
+              setYear("");
+              setStart(null);
+              setEnd(null);
+            });
+          }
+        }}
+      >
+        Create Tournament
+      </Button>
+    </div>
   );
 }
 
@@ -693,164 +758,166 @@ export default function TournamentSettings(props) {
   return tournament === null || tournament === undefined ? (
     ""
   ) : (
-    <div className="page">
+    <div className="page tournament-settings-shell">
       <Banners />
 
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
-      />
+      <div className="tournament-settings-page">
+        <header className="tournament-settings-header">
+          <div className="tournament-settings-title-row">
+            <h1 className="tournament-settings-title">Tournament Settings</h1>
+            <HelpIcon page="Tournament Settings" message={tournamentSettings} />
+          </div>
+          <p className="tournament-settings-subtitle">
+            Manage banners, team visibility, rating calibration, and data
+            exports.
+          </p>
+        </header>
 
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Tournament Settings</Typography>
-        &thinsp;
-        <HelpIcon page="Tournament Settings" message={tournamentSettings} />
-      </Box>
+        {successMsg ? (
+          <div className="tournament-settings-alert success" role="status">
+            {successMsg}
+          </div>
+        ) : null}
+        {errorMsg ? (
+          <div className="tournament-settings-alert error" role="alert">
+            {errorMsg}
+          </div>
+        ) : null}
 
-      {tournament.year === null ? (
-        <CreateTournament
-          setUpdated={setUpdated}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      ) : (
-        <Grid container spacing={2} sx={{ pr: 2 }}>
-          <BannerSection
-            audience="all"
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-
-          <BannerSection
-            audience="captains"
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-
-          <BannerSection
-            audience="ballkid"
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-
-          {["", "finals "].map((teamType) => (
-            <Grid item key={teamType} xs={12} className="justify">
-              <Typography variant="subtitle1">
-                Visiblity of {teamType}teams to captains and ballkids
-              </Typography>
-
-              <HideShowToggle
-                teamType={teamType.trim()}
-                defaultShow={
-                  teamType === ""
-                    ? tournament.show_teams
-                    : tournament.show_finals_teams
-                }
+        {tournament.year === null ? (
+          <section className="tournament-settings-card">
+            <h2 className="tournament-settings-section-title">
+              Create Tournament
+            </h2>
+            <CreateTournament
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </section>
+        ) : (
+          <div className="tournament-settings-stack">
+            <section className="tournament-settings-card">
+              <h2 className="tournament-settings-section-title">Banners</h2>
+              <BannerSection
+                audience="all"
                 setSuccessMsg={setSuccessMsg}
                 setErrorMsg={setErrorMsg}
               />
-            </Grid>
-          ))}
-          <Grid item xs={12} sx={{ mt: 2 }}>
-            <Typography variant="h6">Calibration Settings</Typography>
-          </Grid>
+              <BannerSection
+                audience="captains"
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+              <BannerSection
+                audience="ballkid"
+                setSuccessMsg={setSuccessMsg}
+                setErrorMsg={setErrorMsg}
+              />
+            </section>
 
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Change calibration distance to ideal threshold (to exclude
-              captains' ratings)
-            </Typography>
-            <CalibrationThreshold
-              tournament={tournament}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
+            <section className="tournament-settings-card">
+              <h2 className="tournament-settings-section-title">
+                Team Visibility
+              </h2>
+              {["", "finals "].map((teamType) => (
+                <div className="tournament-settings-row" key={teamType}>
+                  <span className="tournament-settings-row-label">
+                    Visibility of {teamType}teams to captains and ballkids
+                  </span>
+                  <div className="tournament-settings-toggle">
+                    <HideShowToggle
+                      teamType={teamType.trim()}
+                      defaultShow={
+                        teamType === ""
+                          ? tournament.show_teams
+                          : tournament.show_finals_teams
+                      }
+                      setSuccessMsg={setSuccessMsg}
+                      setErrorMsg={setErrorMsg}
+                    />
+                  </div>
+                </div>
+              ))}
+            </section>
 
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Change calibration ignore_outliers parameter
-            </Typography>
-            <RemoveOutliers
-              tournament={tournament}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Change minimum (inclusive) year for which calibration trains
-            </Typography>
-            <YearThreshold
-              tournament={tournament}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
+            <section className="tournament-settings-card">
+              <h2 className="tournament-settings-section-title">
+                Calibration Settings
+              </h2>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Distance-to-ideal threshold (exclude captains&apos; ratings)
+                </span>
+                <CalibrationThreshold
+                  tournament={tournament}
+                  setSuccessMsg={setSuccessMsg}
+                  setErrorMsg={setErrorMsg}
+                />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Ignore outliers parameter
+                </span>
+                <RemoveOutliers
+                  tournament={tournament}
+                  setSuccessMsg={setSuccessMsg}
+                  setErrorMsg={setErrorMsg}
+                />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Minimum year for calibration training (inclusive)
+                </span>
+                <YearThreshold
+                  tournament={tournament}
+                  setSuccessMsg={setSuccessMsg}
+                  setErrorMsg={setErrorMsg}
+                />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Bucket size (days)
+                </span>
+                <BucketSize
+                  tournament={tournament}
+                  setSuccessMsg={setSuccessMsg}
+                  setErrorMsg={setErrorMsg}
+                />
+              </div>
+            </section>
 
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Change calibration bucket_size parameter (in days)
-            </Typography>
-            <BucketSize
-              tournament={tournament}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-
-          <Grid item xs={12} className="sxs" sx={{ mt: 2 }}>
-            <Warning color="error" />
-            <Typography variant="h6" color="error" sx={{ mx: 1 }}>
-              Proceed with Caution
-            </Typography>
-            <Warning color="error" />
-          </Grid>
-
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Export and download all data from database
-            </Typography>
-            <DownloadButton
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">Archive all ballkids</Typography>
-            <ArchiveButton
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-
-          <Grid item xs={12} className="justify">
-            <Typography variant="subtitle1">
-              Reset all data for this year
-            </Typography>
-            <ResetDataButton
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-          {/* <Grid item xs={12} className="justify">
-          <Typography variant="subtitle1">
-          Wrap up this year's tournament
-          </Typography>
-          <Button
-          variant="contained"
-          color="error"
-          size="small"
-          onClick={() => {}}
-            >
-            Complete
-            </Button>
-            </Grid> */}
-        </Grid>
-      )}
+            <section className="tournament-settings-card danger">
+              <div className="tournament-settings-caution-head">
+                <Warning fontSize="small" />
+                <h2>Proceed with Caution</h2>
+                <Warning fontSize="small" />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Export and download all data from the database
+                </span>
+                <DownloadButton
+                  setSuccessMsg={setSuccessMsg}
+                  setErrorMsg={setErrorMsg}
+                />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Archive all ballkids
+                </span>
+                <ArchiveButton />
+              </div>
+              <div className="tournament-settings-row">
+                <span className="tournament-settings-row-label">
+                  Reset all data for this year
+                </span>
+                <ResetDataButton />
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
