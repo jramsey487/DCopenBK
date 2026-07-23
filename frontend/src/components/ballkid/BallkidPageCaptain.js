@@ -12,20 +12,22 @@ import {
   ProfilePageShell,
   ProfileLoadingState,
   ProfileBrandedHero,
-  ProfileTabs,
   ProfileContent,
-  ProfilePanel,
   ProfileCard,
   ProfileInfoRow,
 } from "./BallkidProfileLayout";
 
-const TABS = [{ id: "info", label: "Info" }];
+function positionPillVariant(position) {
+  const key = (position ?? "").toLowerCase();
+  if (key === "net") return "ballkid-profile-pill--net";
+  if (key === "back") return "ballkid-profile-pill--back";
+  return "ballkid-profile-pill--rookie";
+}
 
 export default function BallkidPageCaptain(props) {
   const [ballkid, setBallkid] = useState(null);
   const [updated, setUpdated] = useState(false);
   const [showTeams, setShowTeams] = useState(false);
-  const [tab, setTab] = useState("info");
 
   const isMobile = useIsMobile();
   const { pk } = useParams();
@@ -68,37 +70,38 @@ export default function BallkidPageCaptain(props) {
     <ProfilePageShell>
       <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
 
-      <ProfileTabs tabs={TABS} active={tab} onChange={setTab} />
-
       <ProfileContent>
-        <ProfilePanel id="info" active={tab}>
-          <ProfileCard title="Personal info">
-            <ProfileInfoRow label="Age" value={ballkid.age} />
+        <ProfileCard title="Personal info">
+          <ProfileInfoRow label="Age" value={ballkid.age} />
+          <ProfileInfoRow
+            label="Experience"
+            value={`${ballkid.num_years_experience} years`}
+          />
+          <ProfileInfoRow label="Phone" value={ballkid.phone} />
+          <ProfileInfoRow label="Preferred position">
+            <span
+              className={`ballkid-profile-pill ${positionPillVariant(
+                ballkid.preferred_position
+              )}`}
+            >
+              {ballkid.preferred_position}
+            </span>
+          </ProfileInfoRow>
+        </ProfileCard>
+
+        {!showCurrentInfo ? null : (
+          <ProfileCard title="Current tournament">
+            <ProfileInfoRow label="Position" value={ballkid.position} />
             <ProfileInfoRow
-              label="Experience"
-              value={`${ballkid.num_years_experience} years`}
-            />
-            <ProfileInfoRow label="Phone" value={ballkid.phone} />
-            <ProfileInfoRow
-              label="Preferred position"
-              value={ballkid.preferred_position}
+              label="Current team"
+              value={
+                ballkid.current_team === 0
+                  ? "Unassigned"
+                  : ballkid.current_team
+              }
             />
           </ProfileCard>
-
-          {!showCurrentInfo ? null : (
-            <ProfileCard title="Current tournament">
-              <ProfileInfoRow label="Position" value={ballkid.position} />
-              <ProfileInfoRow
-                label="Current team"
-                value={
-                  ballkid.current_team === 0
-                    ? "Unassigned"
-                    : ballkid.current_team
-                }
-              />
-            </ProfileCard>
-          )}
-        </ProfilePanel>
+        )}
       </ProfileContent>
     </ProfilePageShell>
   );

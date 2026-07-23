@@ -86,8 +86,8 @@
   }
   
   .ballkid-profile-hero-photo {
-    width: 96px;
-    height: 96px;
+    width: 150px;
+    height: 150px;
     border-radius: 16px;
     background: var(--bp-nav);
     flex-shrink: 0;
