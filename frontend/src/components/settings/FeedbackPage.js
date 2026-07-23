@@ -39,11 +39,11 @@ export default function FeedbackPage() {
             </a>
             <a
               className="settings-link-card"
-              href="mailto:mubadalacitiopenballcrew@gmail.com"
+              href="mailto:mdetennis.ballcrew@gmail.com"
             >
               <span className="settings-link-card-title">Email the ballcrew</span>
               <span className="settings-link-card-desc">
-                mubadalacitiopenballcrew@gmail.com
+                mdetennis.ballcrew@gmail.com
               </span>
             </a>
           </div>
