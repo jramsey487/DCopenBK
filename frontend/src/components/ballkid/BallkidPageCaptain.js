@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import Box from "@mui/material/Box";
+
 import {
   getAuthHeader,
   RatingButton,
@@ -68,7 +70,9 @@ export default function BallkidPageCaptain(props) {
 
   return (
     <ProfilePageShell>
-      <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
+      <Box sx={{ "& .ballkid-profile-hero-meta-pills": { display: "none" } }}>
+        <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
+      </Box>
 
       <ProfileContent>
         <ProfileCard title="Personal info">
