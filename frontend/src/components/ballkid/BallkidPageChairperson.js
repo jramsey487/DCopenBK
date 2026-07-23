@@ -40,7 +40,6 @@ import Edit from "@mui/icons-material/Edit";
 
 import RatingDialog from "../ratings/RatingDialog";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
-import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
 import { RaterParamsChart } from "./RaterParamsChart";
 import { BallkidParamsChart } from "./BallkidParamsChart";
@@ -348,7 +347,7 @@ export function FinalsHistoryTable({ pk }) {
         Previous Years' Finals:
       </Typography>
       {finals.length === 0 ? (
-        <Typography>No finals history to show.</Typography>
+        <div className="ballkid-profile-empty">No finals history to show.</div>
       ) : (
         <Box>
           <Typography variant="subtitle1" fontWeight="medium">
@@ -1460,11 +1459,6 @@ export default function BallkidPageChairperson(props) {
               <ProfileCard title="Court time">
                 <div className="ballkid-profile-chart-wrap">
                   <CourtHistoryChart pk={pk} />
-                </div>
-              </ProfileCard>
-              <ProfileCard title="Time under each captain">
-                <div className="ballkid-profile-chart-wrap">
-                  <CaptainHistoryChart pk={pk} />
                 </div>
               </ProfileCard>
             </ProfilePanel>

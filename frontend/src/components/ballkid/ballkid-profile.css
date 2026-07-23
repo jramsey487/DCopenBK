@@ -86,15 +86,15 @@
   }
   
   .ballkid-profile-hero-photo {
-    width: 76px;
-    height: 76px;
-    border-radius: 14px;
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
     background: var(--bp-nav);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
+    font-size: 32px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.65);
     overflow: hidden;
@@ -135,7 +135,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px 14px;
+    gap: 8px 10px;
   }
   
   .ballkid-profile-hero-meta-pills .ballkid-profile-hero-pills {
@@ -159,12 +159,14 @@
   }
   
   .ballkid-profile-shell .ballkid-profile-checkin-btn {
-    min-width: 108px !important;
-    min-height: 34px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 4px 12px !important;
+    line-height: 1.3 !important;
     text-transform: none !important;
     font-weight: 500 !important;
-    font-size: 13px !important;
-    border-radius: 8px !important;
+    font-size: 12px !important;
+    border-radius: 20px !important;
     box-shadow: none !important;
   }
   
@@ -518,12 +520,13 @@
   }
   
   .ballkid-profile-shell .MuiTableHead-root .MuiTableCell-head {
-    background: var(--bp-nav);
-    color: #fff;
+    background: var(--bp-bg2);
+    color: var(--bp-text2);
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--bp-border);
   }
   
   .ballkid-profile-season-stats .MuiTableCell-root {
@@ -543,3 +546,43 @@
     display: none;
   }
   
+  /* Unify MUI Typography with the rest of the profile */
+.ballkid-profile-shell .MuiTypography-root {
+  font-family: var(--font-sans);
+  color: var(--bp-text1);
+  letter-spacing: -0.01em;
+  font-size: 13px;
+}
+
+/* Nicer, more uniform dropdowns (Last Day / Checkout Time) */
+.ballkid-profile-shell .MuiInput-root:before,
+.ballkid-profile-shell .MuiInput-root:after {
+  display: none;
+}
+
+.ballkid-profile-shell .MuiInput-root {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--bp-nav);
+  background: var(--bp-bg2);
+  border: 0.5px solid var(--bp-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  transition: border-color 0.15s;
+}
+
+.ballkid-profile-shell .MuiInput-root.Mui-disabled {
+  color: var(--bp-text2);
+  background: transparent;
+  border-color: transparent;
+  padding: 4px 0;
+}
+
+.ballkid-profile-shell .ballkid-profile-card-body--padded .MuiIconButton-root svg {
+  color: var(--bp-text2);
+  font-size: 18px;
+}
+
+.ballkid-profile-shell .ballkid-profile-card-body--padded .MuiIconButton-root:hover svg {
+  color: var(--bp-nav);
+}
