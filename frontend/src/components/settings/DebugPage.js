@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Component } from "react";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -7,25 +7,286 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Alert from "@mui/material/Alert";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import Stack from "@mui/material/Stack";
+import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 
 import TaskAlt from "@mui/icons-material/TaskAlt";
 import UploadFile from "@mui/icons-material/UploadFile";
+import PersonAdd from "@mui/icons-material/PersonAdd";
+import HistoryEdu from "@mui/icons-material/HistoryEdu";
+import CloudUpload from "@mui/icons-material/CloudUpload";
+import EventAvailable from "@mui/icons-material/EventAvailable";
+import StarRate from "@mui/icons-material/StarRate";
+import GroupAdd from "@mui/icons-material/GroupAdd";
+import ContentCut from "@mui/icons-material/ContentCut";
+import EmojiEvents from "@mui/icons-material/EmojiEvents";
+import AccessTime from "@mui/icons-material/AccessTime";
+import Groups from "@mui/icons-material/Groups";
+import Badge from "@mui/icons-material/Badge";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
+import { DateTime } from "luxon";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { RatingAndLabel } from "../ratings/RatingDialog";
+import "../ratings/rating-dialog.css";
 import {
   Alerts,
   getAuthHeader,
-  useIsMobile,
   getToken,
-  TabbedSections,
   Banners,
+  getToday,
 } from "../Utils";
-import { RatingAndLabel } from "../ratings/RatingDialog";
 
-function CreateBallkid(props) {
+// Custom Sleek Theme Definition
+const theme = createTheme({
+  typography: {
+    fontFamily: [
+      '"Plus Jakarta Sans"',
+      '"Inter"',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      'sans-serif',
+    ].join(','),
+    h5: {
+      fontWeight: 700,
+      letterSpacing: '-0.02em',
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#2563eb', // Crisp Indigo/Blue
+      light: '#eff6ff',
+      dark: '#1d4ed8',
+    },
+    background: {
+      default: '#f8fafc',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#0f172a',
+      secondary: '#64748b',
+    },
+    divider: '#e2e8f0',
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 10,
+          padding: '10px 24px',
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 10,
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#94a3b8',
+          },
+        },
+      },
+    },
+  },
+});
+
+// Error Boundary Component
+class FormErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Tab Render Error Caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "error.light" }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Something went wrong while rendering this section.
+          </Alert>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {this.state.error?.toString() || "Unknown error occurred."}
+          </Typography>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<RefreshIcon />}
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Reset Form
+          </Button>
+        </Paper>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Custom MUI DatePickers compatible with renderInput
+const CustomDatePicker = ({ label, value, onChange, required = false }) => (
+  <DatePicker
+    label={label}
+    value={value || null}
+    onChange={onChange}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="medium"
+        fullWidth
+        variant="outlined"
+        required={required}
+      />
+    )}
+  />
+);
+
+const CustomDateTimePicker = ({ label, value, onChange, required = false }) => (
+  <DateTimePicker
+    label={label}
+    value={value || null}
+    onChange={onChange}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        size="medium"
+        fullWidth
+        variant="outlined"
+        required={required}
+      />
+    )}
+  />
+);
+
+const toIsoString = (dt) => {
+  if (!dt) return null;
+  if (typeof dt === "string") return dt;
+  if (typeof dt.toISO === "function") return dt.toISO();
+  if (typeof dt.toISODate === "function") return dt.toISODate();
+  if (dt instanceof Date) return dt.toISOString();
+  return null;
+};
+
+/** API create-rating expects MM/DD/YYYY (not ISO). */
+const toSlashMonthDayYear = (dt) => {
+  if (!dt) {
+    return null;
+  }
+  if (typeof dt === "string") {
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dt)) {
+      return dt;
+    }
+    const parsed = DateTime.fromISO(dt);
+    if (parsed.isValid) {
+      return parsed.toFormat("MM/dd/yyyy");
+    }
+    return null;
+  }
+  if (typeof dt.toFormat === "function") {
+    return dt.toFormat("MM/dd/yyyy");
+  }
+  if (dt instanceof Date) {
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getDate()).padStart(2, "0");
+    return `${mm}/${dd}/${dt.getFullYear()}`;
+  }
+  return null;
+};
+
+const getSafeOptionLabel = (option) => {
+  if (!option) return "";
+  if (typeof option === "string") return option;
+  return option.label || "";
+};
+
+// Modern Container Form Card Wrapper
+const FormCard = ({ title, children, icon: Icon }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: { xs: 2.5, sm: 4 },
+      borderRadius: 4,
+      border: "1px solid",
+      borderColor: "divider",
+      boxShadow: "0px 10px 30px rgba(15, 23, 42, 0.04)",
+      bgcolor: "background.paper",
+      width: "100%",
+      maxWidth: "100%",
+      boxSizing: "border-box",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    }}
+  >
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+      {Icon && (
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 3,
+            bgcolor: "primary.light",
+            color: "primary.main",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon fontSize="medium" />
+        </Box>
+      )}
+      <Typography variant="h5" color="text.primary">
+        {title}
+      </Typography>
+    </Box>
+    <Divider sx={{ mb: 3.5 }} />
+    {children}
+  </Paper>
+);
+
+function CreateBallkid() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
@@ -37,139 +298,134 @@ function CreateBallkid(props) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetch("/api/create-ballkid", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        age: age ? parseInt(age, 10) : null,
+        image: image,
+        preferred_position: preferredPosition,
+        num_years_experience: numYearsExperience ? parseInt(numYearsExperience, 10) : 0,
+        is_captain: isCaptain,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Ballkid created successfully!");
+          setFirstName("");
+          setLastName("");
+          setAge("");
+          setNumYearsExperience("");
+          setPreferredPosition("");
+          setIsCaptain(false);
+          setImage("");
+        } else {
+          setErrorMsg("Error creating ballkid.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating ballkid."));
+  };
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
+    <FormCard title="Create Ballkid" icon={PersonAdd}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            value={firstName}
+            label="First Name"
+            variant="outlined"
+            required
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            value={lastName}
+            label="Last Name"
+            variant="outlined"
+            required
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            value={age}
+            label="Age"
+            variant="outlined"
+            type="number"
+            required
+            onChange={(e) => setAge(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            value={numYearsExperience}
+            label="Years of Experience"
+            variant="outlined"
+            type="number"
+            onChange={(e) => setNumYearsExperience(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="Preferred Position"
+            value={preferredPosition}
+            variant="outlined"
+            required
+            onChange={(e) => setPreferredPosition(e.target.value)}
+          >
+            <MenuItem value={"Back"}>Back</MenuItem>
+            <MenuItem value={"Net"}>Net</MenuItem>
+            <MenuItem value={"Back/Net"}>Back/Net</MenuItem>
+            <MenuItem value={"Net/Back"}>Net/Back</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="Is Captain"
+            value={isCaptain ? "true" : "false"}
+            variant="outlined"
+            required
+            onChange={(e) => setIsCaptain(e.target.value === "true")}
+          >
+            <MenuItem value={"true"}>Yes</MenuItem>
+            <MenuItem value={"false"}>No</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            value={image}
+            label="Image URL"
+            variant="outlined"
+            placeholder="https://example.com/photo.jpg"
+            onChange={(e) => setImage(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Ballkid
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Ballkid
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={firstName}
-          label="First Name"
-          variant="standard"
-          required
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={lastName}
-          label="Last Name"
-          variant="standard"
-          required
-          onChange={(e) => setLastName(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={age}
-          label="Age"
-          variant="standard"
-          type="number"
-          required
-          onChange={(e) => setAge(parseInt(e.target.value))}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={numYearsExperience}
-          label="# Years Experience"
-          variant="standard"
-          type="number"
-          onChange={(e) => setNumYearsExperience(parseInt(e.target.value))}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          select
-          label="Preferred Position"
-          value={preferredPosition}
-          variant="standard"
-          style={{ minWidth: 250 }}
-          required
-          onChange={(e) => setPreferredPosition(e.target.value)}
-        >
-          <MenuItem value={"Back"}>Back</MenuItem>
-          <MenuItem value={"Net"}>Net</MenuItem>
-          <MenuItem value={"Back/Net"}>Back/Net</MenuItem>
-          <MenuItem value={"Net/Back"}>Net/Back</MenuItem>
-        </TextField>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          select
-          label="Is Captain"
-          value={isCaptain}
-          variant="standard"
-          style={{ minWidth: 200 }}
-          required
-          onChange={(e) => setIsCaptain(e.target.value)}
-        >
-          <MenuItem value={true}>Yes</MenuItem>
-          <MenuItem value={false}>No</MenuItem>
-        </TextField>
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          value={image}
-          label="Image Link"
-          variant="standard"
-          onChange={(e) => setImage(e.target.value)}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) =>
-            fetch("/api/create-ballkid", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                age: age,
-                image: image,
-                preferred_position: preferredPosition,
-                num_years_experience: numYearsExperience,
-                is_captain: isCaptain,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Ballkid created!");
-              } else {
-                setErrorMsg("Error creating ballkid.");
-              }
-              setFirstName("");
-              setLastName("");
-              setAge("");
-              setNumYearsExperience("");
-              setPreferredPosition("");
-              setIsCaptain("");
-              setImage("");
-            })
-          }
-        >
-          Create Ballkid
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateUser(props) {
+function CreateUser() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [group, setGroup] = useState("ballkid");
@@ -178,101 +434,95 @@ function CreateUser(props) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create User
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="First Name"
-          variant="standard"
-          required
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Last Name"
-          variant="standard"
-          value={lastName}
-          required
-          onChange={(e) => setLastName(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          select
-          label="Permissions Group"
-          value={group}
-          variant="standard"
-          style={{ minWidth: 250 }}
-          required
-          onChange={(e) => setGroup(e.target.value)}
-        >
-          <MenuItem value={"ballkid"}>Ballkid</MenuItem>
-          <MenuItem value={"captain"}>Captain</MenuItem>
-          <MenuItem value={"chairperson"}>Chairperson</MenuItem>
-        </TextField>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Email"
-          variant="standard"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </Grid>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetch("/accounts/register", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        group: group,
+        email: email,
+        password: "password",
+        password2: "password",
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("User created successfully!");
+          setFirstName("");
+          setLastName("");
+          setGroup("ballkid");
+          setEmail("");
+        } else {
+          setErrorMsg("Error creating user.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating user."));
+  };
 
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) =>
-            fetch("/accounts/register", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                group: group,
-                email: email,
-                password: "password",
-                password2: "password",
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("User created!");
-              } else {
-                setErrorMsg("Error creating user.");
-              }
-              setFirstName("");
-              setLastName("");
-              setGroup("ballkid");
-              setEmail("");
-            })
-          }
-        >
-          Create User
-        </Button>
+  return (
+    <FormCard title="Create User" icon={Badge}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="First Name"
+            variant="outlined"
+            required
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Last Name"
+            variant="outlined"
+            value={lastName}
+            required
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="Permissions Group"
+            value={group}
+            variant="outlined"
+            required
+            onChange={(e) => setGroup(e.target.value)}
+          >
+            <MenuItem value={"ballkid"}>Ballkid</MenuItem>
+            <MenuItem value={"captain"}>Captain</MenuItem>
+            <MenuItem value={"chairperson"}>Chairperson</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Email Address"
+            type="email"
+            variant="outlined"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create User
+          </Button>
+        </Grid>
       </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateCheckinHistory({ ballkidsList }) {
+function CreateCheckinHistory({ ballkidsList = [] }) {
   const [ballkid, setBallkid] = useState(null);
   const [checkin, setCheckin] = useState(null);
   const [checkout, setCheckout] = useState(null);
@@ -280,107 +530,69 @@ function CreateCheckinHistory({ ballkidsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Check-in History
-        </Typography>
-      </Grid>
+  const handleSubmit = () => {
+    fetch("/api/create-checkin-history", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ballkid_id: ballkid?.id,
+        checkin: toIsoString(checkin),
+        checkout: toIsoString(checkout),
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Check-in history created!");
+          setBallkid(null);
+          setCheckin(null);
+          setCheckout(null);
+        } else {
+          setErrorMsg("Error creating check-in history.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating check-in history."));
+  };
 
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
-            />
-          )}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+  return (
+    <FormCard title="Create Check-in History" icon={AccessTime}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ballkid || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setBallkid(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ballkid" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Check-in Time"
             value={checkin}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setCheckin(newValue);
-            }}
+            onChange={(newValue) => setCheckin(newValue)}
+            required
           />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => <TextField variant="standard" {...props} />}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Check-out Time"
             value={checkout}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setCheckout(newValue);
-            }}
+            onChange={(newValue) => setCheckout(newValue)}
           />
-        </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Check-in History
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-checkin-history", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                ballkid_id: ballkid.id,
-                checkin: checkin,
-                checkout: checkout,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Check-in history created!");
-              } else {
-                setErrorMsg("Error creating check-in history.");
-              }
-              setBallkid(null);
-              setCheckin(null);
-              setCheckout(null);
-            });
-          }}
-        >
-          Create Check-in History
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateTeamHistory({ ballkidsList }) {
+function CreateTeamHistory({ ballkidsList = [] }) {
   const [ballkid, setBallkid] = useState(null);
   const [team, setTeam] = useState("");
   const [start, setStart] = useState(null);
@@ -389,123 +601,82 @@ function CreateTeamHistory({ ballkidsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleSubmit = () => {
+    fetch("/api/create-team-history", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ballkid_id: ballkid?.id,
+        team: team,
+        start: toIsoString(start),
+        end: toIsoString(end),
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Team history created!");
+          setBallkid(null);
+          setTeam("");
+          setStart(null);
+          setEnd(null);
+        } else {
+          setErrorMsg("Error creating team history.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating team history."));
+  };
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Team History
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          id="team"
-          label="Team"
-          variant="standard"
-          type="number"
-          value={team}
-          required
-          onChange={(e) => setTeam(e.target.value)}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+    <FormCard title="Create Team History" icon={Groups}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={8}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ballkid || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setBallkid(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ballkid" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <TextField
+            fullWidth
+            label="Team #"
+            variant="outlined"
+            type="number"
+            value={team}
+            required
+            onChange={(e) => setTeam(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Start Time"
             value={start}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setStart(newValue);
-            }}
+            onChange={(newValue) => setStart(newValue)}
+            required
           />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => <TextField variant="standard" {...props} />}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="End Time"
             value={end}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setEnd(newValue);
-            }}
+            onChange={(newValue) => setEnd(newValue)}
           />
-        </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Team History
+          </Button>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-team-history", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                ballkid_id: ballkid.id,
-                team: team,
-                start: start,
-                end: end,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Team history created!");
-              } else {
-                setErrorMsg("Error creating team history.");
-              }
-              setBallkid(null);
-              setTeam("");
-              setStart(null);
-              setEnd(null);
-            });
-          }}
-        >
-          Create Team History
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateCaptainHistory({ ballkidsList, captainsList }) {
+function CreateCaptainHistory({ ballkidsList = [], captainsList = [] }) {
   const [ballkid, setBallkid] = useState(null);
   const [captain, setCaptain] = useState(null);
   const [start, setStart] = useState(null);
@@ -514,133 +685,81 @@ function CreateCaptainHistory({ ballkidsList, captainsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleSubmit = () => {
+    fetch("/api/create-captain-history", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ballkid_id: ballkid?.id,
+        captain_id: captain?.id,
+        start: toIsoString(start),
+        end: toIsoString(end),
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Captain history created!");
+          setBallkid(null);
+          setCaptain(null);
+          setStart(null);
+          setEnd(null);
+        } else {
+          setErrorMsg("Error creating captain history.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating captain history."));
+  };
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Captain History
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12} className="sxs">
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={captainsList}
-          value={captain}
-          onChange={(e, newVal) => {
-            setCaptain(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Captain"
-              required
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+    <FormCard title="Create Captain History" icon={HistoryEdu}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ballkid || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setBallkid(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ballkid" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={captainsList}
+            value={captain || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setCaptain(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Captain" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Start Time"
             value={start}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setStart(newValue);
-            }}
+            onChange={(newValue) => setStart(newValue)}
+            required
           />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => <TextField variant="standard" {...props} />}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="End Time"
             value={end}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setEnd(newValue);
-            }}
+            onChange={(newValue) => setEnd(newValue)}
           />
-        </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Captain History
+          </Button>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-captain-history", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                ballkid_id: ballkid.id,
-                captain_id: captain.id,
-                start: start,
-                end: end,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Captain history created!");
-              } else {
-                setErrorMsg("Error creating captain history.");
-              }
-              setBallkid(null);
-              setCaptain(null);
-              setStart(null);
-              setEnd(null);
-            });
-          }}
-        >
-          Create Captain History
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateFinalsHistory({ ballkidsList }) {
+function CreateFinalsHistory({ ballkidsList = [] }) {
   const [ballkid, setBallkid] = useState(null);
   const [year, setYear] = useState("");
   const [matchType, setMatchType] = useState("");
@@ -648,104 +767,80 @@ function CreateFinalsHistory({ ballkidsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleSubmit = () => {
+    fetch("/api/create-finals-history", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ballkid_id: ballkid?.id,
+        year: year,
+        match_type: matchType,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Finals history created!");
+          setBallkid(null);
+          setYear("");
+          setMatchType("");
+        } else {
+          setErrorMsg("Error creating finals history.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating finals history."));
+  };
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
+    <FormCard title="Create Finals History" icon={EmojiEvents}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ballkid || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setBallkid(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ballkid" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            value={year}
+            required
+            label="Year"
+            onChange={(e) => setYear(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            select
+            fullWidth
+            label="Match Type"
+            value={matchType}
+            variant="outlined"
+            required
+            onChange={(e) => setMatchType(e.target.value)}
+          >
+            <MenuItem value={"Men's Singles"}>Men's Singles</MenuItem>
+            <MenuItem value={"Men's Doubles"}>Men's Doubles</MenuItem>
+            <MenuItem value={"Women's Singles"}>Women's Singles</MenuItem>
+            <MenuItem value={"Women's Doubles"}>Women's Doubles</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Finals History
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Finals History
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          variant="standard"
-          value={year}
-          required
-          label="Year"
-          onChange={(e) => setYear(e.target.value)}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          select
-          label="Match Type"
-          value={matchType}
-          variant="standard"
-          style={{ minWidth: 200 }}
-          required
-          onChange={(e) => setMatchType(e.target.value)}
-        >
-          <MenuItem value={"Men's Singles"}>Men's Singles</MenuItem>
-          <MenuItem value={"Men's Doubles"}>Men's Doubles</MenuItem>
-          <MenuItem value={"Women's Singles"}>Women's Singles</MenuItem>
-          <MenuItem value={"Women's Doubles"}>Women's Doubles</MenuItem>
-        </TextField>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-finals-history", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                ballkid_id: ballkid.id,
-                year: year,
-                match_type: matchType,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Rating submitted!");
-                setBallkid(null);
-                setYear("");
-                setMatchType("");
-              } else {
-                setErrorMsg("Error submitting rating.");
-              }
-            });
-          }}
-        >
-          Create Finals History
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateCutHistory({ ballkidsList }) {
+function CreateCutHistory({ ballkidsList = [] }) {
   const [ballkid, setBallkid] = useState(null);
   const [year, setYear] = useState("");
   const [furthestDay, setFurthestDay] = useState(null);
@@ -754,121 +849,93 @@ function CreateCutHistory({ ballkidsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleSubmit = () => {
+    fetch("/api/create-cut-history", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ballkid_id: ballkid?.id,
+        year: year,
+        furthest_day: toIsoString(furthestDay),
+        self_cut: selfCut,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Cut history created/updated!");
+          setBallkid(null);
+          setYear("");
+          setFurthestDay(null);
+          setSelfCut(false);
+        } else {
+          setErrorMsg("Error creating/updating cut history.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error creating cut history."));
+  };
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create/Update Cut History
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12} className="sxs">
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          select
-          label="Self-Cut"
-          value={selfCut}
-          variant="standard"
-          style={{ minWidth: 150 }}
-          required
-          onChange={(e) => setSelfCut(e.target.value)}
-        >
-          <MenuItem value={true}>Yes</MenuItem>
-          <MenuItem value={false}>No</MenuItem>
-        </TextField>
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          variant="standard"
-          required
-          value={year}
-          label="Year"
-          onChange={(e) => setYear(e.target.value)}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DatePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+    <FormCard title="Create/Update Cut History" icon={ContentCut}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ballkid || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setBallkid(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ballkid" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="Self-Cut"
+            value={selfCut ? "true" : "false"}
+            variant="outlined"
+            required
+            onChange={(e) => setSelfCut(e.target.value === "true")}
+          >
+            <MenuItem value={"true"}>Yes</MenuItem>
+            <MenuItem value={"false"}>No</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            required
+            value={year}
+            label="Year"
+            onChange={(e) => setYear(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDatePicker
             label="Furthest Day"
             value={furthestDay}
-            mask={"__/__/____"}
-            onChange={(newValue) => setFurthestDay(newValue.toLocaleString())}
+            onChange={(newValue) => setFurthestDay(newValue)}
+            required
           />
-        </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create / Update Cut History
+          </Button>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-cut-history", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                ballkid_id: ballkid.id,
-                year: year,
-                furthest_day: furthestDay,
-                self_cut: selfCut,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Cut history created/updated!");
-                setBallkid(null);
-                setYear("");
-                setFurthestDay(null);
-                setSelfCut(false);
-              } else {
-                setErrorMsg("Error creating/updating cut history.");
-              }
-            });
-          }}
-        >
-          Create/Update Cut History
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
-function CreateRating({ ballkidsList, captainsList }) {
+function CreateRating({ ballkidsList = [], captainsList = [] }) {
   const [ratee, setRatee] = useState(null);
   const [rater, setRater] = useState(null);
-  const [date, setDate] = useState(null);
+  const [date, setDate] = useState(() =>
+    DateTime.fromFormat(getToday("slash", true), "MM/dd/yyyy")
+  );
   const [rating, setRating] = useState(null);
   const [athleticismRating, setAthleticismRating] = useState(null);
   const [rollingRating, setRollingRating] = useState(null);
@@ -880,173 +947,171 @@ function CreateRating({ ballkidsList, captainsList }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const isMobile = useIsMobile();
+  const handleSubmit = () => {
+    if (!ratee?.id || !rater?.id) {
+      setErrorMsg("Ratee and rater are required.");
+      return;
+    }
+    if (!rating) {
+      setErrorMsg("Overall rating is required (0.5–5 stars).");
+      return;
+    }
+    const dateStr = toSlashMonthDayYear(date);
+    if (!dateStr) {
+      setErrorMsg("Date is required.");
+      return;
+    }
+
+    fetch("/api/create-rating", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        rater: rater.id,
+        ratee: ratee.id,
+        date: dateStr,
+        rating: rating,
+        athleticism_rating: athleticismRating,
+        rolling_rating: rollingRating,
+        awareness_rating: awarenessRating,
+        decision_rating: decisionRating,
+        effort_rating: effortRating,
+        comments: comments,
+      }),
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          setSuccessMsg("Rating submitted successfully!");
+          setRater(null);
+          setRatee(null);
+          setComments("");
+          setRating(null);
+          setDate(DateTime.fromFormat(getToday("slash", true), "MM/dd/yyyy"));
+          setAthleticismRating(null);
+          setRollingRating(null);
+          setAwarenessRating(null);
+          setDecisionRating(null);
+          setEffortRating(null);
+          return;
+        }
+        let detail = "Error submitting rating.";
+        try {
+          const body = await response.json();
+          if (body?.["Invalid serializer"]) {
+            detail = String(body["Invalid serializer"]);
+          }
+        } catch {
+          /* ignore */
+        }
+        setErrorMsg(detail);
+      })
+      .catch(() => setErrorMsg("Network error submitting rating."));
+  };
+
+  const ratingFields = [
+    { label: "Overall*", value: rating, setter: setRating },
+    { label: "Athleticism", value: athleticismRating, setter: setAthleticismRating },
+    { label: "Rolling", value: rollingRating, setter: setRollingRating },
+    { label: "Awareness", value: awarenessRating, setter: setAwarenessRating },
+    { label: "Effort", value: effortRating, setter: setEffortRating },
+    { label: "Decision-making", value: decisionRating, setter: setDecisionRating },
+  ];
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Create Rating
-        </Typography>
-      </Grid>
+    <FormCard title="Create Rating" icon={StarRate}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        {/* Ratee & Rater */}
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={ballkidsList}
+            value={ratee || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setRatee(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Ratee (Ballkid)" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Autocomplete
+            options={captainsList}
+            value={rater || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setRater(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Rater (Captain)" required />}
+          />
+        </Grid>
 
-      <Grid item xs={12} className="sxs">
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={ballkidsList}
-          value={ratee}
-          onChange={(e, newVal) => {
-            setRatee(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField {...params} variant="standard" label="Ratee" required />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={captainsList}
-          value={rater}
-          onChange={(e, newVal) => {
-            setRater(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField {...params} variant="standard" label="Rater" required />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DatePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+        {/* Date Field */}
+        <Grid item xs={12}>
+          <CustomDatePicker
             label="Date"
             value={date}
-            mask={"__/__/____"}
-            onChange={(newValue) => {
-              setDate(newValue.toLocaleString());
-            }}
+            onChange={(newValue) => setDate(newValue)}
+            required
           />
-        </LocalizationProvider>
-      </Grid>
+        </Grid>
 
-      <Grid container sx={{ mt: 3 }}>
+        {/* Individual Card Styling per Rating Item */}
         <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Overall*"}
-            rating={rating}
-            setRating={setRating}
-          />
+          <Grid container spacing={2}>
+            {ratingFields.map((item, index) => (
+              <Grid item xs={12} sm={6} key={index}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 3,
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <Box sx={{ width: "100%" }}>
+                    <RatingAndLabel
+                      label={item.label}
+                      rating={item.value}
+                      setRating={item.setter}
+                    />
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 2, fontSize: "0.775rem", lineHeight: 1.55 }}
+          >
+            Overall rating is required. Sub-categories are optional. Empty (0)
+            stars are treated as unset.
+          </Typography>
         </Grid>
-        <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Athleticism"}
-            rating={athleticismRating}
-            setRating={setAthleticismRating}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Rolling"}
-            rating={rollingRating}
-            setRating={setRollingRating}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Awareness"}
-            rating={awarenessRating}
-            setRating={setAwarenessRating}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Effort"}
-            rating={effortRating}
-            setRating={setEffortRating}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <RatingAndLabel
-            label={"Decision-making"}
-            rating={decisionRating}
-            setRating={setDecisionRating}
-          />
-        </Grid>
-      </Grid>
 
-      <Grid item xs={12}>
-        <TextField
-          label="Comments"
-          variant="standard"
-          sx={{ width: isMobile ? 250 : 400 }}
-          value={comments}
-          onChange={(e) => setComments(e.target.value)}
-          multiline
-        />
-      </Grid>
+        {/* Comments Field */}
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label="Comments"
+            variant="outlined"
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+          />
+        </Grid>
 
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/create-rating", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                rater: rater.id,
-                ratee: ratee.id,
-                date: date,
-                rating: rating,
-                athleticism_rating: athleticismRating,
-                rolling_rating: rollingRating,
-                awareness_rating: awarenessRating,
-                decision_rating: decisionRating,
-                effort_rating: effortRating,
-                comments: comments,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Rating submitted!");
-                setRater(null);
-                setRatee(null);
-                setComments("");
-                setRating(null);
-                setDate(null);
-                setAthleticismRating(null);
-                setRollingRating(null);
-                setAwarenessRating(null);
-                setDecisionRating(null);
-                setEffortRating(null);
-              } else {
-                setErrorMsg("Error submitting rating.");
-              }
-            });
-          }}
-        >
-          Create Rating
-        </Button>
+        {/* Submit Button */}
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Create Rating
+          </Button>
+        </Grid>
       </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
@@ -1058,190 +1123,159 @@ function UpdateShift() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const courtsList = [
-    "Stadium",
-    "Harris",
-    "Grandstand",
-    "Court 4",
-    "Court 5",
-  ].map((court, index) => ({
-    label: court,
+  const courtsList = ["Stadium", "Harris", "Grandstand", "Court 4", "Court 5"].map((courtName, index) => ({
+    label: courtName,
     id: index,
   }));
 
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Update Shift
-        </Typography>
-      </Grid>
+  const handleSubmit = () => {
+    fetch("/api/update-shift", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        start: toIsoString(start),
+        end: toIsoString(end),
+        court: court?.label,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Shift updated successfully!");
+          setStart(null);
+          setEnd(null);
+          setCourt(null);
+        } else {
+          setErrorMsg("Error updating shift.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error updating shift."));
+  };
 
-      <Grid item xs={12}>
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300 }}
-          options={courtsList}
-          value={court}
-          onChange={(e, newVal) => {
-            setCourt(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField {...params} variant="standard" label="Court" required />
-          )}
-        />
-      </Grid>
-      <Grid item xs={12} className="sxs">
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+  return (
+    <FormCard title="Update Shift" icon={EventAvailable}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Autocomplete
+            options={courtsList}
+            value={court || null}
+            getOptionLabel={getSafeOptionLabel}
+            onChange={(e, newVal) => setCourt(newVal)}
+            isOptionEqualToValue={(option, value) => !value || option?.id === value?.id}
+            renderInput={(params) => <TextField {...params} variant="outlined" label="Court" required />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Shift Start Time"
             value={start}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setStart(newValue);
-            }}
+            onChange={(newValue) => setStart(newValue)}
+            required
           />
-        </LocalizationProvider>
-      </Grid>
-
-      <Grid item xs={12}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateTimePicker
-            renderInput={(props) => (
-              <TextField variant="standard" required {...props} />
-            )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomDateTimePicker
             label="Shift End Time"
             value={end}
-            // disableMaskedInput
-            mask={"__/__/____ __:__:__"}
-            onChange={(newValue) => {
-              setEnd(newValue);
-            }}
+            onChange={(newValue) => setEnd(newValue)}
+            required
           />
-        </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Update Shift
+          </Button>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            fetch("/api/update-shift", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                start: start,
-                end: end,
-                court: court.label,
-              }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Shift updated!");
-                setStart(null);
-                setEnd(null);
-                setCourt(null);
-              } else {
-                setErrorMsg("Error updating shift.");
-              }
-            });
-          }}
-        >
-          Update Shift
-        </Button>
-      </Grid>
-    </Grid>
+    </FormCard>
   );
 }
 
 function BulkCreation({ type }) {
-  const [file, setFile] = useState();
+  const [file, setFile] = useState(null);
   const [showProgress, setShowProgress] = useState(false);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const handleUpload = (e) => {
+    e.preventDefault();
+    if (!file) return;
+
+    setShowProgress(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch(`/api/bulk-create-${type}`, {
+      method: "POST",
+      headers: { Authorization: "Token " + getToken() },
+      body: formData,
+    })
+      .then((response) => {
+        setShowProgress(false);
+        if (response.ok) {
+          setSuccessMsg(`Bulk created ${type} successfully!`);
+          setFile(null);
+        } else {
+          setErrorMsg(`Error bulk creating ${type}.`);
+        }
+      })
+      .catch(() => {
+        setShowProgress(false);
+        setErrorMsg(`Network error uploading bulk file.`);
+      });
+  };
+
+  const titleType = type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
+
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Bulk Create {type.charAt(0).toUpperCase() + type.slice(1)}
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <div className="sxs">
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={file ? <TaskAlt /> : <UploadFile />}
-          >
-            {file ? "File Uploaded" : "Upload File"}
-            <input
-              type="file"
-              accept=".csv"
-              hidden
-              onChange={(e) => setFile(e.target.files[0])}
-            />
-          </Button>
-          &ensp;
-          <Typography variant="body1">{file?.name}</Typography>
-        </div>
-      </Grid>
-
-      <Grid item xs={12} className="sxs">
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) => {
-            setShowProgress(true);
-
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append("file", file);
-
-            fetch(`/api/bulk-create-${type}`, {
-              method: "POST",
-              headers: { Authorization: "Token " + getToken() },
-              body: formData,
-            }).then((response) => {
-              setShowProgress(false);
-              if (response.ok) {
-                setSuccessMsg(`Bulk created ${type}!`);
-                setFile(null);
-              } else {
-                setErrorMsg(`Error bulk creating ${type}.`);
-              }
-            });
+    <FormCard title={`Bulk Create ${titleType}`} icon={CloudUpload}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center", my: 2 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 4,
+            width: "100%",
+            boxSizing: "border-box",
+            borderStyle: "dashed",
+            borderWidth: 2,
+            borderRadius: 3,
+            borderColor: file ? "primary.main" : "divider",
+            bgcolor: file ? "primary.light" : "background.paper",
+            textAlign: "center",
+            cursor: "pointer",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": { borderColor: "primary.main", bgcolor: "primary.light" },
           }}
+          component="label"
         >
-          Bulk Create {type}
-        </Button>
-        &emsp;
-        {showProgress ? <CircularProgress size={20} /> : ""}
-      </Grid>
-    </Grid>
+          <input type="file" accept=".csv" hidden onChange={(e) => setFile(e.target.files[0])} />
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
+            {file ? <TaskAlt color="success" sx={{ fontSize: 52 }} /> : <UploadFile color="action" sx={{ fontSize: 52 }} />}
+            <Typography variant="body1" fontWeight={600}>
+              {file ? file.name : "Click to select or drag a CSV file"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Only .csv files supported
+            </Typography>
+          </Box>
+        </Paper>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            size="large"
+            color="primary"
+            variant="contained"
+            disabled={!file || showProgress}
+            onClick={handleUpload}
+          >
+            Bulk Create {titleType}
+          </Button>
+          {showProgress && <CircularProgress size={24} />}
+        </Box>
+      </Box>
+    </FormCard>
   );
 }
 
@@ -1251,127 +1285,307 @@ function BulkCheckin() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Typography component="h4" variant="h4">
-          Bulk Ballkid Check-In
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={numBallkids}
-          label="Number of Ballkids"
-          variant="standard"
-          type="number"
-          required
-          onChange={(e) => setNumBallkids(e.target.value)}
-        />
-        <Typography variant="body1" sx={{ mt: 1 }}>
-          Note that ballkids to be checked in will be randomly selected.
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={(e) =>
-            fetch("/api/bulk-checkin", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({ num: numBallkids }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Ballkids checked in!");
-              } else {
-                setErrorMsg("Error checking in ballkids.");
-              }
-              setNumBallkids("");
-            })
-          }
-        >
-          Bulk Check In
-        </Button>
-      </Grid>
-    </Grid>
-  );
-}
-
-export default function DebugPage(props) {
-  const [ballkids, setBallkids] = useState([]);
-  const [captains, setCaptains] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => {
-        setBallkids(data);
-        setCaptains(
-          data.filter(
-            (ballkid) =>
-              ballkid.is_captain === true || ballkid.is_chairperson === true
-          )
-        );
-      });
-  }, []);
-
-  const ballkidsList = ballkids.map((ballkid) => ({
-    label: ballkid.first_name + " " + ballkid.last_name,
-    id: ballkid.id,
-  }));
-
-  const captainsList = captains.map((ballkid) => ({
-    label: ballkid.first_name + " " + ballkid.last_name,
-    id: ballkid.id,
-  }));
-
-  const sections = {
-    "Create/Update Ballkid": <CreateBallkid />,
-    "Create User": <CreateUser />,
-    "Create Checkin History": (
-      <CreateCheckinHistory ballkidsList={ballkidsList} />
-    ),
-    "Create Team History": <CreateTeamHistory ballkidsList={ballkidsList} />,
-    "Create Captain History": (
-      <CreateCaptainHistory
-        ballkidsList={ballkidsList}
-        captainsList={captainsList}
-      />
-    ),
-    "Create/Update Finals History": (
-      <CreateFinalsHistory ballkidsList={ballkidsList} />
-    ),
-    "Create/Update Cut History": (
-      <CreateCutHistory ballkidsList={ballkidsList} />
-    ),
-    "Create Rating": (
-      <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />
-    ),
-    "Update Shift": <UpdateShift />,
-    "Bulk Create Ballkids": <BulkCreation type="ballkids" />,
-    "Bulk Create Users": <BulkCreation type="users" />,
-    "Bulk Create Signups": <BulkCreation type="signups" />,
-    "Bulk Create Ratings": <BulkCreation type="ratings" />,
-    "Bulk Create Finals": <BulkCreation type="finals" />,
-    "Bulk Create Cuts": <BulkCreation type="cuts" />,
-    "Bulk Create Check-in Histories": <BulkCreation type="checkins" />,
-    "Bulk Ballkid Check-In": <BulkCheckin />,
+  const handleSubmit = () => {
+    fetch("/api/bulk-checkin", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({ num: numBallkids }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Ballkids checked in!");
+          setNumBallkids("");
+        } else {
+          setErrorMsg("Error checking in ballkids.");
+        }
+      })
+      .catch(() => setErrorMsg("Network error checking in ballkids."));
   };
 
   return (
-    <div className="page">
-      <Banners />
+    <FormCard title="Bulk Ballkid Check-In" icon={GroupAdd}>
+      <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            value={numBallkids}
+            label="Number of Ballkids"
+            variant="outlined"
+            type="number"
+            required
+            onChange={(e) => setNumBallkids(e.target.value)}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+            Note: Ballkids to be checked in will be randomly selected from active entries.
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sx={{ mt: 1 }}>
+          <Button size="large" color="primary" variant="contained" onClick={handleSubmit}>
+            Bulk Check In
+          </Button>
+        </Grid>
+      </Grid>
+    </FormCard>
+  );
+}
 
-      <TabbedSections sections={sections} />
-    </div>
+export default function DebugPage() {
+  const [ballkids, setBallkids] = useState([]);
+  const [captains, setCaptains] = useState([]);
+  const [activeSection, setActiveSection] = useState("ballkid");
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+
+  useEffect(() => {
+    fetch("/api/list", { headers: getAuthHeader() })
+      .then((response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setBallkids(data);
+          setCaptains(data.filter((b) => b && (b.is_captain === true || b.is_chairperson === true)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const ballkidsList = (Array.isArray(ballkids) ? ballkids : []).map((b) => ({
+    label: `${b?.first_name || ""} ${b?.last_name || ""}`.trim() || `Ballkid #${b?.id || ""}`,
+    id: b?.id,
+  }));
+
+  const captainsList = (Array.isArray(captains) ? captains : []).map((b) => ({
+    label: `${b?.first_name || ""} ${b?.last_name || ""}`.trim() || `Captain #${b?.id || ""}`,
+    id: b?.id,
+  }));
+
+  const menuCategories = [
+    {
+      title: "User Management",
+      items: [
+        { id: "ballkid", label: "Create Ballkid", icon: PersonAdd },
+        { id: "user", label: "Create User", icon: Badge },
+      ],
+    },
+    {
+      title: "Histories & Shifts",
+      items: [
+        { id: "checkin", label: "Check-in History", icon: AccessTime },
+        { id: "team", label: "Team History", icon: Groups },
+        { id: "captain", label: "Captain History", icon: HistoryEdu },
+        { id: "finals", label: "Finals History", icon: EmojiEvents },
+        { id: "cut", label: "Cut History", icon: ContentCut },
+        { id: "shift", label: "Update Shift", icon: EventAvailable },
+      ],
+    },
+    {
+      title: "Evaluations",
+      items: [{ id: "rating", label: "Create Rating", icon: StarRate }],
+    },
+    {
+      title: "Bulk Uploads",
+      items: [
+        { id: "bulk-checkin", label: "Bulk Check-in", icon: GroupAdd },
+        { id: "bulk-ballkids", label: "Bulk Ballkids", icon: CloudUpload },
+        { id: "bulk-users", label: "Bulk Users", icon: CloudUpload },
+        { id: "bulk-signups", label: "Bulk Signups", icon: CloudUpload },
+        { id: "bulk-ratings", label: "Bulk Ratings", icon: CloudUpload },
+        { id: "bulk-finals", label: "Bulk Finals", icon: CloudUpload },
+        { id: "bulk-cuts", label: "Bulk Cuts", icon: CloudUpload },
+        { id: "bulk-checkins", label: "Bulk Check-ins", icon: CloudUpload },
+      ],
+    },
+  ];
+
+  const renderActiveForm = () => {
+    switch (activeSection) {
+      case "ballkid":
+        return <CreateBallkid />;
+      case "user":
+        return <CreateUser />;
+      case "checkin":
+        return <CreateCheckinHistory ballkidsList={ballkidsList} />;
+      case "team":
+        return <CreateTeamHistory ballkidsList={ballkidsList} />;
+      case "captain":
+        return <CreateCaptainHistory ballkidsList={ballkidsList} captainsList={captainsList} />;
+      case "finals":
+        return <CreateFinalsHistory ballkidsList={ballkidsList} />;
+      case "cut":
+        return <CreateCutHistory ballkidsList={ballkidsList} />;
+      case "shift":
+        return <UpdateShift />;
+      case "rating":
+        return <CreateRating ballkidsList={ballkidsList} captainsList={captainsList} />;
+      case "bulk-checkin":
+        return <BulkCheckin />;
+      case "bulk-ballkids":
+        return <BulkCreation type="ballkids" />;
+      case "bulk-users":
+        return <BulkCreation type="users" />;
+      case "bulk-signups":
+        return <BulkCreation type="signups" />;
+      case "bulk-ratings":
+        return <BulkCreation type="ratings" />;
+      case "bulk-finals":
+        return <BulkCreation type="finals" />;
+      case "bulk-cuts":
+        return <BulkCreation type="cuts" />;
+      case "bulk-checkins":
+        return <BulkCreation type="checkins" />;
+      default:
+        return <CreateBallkid />;
+    }
+  };
+
+  const drawerContent = (
+    <Box sx={{ p: 2.5, pt: 3 }}>
+      {/* Sidebar Header Title */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 1, pb: 2.5 }}>
+        <AdminPanelSettingsIcon color="primary" />
+        <Typography variant="h6" fontWeight="700" color="text.primary" sx={{ fontSize: "1.1rem" }}>
+          Control Panel
+        </Typography>
+      </Box>
+
+      <Divider sx={{ mb: 2.5 }} />
+
+      {menuCategories.map((category, catIdx) => (
+        <Box key={catIdx} sx={{ mb: 3 }}>
+          <Typography
+            variant="caption"
+            fontWeight="700"
+            color="text.secondary"
+            sx={{ px: 1.5, mb: 1, display: "block", textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.75rem" }}
+          >
+            {category.title}
+          </Typography>
+          <List disablePadding>
+            {category.items.map((item) => {
+              const IconComponent = item.icon;
+              const isSelected = activeSection === item.id;
+              return (
+                <ListItemButton
+                  key={item.id}
+                  selected={isSelected}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    if (isMobile) setMobileOpen(false);
+                  }}
+                  sx={{
+                    borderRadius: 2.5,
+                    mb: 0.5,
+                    py: 1,
+                    px: 1.5,
+                    transition: "all 0.15s ease",
+                    "&.Mui-selected": {
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                      "&:hover": {
+                        bgcolor: "primary.dark",
+                      },
+                      "& .MuiListItemIcon-root": {
+                        color: "inherit",
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32, color: isSelected ? "inherit" : "action.active" }}>
+                    <IconComponent fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{
+                      fontSize: "0.875rem",
+                      fontWeight: isSelected ? 600 : 500,
+                    }}
+                  />
+                </ListItemButton>
+              );
+            })}
+          </List>
+        </Box>
+      ))}
+    </Box>
+  );
+
+  return (
+    <ThemeProvider theme={theme}>
+      <LocalizationProvider dateAdapter={AdapterLuxon}>
+        <Box sx={{ bgcolor: "background.default", minHeight: "100vh", p: { xs: 2, md: 4 }, overflowX: "hidden" }}>
+          <Box sx={{ maxWidth: 1280, mx: "auto", width: "100%" }}>
+            <Banners />
+
+            {/* Mobile Drawer Trigger Header */}
+            {isMobile && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 2.5,
+                  px: 1,
+                }}
+              >
+                <Typography variant="h6" fontWeight="700" color="text.primary">
+                  Control Panel
+                </Typography>
+                <IconButton onClick={() => setMobileOpen(!mobileOpen)} color="primary">
+                  {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+                </IconButton>
+              </Box>
+            )}
+
+            <Grid container spacing={3} sx={{ width: "100%", m: 0 }}>
+              {/* Desktop Left Sidebar Navigation */}
+              {!isMobile && (
+                <Grid item xs={12} md={3.5} lg={3}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      borderRadius: 4,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      position: "sticky",
+                      top: 24,
+                      maxHeight: "calc(100vh - 48px)",
+                      overflowY: "auto",
+                      boxShadow: "0px 10px 30px rgba(15, 23, 42, 0.02)",
+                    }}
+                  >
+                    {drawerContent}
+                  </Paper>
+                </Grid>
+              )}
+
+              {/* Mobile Navigation Drawer */}
+              {isMobile && (
+                <Drawer
+                  anchor="left"
+                  open={mobileOpen}
+                  onClose={() => setMobileOpen(false)}
+                  PaperProps={{ sx: { width: 280, borderRadius: "0px 16px 16px 0px" } }}
+                >
+                  {drawerContent}
+                </Drawer>
+              )}
+
+              {/* Main Dynamic Content Area */}
+              <Grid item xs={12} md={8.5} lg={9} sx={{ pl: { md: 3 } }}>
+                <FormErrorBoundary key={activeSection}>
+                  {renderActiveForm()}
+                </FormErrorBoundary>
+              </Grid>
+            </Grid>
+          </Box>
+        </Box>
+      </LocalizationProvider>
+    </ThemeProvider>
   );
 }
