@@ -109,13 +109,9 @@ export default function BallkidPageCaptain(props) {
               {ballkid.current_team === 0 ? (
                 "Unassigned"
               ) : (
-                <button
-                  type="button"
-                  className={`chip t${ballkid.current_team}`}
-                  disabled
-                >
+                <span className={`chip t${ballkid.current_team}`}>
                   {ballkid.current_team}
-                </button>
+                </span>
               )}
             </ProfileInfoRow>
           </ProfileCard>
