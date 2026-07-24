@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
@@ -15,6 +14,7 @@ import {
   Banners,
 } from "../Utils";
 import { list, listNonchairperson } from "../HelpMessages";
+import "./ballkid-list-by-name.css";
 
 export default function BallkidList(props) {
   const [ballkids, setBallkids] = useState([]);
@@ -34,61 +34,61 @@ export default function BallkidList(props) {
       );
   }, []);
 
+  const filtered = filterBallkids(ballkids, searchKeyword, filterGroup);
+
   return (
-    <div className="page">
+    <div className="page ballkid-list-page">
       <Banners />
 
-      <div className="justify">
-        <Box className="sxs" sx={{ mb: 1 }}>
-          <Typography variant="h4">List by Name</Typography>
-          &ensp;
-          <Typography variant="h6">
-            ({filterBallkids(ballkids, searchKeyword, filterGroup).length})
-          </Typography>
-          &thinsp;
-          <HelpIcon
-            page="List By Name"
-            message={group === "chairperson" ? list : listNonchairperson}
-          />
-        </Box>
+      <Box className="ballkid-list-title-row">
+        <Typography className="ballkid-list-title" variant="h4">
+          List by Name
+        </Typography>
+        <Typography className="ballkid-list-count" variant="h6">
+          ({filtered.length})
+        </Typography>
+        <HelpIcon
+          page="List By Name"
+          message={group === "chairperson" ? list : listNonchairperson}
+        />
+      </Box>
 
-        <LayoutButtons layout={layout} setLayout={setLayout} />
-      </div>
-
-      {ballkids.length === 0 ? (
-        <Typography>There are no ballkids to show.</Typography>
-      ) : (
-        <Grid container spacing={layout === "grid" ? 2 : 1}>
+      <div className="ballkid-list-toolbar">
+        <div className="ballkid-list-toolbar-search">
           <SearchAndFilter
             setSearchKeyword={setSearchKeyword}
             filterGroup={filterGroup}
             setFilterGroup={setFilterGroup}
             filters={group === "ballkid" ? filters : ["rookie", ...filters]}
           />
+        </div>
+        <div className="ballkid-list-toolbar-divider" />
+        <div className="ballkid-list-toolbar-layout">
+          <LayoutButtons layout={layout} setLayout={setLayout} />
+        </div>
+      </div>
 
-          {filterBallkids(ballkids, searchKeyword, filterGroup).map(
-            (ballkid) => (
-              <Grid
-                item
-                key={ballkid.id}
-                xs={layout === "grid" ? 6 : 12}
-                sm={layout === "grid" ? 4 : 12}
-                md={layout === "grid" ? 3 : 12}
-                lg={layout === "grid" ? 2 : 12}
-                xl={layout === "grid" ? 1 : 12}
-              >
-                <BallkidCard
-                  ballkid={ballkid}
-                  renderAdditional={
-                    <Typography variant="body2" color="text.secondary">
-                      {ballkid.preferred_position}
-                    </Typography>
-                  }
-                />
-              </Grid>
-            )
-          )}
-        </Grid>
+      {ballkids.length === 0 ? (
+        <div className="ballkid-list-empty">There are no ballkids to show.</div>
+      ) : (
+        <div
+          className={
+            layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+          }
+        >
+          {filtered.map((ballkid) => (
+            <div className="ballkid-list-card-wrap" key={ballkid.id}>
+              <BallkidCard
+                ballkid={ballkid}
+                renderAdditional={
+                  <Typography variant="body2" color="text.secondary">
+                    {ballkid.preferred_position}
+                  </Typography>
+                }
+              />
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
