@@ -1,0 +1,360 @@
+/* Cut page — draggable ballkid chips */
+.cut-ballkid-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cut-ballkid-chip {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(13, 27, 62, 0.05);
+  overflow: hidden;
+  cursor: grab;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.cut-ballkid-chip:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(13, 27, 62, 0.08);
+}
+
+.cut-ballkid-chip:active,
+.cut-ballkid-chip.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(13, 27, 62, 0.12);
+  border-color: #93c5fd;
+}
+
+.cut-ballkid-chip.is-dragging {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.cut-ballkid-chip__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #eef2ff 0%, #e8eeff 100%);
+  border-right: 1px solid #e2e8f0;
+}
+
+.cut-ballkid-chip:hover .cut-ballkid-chip__handle {
+  background: linear-gradient(180deg, #e0e7ff 0%, #d9e2ff 100%);
+}
+
+.cut-ballkid-chip__handle-dots {
+  display: grid;
+  grid-template-columns: repeat(2, 4px);
+  gap: 3px;
+}
+
+.cut-ballkid-chip__handle-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.cut-ballkid-chip__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px 8px 10px;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.cut-ballkid-chip__name {
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cut-ballkid-chip__name a {
+  color: #0d1b3e;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cut-ballkid-chip__name a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.cut-chip-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cut-chip-icon-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.cut-chip-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  line-height: 0;
+}
+
+.cut-chip-icon-badge svg {
+  font-size: 1rem !important;
+}
+
+.cut-chip-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(13, 27, 62, 0.08);
+  white-space: nowrap;
+}
+
+.cut-chip-pill--yrs {
+  background: #dcfce7;
+  color: #14532d;
+  border-color: rgba(21, 128, 61, 0.25);
+}
+
+.cut-chip-pill--rank {
+  background: #fce7f3;
+  color: #9d174d;
+  border-color: #fbcfe8;
+}
+
+.cut-chip-pill--rank.cut-chip-pill--muted {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.cut-chip-pill--last {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+.cut-ballkid-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.cut-page-active-panel {
+  border-radius: 16px !important;
+}
+
+.cut-page-top-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+}
+
+.cut-page-top-bar__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cut-page-top-bar__title .ballkid-list-title {
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 1.5rem !important;
+  white-space: nowrap;
+}
+
+.cut-page-top-bar__end {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px 28px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.cut-page-top-bar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cut-page-top-bar__switch {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.cut-page-top-bar__switch .sxs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cut-page-top-bar__switch .MuiTypography-root {
+  font-size: 0.8125rem !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .cut-page-top-bar__end {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.cut-page-columns {
+  align-items: flex-start;
+}
+
+.cut-page-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1.25rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cut-page-two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: start;
+}
+
+.cut-page-two-columns__col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* Compact chips for dense two-column lists */
+.cut-ballkid-chip--dense {
+  min-height: 0;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.cut-ballkid-chip--dense:hover {
+  box-shadow: 0 2px 8px rgba(13, 27, 62, 0.06);
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__handle {
+  width: 16px;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__handle-dots {
+  grid-template-columns: repeat(2, 3px);
+  gap: 2px;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__handle-dots span {
+  width: 3px;
+  height: 3px;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__content {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 4px;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cut-ballkid-chip--dense .cut-chip-meta-row {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 3px;
+}
+
+.cut-ballkid-chip--dense .cut-chip-icon-group {
+  padding: 0 2px;
+  gap: 0;
+  border: none;
+  background: transparent;
+}
+
+.cut-ballkid-chip--dense .cut-chip-icon-badge {
+  width: 16px;
+  height: 16px;
+}
+
+.cut-ballkid-chip--dense .cut-chip-icon-badge svg {
+  font-size: 0.85rem !important;
+}
+
+.cut-ballkid-chip--dense .cut-chip-pill {
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  min-height: 18px;
+}
+
+.cut-ballkid-row--dense {
+  gap: 4px;
+}
+
+.cut-ballkid-row--dense .cut-ballkid-row__actions {
+  padding-right: 0;
+}
+
+.cut-ballkid-row--dense .cut-ballkid-row__actions .MuiIconButton-root {
+  padding: 4px;
+}

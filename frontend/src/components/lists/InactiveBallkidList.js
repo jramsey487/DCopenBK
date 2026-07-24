@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";

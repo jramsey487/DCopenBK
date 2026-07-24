@@ -562,6 +562,10 @@ export function DraggableBallkidAndIcon({
   commentTypes = [],
   showHovercard = false,
   hoverCommentTypes = [],
+  leftAdornment = null,
+  layout = "inline",
+  renderCustom = null,
+  metaSlot = null,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -571,40 +575,84 @@ export function DraggableBallkidAndIcon({
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   }));
 
-  return (
-    <Box
-      ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-    >
+  const hoverHandlers = {
+    onMouseEnter: (e) => setAnchorEl(e.currentTarget),
+    onMouseLeave: () => setAnchorEl(null),
+  };
+
+  const metaBlock = (
+    <>
+      <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
+      {commentTypes.map((commentType) => (
+        <Box key={commentType} component="span" className="cut-chip-meta-item">
+          <CommentsText ballkid={ballkid} commentType={commentType} />
+        </Box>
+      ))}
+      {showHovercard ? (
+        <BallkidPopover
+          ballkid={ballkid}
+          hoverCommentTypes={hoverCommentTypes}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
+        />
+      ) : null}
+    </>
+  );
+
+  const innerContent =
+    layout === "cut-chip" ? (
+      <Box
+        className="cut-ballkid-chip__content"
+        sx={{ flex: 1, minWidth: 0 }}
+        {...hoverHandlers}
+      >
+        <Box className="cut-ballkid-chip__name">
+          <BallkidLink
+            id={ballkid.id}
+            name={`${ballkid.first_name} ${ballkid.last_name}`}
+          />
+        </Box>
+        <Box className="cut-ballkid-chip__meta">
+          {metaSlot ?? metaBlock}
+        </Box>
+      </Box>
+    ) : (
       <Box
         className="sxs"
-        onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
-        onMouseLeave={() => setAnchorEl(null)}
+        sx={{ alignItems: "center", py: 0.75, px: 1.25, minWidth: 0 }}
+        {...hoverHandlers}
       >
         <BallkidLink
           id={ballkid.id}
           name={`${ballkid.first_name} ${ballkid.last_name}`}
         />
         &thinsp;
-        <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
-        {commentTypes.map((commentType) => (
-          <Box key={commentType}>
-            <CommentsText ballkid={ballkid} commentType={commentType} />
-          </Box>
-        ))}
-        {showHovercard ? (
-          <BallkidPopover
-            ballkid={ballkid}
-            hoverCommentTypes={hoverCommentTypes}
-            anchorEl={anchorEl}
-            setAnchorEl={setAnchorEl}
-          />
-        ) : (
-          ""
-        )}
+        {metaBlock}
       </Box>
+    );
+
+  if (renderCustom) {
+    return renderCustom({
+      ref: drag,
+      isDragging,
+      children: innerContent,
+    });
+  }
+
+  return (
+    <Box
+      ref={drag}
+      sx={{
+        display: "flex",
+        alignItems: "stretch",
+        width: "100%",
+        opacity: isDragging ? 0.5 : 1,
+        cursor: "grab",
+        "&:active": { cursor: "grabbing" },
+      }}
+    >
+      {leftAdornment}
+      {innerContent}
     </Box>
   );
 }
