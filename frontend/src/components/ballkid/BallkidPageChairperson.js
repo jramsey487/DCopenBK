@@ -109,7 +109,10 @@ function profileHeaderStatus(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
 }
 
 function profileOverflowMenu(ballkid, setUpdated) {
-  return ballkid.is_cut === "true" || !ballkid.is_active ? (
+  const isCut = ballkid.is_cut === true || ballkid.is_cut === "true";
+  const isActive = ballkid.is_active === true || ballkid.is_active === "true";
+
+  return isCut || !isActive ? (
     <InactiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
   ) : (
     <ActiveOverflowMenu ballkid={ballkid} setUpdated={setUpdated} />
@@ -184,83 +187,97 @@ function CheckinSection({ ballkid, setUpdated, setErrorMsg, setSuccessMsg }) {
   );
 }
 
-function renderPreferredPosition(ballkid, setUpdated, isMobile) {
-  const positions = new Set(["Back", "Net", "Back/Net", "Net/Back"]);
-  positions.delete(ballkid.preferred_position);
+function renderPreferredPosition(ballkid, setUpdated) {
+  const ALL_POSITIONS = ["Back", "Net", "Back/Net", "Net/Back"];
 
   return (
-    <div className={isMobile ? "" : "justify"}>
-      <Typography variant="body1">
-        Preferred position: {ballkid.preferred_position}
-      </Typography>
-      <div className="sxs">
-        <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
-          Change to: &emsp;
-        </Typography>
-        {[...positions].map((newPosition) => (
+    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center" }}>
+      {ALL_POSITIONS.map((pos) => {
+        const isSelected = ballkid.preferred_position === pos;
+        return (
           <Button
-            key={newPosition}
+            key={pos}
             size="small"
-            sx={{ m: 0.2 }}
-            variant="outlined"
-            onClick={(e) => {
+            variant={isSelected ? "contained" : "outlined"}
+            color={isSelected ? "primary" : "inherit"}
+            disableElevation
+            sx={{
+              borderRadius: "16px",
+              textTransform: "none",
+              px: 1.5,
+              py: 0.25,
+              fontSize: "0.8125rem",
+              fontWeight: isSelected ? 600 : 400,
+              opacity: isSelected ? 1 : 0.7,
+              "&:hover": { opacity: 1 },
+            }}
+            onClick={() => {
+              if (isSelected) return;
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  preferred_position: newPosition,
+                  preferred_position: pos,
                 }),
               })
                 .then((response) => response.json())
                 .then(() => setUpdated(true));
             }}
           >
-            {newPosition}
+            {pos}
           </Button>
-        ))}
-      </div>
-    </div>
+        );
+      })}
+    </Box>
   );
 }
 
-function renderPosition(ballkid, setUpdated, isMobile) {
-  const newPosition = ballkid.position === "Back" ? "Net" : "Back";
+function renderPosition(ballkid, setUpdated) {
+  const POSITIONS = ["Back", "Net"];
 
   return (
-    <div className={isMobile ? "" : "justify"}>
-      <Typography variant="body1">Position: {ballkid.position}</Typography>
-      {ballkid.current_team === 0 ? (
-        ""
-      ) : (
-        <div className="sxs">
-          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0 }}>
-            Change to: &emsp;
-          </Typography>
+    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center" }}>
+      {POSITIONS.map((pos) => {
+        const isSelected = ballkid.position === pos;
+        return (
           <Button
+            key={pos}
             size="small"
-            sx={{ m: 0.2 }}
-            variant="outlined"
-            onClick={(e) => {
+            variant={isSelected ? "contained" : "outlined"}
+            color={isSelected ? "primary" : "inherit"}
+            disableElevation
+            sx={{
+              borderRadius: "16px",
+              textTransform: "none",
+              px: 1.5,
+              py: 0.25,
+              fontSize: "0.8125rem",
+              fontWeight: isSelected ? 600 : 400,
+              opacity: isSelected ? 1 : 0.7,
+              "&:hover": { opacity: 1 },
+            }}
+            onClick={() => {
+              if (isSelected) return;
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  position: newPosition,
+                  position: pos,
                 }),
               })
                 .then((response) => response.json())
                 .then(() => setUpdated(true));
             }}
           >
-            {newPosition}
+            {pos}
           </Button>
-        </div>
-      )}
-    </div>
+        );
+      })}
+    </Box>
   );
 }
 
@@ -290,40 +307,91 @@ function renderTeamButton(ballkid, buttonString, teamNum, setUpdated) {
   );
 }
 
-function renderTeam(ballkid, teams, setUpdated, isMobile) {
-  return (
-    <div className={isMobile ? "" : "justify"}>
-      <Typography variant="body1" sx={{ pr: 1 }}>
-        Current Team:{" "}
-        {ballkid.current_team === 0 ? "Unassigned" : ballkid.current_team}
-      </Typography>
-      {!ballkid.is_checked_in ? (
-        ""
-      ) : (
-        <Box className="sxs" sx={{ maxWidth: "100%" }}>
-          <Typography variant="body1" sx={{ ml: isMobile ? 2 : 0, pr: 1 }}>
-            Change to:
-          </Typography>
+function renderTeam(ballkid, teams, setUpdated) {
+  const currentTeam = ballkid.current_team;
 
-          <Box>
-            {(teams ?? []).map((team) =>
-              team === ballkid.current_team
-                ? ""
-                : renderTeamButton(ballkid, team, team, setUpdated)
-            )}
-            {renderTeamButton(
-              ballkid,
-              "New Team",
-              (teams ?? []).length + 1,
-              setUpdated
-            )}
-            {ballkid.current_team === 0
-              ? ""
-              : renderTeamButton(ballkid, "Unassign", 0, setUpdated)}
-          </Box>
-        </Box>
+  const handleTeamChange = (teamNum) => {
+    fetch("/api/update-ballkid", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        first_name: ballkid.first_name,
+        last_name: ballkid.last_name,
+        current_team: teamNum,
+      }),
+    })
+      .then((response) => response.json())
+      .then(() => setUpdated(true));
+  };
+
+  return (
+    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }}>
+      {(teams ?? []).map((team) => {
+        const isSelected = currentTeam === team;
+        return (
+          <Button
+            key={team}
+            size="small"
+            variant={isSelected ? "contained" : "outlined"}
+            color={isSelected ? "primary" : "inherit"}
+            disableElevation
+            sx={{
+              borderRadius: "16px",
+              textTransform: "none",
+              px: 1.5,
+              py: 0.25,
+              fontSize: "0.8125rem",
+              fontWeight: isSelected ? 600 : 400,
+              opacity: isSelected ? 1 : 0.7,
+              "&:hover": { opacity: 1 },
+            }}
+            onClick={() => handleTeamChange(team)}
+          >
+            Team {team}
+          </Button>
+        );
+      })}
+
+      {/* Button to add a new team */}
+      <Button
+        size="small"
+        variant="outlined"
+        color="inherit"
+        sx={{
+          borderRadius: "16px",
+          textTransform: "none",
+          px: 1.5,
+          py: 0.25,
+          fontSize: "0.8125rem",
+          opacity: 0.7,
+          "&:hover": { opacity: 1 },
+        }}
+        onClick={() => handleTeamChange((teams ?? []).length + 1)}
+      >
+        + New Team
+      </Button>
+
+      {/* Button to unassign */}
+      {currentTeam !== 0 && (
+        <Button
+          size="small"
+          variant="outlined"
+          color="error"
+          sx={{
+            borderRadius: "16px",
+            textTransform: "none",
+            px: 1.5,
+            py: 0.25,
+            fontSize: "0.8125rem",
+            opacity: 0.7,
+            "&:hover": { opacity: 1 },
+          }}
+          onClick={() => handleTeamChange(0)}
+        >
+          Unassign
+        </Button>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -616,75 +684,37 @@ function RatingSection({ ballkid }) {
   );
 }
 
-function InactiveOverflowMenu(props) {
-  const ballkid = props.ballkid;
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  return (
-    <div>
-      <IconButton
-        onClick={(e) => {
-          setAnchorEl(e.currentTarget);
-        }}
-      >
-        <MoreVert />
-      </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
-        }}
-      >
-        {ballkid.is_cut === "true" ? (
-          <MenuItem
-            onClick={(e) => {
-              setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_cut: "false",
-                }),
-              })
-                .then((response) => response.json())
-                .then(() => props.setUpdated(true));
-            }}
-          >
-            <ListItemIcon>
-              <ReportOff />
-            </ListItemIcon>
-            <ListItemText>Un-cut</ListItemText>
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={(e) => {
-              setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_active: true,
-                }),
-              })
-                .then((response) => response.json())
-                .then(() => props.setUpdated(true));
-            }}
-          >
-            <ListItemIcon>
-              <Unarchive />
-            </ListItemIcon>
-            <ListItemText>Un-archive</ListItemText>
-          </MenuItem>
-        )}
-      </Menu>
-    </div>
-  );
-}
+// Reusable paper & slot styling for both menus
+const menuPaperProps = {
+  elevation: 3,
+  sx: {
+    borderRadius: 2.5,
+    minWidth: 190,
+    mt: 0.5,
+    boxShadow:
+      "0px 4px 20px rgba(0, 0, 0, 0.08), 0px 1px 4px rgba(0, 0, 0, 0.04)",
+    "& .MuiMenuItem-root": {
+      py: 1,
+      px: 2,
+      fontFamily: "inherit",
+      fontSize: "0.875rem",
+      fontWeight: 500,
+      gap: 1.25,
+      borderRadius: 1.5,
+      mx: 0.75,
+      my: 0.25,
+      "& .MuiTypography-root": {
+        fontFamily: "inherit",
+        fontSize: "0.875rem",
+        fontWeight: 500,
+      },
+      "& .MuiListItemIcon-root": {
+        minWidth: "auto",
+        color: "inherit",
+      },
+    },
+  },
+};
 
 function ActiveOverflowMenu(props) {
   const ballkid = props.ballkid;
@@ -692,7 +722,7 @@ function ActiveOverflowMenu(props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div>
+    <Box sx={{ position: "relative", zIndex: 10, display: "inline-block" }}>
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -702,7 +732,13 @@ function ActiveOverflowMenu(props) {
 
       <IconButton
         onClick={(e) => {
+          e.stopPropagation();
           setAnchorEl(e.currentTarget);
+        }}
+        sx={{
+          color: "text.primary",
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
+          "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
         }}
       >
         <MoreVert />
@@ -711,68 +747,30 @@ function ActiveOverflowMenu(props) {
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
+        onClose={() => setAnchorEl(null)}
+        PaperProps={menuPaperProps}
+        slotProps={{
+          root: {
+            sx: { zIndex: 9999 },
+          },
         }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {ballkid.id === getLocalStorage("ballkid_id") ? (
-          ""
-        ) : (
+        {ballkid.id === getLocalStorage("ballkid_id") ? null : (
           <MenuItem
-            onClick={(e) => {
+            onClick={() => {
               setAnchorEl(null);
               setOpen(true);
             }}
           >
             <ListItemIcon>
-              <RateReview />
+              <RateReview fontSize="small" />
             </ListItemIcon>
             <ListItemText>Give Rating</ListItemText>
           </MenuItem>
         )}
 
-        <MenuItem
-          onClick={(e) => {
-            setAnchorEl(null);
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                is_cut: "true",
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => props.setUpdated(true));
-          }}
-        >
-          <ListItemIcon>
-            <Dangerous />
-          </ListItemIcon>
-          <ListItemText>Cut</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={(e) => {
-            setAnchorEl(null);
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                is_active: false,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => props.setUpdated(true));
-          }}
-        >
-          <ListItemIcon>
-            <Archive />
-          </ListItemIcon>
-          <ListItemText>Archive</ListItemText>
-        </MenuItem>
         {ballkid.is_captain ? (
           <MenuItem
             onClick={() => {
@@ -791,7 +789,7 @@ function ActiveOverflowMenu(props) {
             }}
           >
             <ListItemIcon>
-              <ArrowCircleDown />
+              <ArrowCircleDown fontSize="small" />
             </ListItemIcon>
             <ListItemText>Demote from Captain</ListItemText>
           </MenuItem>
@@ -813,210 +811,302 @@ function ActiveOverflowMenu(props) {
             }}
           >
             <ListItemIcon>
-              <ArrowCircleUp />
+              <ArrowCircleUp fontSize="small" />
             </ListItemIcon>
             <ListItemText>Promote to Captain</ListItemText>
           </MenuItem>
         )}
-      </Menu>
-    </div>
-  );
-}
 
-function DropdownComments({
-  ballkid,
-  commentType,
-  setSuccessMsg,
-  setErrorMsg,
-}) {
-  const defaultComments =
-    commentType === "checkout" ? ballkid.checkout_comments : ballkid.last_day;
-
-  const [disabled, setDisabled] = useState(true);
-  const [savedComments, setSavedComments] = useState(defaultComments ?? "");
-  const [comments, setComments] = useState(defaultComments ?? "");
-
-  return (
-    <div className="sxs">
-      <Typography variant="body1" sx={{ mr: 1 }}>
-        {commentType === "checkout" ? "Today's Checkout Time:" : "Last Day:"}
-      </Typography>
-      <Box className="sxs">
-        <TextField
-          select
-          disabled={disabled}
-          value={comments}
-          variant="standard"
-          sx={{ mx: 0.5 }}
-          style={{ minWidth: 125 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-          onChange={(e) => setComments(e.target.value)}
-          onDoubleClick={() => setDisabled(false)}
-        >
-          {(commentType === "checkout"
-            ? CHECKOUT_OPTIONS
-            : LAST_DAY_OPTIONS
-          ).map((value) => (
-            <MenuItem key={value} value={value}>
-              {value}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        {disabled ? (
-          <IconButton
-            size="small"
-            disabled={!disabled}
-            onClick={() => setDisabled(false)}
-            sx={{ mt: 0.5 }}
-          >
-            <Tooltip title="Edit">
-              <Edit />
-            </Tooltip>
-          </IconButton>
-        ) : (
-          <Box>
-            <IconButton
-              size="small"
-              sx={{ ml: 2 }}
-              onClick={() => {
-                const commentsBody =
-                  commentType === "checkout"
-                    ? { checkout_comments: comments }
-                    : { last_day: comments };
-
-                fetch("/api/update-ballkid", {
-                  method: "PATCH",
-                  headers: getAuthHeader(),
-                  body: JSON.stringify({
-                    first_name: ballkid.first_name,
-                    last_name: ballkid.last_name,
-                    ...commentsBody,
-                  }),
-                }).then((response) => {
-                  if (response.ok) {
-                    setSuccessMsg("Comments saved!");
-                    setDisabled(true);
-                    setSavedComments(comments);
-                  } else {
-                    setErrorMsg("Error saving comments.");
-                  }
-                });
-              }}
-            >
-              <Tooltip title="Save">
-                <Done />
-              </Tooltip>
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => {
-                setComments(savedComments);
-                setDisabled(true);
-              }}
-            >
-              <Tooltip title="Cancel">
-                <Close />
-              </Tooltip>
-            </IconButton>
-          </Box>
-        )}
-      </Box>
-    </div>
-  );
-}
-
-function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
-  const [disabled, setDisabled] = useState(true);
-  const [savedComments, setSavedComments] = useState(ballkid.comments ?? "");
-  const [comments, setComments] = useState(ballkid.comments ?? "");
-
-  const commentsInput = useRef(null);
-
-  return (
-    <div>
-      <div className="sxs">
-        {/* <Typography variant="body1" fontWeight="medium"> */}
-        <Typography variant="body1">Other Chairperson Comments:</Typography>
-        <IconButton
-          size="small"
-          disabled={!disabled}
+        <MenuItem
           onClick={() => {
-            setDisabled(false);
-            setTimeout(() => commentsInput.current.focus(), 100);
+            setAnchorEl(null);
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                is_active: false,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => props.setUpdated(true));
           }}
-          sx={{ mt: 0.5 }}
         >
-          <Tooltip title="Edit">
-            <Edit />
-          </Tooltip>
-        </IconButton>
-      </div>
+          <ListItemIcon>
+            <Archive fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Archive</ListItemText>
+        </MenuItem>
 
-      {disabled ? (
-        <Typography color="gray">{comments}</Typography>
-      ) : (
-        <div className="sxs">
-          <TextField
-            variant="standard"
-            multiline
-            value={comments}
-            style={{ width: "100%" }}
-            disabled={disabled}
-            inputRef={commentsInput}
-            onFocus={(e) =>
-              e.currentTarget.setSelectionRange(
-                e.currentTarget.value.length,
-                e.currentTarget.value.length
-              )
-            }
-            onChange={(e) => setComments(e.target.value)}
-          />
+        <MenuItem
+          sx={{
+            color: "error.main",
+            "&:hover": { backgroundColor: "error.lighter" },
+          }}
+          onClick={() => {
+            setAnchorEl(null);
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                is_cut: true,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => props.setUpdated(true));
+          }}
+        >
+          <ListItemIcon sx={{ color: "error.main !important" }}>
+            <Dangerous fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Cut</ListItemText>
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
 
-          <IconButton
-            size="small"
-            sx={{ ml: 2 }}
-            onClick={() =>
+function InactiveOverflowMenu(props) {
+  const ballkid = props.ballkid;
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  return (
+    <Box sx={{ position: "relative", zIndex: 10, display: "inline-block" }}>
+      <IconButton
+        onClick={(e) => {
+          e.stopPropagation();
+          setAnchorEl(e.currentTarget);
+        }}
+        sx={{
+          color: "text.primary",
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
+          "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
+        }}
+      >
+        <MoreVert />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+        PaperProps={menuPaperProps}
+        slotProps={{
+          root: {
+            sx: { zIndex: 9999 },
+          },
+        }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        {String(ballkid.is_cut) === "true" ? (
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
                 body: JSON.stringify({
                   first_name: ballkid.first_name,
                   last_name: ballkid.last_name,
-                  comments: comments,
+                  is_cut: false,
                 }),
-              }).then((response) => {
-                if (response.ok) {
-                  setSuccessMsg("Comments saved!");
-                  setDisabled(true);
-                  setSavedComments(comments);
-                } else {
-                  setErrorMsg("Error saving comments.");
-                }
               })
-            }
-          >
-            <Tooltip title="Save">
-              <Done />
-            </Tooltip>
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => {
-              setComments(savedComments);
-              setDisabled(true);
+                .then((response) => response.json())
+                .then(() => props.setUpdated(true));
             }}
           >
-            <Tooltip title="Cancel">
-              <Close />
-            </Tooltip>
-          </IconButton>
-        </div>
-      )}
-    </div>
+            <ListItemIcon>
+              <ReportOff fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Un-cut</ListItemText>
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              fetch("/api/update-ballkid", {
+                method: "PATCH",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  first_name: ballkid.first_name,
+                  last_name: ballkid.last_name,
+                  is_active: true,
+                }),
+              })
+                .then((response) => response.json())
+                .then(() => props.setUpdated(true));
+            }}
+          >
+            <ListItemIcon>
+              <Unarchive fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Un-archive</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
+    </Box>
+  );
+}
+
+function DropdownComments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) {
+  const isCheckout = commentType === "checkout";
+  const defaultVal = isCheckout ? ballkid.checkout_comments : ballkid.last_day;
+  const options = isCheckout ? CHECKOUT_OPTIONS : LAST_DAY_OPTIONS;
+
+  const [value, setValue] = useState(defaultVal ?? "");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (event) => {
+    const newVal = event.target.value;
+    setValue(newVal);
+    setLoading(true);
+
+    const commentsBody = isCheckout
+      ? { checkout_comments: newVal }
+      : { last_day: newVal };
+
+    fetch("/api/update-ballkid", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        first_name: ballkid.first_name,
+        last_name: ballkid.last_name,
+        ...commentsBody,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Updated successfully!");
+        } else {
+          setErrorMsg("Error saving selection.");
+        }
+      })
+      .catch(() => setErrorMsg("Error saving selection."))
+      .finally(() => setLoading(false));
+  };
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <TextField
+        select
+        size="small"
+        value={value}
+        onChange={handleChange}
+        disabled={loading}
+        sx={{
+          minWidth: 160,
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+            fontSize: "0.875rem",
+            backgroundColor: "#fff",
+          },
+        }}
+      >
+        <MenuItem value="">
+          <em>None</em>
+        </MenuItem>
+        {options.map((option) => (
+          <MenuItem key={option} value={option}>
+            {option}
+          </MenuItem>
+        ))}
+      </TextField>
+      {loading && <CircularProgress size={18} />}
+    </Box>
+  );
+}
+
+function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
+  const [editing, setEditing] = useState(false);
+  const [savedComments, setSavedComments] = useState(ballkid.comments ?? "");
+  const [comments, setComments] = useState(ballkid.comments ?? "");
+  const commentsInput = useRef(null);
+
+  const handleSave = () => {
+    fetch("/api/update-ballkid", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        first_name: ballkid.first_name,
+        last_name: ballkid.last_name,
+        comments: comments,
+      }),
+    }).then((response) => {
+      if (response.ok) {
+        setSuccessMsg("Comments saved!");
+        setEditing(false);
+        setSavedComments(comments);
+      } else {
+        setErrorMsg("Error saving comments.");
+      }
+    });
+  };
+
+  if (!editing) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: savedComments ? "text.primary" : "text.secondary",
+            fontStyle: savedComments ? "normal" : "italic",
+          }}
+        >
+          {savedComments || "No comments added."}
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={() => {
+            setEditing(true);
+            setTimeout(() => commentsInput.current?.focus(), 100);
+          }}
+          sx={{ color: "text.secondary", "&:hover": { color: "primary.main" } }}
+        >
+          <Tooltip title="Edit comment">
+            <Edit fontSize="small" />
+          </Tooltip>
+        </IconButton>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, width: "100%", mt: 0.5 }}>
+      <TextField
+        fullWidth
+        multiline
+        size="small"
+        variant="outlined"
+        value={comments}
+        inputRef={commentsInput}
+        onChange={(e) => setComments(e.target.value)}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+            fontSize: "0.875rem",
+          },
+        }}
+      />
+      <IconButton size="small" color="primary" onClick={handleSave}>
+        <Tooltip title="Save">
+          <Done fontSize="small" />
+        </Tooltip>
+      </IconButton>
+      <IconButton
+        size="small"
+        onClick={() => {
+          setComments(savedComments);
+          setEditing(false);
+        }}
+      >
+        <Tooltip title="Cancel">
+          <Close fontSize="small" />
+        </Tooltip>
+      </IconButton>
+    </Box>
   );
 }
 
@@ -1053,165 +1143,89 @@ export function AggregateMetrics({ pk }) {
     }
   }, [pk, isChairperson]);
 
+  // Helper to format the Chairperson averages next to the ballkid's metrics
+  const formatValue = (ballkidVal, avgVal) => {
+    return isChairperson && avgVal ? `${ballkidVal} (Avg: ${avgVal})` : ballkidVal;
+  };
+
   return loading ? (
     <CircularProgress size={30} sx={{ display: "block", m: 2 }} />
   ) : (
-    <Grid container justifyContent="flex-start">
-      <Grid item xs={12}>
-        <TableContainer>
-          <Table size="small">
-            {!isChairperson ? (
-              ""
-            ) : (
-              <TableHead>
-                <TableRow>
-                  <TableCell />
-                  <TableCell>Ballkid</TableCell>
-                  <TableCell>Average</TableCell>
-                </TableRow>
-              </TableHead>
-            )}
+    <>
+      <ProfileInfoRow
+        label="Total Time Checked In"
+        value={formatValue(
+          getDurationStr(getTimeFloat(metrics.checkin_duration)),
+          averages ? getDurationStr(parseFloat(averages.checkin_avg) / 3600) : null
+        )}
+      />
 
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Total Time Checked In
-                </TableCell>
-                <TableCell>
-                  {getDurationStr(getTimeFloat(metrics.checkin_duration))}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {getDurationStr(parseFloat(averages.checkin_avg) / 3600)}
-                  </TableCell>
-                )}
-              </TableRow>
+      <ProfileInfoRow
+        label="Total Days Checked In"
+        value={formatValue(
+          metrics.checkin_days,
+          averages ? Number(averages.days_avg).toFixed(1) : null
+        )}
+      />
 
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Total Days Checked In
-                </TableCell>
-                <TableCell>{metrics.checkin_days}</TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {Number(averages.days_avg).toFixed(1)}
-                  </TableCell>
-                )}
-              </TableRow>
+      <ProfileInfoRow
+        label="Average Time Checked In Per Day"
+        value={formatValue(
+          getDurationStr(getTimeFloat(metrics.checkin_duration) / metrics.checkin_days),
+          averages ? getDurationStr(parseFloat(averages.checkin_avg) / 3600 / averages.days_avg) : null
+        )}
+      />
 
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Average Time Checked In Per Day
-                </TableCell>
+      <ProfileInfoRow
+        label="Average Check-in Time"
+        value={formatValue(
+          getTimeStr(parseFloat(checkinTimeMetrics?.ballkid) / 3600),
+          checkinTimeMetrics ? getTimeStr(parseFloat(checkinTimeMetrics?.average) / 3600) : null
+        )}
+      />
 
-                <TableCell>
-                  {getDurationStr(
-                    getTimeFloat(metrics.checkin_duration) /
-                      metrics.checkin_days
-                  )}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {getDurationStr(
-                      parseFloat(averages.checkin_avg) /
-                        3600 /
-                        averages.days_avg
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
+      <ProfileInfoRow
+        label="Average Check-out Time"
+        value={formatValue(
+          getTimeStr(
+            parseFloat(checkinTimeMetrics?.ballkid) / 3600 +
+              getTimeFloat(metrics.checkin_duration) / metrics.checkin_days
+          ),
+          checkinTimeMetrics && averages
+            ? getTimeStr(
+                parseFloat(checkinTimeMetrics?.average) / 3600 +
+                  parseFloat(averages.checkin_avg) / 3600 / averages.days_avg
+              )
+            : null
+        )}
+      />
 
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Average Check-in Time
-                </TableCell>
-                <TableCell>
-                  {getTimeStr(parseFloat(checkinTimeMetrics?.ballkid) / 3600)}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {getTimeStr(parseFloat(checkinTimeMetrics?.average) / 3600)}
-                  </TableCell>
-                )}
-              </TableRow>
+      <ProfileInfoRow
+        label="Total Time on Court"
+        value={formatValue(
+          getDurationStr(getTimeFloat(metrics.court_duration)),
+          averages ? getDurationStr(parseFloat(averages.court_avg) / 3600) : null
+        )}
+      />
 
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Average Check-out Time
-                </TableCell>
-                <TableCell>
-                  {getTimeStr(
-                    parseFloat(checkinTimeMetrics?.ballkid) / 3600 +
-                      getTimeFloat(metrics.checkin_duration) /
-                        metrics.checkin_days
-                  )}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {getTimeStr(
-                      parseFloat(checkinTimeMetrics?.average) / 3600 +
-                        parseFloat(averages.checkin_avg) /
-                          3600 /
-                          averages.days_avg
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  Total Time on Court
-                </TableCell>
-                <TableCell>
-                  {getDurationStr(getTimeFloat(metrics.court_duration))}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {getDurationStr(parseFloat(averages.court_avg) / 3600)}
-                  </TableCell>
-                )}
-              </TableRow>
-
-              <TableRow>
-                <TableCell sx={{ fontWeight: "medium" }}>
-                  % Time on Court
-                </TableCell>
-                <TableCell>
-                  {getTimeFloat(metrics.checkin_duration) === 0
-                    ? "0%"
-                    : toPercent(
-                        getTimeFloat(metrics.court_duration) /
-                          getTimeFloat(metrics.checkin_duration)
-                      )}
-                </TableCell>
-                {!isChairperson ? (
-                  ""
-                ) : (
-                  <TableCell>
-                    {toPercent(
-                      parseFloat(averages.court_avg) /
-                        parseFloat(averages.checkin_avg)
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Grid>
-    </Grid>
+      <ProfileInfoRow
+        label="% Time on Court"
+        value={formatValue(
+          getTimeFloat(metrics.checkin_duration) === 0
+            ? "0%"
+            : toPercent(
+                getTimeFloat(metrics.court_duration) /
+                  getTimeFloat(metrics.checkin_duration)
+              ),
+          averages && parseFloat(averages.checkin_avg) > 0
+            ? toPercent(
+                parseFloat(averages.court_avg) /
+                  parseFloat(averages.checkin_avg)
+              )
+            : "0%"
+        )}
+      />
+    </>
   );
 }
 
@@ -1363,9 +1377,11 @@ export default function BallkidPageChairperson(props) {
 
           {ballkid.is_cut || !ballkid.is_active ? null : (
             <ProfileCard title="Current tournament">
-              <ProfileInfoRow label="Assignment" stack>
-                {renderPosition(ballkid, setUpdated, isMobile)}
-                {renderTeam(ballkid, teams, setUpdated, isMobile)}
+              <ProfileInfoRow label="Position">
+                {renderPosition(ballkid, setUpdated)}
+              </ProfileInfoRow>
+              <ProfileInfoRow label="Current team">
+                {renderTeam(ballkid, teams, setUpdated)}
               </ProfileInfoRow>
             </ProfileCard>
           )}
@@ -1373,12 +1389,13 @@ export default function BallkidPageChairperson(props) {
           {!ballkid.is_active ? null : (
             <ProfileCard title="Comments & tickets">
               <ProfileInfoRow label="Tickets used">
-                <Box className="sxs" sx={{ alignItems: "center" }}>
-                  <span>{ballkid.num_tickets}</span>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="body2" fontWeight="600" sx={{ minWidth: 16 }}>
+                    {ballkid.num_tickets}
+                  </Typography>
                   <IconButton
                     disabled={ballkid.num_tickets === 0}
                     size="small"
-                    sx={{ p: 0.5 }}
                     onClick={() => {
                       fetch("/api/update-ballkid", {
                         method: "PATCH",
@@ -1392,12 +1409,12 @@ export default function BallkidPageChairperson(props) {
                         .then((response) => response.json())
                         .then(() => setUpdated(true));
                     }}
+                    sx={{ p: 0.5 }}
                   >
-                    <RemoveCircle />
+                    <RemoveCircle fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
-                    sx={{ p: 0.5 }}
                     onClick={() => {
                       fetch("/api/update-ballkid", {
                         method: "PATCH",
@@ -1411,30 +1428,38 @@ export default function BallkidPageChairperson(props) {
                         .then((response) => response.json())
                         .then(() => setUpdated(true));
                     }}
+                    sx={{ p: 0.5 }}
                   >
-                    <AddCircle />
+                    <AddCircle fontSize="small" />
                   </IconButton>
                 </Box>
               </ProfileInfoRow>
-              <div className="ballkid-profile-card-body--padded">
+
+              <ProfileInfoRow label="Last day">
                 <DropdownComments
                   ballkid={ballkid}
                   commentType="last_day"
                   setSuccessMsg={setSuccessMsg}
                   setErrorMsg={setErrorMsg}
                 />
+              </ProfileInfoRow>
+
+              <ProfileInfoRow label="Today's checkout time">
                 <DropdownComments
                   ballkid={ballkid}
                   commentType="checkout"
                   setSuccessMsg={setSuccessMsg}
                   setErrorMsg={setErrorMsg}
                 />
+              </ProfileInfoRow>
+
+              <ProfileInfoRow label="Other comments">
                 <Comments
                   ballkid={ballkid}
                   setSuccessMsg={setSuccessMsg}
                   setErrorMsg={setErrorMsg}
                 />
-              </div>
+              </ProfileInfoRow>
             </ProfileCard>
           )}
         </ProfilePanel>
@@ -1447,9 +1472,7 @@ export default function BallkidPageChairperson(props) {
 
             <ProfilePanel id="analytics" active={tab}>
               <ProfileCard title="Season stats">
-                <div className="ballkid-profile-card-body--padded ballkid-profile-season-stats">
-                  <AggregateMetrics pk={pk} />
-                </div>
+                <AggregateMetrics pk={pk} />
               </ProfileCard>
               <ProfileCard title="Check-in history">
                 <div className="ballkid-profile-chart-wrap">
