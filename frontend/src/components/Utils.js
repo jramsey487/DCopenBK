@@ -761,7 +761,7 @@ export function BallkidCard({ ballkid, renderAdditional }) {
   const layout = getLocalStorage("layout") ?? "list";
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <CardActionArea
         component={RouterLink}
         to={
@@ -769,6 +769,7 @@ export function BallkidCard({ ballkid, renderAdditional }) {
             ? "/me"
             : `/ballkid/${ballkid.id}`
         }
+        sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         {layout === "list" ? (
           ""
@@ -777,10 +778,17 @@ export function BallkidCard({ ballkid, renderAdditional }) {
             <CardMedia component="img" image={ballkid.image} />
           </AspectRatio>
         )}
-        <CardContent>
+        <CardContent sx={{ flexGrow: 1 }}>
           <div className={layout === "grid" ? "" : "justify"}>
             <div className={layout === "grid" ? "justify" : "sxs"}>
-              <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
+              <Typography variant="subtitle1" sx={{
+                fontWeight: "medium",
+                minHeight: "2.6em",      // ~2 lines at this variant's line-height
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}>
                 {ballkid.first_name} {ballkid.last_name}
               </Typography>
               &thinsp;
