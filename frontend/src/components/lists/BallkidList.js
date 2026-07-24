@@ -40,7 +40,10 @@ export default function BallkidList(props) {
     <div className="page ballkid-list-page">
       <Banners />
 
-      <Box className="ballkid-list-title-row">
+      <Box
+        className="ballkid-list-title-row"
+        sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+      >
         <Typography className="ballkid-list-title" variant="h4">
           List by Name
         </Typography>
@@ -51,6 +54,9 @@ export default function BallkidList(props) {
           page="List By Name"
           message={group === "chairperson" ? list : listNonchairperson}
         />
+        <Box sx={{ ml: "auto" }}>
+          <LayoutButtons layout={layout} setLayout={setLayout} />
+        </Box>
       </Box>
 
       <div className="ballkid-list-toolbar">
@@ -61,10 +67,6 @@ export default function BallkidList(props) {
             setFilterGroup={setFilterGroup}
             filters={group === "ballkid" ? filters : ["rookie", ...filters]}
           />
-        </div>
-        <div className="ballkid-list-toolbar-divider" />
-        <div className="ballkid-list-toolbar-layout">
-          <LayoutButtons layout={layout} setLayout={setLayout} />
         </div>
       </div>
 
