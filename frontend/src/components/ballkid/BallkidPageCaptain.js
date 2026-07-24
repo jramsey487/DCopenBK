@@ -18,6 +18,7 @@ import {
   ProfileCard,
   ProfileInfoRow,
 } from "./BallkidProfileLayout";
+import "../schedule/schedule-mobile.css";
 
 function positionPillVariant(position) {
   const key = (position ?? "").toLowerCase();
@@ -95,15 +96,28 @@ export default function BallkidPageCaptain(props) {
 
         {!showCurrentInfo ? null : (
           <ProfileCard title="Current tournament">
-            <ProfileInfoRow label="Position" value={ballkid.position} />
-            <ProfileInfoRow
-              label="Current team"
-              value={
-                ballkid.current_team === 0
-                  ? "Unassigned"
-                  : ballkid.current_team
-              }
-            />
+            <ProfileInfoRow label="Position">
+              <span
+                className={`ballkid-profile-pill ${positionPillVariant(
+                  ballkid.position
+                )}`}
+              >
+                {ballkid.position}
+              </span>
+            </ProfileInfoRow>
+            <ProfileInfoRow label="Current team">
+              {ballkid.current_team === 0 ? (
+                "Unassigned"
+              ) : (
+                <button
+                  type="button"
+                  className={`chip t${ballkid.current_team}`}
+                  disabled
+                >
+                  {ballkid.current_team}
+                </button>
+              )}
+            </ProfileInfoRow>
           </ProfileCard>
         )}
       </ProfileContent>
