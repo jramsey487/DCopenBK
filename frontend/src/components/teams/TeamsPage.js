@@ -5,7 +5,6 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import Box from "@mui/material/Box";
@@ -24,6 +23,8 @@ import {
 import { ON_COURT_GREEN, POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
 
+const FONT_STACK =
+  'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 const NAVY = "#0d1b3e";
 const TEXT2 = "#64748b";
 const BORDER = "#e2e8f0";
@@ -61,6 +62,7 @@ function PersonPhotoTile({ ballkid }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          fontFamily: FONT_STACK,
           fontWeight: 700,
           color: NAVY,
           fontSize: 18,
@@ -77,7 +79,15 @@ function PersonPhotoTile({ ballkid }) {
           personInitials(ballkid.first_name, ballkid.last_name)
         )}
       </Box>
-      <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: NAVY, lineHeight: 1.25 }}>
+      <Typography
+        sx={{
+          fontFamily: FONT_STACK,
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: NAVY,
+          lineHeight: 1.25,
+        }}
+      >
         {ballkid.first_name} {ballkid.last_name}
       </Typography>
       <Icons ballkid={ballkid} margin={0} />
@@ -105,25 +115,16 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
         <CardContent>
           <div className="justify">
             <div className="sxs">
-              <Typography variant="h6" sx={{ fontWeight: 700, color: NAVY }}>
+              <Typography
+                sx={{ fontFamily: FONT_STACK, fontWeight: 700, fontSize: 19, color: NAVY }}
+              >
                 Team {team}
               </Typography>
-              <Typography variant="subtitle1" sx={{ ml: 1, color: TEXT2 }}>
+              <Typography
+                sx={{ fontFamily: FONT_STACK, fontSize: 15, ml: 1, color: TEXT2 }}
+              >
                 ({assigned.length})
               </Typography>
-              {isMyTeam ? (
-                <Chip
-                  label="Your team"
-                  size="small"
-                  sx={{
-                    ml: 1,
-                    backgroundColor: "#eef1f6",
-                    color: NAVY,
-                    fontWeight: 600,
-                    fontSize: 11,
-                  }}
-                />
-              ) : null}
             </div>
             <CourtAssignment nextShifts={nextShifts} />
           </div>
@@ -138,10 +139,14 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
               <div key={position}>
                 <Divider sx={{ mt: 1.5, mb: 1.5 }} />
                 <div className="sxs" style={{ marginBottom: 8 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: NAVY }}>
+                  <Typography
+                    sx={{ fontFamily: FONT_STACK, fontWeight: 600, fontSize: 15, color: NAVY }}
+                  >
                     {position}s
                   </Typography>
-                  <Typography variant="subtitle2" sx={{ ml: 1, color: TEXT2 }}>
+                  <Typography
+                    sx={{ fontFamily: FONT_STACK, fontSize: 13, ml: 1, color: TEXT2 }}
+                  >
                     ({positionBallkids.length})
                   </Typography>
                 </div>
@@ -217,7 +222,9 @@ export default function TeamsPage(props) {
 
       <Box className="justify" sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
         <Box className="sxs">
-          <Typography variant="h4" sx={{ fontWeight: 700, color: NAVY }}>
+          <Typography
+            sx={{ fontFamily: FONT_STACK, fontWeight: 700, fontSize: 26, color: NAVY }}
+          >
             Current Teams
           </Typography>
           &thinsp;
@@ -232,6 +239,7 @@ export default function TeamsPage(props) {
             />
           }
           label="Show photos"
+          sx={{ "& .MuiFormControlLabel-label": { fontFamily: FONT_STACK, fontSize: 14 } }}
         />
       </Box>
 
@@ -249,7 +257,7 @@ export default function TeamsPage(props) {
           ))}
         </Grid>
       ) : (
-        <Typography variant="body1">
+        <Typography sx={{ fontFamily: FONT_STACK }}>
           There are currently no teams assigned.
         </Typography>
       )}
