@@ -11,8 +11,10 @@ const stroke = {
 export function NavIconRoster({ className }) {
   return (
     <svg className={className} width="20" height="20" viewBox="0 0 20 20" aria-hidden>
-      <circle cx="10" cy="7" r="3.5" {...stroke} />
-      <path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" {...stroke} />
+      <circle cx="4" cy="5" r="1" {...stroke} />
+      <circle cx="4" cy="10" r="1" {...stroke} />
+      <circle cx="4" cy="15" r="1" {...stroke} />
+      <path d="M8 5h9M8 10h9M8 15h9" {...stroke} />
     </svg>
   );
 }

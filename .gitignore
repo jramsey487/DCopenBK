@@ -4,6 +4,8 @@ __pycache__/
 env/
 db.sqlite3
 .vscode/
+venv/
+.venv/
 
 # Logs
 logs
