@@ -32,7 +32,7 @@ import {
   POSITIONS,
   ICON_DICT,
   TOOLTIP_DICT,
-  NUM_RATINGS_WARNING_THRESHOLD,
+  SUPERVET_THRESHOLD,
 } from "../Consts";
 import { cut } from "../HelpMessages";
 import "./cut-page-desktop.css";
@@ -49,13 +49,20 @@ function CutDragHandle() {
   );
 }
 
-function renderCutChipDragSurface({ ref, isDragging, children, dense = false }) {
+function renderCutChipDragSurface({
+  ref,
+  isDragging,
+  children,
+  hoverHandlers,
+  dense = false,
+}) {
   return (
     <div
       ref={ref}
       className={`cut-ballkid-chip${dense ? " cut-ballkid-chip--dense" : ""}${
         isDragging ? " is-dragging" : ""
       }`}
+      {...(hoverHandlers || {})}
     >
       <CutDragHandle />
       {children}
@@ -101,13 +108,11 @@ function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
   if (group !== "ballkid" && ballkid.num_years_experience === 0) {
     addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
   }
+  if (ballkid.num_years_experience > SUPERVET_THRESHOLD) {
+    addIcon("supervet", ICON_DICT.supervet, TOOLTIP_DICT.supervet);
+  }
 
   const lastDay = cutLastDayLabel(ballkid);
-  const rank = ballkid.rank;
-  const showRank = rank !== null && rank !== undefined && rank !== "";
-  const lowRatings =
-    ballkid.num_ratings != null &&
-    ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
 
   if (compact) {
     return lastDay ? (
@@ -130,17 +135,6 @@ function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
             {dense
               ? ballkid.num_years_experience
               : `${ballkid.num_years_experience} yr`}
-          </span>
-        </Tooltip>
-      ) : null}
-      {showRank ? (
-        <Tooltip title="Calibrated rank" arrow>
-          <span
-            className={`cut-chip-pill cut-chip-pill--rank${
-              lowRatings ? " cut-chip-pill--muted" : ""
-            }`}
-          >
-            {dense ? rank : `#${rank}`}
           </span>
         </Tooltip>
       ) : null}
@@ -176,7 +170,11 @@ function CutBallkidRow({
           />
         }
         renderCustom={(props) =>
-          renderCutChipDragSurface({ ...props, dense })
+          renderCutChipDragSurface({
+            ...props,
+            dense,
+            hoverHandlers: showHovercard ? props.hoverHandlers : null,
+          })
         }
       />
       {actions ? (

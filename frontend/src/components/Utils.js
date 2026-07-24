@@ -580,6 +580,12 @@ export function DraggableBallkidAndIcon({
     onMouseLeave: () => setAnchorEl(null),
   };
 
+  useEffect(() => {
+    if (!showHovercard) {
+      setAnchorEl(null);
+    }
+  }, [showHovercard]);
+
   const metaBlock = (
     <>
       <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
@@ -588,23 +594,24 @@ export function DraggableBallkidAndIcon({
           <CommentsText ballkid={ballkid} commentType={commentType} />
         </Box>
       ))}
-      {showHovercard ? (
-        <BallkidPopover
-          ballkid={ballkid}
-          hoverCommentTypes={hoverCommentTypes}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
-        />
-      ) : null}
     </>
   );
+
+  const hovercardNode = showHovercard ? (
+    <BallkidPopover
+      ballkid={ballkid}
+      hoverCommentTypes={hoverCommentTypes}
+      anchorEl={anchorEl}
+      setAnchorEl={setAnchorEl}
+    />
+  ) : null;
 
   const innerContent =
     layout === "cut-chip" ? (
       <Box
         className="cut-ballkid-chip__content"
         sx={{ flex: 1, minWidth: 0 }}
-        {...hoverHandlers}
+        {...(renderCustom ? {} : hoverHandlers)}
       >
         <Box className="cut-ballkid-chip__name">
           <BallkidLink
@@ -632,11 +639,17 @@ export function DraggableBallkidAndIcon({
     );
 
   if (renderCustom) {
-    return renderCustom({
-      ref: drag,
-      isDragging,
-      children: innerContent,
-    });
+    return (
+      <>
+        {renderCustom({
+          ref: drag,
+          isDragging,
+          children: innerContent,
+          hoverHandlers: showHovercard ? hoverHandlers : null,
+        })}
+        {hovercardNode}
+      </>
+    );
   }
 
   return (
@@ -653,6 +666,7 @@ export function DraggableBallkidAndIcon({
     >
       {leftAdornment}
       {innerContent}
+      {hovercardNode}
     </Box>
   );
 }
@@ -966,7 +980,11 @@ export function renderSwitch(param, setParam, offStr, onStr) {
   return (
     <Box className="sxs">
       <Typography variant="body1">{offStr}</Typography>
-      <Switch checked={param} onClick={(e) => setParam(e.target.checked)} />
+      <Switch
+        checked={param}
+        onChange={(e) => setParam(e.target.checked)}
+        inputProps={{ "aria-label": `${offStr} / ${onStr}` }}
+      />
       <Typography variant="body1">{onStr}</Typography>
     </Box>
   );
