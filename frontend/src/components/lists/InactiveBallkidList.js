@@ -4,6 +4,8 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 
 import {
   LayoutButtons,
@@ -15,8 +17,8 @@ import {
   HelpIcon,
   Banners,
 } from "../Utils";
-import { MARGINS } from "../Consts";
 import { inactive } from "../HelpMessages";
+import "./ballkid-list-by-name.css";
 
 function renderUnarchiveButton(ballkid, setUpdated) {
   return (
@@ -77,21 +79,18 @@ function renderUncutButton(ballkid, setUpdated) {
 
 function renderBallkids(ballkids, section, layout, setUpdated) {
   return ballkids.length === 0 ? (
-    <Typography variant="body1">
+    <div className="ballkid-list-empty" style={{ textAlign: "left", marginBottom: "2rem" }}>
       There are currently no {section} ballkids.
-    </Typography>
+    </div>
   ) : (
-    <Grid container spacing={layout === "grid" ? 2 : 1}>
+    <div
+      className={
+        layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+      }
+      style={{ marginBottom: "2rem" }}
+    >
       {ballkids.map((ballkid) => (
-        <Grid
-          item
-          key={ballkid.id}
-          xs={layout === "grid" ? 6 : 12}
-          sm={layout === "grid" ? 4 : 12}
-          md={layout === "grid" ? 3 : 12}
-          lg={layout === "grid" ? 2 : 12}
-          xl={layout === "grid" ? 1 : 12}
-        >
+        <div className="ballkid-list-card-wrap" key={ballkid.id}>
           <BallkidCard
             ballkid={ballkid}
             renderAdditional={
@@ -102,9 +101,9 @@ function renderBallkids(ballkids, section, layout, setUpdated) {
               </Box>
             }
           />
-        </Grid>
+        </div>
       ))}
-    </Grid>
+    </div>
   );
 }
 
@@ -116,6 +115,9 @@ export default function InactiveBallkidList(props) {
   const [filterGroup, setFilterGroup] = useState();
   const [layout, setLayout] = useState(getLocalStorage("layout") ?? "list");
   const [updated, setUpdated] = useState(false);
+
+  const group = getLocalStorage("group");
+  const filters = ["captain", "chairperson", "back", "net"];
 
   useEffect(() => {
     fetch("/api/inactive-list", { headers: getAuthHeader() })
@@ -132,34 +134,55 @@ export default function InactiveBallkidList(props) {
   }, [updated]);
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page">
       <Banners />
 
-      <div className="justify">
-        <Box className="sxs" sx={{ mb: 1 }}>
-          <Typography variant="h4">Inactive</Typography>
-          &thinsp;
-          <HelpIcon page="Inactive" message={inactive} />
+      <Box
+        className="ballkid-list-title-row"
+        sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+      >
+        <Typography className="ballkid-list-title" variant="h4">
+          Inactive
+        </Typography>
+        <HelpIcon page="Inactive" message={inactive} />
+        <Box sx={{ ml: "auto" }}>
+          <LayoutButtons layout={layout} setLayout={setLayout} />
         </Box>
+      </Box>
 
-        <LayoutButtons layout={layout} setLayout={setLayout} />
+      <div className="ballkid-list-toolbar">
+        <div className="ballkid-list-toolbar-search">
+          <SearchAndFilter
+            setSearchKeyword={setSearchKeyword}
+            filterGroup={filterGroup}
+            setFilterGroup={setFilterGroup}
+            filters={group === "ballkid" ? filters : ["rookie", ...filters]}
+          />
+        </div>
       </div>
 
-      <SearchAndFilter
-        setSearchKeyword={setSearchKeyword}
-        filterGroup={filterGroup}
-        setFilterGroup={setFilterGroup}
-      />
-
-      <Grid item className="sxs">
-        <Typography variant="h5" sx={MARGINS}>
+      <Box
+        className="sxs"
+        sx={{
+          mt: 3,
+          mb: 0,
+          alignItems: "center",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          pb: 1,
+        }}
+      >
+        <PersonRemoveOutlinedIcon
+          sx={{ fontSize: 20, mr: 1, "& path": { strokeWidth: 1.2 } }}
+        />
+        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
           Cut Ballkids
         </Typography>
         &ensp;
-        <Typography variant="h6" sx={MARGINS}>
+        <Typography variant="body1" sx={{ opacity: 0.6, fontWeight: 500 }}>
           ({filterBallkids(cut, searchKeyword, filterGroup).length})
         </Typography>
-      </Grid>
+      </Box>
 
       {renderBallkids(
         filterBallkids(cut, searchKeyword, filterGroup),
@@ -168,15 +191,28 @@ export default function InactiveBallkidList(props) {
         setUpdated
       )}
 
-      <Grid item className="sxs">
-        <Typography variant="h5" sx={MARGINS}>
+      <Box
+        className="sxs"
+        sx={{
+          mt: 3,
+          mb: 0,
+          alignItems: "center",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          pb: 1,
+        }}
+      >
+        <ArchiveOutlinedIcon
+          sx={{ fontSize: 20, mr: 1, "& path": { strokeWidth: 1.2 } }}
+        />
+        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
           Archived Ballkids
         </Typography>
         &ensp;
-        <Typography variant="h6" sx={MARGINS}>
+        <Typography variant="body1" sx={{ opacity: 0.6, fontWeight: 500 }}>
           ({filterBallkids(archived, searchKeyword, filterGroup).length})
         </Typography>
-      </Grid>
+      </Box>
 
       {renderBallkids(
         filterBallkids(archived, searchKeyword, filterGroup),
