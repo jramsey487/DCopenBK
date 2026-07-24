@@ -20,6 +20,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
+import Add from "@mui/icons-material/Add";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -281,34 +282,8 @@ function renderPosition(ballkid, setUpdated) {
   );
 }
 
-function renderTeamButton(ballkid, buttonString, teamNum, setUpdated) {
-  return (
-    <Button
-      key={teamNum}
-      sx={{ m: 0.2, minWidth: 0 }}
-      size="small"
-      variant="outlined"
-      onClick={(e) => {
-        fetch("/api/update-ballkid", {
-          method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            first_name: ballkid.first_name,
-            last_name: ballkid.last_name,
-            current_team: teamNum,
-          }),
-        })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
-      }}
-    >
-      {buttonString}
-    </Button>
-  );
-}
-
-function renderTeam(ballkid, teams, setUpdated) {
-  const currentTeam = ballkid.current_team;
+function renderTeam(ballkid, teams = [], setUpdated) {
+  const currentTeam = ballkid.current_team || "";
 
   const handleTeamChange = (teamNum) => {
     fetch("/api/update-ballkid", {
@@ -317,80 +292,74 @@ function renderTeam(ballkid, teams, setUpdated) {
       body: JSON.stringify({
         first_name: ballkid.first_name,
         last_name: ballkid.last_name,
-        current_team: teamNum,
+        current_team: Number(teamNum),
       }),
     })
       .then((response) => response.json())
       .then(() => setUpdated(true));
   };
 
-  return (
-    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center", flexWrap: "wrap" }}>
-      {(teams ?? []).map((team) => {
-        const isSelected = currentTeam === team;
-        return (
-          <Button
-            key={team}
-            size="small"
-            variant={isSelected ? "contained" : "outlined"}
-            color={isSelected ? "primary" : "inherit"}
-            disableElevation
-            sx={{
-              borderRadius: "16px",
-              textTransform: "none",
-              px: 1.5,
-              py: 0.25,
-              fontSize: "0.8125rem",
-              fontWeight: isSelected ? 600 : 400,
-              opacity: isSelected ? 1 : 0.7,
-              "&:hover": { opacity: 1 },
-            }}
-            onClick={() => handleTeamChange(team)}
-          >
-            Team {team}
-          </Button>
-        );
-      })}
+  const handleSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === "UNASSIGN") {
+      handleTeamChange(0);
+    } else {
+      handleTeamChange(val);
+    }
+  };
 
-      {/* Button to add a new team */}
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+      {/* Team Dropdown */}
+      <TextField
+        select
+        size="small"
+        value={currentTeam === 0 ? "" : currentTeam}
+        onChange={handleSelectChange}
+        displayEmpty
+        sx={{
+          minWidth: 160,
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+            fontSize: "0.875rem",
+            backgroundColor: "#fff",
+          },
+        }}
+      >
+        <MenuItem value="" disabled>
+          <em>Select Team</em>
+        </MenuItem>
+        {(teams ?? []).map((team) => (
+          <MenuItem key={team} value={team}>
+            Team {team}
+          </MenuItem>
+        ))}
+        {currentTeam !== 0 && currentTeam !== "" && (
+          <MenuItem value="UNASSIGN" sx={{ color: "error.main", fontWeight: 500 }}>
+            Unassign Team
+          </MenuItem>
+        )}
+      </TextField>
+
+      {/* Explicit Create New Team Action */}
       <Button
         size="small"
         variant="outlined"
-        color="inherit"
+        color="primary"
+        startIcon={<Add fontSize="small" />}
         sx={{
-          borderRadius: "16px",
+          borderRadius: 2,
           textTransform: "none",
+          fontWeight: 600,
+          py: 0.75,
           px: 1.5,
-          py: 0.25,
           fontSize: "0.8125rem",
-          opacity: 0.7,
-          "&:hover": { opacity: 1 },
+          whiteSpace: "nowrap",
         }}
         onClick={() => handleTeamChange((teams ?? []).length + 1)}
       >
-        + New Team
+        Create New Team
       </Button>
-
-      {/* Button to unassign */}
-      {currentTeam !== 0 && (
-        <Button
-          size="small"
-          variant="outlined"
-          color="error"
-          sx={{
-            borderRadius: "16px",
-            textTransform: "none",
-            px: 1.5,
-            py: 0.25,
-            fontSize: "0.8125rem",
-            opacity: 0.7,
-            "&:hover": { opacity: 1 },
-          }}
-          onClick={() => handleTeamChange(0)}
-        >
-          Unassign
-        </Button>
-      )}
     </Box>
   );
 }
