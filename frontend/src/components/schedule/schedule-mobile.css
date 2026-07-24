@@ -789,19 +789,12 @@
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     max-height: 60vh;
-    overflow-y: auto;
     font-family: var(--font-sans);
   }
   
   .schedule-sheet.open {
-    display: block;
-  }
-  
-  .schedule-sheet .sheet-title {
-    padding: 0 20px 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--sched-text1, #0d1b3e);
+    display: flex;
+    flex-direction: column;
   }
   
   .schedule-sheet .pop-handle {
@@ -809,55 +802,187 @@
     height: 4px;
     border-radius: 2px;
     background: var(--sched-border, #e2e8f0);
-    margin: 10px auto 14px;
-  }
-  
-  .schedule-sheet .pop-member {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 0.5px solid var(--sched-border, #e2e8f0);
-  }
-  
-  .schedule-sheet .pop-member:last-child {
-    border-bottom: none;
-  }
-  
-  .schedule-sheet .pop-name {
-    font-size: 14px;
-    color: var(--sched-text1, #0d1b3e);
-  }
-  
-  .schedule-sheet .pop-right {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    width: 66px;
-    justify-content: flex-end;
+    margin: 10px auto 0;
     flex-shrink: 0;
   }
   
-  .schedule-sheet .cap-star {
-    font-size: 12px;
+  .schedule-sheet .sheet-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px 14px;
+    border-bottom: 1px solid var(--sched-border, #e2e8f0);
+    background: var(--sched-bg1, #fff);
+    flex-shrink: 0;
+  }
+  
+  .schedule-sheet .sheet-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--sched-text1, #0d1b3e);
+    line-height: 1.2;
+  }
+  
+  .schedule-sheet .sheet-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sched-text2, #64748b);
+  }
+  
+  .schedule-sheet .sheet-close {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--sched-border, #e2e8f0);
+    border-radius: 10px;
+    background: var(--sched-bg0, #f8fafc);
+    color: var(--sched-text2, #64748b);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  
+  .schedule-sheet .sheet-close:hover {
+    background: var(--sched-bg2, #f1f5f9);
+    color: var(--sched-text1, #0d1b3e);
+  }
+  
+  .schedule-sheet .sheet-body {
+    padding: 16px 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    background: var(--sched-bg0, #f8fafc);
+  }
+  
+  .schedule-sheet .sheet-empty {
+    margin: 0;
+    padding: 24px 12px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--sched-text2, #64748b);
+  }
+  
+  .schedule-sheet .sheet-section + .sheet-section {
+    margin-top: 18px;
+  }
+  
+  .schedule-sheet .sheet-section-label {
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sched-text2, #64748b);
+  }
+  
+  .schedule-sheet .sheet-section-count {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--sched-text3, #94a3b8);
+    background: var(--sched-bg1, #fff);
+    border: 1px solid var(--sched-border, #e2e8f0);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  
+  .schedule-sheet .sheet-member-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .schedule-sheet .sheet-member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--sched-bg1, #fff);
+    border: 1px solid var(--sched-border, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
+  }
+  
+  .schedule-sheet .sheet-member-avatar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sched-nav, #0d1b3e);
+    background: var(--sched-bg2, #f1f5f9);
+    border: 1px solid var(--sched-border, #e2e8f0);
+  }
+  
+  .schedule-sheet .sheet-member-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sched-text1, #0d1b3e);
+    line-height: 1.3;
+  }
+  
+  .schedule-sheet .sheet-member-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  
+  .schedule-sheet .sheet-cap-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
   }
   
   .schedule-sheet .pos-n {
     font-size: 11px;
-    font-weight: 500;
-    padding: 3px 8px;
-    border-radius: 3px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 8px;
     background: #eff6ff;
     color: #1d4ed8;
+    border: 1px solid #dbeafe;
   }
   
   .schedule-sheet .pos-b {
     font-size: 11px;
-    font-weight: 500;
-    padding: 3px 8px;
-    border-radius: 3px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 8px;
     background: #f0fdf4;
     color: #15803d;
+    border: 1px solid #bbf7d0;
   }
   
   /* Wider screens: header on one row, larger chips, centered team dialog */
@@ -922,14 +1047,28 @@
       bottom: auto;
       top: 50%;
       transform: translate(-50%, -50%);
-      width: min(420px, 92vw);
+      width: min(440px, 92vw);
       border-radius: 16px;
-      max-height: 70vh;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+      max-height: min(72vh, 640px);
+      box-shadow: 0 12px 40px rgba(13, 27, 62, 0.16);
+      border: 1px solid var(--sched-border, #e2e8f0);
+      overflow: hidden;
     }
   
     .schedule-sheet .pop-handle {
       display: none;
+    }
+  
+    .schedule-sheet .sheet-header {
+      padding: 20px 22px 16px;
+    }
+  
+    .schedule-sheet .sheet-title {
+      font-size: 22px;
+    }
+  
+    .schedule-sheet .sheet-body {
+      padding: 18px 22px 22px;
     }
   }
   

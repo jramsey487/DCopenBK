@@ -75,7 +75,73 @@ function buildTeamRoster(ballkids) {
   return roster;
 }
 
+function memberInitials(fullName) {
+  const parts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return "?";
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function TeamSheetMember({ member }) {
+  return (
+    <li className="sheet-member">
+      <span className="sheet-member-avatar" aria-hidden="true">
+        {memberInitials(member.name)}
+      </span>
+      <span className="sheet-member-name">{member.name}</span>
+      <div className="sheet-member-meta">
+        {member.isCaptain ? (
+          <span className="sheet-cap-badge">Captain</span>
+        ) : null}
+        <span className={member.pos === "Net" ? "pos-n" : "pos-b"}>
+          {member.pos}
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function TeamSheetSection({ label, members }) {
+  if (!members?.length) {
+    return null;
+  }
+  return (
+    <section className="sheet-section">
+      <h3 className="sheet-section-label">
+        {label}
+        <span className="sheet-section-count">{members.length}</span>
+      </h3>
+      <ul className="sheet-member-list">
+        {members.map((member) => (
+          <TeamSheetMember key={member.name} member={member} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function TeamSheet({ team, members, open, onClose }) {
+  const roster = members || [];
+  const nets = roster.filter((m) => m.pos === "Net");
+  const backs = roster.filter((m) => m.pos !== "Net");
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   return (
     <>
       <div
@@ -83,24 +149,45 @@ function TeamSheet({ team, members, open, onClose }) {
         onClick={onClose}
         role="presentation"
       />
-      <div className={`schedule-sheet${open ? " open" : ""}`}>
+      <div
+        className={`schedule-sheet${open ? " open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="schedule-team-sheet-title"
+      >
         <div className="pop-handle" aria-hidden="true" />
-        <div className="sheet-title">Team {team}</div>
-        {(members || []).map((member) => (
-          <div className="pop-member" key={member.name}>
-            <span className="pop-name">{member.name}</span>
-            <div className="pop-right">
-              {member.isCaptain ? (
-                <span className="cap-star" aria-label="Captain">
-                  ⭐
-                </span>
-              ) : null}
-              <span className={member.pos === "Net" ? "pos-n" : "pos-b"}>
-                {member.pos}
-              </span>
-            </div>
+        <header className="sheet-header">
+          <div className="sheet-header-text">
+            <h2 id="schedule-team-sheet-title" className="sheet-title">
+              Team {team}
+            </h2>
+            <p className="sheet-subtitle">
+              {roster.length === 0
+                ? "No one checked in on this team"
+                : `${roster.length} checked in today`}
+            </p>
           </div>
-        ))}
+          <button
+            type="button"
+            className="sheet-close"
+            onClick={onClose}
+            aria-label="Close team roster"
+          >
+            ×
+          </button>
+        </header>
+        <div className="sheet-body">
+          {roster.length === 0 ? (
+            <p className="sheet-empty">
+              Assignments update when ballkids check in and teams are set.
+            </p>
+          ) : (
+            <>
+              <TeamSheetSection label="Nets" members={nets} />
+              <TeamSheetSection label="Backs" members={backs} />
+            </>
+          )}
+        </div>
       </div>
     </>
   );
