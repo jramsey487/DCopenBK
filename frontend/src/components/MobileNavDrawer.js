@@ -3,6 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
+import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
+import SportsTennisOutlinedIcon from "@mui/icons-material/SportsTennisOutlined";
+import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
+import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
 import { getAuthHeader, getLocalStorage } from "./Utils";
 import {
@@ -103,7 +107,7 @@ function getNavSections(group) {
   };
   const leaderboards = {
     label: "Leaderboards",
-    Icon: NavIconRatings,
+    Icon: () => <EmojiEventsOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
     items: [
       { label: "Check-in", url: "/leaderboards/checkin" },
       { label: "Court Time", url: "/leaderboards/court" },
@@ -143,14 +147,29 @@ function getAccountItems(group) {
       {
         label: "Tournament Settings",
         url: "/tournament-settings",
-        Icon: NavIconSettings,
+        Icon: () => <SportsTennisOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
       },
-      { label: "Debug", url: "/debug", Icon: NavIconSettings },
-      { label: "Feedback", url: "/feedback", Icon: NavIconProfile },
+      {
+        label: "Debug",
+        url: "/debug",
+        Icon: () => <BugReportOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
+      },
+      {
+        label: "Feedback",
+        url: "/feedback",
+        Icon: () => <FeedbackOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
+      },
     ];
   }
   if (group === "captain" || group === "ballkid") {
-    return [...base, { label: "Feedback", url: "/feedback", Icon: NavIconProfile }];
+    return [
+      ...base,
+      {
+        label: "Feedback",
+        url: "/feedback",
+        Icon: () => <FeedbackOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
+      },
+    ];
   }
   return base;
 }

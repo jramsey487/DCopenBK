@@ -309,7 +309,15 @@ function renderTeam(ballkid, teams = [], setUpdated) {
   };
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "stretch", sm: "center" },
+        gap: 1.25,
+        width: { xs: "100%", sm: "auto" },
+      }}
+    >
       {/* Team Dropdown */}
       <TextField
         select
@@ -318,7 +326,7 @@ function renderTeam(ballkid, teams = [], setUpdated) {
         onChange={handleSelectChange}
         displayEmpty
         sx={{
-          minWidth: 160,
+          minWidth: { xs: "100%", sm: 160 },
           "& .MuiOutlinedInput-root": {
             borderRadius: 2,
             fontSize: "0.875rem",
@@ -355,6 +363,7 @@ function renderTeam(ballkid, teams = [], setUpdated) {
           px: 1.5,
           fontSize: "0.8125rem",
           whiteSpace: "nowrap",
+          width: { xs: "100%", sm: "auto" },
         }}
         onClick={() => handleTeamChange((teams ?? []).length + 1)}
       >
