@@ -778,17 +778,10 @@ export function BallkidCard({ ballkid, renderAdditional }) {
             <CardMedia component="img" image={ballkid.image} />
           </AspectRatio>
         )}
-        <CardContent sx={{ flexGrow: 1 }}>
+        <CardContent>
           <div className={layout === "grid" ? "" : "justify"}>
             <div className={layout === "grid" ? "justify" : "sxs"}>
-              <Typography variant="subtitle1" sx={{
-                fontWeight: "medium",
-                minHeight: "2.6em",      // ~2 lines at this variant's line-height
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
                 {ballkid.first_name} {ballkid.last_name}
               </Typography>
               &thinsp;
