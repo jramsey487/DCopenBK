@@ -63,7 +63,9 @@ function Team({ team, assigned, nextShifts, setUpdated }) {
                       <BallkidAndIcon ballkid={ballkid} />
 
                       {ballkid.id === getLocalStorage("ballkid_id") ? (
-                        ""
+                        <button type="button" className="rbt-give-rating-disabled" disabled>
+                          Give Rating
+                        </button>
                       ) : ballkid.have_draft ? (
                         <DraftRatingButton
                           ballkid={ballkid}
