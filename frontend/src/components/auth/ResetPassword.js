@@ -1,95 +1,144 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
+import BallcrewLogo from "../BallcrewLogo";
+import "./login.css";
 
-import { Alerts } from "../Utils";
+async function handleSubmit(
+  uid,
+  token,
+  password,
+  confirmPassword,
+  navigate,
+  setErrorMsg,
+  setLoading
+) {
+  setErrorMsg("");
+
+  if (password !== confirmPassword) {
+    setErrorMsg("Passwords do not match.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const response = await fetch("/accounts/users/reset_password_confirm/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: uid,
+        token: token,
+        new_password: password,
+        re_new_password: confirmPassword,
+      }),
+    });
+    if (response.ok) {
+      navigate("/reset-password-complete");
+      return;
+    }
+    setErrorMsg("This reset link is invalid or has expired.");
+  } catch {
+    setErrorMsg("Could not reach the server. Is the backend running?");
+  } finally {
+    setLoading(false);
+  }
+}
 
 export default function ResetPassword(props) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { uid, token } = useParams();
   const navigate = useNavigate();
 
+  const canSubmit =
+    password.length > 0 && confirmPassword.length > 0 && !loading;
+
+  function onSubmit(e) {
+    e.preventDefault();
+    if (!canSubmit) {
+      return;
+    }
+    handleSubmit(
+      uid,
+      token,
+      password,
+      confirmPassword,
+      navigate,
+      setErrorMsg,
+      setLoading
+    );
+  }
+
   return (
-    <div className="page">
-      <div className="center">
-        <Grid
-          container
-          spacing={2}
-          alignItems="center"
-          direction="column"
-          justifyContent="center"
-        >
-          <Grid item xs={12}>
-            <Alerts
-              successMsg={successMsg}
-              errorMsg={errorMsg}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography component="h4" variant="h4">
-              Reset Password
-            </Typography>
-          </Grid>
+    <div className="page login-shell">
+      <div className="login-page">
+        <div className="login-brand">
+          <BallcrewLogo variant="crest" size={56} />
+          <p className="login-brand-title">Mubadala DC Open Ballcrew</p>
+        </div>
 
-          <Grid item xs={12}>
-            <TextField
-              label="New Password"
-              name="newPassword"
-              variant="standard"
-              type="password"
-              required={true}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Confirm New Password"
-              name="confirmPassword"
-              variant="standard"
-              type="password"
-              required={true}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </Grid>
+        <section className="login-card">
+          <div className="login-accent-bar" aria-hidden="true" />
+          <h1 className="login-card-title">Reset Password</h1>
+          <p className="login-card-subtitle">
+            Choose a new password for your account.
+          </p>
 
-          <Grid item xs={12}>
-            <Button
-              color="primary"
-              variant="contained"
-              onClick={(e) =>
-                fetch("/accounts/users/reset_password_confirm/", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    uid: uid,
-                    token: token,
-                    new_password: password,
-                    re_new_password: confirmPassword,
-                  }),
-                }).then((response) => {
-                  if (response.ok) {
-                    navigate("/reset-password-complete");
-                  } else {
-                    setErrorMsg("Error resetting password.");
-                  }
-                })
-              }
+          {errorMsg ? (
+            <div className="login-alert error" role="alert">
+              {errorMsg}
+            </div>
+          ) : null}
+
+          <form className="login-form" onSubmit={onSubmit}>
+            <div className="login-field">
+              <label className="login-label" htmlFor="reset-password">
+                New Password
+              </label>
+              <input
+                id="reset-password"
+                className="login-input"
+                name="newPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="login-field">
+              <label className="login-label" htmlFor="reset-confirm-password">
+                Confirm New Password
+              </label>
+              <input
+                id="reset-confirm-password"
+                className="login-input"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={!canSubmit}
             >
-              Submit
-            </Button>
-          </Grid>
-        </Grid>
+              {loading ? "Resetting…" : "Reset Password"}
+            </button>
+          </form>
+
+          <div className="login-footer">
+            <RouterLink className="login-forgot" to="/login">
+              Back to Log In
+            </RouterLink>
+          </div>
+        </section>
       </div>
     </div>
   );
