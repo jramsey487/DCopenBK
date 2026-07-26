@@ -36,16 +36,17 @@ function formatDurationShort(hoursFloat) {
   const totalMinutes = Math.round(hoursFloat * 60);
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  return `${h}h${m}m`;
+  return `${h}h ${m}m`;
 }
 
 const COL_W = {
-  ballkid: "22%",
-  duration: "16%",
-  days: "8%",
-  durationPerDay: "18%",
-  avgCheckin: "18%",
-  avgCheckout: "18%",
+  rank: "60px",
+  ballkid: "1fr",
+  duration: "1fr",
+  days: "0.6fr",
+  durationPerDay: "1.1fr",
+  avgCheckin: "1.1fr",
+  avgCheckout: "1.1fr",
 };
 
 /** Min widths (px) for averages table — mobile scrolls horizontally instead of squishing */
@@ -110,11 +111,11 @@ function renderAverages(averages, isMobile) {
 
   const headerLabels = isMobile
     ? {
-        duration: "Total duration",
-        days: "# days",
-        perDay: "Avg duration / day",
-        checkin: "Avg check-in",
-        checkout: "Avg check-out",
+        duration: "Total Duration",
+        days: "# Days",
+        perDay: "Avg Duration / Day",
+        checkin: "Avg Check-in",
+        checkout: "Avg Check-out",
       }
     : {
         duration: "Total Duration",
@@ -434,6 +435,7 @@ export default function CheckinLeaderboard(props) {
             alignItems: "center",
             gap: "6px",
             lineHeight: 1.2,
+            height: "100%", // Ensure the inner wrapper takes full height
           },
           ".checkin-lb-name-cell .MuiLink-root": {
             display: "inline-flex",
@@ -453,6 +455,8 @@ export default function CheckinLeaderboard(props) {
           ".MuiDataGrid-cell[data-field='name']": {
             display: "flex",
             alignItems: "center",
+            paddingTop: "4px",
+            paddingBottom: "4px",
           },
         }}
       />
@@ -498,7 +502,7 @@ export default function CheckinLeaderboard(props) {
                 columns={columns}
                 rows={rows}
                 density="compact"
-                rowHeight={isMobile ? 36 : 44}
+                rowHeight={isMobile ? 44 : 52}
                 sx={{
                   border: "none",
                   borderRadius: "16px",

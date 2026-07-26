@@ -1,66 +1,58 @@
 import React, { useState, useEffect } from "react";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
 
 import { getAuthHeader, BallkidAndIcon, HelpIcon, Banners } from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
-import { Box } from "@mui/material";
 import { finalsTeamsNonchairperson } from "../HelpMessages";
+import "./teams-page.css";
 
 function Team({ team, assigned }) {
-  return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <div className="justify">
-            <div className="sxs">
-              <Typography variant="h6">{team}</Typography>
-              <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                (
-                {
-                  assigned.filter((ballkid) => ballkid.finals_team === team)
-                    .length
-                }
-                )
-              </Typography>
-            </div>
-          </div>
+  const teamAssigned = assigned.filter(
+    (ballkid) => ballkid.finals_team === team
+  );
 
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ mt: 1, mb: 1 }} />
-              <div className="sxs">
-                <Typography variant="subtitle1">{position}s</Typography>
-                <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                  (
-                  {
-                    assigned.filter(
-                      (ballkid) =>
-                        ballkid.finals_team === team &&
-                        ballkid.finals_position === position
-                    ).length
-                  }
-                  )
-                </Typography>
+  return (
+    <div className="team-card">
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">{team}</span>
+          <span className="team-card-count">({teamAssigned.length})</span>
+        </div>
+      </div>
+
+      <div className="team-card-body">
+        {POSITIONS.map((position) => {
+          const positionAssigned = teamAssigned.filter(
+            (ballkid) => ballkid.finals_position === position
+          );
+
+          return (
+            <div className="team-position-block" key={position}>
+              <div className="team-position-head">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">
+                  ({positionAssigned.length})
+                </span>
               </div>
 
-              {assigned.map((ballkid) =>
-                ballkid.finals_team === team &&
-                ballkid.finals_position === position ? (
-                  <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
-                ) : (
-                  ""
-                )
+              {positionAssigned.length === 0 ? (
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s assigned yet.
+                </div>
+              ) : (
+                <div className="team-member-list">
+                  {positionAssigned.map((ballkid) => (
+                    <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
+                  ))}
+                </div>
               )}
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </Grid>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -86,25 +78,28 @@ export default function FinalsTeamsPage(props) {
   }, []);
 
   return (
-    <div className="page">
+    <div className="page teams-page-shell">
       <Banners />
 
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Finals Teams</Typography>
-        &thinsp;
-        <HelpIcon page="Finals Teams" message={finalsTeamsNonchairperson} />
+      <Box className="teams-page-header">
+        <div className="teams-page-title-row">
+          <Typography className="teams-page-title" variant="h4">
+            Finals Teams
+          </Typography>
+          <HelpIcon page="Finals Teams" message={finalsTeamsNonchairperson} />
+        </div>
       </Box>
 
       {assigned.length > 0 && showFinalsTeams ? (
-        <Grid container spacing={2}>
+        <div className="teams-page-grid">
           {teams.map((team) => (
             <Team key={team} team={team} assigned={assigned} />
           ))}
-        </Grid>
+        </div>
       ) : (
-        <Typography variant="body1">
+        <div className="teams-page-empty">
           There are currently no finals teams assigned.
-        </Typography>
+        </div>
       )}
     </div>
   );

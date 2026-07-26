@@ -734,13 +734,29 @@ export function BallkidPopover({
 
 export function BallkidAndIcon({ ballkid }) {
   return (
-    <div className="sxs">
+    <div className="sxs" style={{ display: "flex", alignItems: "center", height: "100%" }}>
       <BallkidLink
         id={ballkid.id}
         name={`${ballkid.first_name} ${ballkid.last_name}`}
       />
       &thinsp;
-      <Icons ballkid={ballkid} margin={0} />
+      <Box 
+        component="span" 
+        sx={{ 
+          display: "inline-flex", 
+          alignItems: "center", 
+          verticalAlign: "middle",
+          height: "24px", 
+          "& svg, & img": { 
+            height: "20px", 
+            width: "20px", 
+            display: "block",
+            objectFit: "contain"
+          } 
+        }}
+      >
+        <Icons ballkid={ballkid} margin={0} />
+      </Box>
     </div>
   );
 }

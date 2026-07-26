@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Switch from "@mui/material/Switch";
 import Box from "@mui/material/Box";
 
 import {
@@ -20,15 +14,9 @@ import {
   Icons,
   getLocalStorage,
 } from "../Utils";
-import { ON_COURT_GREEN, POSITIONS } from "../Consts";
+import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
-
-const FONT_STACK =
-  'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-const NAVY = "#0d1b3e";
-const TEXT2 = "#64748b";
-const BORDER = "#e2e8f0";
-const BG0 = "#f8fafc";
+import "./teams-page.css";
 
 function personInitials(firstName, lastName) {
   const f = (firstName ?? "").trim()[0] ?? "";
@@ -41,57 +29,19 @@ function PersonPhotoTile({ ballkid }) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: 84,
-        textAlign: "center",
-        gap: 0.5,
-      }}
-    >
-      <Box
-        sx={{
-          width: 64,
-          height: 64,
-          borderRadius: "50%",
-          overflow: "hidden",
-          border: `1px solid ${BORDER}`,
-          backgroundColor: BG0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: FONT_STACK,
-          fontWeight: 700,
-          color: NAVY,
-          fontSize: 18,
-        }}
-      >
+    <div className="team-photo-tile">
+      <div className="team-photo-avatar">
         {src && !failed ? (
-          <img
-            src={src}
-            alt=""
-            onError={() => setFailed(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          <img src={src} alt="" onError={() => setFailed(true)} />
         ) : (
           personInitials(ballkid.first_name, ballkid.last_name)
         )}
-      </Box>
-      <Typography
-        sx={{
-          fontFamily: FONT_STACK,
-          fontSize: 12.5,
-          fontWeight: 600,
-          color: NAVY,
-          lineHeight: 1.25,
-        }}
-      >
+      </div>
+      <span className="team-photo-name">
         {ballkid.first_name} {ballkid.last_name}
-      </Typography>
+      </span>
       <Icons ballkid={ballkid} margin={0} />
-    </Box>
+    </div>
   );
 }
 
@@ -100,74 +50,65 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card
-        sx={{
-          mb: 2,
-          backgroundColor: isCurrentlyOn ? ON_COURT_GREEN : "#fff",
-          border: isMyTeam ? `2px solid ${NAVY}` : `1px solid ${BORDER}`,
-          borderRadius: "12px",
-          boxShadow: isMyTeam
-            ? "0 4px 14px rgba(13, 27, 62, 0.12)"
-            : "0 1px 4px rgba(13, 27, 62, 0.04)",
-        }}
-      >
-        <CardContent>
-          <div className="justify">
-            <div className="sxs">
-              <Typography
-                sx={{ fontFamily: FONT_STACK, fontWeight: 700, fontSize: 19, color: NAVY }}
-              >
-                Team {team}
-              </Typography>
-              <Typography
-                sx={{ fontFamily: FONT_STACK, fontSize: 15, ml: 1, color: TEXT2 }}
-              >
-                ({assigned.length})
-              </Typography>
-            </div>
-            <CourtAssignment nextShifts={nextShifts} />
-          </div>
+    <div
+      className={`team-card${isMyTeam ? " is-mine" : ""}${
+        isCurrentlyOn ? " is-on-court" : ""
+      }`}
+    >
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">Team {team}</span>
+          <span className="team-card-count">({assigned.length})</span>
+          {isMyTeam ? (
+            <span className="team-card-mine-badge">Your Team</span>
+          ) : null}
+          {isCurrentlyOn ? (
+            <span className="team-card-oncourt-badge">On court</span>
+          ) : null}
+        </div>
+        <span className="team-card-assignment">
+          <CourtAssignment nextShifts={nextShifts} />
+        </span>
+      </div>
 
-          {POSITIONS.map((position) => {
-            const positionBallkids = assigned.filter(
-              (ballkid) =>
-                ballkid.current_team === team && ballkid.position === position
-            );
+      <div className="team-card-body">
+        {POSITIONS.map((position) => {
+          const positionBallkids = assigned.filter(
+            (ballkid) =>
+              ballkid.current_team === team && ballkid.position === position
+          );
 
-            return (
-              <div key={position}>
-                <Divider sx={{ mt: 1.5, mb: 1.5 }} />
-                <div className="sxs" style={{ marginBottom: 8 }}>
-                  <Typography
-                    sx={{ fontFamily: FONT_STACK, fontWeight: 600, fontSize: 15, color: NAVY }}
-                  >
-                    {position}s
-                  </Typography>
-                  <Typography
-                    sx={{ fontFamily: FONT_STACK, fontSize: 13, ml: 1, color: TEXT2 }}
-                  >
-                    ({positionBallkids.length})
-                  </Typography>
-                </div>
-
-                {showPhotos ? (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-                    {positionBallkids.map((ballkid) => (
-                      <PersonPhotoTile key={ballkid.id} ballkid={ballkid} />
-                    ))}
-                  </Box>
-                ) : (
-                  positionBallkids.map((ballkid) => (
-                    <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
-                  ))
-                )}
+          return (
+            <div className="team-position-block" key={position}>
+              <div className="team-position-head">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">
+                  ({positionBallkids.length})
+                </span>
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-    </Grid>
+
+              {positionBallkids.length === 0 ? (
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s assigned yet.
+                </div>
+              ) : showPhotos ? (
+                <div className="team-photo-grid">
+                  {positionBallkids.map((ballkid) => (
+                    <PersonPhotoTile key={ballkid.id} ballkid={ballkid} />
+                  ))}
+                </div>
+              ) : (
+                <div className="team-member-list">
+                  {positionBallkids.map((ballkid) => (
+                    <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -217,49 +158,50 @@ export default function TeamsPage(props) {
   });
 
   return (
-    <div className="page">
+    <div className="page teams-page-shell">
       <Banners />
 
-      <Box className="justify" sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
-        <Box className="sxs">
-          <Typography
-            sx={{ fontFamily: FONT_STACK, fontWeight: 700, fontSize: 26, color: NAVY }}
-          >
+      <Box className="teams-page-header">
+        <div className="teams-page-title-row">
+          <Typography className="teams-page-title" variant="h4">
             Current Teams
           </Typography>
-          &thinsp;
           <HelpIcon page="Teams" message={teamsNonchairperson} />
-        </Box>
+        </div>
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showPhotos}
-              onChange={(e) => setShowPhotos(e.target.checked)}
-            />
-          }
-          label="Show photos"
-          sx={{ "& .MuiFormControlLabel-label": { fontFamily: FONT_STACK, fontSize: 14 } }}
-        />
+        <div className="teams-page-photo-toggle">
+          <span className="teams-page-photo-toggle-label">Show photos</span>
+          <button
+            type="button"
+            className={`teams-page-photo-toggle-switch${
+              showPhotos ? " on" : ""
+            }`}
+            role="switch"
+            aria-checked={showPhotos}
+            onClick={() => setShowPhotos(!showPhotos)}
+          />
+        </div>
       </Box>
 
       {assigned.length > 0 && showTeams ? (
-        <Grid container spacing={2}>
+        <div className="teams-page-grid">
           {orderedTeams.map((team) => (
             <Team
               key={team}
               team={team}
-              assigned={assigned.filter((ballkid) => ballkid.current_team === team)}
+              assigned={assigned.filter(
+                (ballkid) => ballkid.current_team === team
+              )}
               nextShifts={nextShifts.filter((shift) => shift.team === team)}
               isMyTeam={team === myTeam}
               showPhotos={showPhotos}
             />
           ))}
-        </Grid>
+        </div>
       ) : (
-        <Typography sx={{ fontFamily: FONT_STACK }}>
+        <div className="teams-page-empty">
           There are currently no teams assigned.
-        </Typography>
+        </div>
       )}
     </div>
   );
