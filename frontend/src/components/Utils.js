@@ -198,7 +198,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
               }),
         }}
       >
-        Give rating
+        GIVE RATING
       </Button>
     </div>
   );
