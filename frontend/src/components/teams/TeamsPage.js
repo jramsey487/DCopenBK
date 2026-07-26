@@ -32,7 +32,12 @@ function PersonPhotoTile({ ballkid }) {
     <div className="team-photo-tile">
       <div className="team-photo-avatar">
         {src && !failed ? (
-          <img src={src} alt="" onError={() => setFailed(true)} />
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            onError={() => setFailed(true)}
+          />
         ) : (
           personInitials(ballkid.first_name, ballkid.last_name)
         )}
