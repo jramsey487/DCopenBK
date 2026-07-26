@@ -195,3 +195,89 @@
     min-height: 36px; /* fixed floor so it can't collapse or grow oddly */
     white-space: nowrap; /* prevents "GIVE RATING" from wrapping to 2 lines */
   }
+
+  .rbt-page-photo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .rbt-page-photo-toggle-label {
+    font-size: 13px;
+    color: var(--rbt-text2);
+  }
+  
+  .rbt-page-photo-toggle-switch {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--rbt-border);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  
+  .rbt-page-photo-toggle-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+  }
+  
+  .rbt-page-photo-toggle-switch.on {
+    background: var(--rbt-green);
+  }
+  
+  .rbt-page-photo-toggle-switch.on::after {
+    transform: translateX(16px);
+  }
+  
+  .rbt-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  .rbt-photo-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  
+  .rbt-photo-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--rbt-bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--rbt-text2);
+    overflow: hidden;
+  }
+  
+  .rbt-photo-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .rbt-photo-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--rbt-text1);
+  }
+  
+  .rbt-photo-tile-action {
+    margin-top: 2px;
+  }

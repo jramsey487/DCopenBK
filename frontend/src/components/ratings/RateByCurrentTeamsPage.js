@@ -13,12 +13,66 @@ import {
   HelpIcon,
   Banners,
   DraftRatingButton,
+  ballkidImageSrc,
+  Icons,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { rateByCurrentTeam } from "../HelpMessages";
 import "./rate-by-current-team.css";
 
-function Team({ team, assigned, nextShifts, setUpdated }) {
+function personInitials(firstName, lastName) {
+  const f = (firstName ?? "").trim()[0] ?? "";
+  const l = (lastName ?? "").trim()[0] ?? "";
+  return (f + l).toUpperCase() || "?";
+}
+
+function RatingActionButton({ ballkid, setUpdated }) {
+  if (ballkid.id === getLocalStorage("ballkid_id")) {
+    return (
+      <button type="button" className="rbt-give-rating-disabled" disabled>
+        Give Rating
+      </button>
+    );
+  }
+
+  return ballkid.have_draft ? (
+    <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
+  ) : (
+    <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
+  );
+}
+
+function PersonPhotoTile({ ballkid, setUpdated }) {
+  const src = ballkidImageSrc(ballkid.image);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="rbt-photo-tile">
+      <div className="rbt-photo-avatar">
+        {src && !failed ? (
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          personInitials(ballkid.first_name, ballkid.last_name)
+        )}
+      </div>
+      <span className="rbt-photo-name">
+        {ballkid.first_name} {ballkid.last_name}
+      </span>
+      <Icons ballkid={ballkid} margin={0} />
+
+      <div className="rbt-photo-tile-action">
+        <RatingActionButton ballkid={ballkid} setUpdated={setUpdated} />
+      </div>
+    </div>
+  );
+}
+
+function Team({ team, assigned, nextShifts, setUpdated, showPhotos }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
@@ -56,27 +110,25 @@ function Team({ team, assigned, nextShifts, setUpdated }) {
                 <div className="rbt-position-empty">
                   No {position.toLowerCase()}s assigned yet.
                 </div>
+              ) : showPhotos ? (
+                <div className="rbt-photo-grid">
+                  {positionAssigned.map((ballkid) => (
+                    <PersonPhotoTile
+                      key={ballkid.id}
+                      ballkid={ballkid}
+                      setUpdated={setUpdated}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="rbt-member-list">
                   {positionAssigned.map((ballkid) => (
                     <div className="rbt-member-row" key={ballkid.id}>
                       <BallkidAndIcon ballkid={ballkid} />
-
-                      {ballkid.id === getLocalStorage("ballkid_id") ? (
-                        <button type="button" className="rbt-give-rating-disabled" disabled>
-                          Give Rating
-                        </button>
-                      ) : ballkid.have_draft ? (
-                        <DraftRatingButton
-                          ballkid={ballkid}
-                          setUpdated={setUpdated}
-                        />
-                      ) : (
-                        <RatingButton
-                          ballkid={ballkid}
-                          setUpdated={setUpdated}
-                        />
-                      )}
+                      <RatingActionButton
+                        ballkid={ballkid}
+                        setUpdated={setUpdated}
+                      />
                     </div>
                   ))}
                 </div>
@@ -95,6 +147,7 @@ export default function RateByCurrentTeamsPage(props) {
   const [teams, setTeams] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
   const [updated, setUpdated] = useState(false);
+  const [showPhotos, setShowPhotos] = useState(true);
 
   const pk = getLocalStorage("ballkid_id");
   const group = getLocalStorage("group");
@@ -139,6 +192,19 @@ export default function RateByCurrentTeamsPage(props) {
           </Typography>
           <HelpIcon page="Rate by Current Team" message={rateByCurrentTeam} />
         </div>
+
+        <div className="rbt-page-photo-toggle">
+          <span className="rbt-page-photo-toggle-label">Show photos</span>
+          <button
+            type="button"
+            className={`rbt-page-photo-toggle-switch${
+              showPhotos ? " on" : ""
+            }`}
+            role="switch"
+            aria-checked={showPhotos}
+            onClick={() => setShowPhotos(!showPhotos)}
+          />
+        </div>
       </Box>
 
       {assigned.length === 0 || (group !== "chairperson" && !showTeams) ? (
@@ -156,6 +222,7 @@ export default function RateByCurrentTeamsPage(props) {
               )}
               nextShifts={nextShifts.filter((shift) => shift.team === team)}
               setUpdated={setUpdated}
+              showPhotos={showPhotos}
             />
           ))}
         </div>
