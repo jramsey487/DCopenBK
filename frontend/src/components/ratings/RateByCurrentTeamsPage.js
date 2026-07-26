@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import Typography from "@mui/material/Typography";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
 
 import {
   getAuthHeader,
@@ -17,71 +14,76 @@ import {
   Banners,
   DraftRatingButton,
 } from "../Utils";
-import { ON_COURT_GREEN, POSITIONS } from "../Consts";
-import { Box } from "@mui/material";
+import { POSITIONS } from "../Consts";
 import { rateByCurrentTeam } from "../HelpMessages";
+import "./rate-by-current-team.css";
 
 function Team({ team, assigned, nextShifts, setUpdated }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
   return (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
-      <Card
-        sx={{ mb: 2, backgroundColor: isCurrentlyOn ? ON_COURT_GREEN : "" }}
-      >
-        <CardContent>
-          <div className="justify">
-            <div className="sxs">
-              <Typography variant="h6">Team {team}</Typography>
-              <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                ({assigned.length})
-              </Typography>
-            </div>
+    <div className={`rbt-team-card${isCurrentlyOn ? " is-on-court" : ""}`}>
+      <div className="rbt-team-card-head">
+        <div className="rbt-team-card-title-group">
+          <span className="rbt-team-card-title">Team {team}</span>
+          <span className="rbt-team-card-count">({assigned.length})</span>
+          {isCurrentlyOn ? (
+            <span className="rbt-team-card-oncourt-badge">On court</span>
+          ) : null}
+        </div>
+        <span className="rbt-team-card-assignment">
+          <CourtAssignment nextShifts={nextShifts} />
+        </span>
+      </div>
 
-            <CourtAssignment nextShifts={nextShifts} />
-          </div>
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ mt: 1, mb: 1 }} />
+      <div className="rbt-team-card-body">
+        {POSITIONS.map((position) => {
+          const positionAssigned = assigned.filter(
+            (ballkid) => ballkid.position === position
+          );
 
-              <div className="sxs">
-                <Typography variant="subtitle1">{position}s</Typography>
-                <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                  (
-                  {
-                    assigned.filter((ballkid) => ballkid.position === position)
-                      .length
-                  }
-                  )
-                </Typography>
+          return (
+            <div className="rbt-position-block" key={position}>
+              <div className="rbt-position-head">
+                <span className="rbt-position-label">{position}s</span>
+                <span className="rbt-position-count">
+                  ({positionAssigned.length})
+                </span>
               </div>
 
-              {assigned.map((ballkid) =>
-                ballkid.position !== position ? (
-                  ""
-                ) : (
-                  <div className="justify" key={ballkid.id}>
-                    <BallkidAndIcon ballkid={ballkid} />
+              {positionAssigned.length === 0 ? (
+                <div className="rbt-position-empty">
+                  No {position.toLowerCase()}s assigned yet.
+                </div>
+              ) : (
+                <div className="rbt-member-list">
+                  {positionAssigned.map((ballkid) => (
+                    <div className="rbt-member-row" key={ballkid.id}>
+                      <BallkidAndIcon ballkid={ballkid} />
 
-                    {ballkid.id === getLocalStorage("ballkid_id") ? (
-                      ""
-                    ) : ballkid.have_draft ? (
-                      <DraftRatingButton
-                        ballkid={ballkid}
-                        setUpdated={setUpdated}
-                      />
-                    ) : (
-                      <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
-                    )}
-                  </div>
-                )
+                      {ballkid.id === getLocalStorage("ballkid_id") ? (
+                        ""
+                      ) : ballkid.have_draft ? (
+                        <DraftRatingButton
+                          ballkid={ballkid}
+                          setUpdated={setUpdated}
+                        />
+                      ) : (
+                        <RatingButton
+                          ballkid={ballkid}
+                          setUpdated={setUpdated}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </Grid>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -125,19 +127,24 @@ export default function RateByCurrentTeamsPage(props) {
   }, [pk, updated]);
 
   return (
-    <div className="page">
+    <div className="page rbt-page-shell">
       <Banners />
 
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Rate by Current Team</Typography>
-        &thinsp;
-        <HelpIcon page="Rate by Current Team" message={rateByCurrentTeam} />
+      <Box className="rbt-page-header">
+        <div className="rbt-page-title-row">
+          <Typography className="rbt-page-title" variant="h4">
+            Rate by Current Team
+          </Typography>
+          <HelpIcon page="Rate by Current Team" message={rateByCurrentTeam} />
+        </div>
       </Box>
 
       {assigned.length === 0 || (group !== "chairperson" && !showTeams) ? (
-        <Typography>There are currently no teams assigned.</Typography>
+        <div className="rbt-page-empty">
+          There are currently no teams assigned.
+        </div>
       ) : (
-        <Grid container spacing={2}>
+        <div className="rbt-page-grid">
           {teams.map((team) => (
             <Team
               key={team}
@@ -149,7 +156,7 @@ export default function RateByCurrentTeamsPage(props) {
               setUpdated={setUpdated}
             />
           ))}
-        </Grid>
+        </div>
       )}
     </div>
   );
