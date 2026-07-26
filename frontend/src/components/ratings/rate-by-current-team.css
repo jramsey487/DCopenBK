@@ -165,7 +165,6 @@
   .rbt-member-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     padding: 4px 0;
   }
@@ -182,4 +181,17 @@
     letter-spacing: 0.03em;
     cursor: not-allowed;
     font-family: inherit;
+  }
+
+  .rbt-member-row > *:first-child {
+    /* the BallkidAndIcon block */
+    flex: 1 1 auto;
+    min-width: 0; /* critical: lets long names actually shrink/wrap instead of forcing siblings to squeeze */
+  }
+  
+  .rbt-member-row > *:last-child {
+    /* the rating button */
+    flex: 0 0 auto;
+    min-height: 36px; /* fixed floor so it can't collapse or grow oddly */
+    white-space: nowrap; /* prevents "GIVE RATING" from wrapping to 2 lines */
   }
