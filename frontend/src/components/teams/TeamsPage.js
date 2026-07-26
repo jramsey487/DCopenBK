@@ -64,9 +64,6 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
         <div className="team-card-title-group">
           <span className="team-card-title">Team {team}</span>
           <span className="team-card-count">({assigned.length})</span>
-          {isMyTeam ? (
-            <span className="team-card-mine-badge">Your Team</span>
-          ) : null}
           {isCurrentlyOn ? (
             <span className="team-card-oncourt-badge">On court</span>
           ) : null}
