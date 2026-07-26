@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 
 import {
   getAuthHeader,
@@ -29,9 +30,32 @@ function personInitials(firstName, lastName) {
 function RatingActionButton({ ballkid, setUpdated }) {
   if (ballkid.id === getLocalStorage("ballkid_id")) {
     return (
-      <button type="button" className="rbt-give-rating-disabled" disabled>
-        Give Rating
-      </button>
+      <Button
+        variant="outlined"
+        disableElevation
+        disabled
+        size="small"
+        sx={{
+          fontFamily:
+            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: 600,
+          fontSize: 13,
+          letterSpacing: "0.03em",
+          borderRadius: "8px",
+          px: 2.25,
+          py: 0.75,
+          color: "#94a3b8",
+          borderColor: "#e2e8f0",
+          backgroundColor: "#fff",
+          "&.Mui-disabled": {
+            color: "#94a3b8",
+            borderColor: "#e2e8f0",
+            backgroundColor: "#fff",
+          },
+        }}
+      >
+        GIVE RATING
+      </Button>
     );
   }
 

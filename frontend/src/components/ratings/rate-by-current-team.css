@@ -169,21 +169,7 @@
     padding: 4px 0;
   }
 
-  .rbt-give-rating-disabled {
-    padding: 10px 20px;
-    border-radius: 20px;
-    border: none;
-    background: var(--rbt-bg2);
-    color: var(--rbt-text3);
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    cursor: not-allowed;
-    font-family: inherit;
-  }
-
-  .rbt-member-row > *:first-child {
+.rbt-member-row > *:first-child {
     /* the BallkidAndIcon block */
     flex: 1 1 auto;
     min-width: 0; /* critical: lets long names actually shrink/wrap instead of forcing siblings to squeeze */
