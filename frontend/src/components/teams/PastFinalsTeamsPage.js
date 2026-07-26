@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
 
 import {
   BallkidLink,
@@ -17,98 +12,124 @@ import {
 } from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { pastFinalsTeams } from "../HelpMessages";
+import "./teams-page.css";
 
 function Team({ team, ballkids }) {
-  return (
-    <Grid item xs={12} sm={6} md={6} lg={6} xl={3}>
-      <Card sx={{ mb: 2 }} elevation={1}>
-        <CardContent>
-          <div className="justify">
-            <div className="sxs">
-              <Typography variant="h6">{team}</Typography>
-              <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                ({ballkids.length})
-              </Typography>
-            </div>
-          </div>
+  const teamBallkids = ballkids.filter((ballkid) => ballkid.match_type === team);
 
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ my: 1 }} />
-              <div className="sxs">
-                <Typography variant="subtitle1">{position}s</Typography>
-                <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                  (
-                  {
-                    ballkids.filter((ballkid) => ballkid.position === position)
-                      .length
-                  }
-                  )
-                </Typography>
+  return (
+    <div className="team-card">
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">{team}</span>
+          <span className="team-card-count">({teamBallkids.length})</span>
+        </div>
+      </div>
+
+      <div className="team-card-body">
+        {POSITIONS.map((position) => {
+          const positionBallkids = teamBallkids.filter(
+            (ballkid) => ballkid.position === position
+          );
+
+          return (
+            <div className="team-position-block" key={position}>
+              <div className="team-position-head">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">
+                  ({positionBallkids.length})
+                </span>
               </div>
 
-              <Box>
-                {ballkids
-                  .filter((ballkid) => ballkid.position === position)
-                  .map((ballkid) => (
-                    <Box key={`${team}_${ballkid.ballkid}`}>
-                      <BallkidLink
-                        id={ballkid.ballkid}
-                        name={`${ballkid.first_name} ${ballkid.last_name}`}
-                      />
-                    </Box>
+              {positionBallkids.length === 0 ? (
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s on this team.
+                </div>
+              ) : (
+                <div className="team-member-list">
+                  {positionBallkids.map((ballkid) => (
+                    <BallkidLink
+                      key={`${team}_${ballkid.ballkid}`}
+                      id={ballkid.ballkid}
+                      name={`${ballkid.first_name} ${ballkid.last_name}`}
+                    />
                   ))}
-              </Box>
+                </div>
+              )}
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </Grid>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-export default function PastFinalsTeamsPageDesktop() {
-  const [year, setYear] = useState(getCurrentYear() - 1);
+export default function PastFinalsTeamsPage() {
+  const defaultYear = getCurrentYear() - 1;
+  const [year, setYear] = useState(defaultYear);
   const [ballkids, setBallkids] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`/api/get-past-finals/${year}`, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setBallkids(data));
+      .then((data) => setBallkids(Array.isArray(data) ? data : []))
+      .catch(() => setBallkids([]))
+      .finally(() => setLoading(false));
   }, [year]);
 
+  const handleYearChange = (e) => {
+    const next = parseInt(e.target.value, 10);
+    if (!Number.isNaN(next)) {
+      setYear(next);
+    }
+  };
+
   return (
-    <div className="page">
+    <div className="page teams-page-shell">
       <Banners />
 
-      <Box className="sxs" sx={{ mb: 2 }}>
-        <Typography variant="h4">Past Finals Teams</Typography>
-        &thinsp;
-        <HelpIcon page="Past Finals Teams" message={pastFinalsTeams} />
-      </Box>
+      <Box className="teams-page-header">
+        <div className="teams-page-title-row">
+          <Typography className="teams-page-title" variant="h4">
+            Past Finals Teams
+          </Typography>
+          <HelpIcon page="Past Finals Teams" message={pastFinalsTeams} />
+        </div>
 
-      <Box className="sxs">
-        <Typography variant="body1">Showing finals for: &thinsp;</Typography>
-        <TextField
-          variant="standard"
-          value={year}
-          type="number"
-          sx={{ mx: 2, maxWidth: "100px" }}
-          onChange={(e) => setYear(e.target.value)}
-        />
-      </Box>
-
-      <Grid container spacing={2}>
-        {teams.map((team) => (
-          <Team
-            key={team}
-            team={team}
-            ballkids={ballkids.filter((ballkid) => ballkid.match_type === team)}
+        <div className="past-finals-year-control">
+          <label className="past-finals-year-label" htmlFor="past-finals-year">
+            Year
+          </label>
+          <input
+            id="past-finals-year"
+            className="past-finals-year-input"
+            type="number"
+            min={2000}
+            max={getCurrentYear()}
+            value={year}
+            onChange={handleYearChange}
+            aria-label="Finals year"
           />
-        ))}
-      </Grid>
+        </div>
+      </Box>
+
+      {loading ? (
+        <div className="teams-page-empty">Loading past finals teams…</div>
+      ) : ballkids.length > 0 ? (
+        <div className="teams-page-grid">
+          {teams.map((team) => (
+            <Team key={team} team={team} ballkids={ballkids} />
+          ))}
+        </div>
+      ) : (
+        <div className="teams-page-empty">
+          No past finals team data for {year}.
+        </div>
+      )}
     </div>
   );
 }

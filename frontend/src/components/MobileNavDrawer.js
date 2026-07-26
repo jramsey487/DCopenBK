@@ -80,7 +80,7 @@ function getNavSections(group) {
       { label: "Inactive", url: "/inactive" },
     ],
   };
-  const teams = {
+  const teamsChairperson = {
     label: "Teams",
     Icon: NavIconTeams,
     items: [
@@ -89,16 +89,34 @@ function getNavSections(group) {
       { label: "Past Finals Teams", url: "/past-finals" },
     ],
   };
+  const teamsBallkidCaptain = {
+    label: "Teams",
+    Icon: NavIconTeams,
+    items: [
+      { label: "Teams", url: "/teams" },
+      { label: "Finals Teams", url: "/finals-teams" },
+    ],
+  };
   const schedule = {
     label: "Schedule",
     url: "/schedule",
     Icon: NavIconSchedule,
   };
-  const ratings = {
+  const ratingsChairperson = {
     label: "Ratings",
     Icon: NavIconRatings,
     items: [
       { label: "View Ratings", url: "/ratings" },
+      { label: "View My Ratings", url: "/my-ratings" },
+      { label: "Rate By Name", url: "/rate-by-name" },
+      { label: "Rate By Current Team", url: "/rate-by-team" },
+      { label: "Rate By Past Team", url: "/rate-by-past-team" },
+    ],
+  };
+  const ratingsCaptain = {
+    label: "Ratings",
+    Icon: NavIconRatings,
+    items: [
       { label: "View My Ratings", url: "/my-ratings" },
       { label: "Rate By Name", url: "/rate-by-name" },
       { label: "Rate By Current Team", url: "/rate-by-team" },
@@ -118,19 +136,18 @@ function getNavSections(group) {
 
   switch (group) {
     case "chairperson":
-      return [list, teams, schedule, ratings, leaderboards];
+      return [list, teamsChairperson, schedule, ratingsChairperson, leaderboards];
     case "captain":
       return [
         { ...list, items: [{ label: "By Name", url: "/list" }] },
-        teams,
+        teamsBallkidCaptain,
         schedule,
-        ratings,
-        leaderboards,
+        ratingsCaptain,
       ];
     default:
       return [
         { ...list, items: [{ label: "By Name", url: "/list" }] },
-        teams,
+        teamsBallkidCaptain,
         schedule,
       ];
   }

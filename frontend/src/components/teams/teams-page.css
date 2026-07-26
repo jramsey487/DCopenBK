@@ -277,3 +277,42 @@
     align-items: center;
     line-height: 0;
   }
+
+  .past-finals-year-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: var(--tp-bg0);
+    border: 0.5px solid var(--tp-border);
+    border-radius: 20px;
+  }
+
+  .past-finals-year-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tp-text2);
+  }
+
+  .past-finals-year-input {
+    width: 72px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--tp-text1);
+    border: none;
+    background: transparent;
+    padding: 2px 4px;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+
+  .past-finals-year-input::-webkit-outer-spin-button,
+  .past-finals-year-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .past-finals-year-input:focus {
+    outline: none;
+  }
