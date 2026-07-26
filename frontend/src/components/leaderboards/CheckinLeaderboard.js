@@ -429,13 +429,8 @@ export default function CheckinLeaderboard(props) {
             height: "100%",
             minHeight: "100%",
           },
-          ".checkin-lb-name-cell .sxs": {
-            display: "inline-flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: "6px",
+          ".checkin-lb-name-cell .ballkid-and-icon": {
             lineHeight: 1.2,
-            height: "100%", // Ensure the inner wrapper takes full height
           },
           ".checkin-lb-name-cell .MuiLink-root": {
             display: "inline-flex",

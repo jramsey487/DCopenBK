@@ -59,7 +59,21 @@ export function Icons({ ballkid, margin, isTeamsPage = false }) {
   const group = getLocalStorage("group");
 
   return (
-    <Icon sx={{ mb: margin }}>
+    <Icon
+      component="span"
+      sx={{
+        mb: margin,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        verticalAlign: "middle",
+        lineHeight: 0,
+        fontSize: "1.125rem",
+        "& svg": {
+          display: "block",
+        },
+      }}
+    >
       {ballkid.is_chairperson && ICON_DICT["chairperson"]}
       {ballkid.is_captain && ICON_DICT["captain"]}
       {group !== "ballkid" &&
@@ -732,40 +746,26 @@ export function BallkidPopover({
   );
 }
 
-export function BallkidAndIcon({ ballkid }) {
+export function BallkidAndIcon({ ballkid, isTeamsPage = false }) {
   return (
     <Box
+      className="ballkid-and-icon"
       sx={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "flex-start",
-        gap: "6px",
+        gap: "4px",
+        width: "max-content",
+        maxWidth: "100%",
         minWidth: 0,
-        height: "100%",
+        flexWrap: "wrap",
       }}
     >
       <BallkidLink
         id={ballkid.id}
         name={`${ballkid.first_name} ${ballkid.last_name}`}
       />
-
-      <Box
-        component="span"
-        sx={{
-          display: "inline-flex",
-          alignItems: "center",
-          flexShrink: 0,
-          height: "24px",
-          "& svg, & img": {
-            height: "20px",
-            width: "20px",
-            display: "block",
-            objectFit: "contain",
-          },
-        }}
-      >
-        <Icons ballkid={ballkid} margin={0} />
-      </Box>
+      <Icons ballkid={ballkid} margin={0} isTeamsPage={isTeamsPage} />
     </Box>
   );
 }
@@ -776,6 +776,11 @@ export function BallkidLink({ id, name }) {
       variant="body2"
       component={RouterLink}
       to={id === getLocalStorage("ballkid_id") ? "/me" : `/ballkid/${id}`}
+      sx={{
+        lineHeight: 1.25,
+        display: "inline-flex",
+        alignItems: "center",
+      }}
     >
       {name}
     </Link>

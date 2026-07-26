@@ -87,7 +87,9 @@ function PersonPhotoTile({ ballkid, setUpdated }) {
       <span className="rbt-photo-name">
         {ballkid.first_name} {ballkid.last_name}
       </span>
-      <Icons ballkid={ballkid} margin={0} />
+      <span className="rbt-photo-role-icons">
+        <Icons ballkid={ballkid} margin={0} isTeamsPage />
+      </span>
 
       <div className="rbt-photo-tile-action">
         <RatingActionButton ballkid={ballkid} setUpdated={setUpdated} />
@@ -148,7 +150,7 @@ function Team({ team, assigned, nextShifts, setUpdated, showPhotos }) {
                 <div className="rbt-member-list">
                   {positionAssigned.map((ballkid) => (
                     <div className="rbt-member-row" key={ballkid.id}>
-                      <BallkidAndIcon ballkid={ballkid} />
+                      <BallkidAndIcon ballkid={ballkid} isTeamsPage />
                       <RatingActionButton
                         ballkid={ballkid}
                         setUpdated={setUpdated}

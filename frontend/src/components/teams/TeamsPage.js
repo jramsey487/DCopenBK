@@ -45,7 +45,9 @@ function PersonPhotoTile({ ballkid }) {
       <span className="team-photo-name">
         {ballkid.first_name} {ballkid.last_name}
       </span>
-      <Icons ballkid={ballkid} margin={0} />
+      <span className="team-photo-role-icons">
+        <Icons ballkid={ballkid} margin={0} isTeamsPage />
+      </span>
     </div>
   );
 }
@@ -102,7 +104,11 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
               ) : (
                 <div className="team-member-list">
                   {positionBallkids.map((ballkid) => (
-                    <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
+                    <BallkidAndIcon
+                      key={ballkid.id}
+                      ballkid={ballkid}
+                      isTeamsPage
+                    />
                   ))}
                 </div>
               )}

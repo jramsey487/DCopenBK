@@ -223,6 +223,10 @@
     flex-direction: column;
     gap: 2px;
   }
+
+  .team-member-list .ballkid-and-icon {
+    padding: 2px 0;
+  }
   
   .team-photo-grid {
     display: grid;
@@ -266,4 +270,10 @@
     font-weight: 500;
     color: var(--tp-text1);
     line-height: 1.25;
+  }
+
+  .team-photo-role-icons {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
   }
