@@ -98,12 +98,16 @@ function PersonPhotoTile({ ballkid, setUpdated }) {
   );
 }
 
-function Team({ team, assigned, nextShifts, setUpdated, showPhotos }) {
+function Team({ team, assigned, nextShifts, setUpdated, showPhotos, isMyTeam }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
   return (
-    <div className={`rbt-team-card${isCurrentlyOn ? " is-on-court" : ""}`}>
+    <div
+      className={`rbt-team-card${isMyTeam ? " is-mine" : ""}${
+        isCurrentlyOn ? " is-on-court" : ""
+      }`}
+    >
       <div className="rbt-team-card-head">
         <div className="rbt-team-card-title-group">
           <span className="rbt-team-card-title">Team {team}</span>
@@ -207,6 +211,20 @@ export default function RateByCurrentTeamsPage(props) {
       .then(() => setUpdated(false));
   }, [pk, updated]);
 
+  const myBallkidId = Number(pk);
+  const viewerBallkid = assigned.find((b) => b.id === myBallkidId);
+  const myTeam =
+    viewerBallkid?.is_captain && viewerBallkid.current_team > 0
+      ? viewerBallkid.current_team
+      : undefined;
+
+  const orderedTeams = [...teams].sort((a, b) => {
+    if (myTeam == null) return a - b;
+    if (a === myTeam) return -1;
+    if (b === myTeam) return 1;
+    return a - b;
+  });
+
   return (
     <div className="page rbt-page-shell">
       <Banners />
@@ -239,7 +257,7 @@ export default function RateByCurrentTeamsPage(props) {
         </div>
       ) : (
         <div className="rbt-page-grid">
-          {teams.map((team) => (
+          {orderedTeams.map((team) => (
             <Team
               key={team}
               team={team}
@@ -249,6 +267,7 @@ export default function RateByCurrentTeamsPage(props) {
               nextShifts={nextShifts.filter((shift) => shift.team === team)}
               setUpdated={setUpdated}
               showPhotos={showPhotos}
+              isMyTeam={team === myTeam}
             />
           ))}
         </div>

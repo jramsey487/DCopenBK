@@ -55,7 +55,7 @@ import {
 } from "./Consts";
 import { Popover } from "@mui/material";
 
-export function Icons({ ballkid, margin, isTeamsPage = false }) {
+export function Icons({ ballkid, margin, isTeamsPage = false, showSupervet = false }) {
   const group = getLocalStorage("group");
 
   return (
@@ -90,7 +90,7 @@ export function Icons({ ballkid, margin, isTeamsPage = false }) {
         ballkid.num_years_experience === 0 &&
         ICON_DICT["rookie"]}
       {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
-        isTeamsPage &&
+        showSupervet &&
         ICON_DICT["supervet"]}
     </Icon>
   );
@@ -602,7 +602,7 @@ export function DraggableBallkidAndIcon({
 
   const metaBlock = (
     <>
-      <Icons ballkid={ballkid} margin={0} isTeamsPage={true} />
+      <Icons ballkid={ballkid} margin={0} isTeamsPage={true} showSupervet />
       {commentTypes.map((commentType) => (
         <Box key={commentType} component="span" className="cut-chip-meta-item">
           <CommentsText ballkid={ballkid} commentType={commentType} />
@@ -746,7 +746,7 @@ export function BallkidPopover({
   );
 }
 
-export function BallkidAndIcon({ ballkid, isTeamsPage = false }) {
+export function BallkidAndIcon({ ballkid, isTeamsPage = false, showSupervet = false }) {
   return (
     <Box
       className="ballkid-and-icon"
@@ -765,7 +765,12 @@ export function BallkidAndIcon({ ballkid, isTeamsPage = false }) {
         id={ballkid.id}
         name={`${ballkid.first_name} ${ballkid.last_name}`}
       />
-      <Icons ballkid={ballkid} margin={0} isTeamsPage={isTeamsPage} />
+      <Icons
+        ballkid={ballkid}
+        margin={0}
+        isTeamsPage={isTeamsPage}
+        showSupervet={showSupervet}
+      />
     </Box>
   );
 }
