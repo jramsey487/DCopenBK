@@ -6,6 +6,7 @@ import {
   getToday,
   dayHourToStr,
   isCurrentHour,
+  ConfirmDialog,
 } from "../Utils";
 import ScheduleCalendar from "./ScheduleCalendar";
 import "./schedule-mobile.css";
@@ -193,12 +194,104 @@ function TeamSheet({ team, members, open, onClose }) {
   );
 }
 
+function EndCourtButton({ court, setUpdated }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <ConfirmDialog
+        message={`You are about to end ${court} and unassign all teams from this court for future shifts.`}
+        url="/api/end-court"
+        body={{ court: court }}
+        open={open}
+        setOpen={setOpen}
+        setUpdated={setUpdated}
+      />
+      <span className="mobile-tooltip-wrap" data-tooltip="End Court">
+        <button
+          type="button"
+          className="mobile-end-court-btn"
+          aria-label={`End ${court}`}
+          onClick={() => setOpen(true)}
+        >
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle
+              cx="7"
+              cy="7"
+              r="6"
+              stroke="currentColor"
+              strokeWidth="1.2"
+            />
+            <path
+              d="M4.5 4.5l5 5M9.5 4.5l-5 5"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </span>
+    </>
+  );
+}
+
+function ShiftHourButtons({ hour, setUpdated }) {
+  const shift = (direction) => {
+    fetch("/api/shift-schedule", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({ direction, hour }),
+    })
+      .then((response) => response.json())
+      .then(() => setUpdated(true));
+  };
+
+  return (
+    <div className="mobile-shift-btns">
+      <button
+        type="button"
+        className="mobile-shift-btn"
+        aria-label="Shift schedule up"
+        onClick={() => shift("up")}
+      >
+        <svg viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path
+            d="M1 6l4-4 4 4"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className="mobile-shift-btn"
+        aria-label="Shift schedule down"
+        onClick={() => shift("down")}
+      >
+        <svg viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path
+            d="M1 4l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function ScheduleMobileView({
   shifts,
   date,
   setDate,
   chairpersonActions,
   emptyContent,
+  isChairperson = false,
+  setUpdated,
 }) {
   const [myShiftsOn, setMyShiftsOn] = useState(false);
   const [teamRoster, setTeamRoster] = useState({});
@@ -399,10 +492,15 @@ export default function ScheduleMobileView({
                     <tr>
                       <th>Time</th>
                       {courts.map((court) => (
-                        <th key={court} className="cth">
-                          {court}
-                        </th>
-                      ))}
+                      <th key={court} className="cth">
+                        <span className="cth-inner">
+                          <span className="court-head-label">{court}</span>
+                          {isChairperson ? (
+                            <EndCourtButton court={court} setUpdated={setUpdated} />
+                          ) : null}
+                        </span>
+                      </th>
+                    ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -422,6 +520,12 @@ export default function ScheduleMobileView({
                             ) : (
                               formatTimeLabel(hour)
                             )}
+                            {isChairperson ? (
+                              <ShiftHourButtons
+                                hour={hour}
+                                setUpdated={setUpdated}
+                              />
+                            ) : null}
                           </td>
                           {courts.map((court) => {
                             const team =

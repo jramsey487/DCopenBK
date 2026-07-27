@@ -55,26 +55,19 @@ import {
 } from "./Consts";
 import { Popover } from "@mui/material";
 
-export function Icons({ ballkid, margin, isTeamsPage = false, showSupervet = false }) {
+export function Icons({ ballkid, margin, isTeamsPage = false }) {
   const group = getLocalStorage("group");
 
+  if (ballkid.is_chairperson) {
+    return (
+      <Icon sx={{ mb: margin }}>
+        {ICON_DICT["chairperson"]}
+      </Icon>
+    );
+  }
+
   return (
-    <Icon
-      component="span"
-      sx={{
-        mb: margin,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        verticalAlign: "middle",
-        lineHeight: 0,
-        fontSize: "1.125rem",
-        "& svg": {
-          display: "block",
-        },
-      }}
-    >
-      {ballkid.is_chairperson && ICON_DICT["chairperson"]}
+    <Icon sx={{ mb: margin }}>
       {ballkid.is_captain && ICON_DICT["captain"]}
       {group !== "ballkid" &&
         ballkid.num_years_experience === 0 &&
@@ -90,7 +83,7 @@ export function Icons({ ballkid, margin, isTeamsPage = false, showSupervet = fal
         ballkid.num_years_experience === 0 &&
         ICON_DICT["rookie"]}
       {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
-        showSupervet &&
+        isTeamsPage &&
         ICON_DICT["supervet"]}
     </Icon>
   );

@@ -230,6 +230,8 @@ export default function SchedulePageChairperson(props) {
           setDate={setDate}
           chairpersonActions={chairpersonActions}
           emptyContent={<CreateSchedule date={date} setUpdated={setUpdated} />}
+          isChairperson={true}
+          setUpdated={setUpdated}
         />
       </>
     );
