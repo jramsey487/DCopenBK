@@ -191,15 +191,62 @@
 
 @media (max-width: 900px) {
   .checkin-page .checkin-list-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .checkin-page .checkin-list-row__identity {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .checkin-page .checkin-list-row__identity .ballkid-and-icon {
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .checkin-page .checkin-list-row__identity a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .checkin-page .checkin-list-row__fields {
+    display: none;
   }
 
   .checkin-page .checkin-list-row__action {
-    justify-self: stretch;
+    flex-shrink: 0;
+    justify-self: auto;
   }
 
   .checkin-page .checkin-list-row__action .checkin-action-btn {
-    width: 100%;
+    width: auto;
+    min-width: 0 !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap;
+  }
+
+  .checkin-page .checkin-card-actions--grid {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .checkin-page .checkin-card-actions--grid .checkin-action-btn {
+    width: auto;
+    flex-shrink: 0;
+    min-width: 0 !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
   }
 }
