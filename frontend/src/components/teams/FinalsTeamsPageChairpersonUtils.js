@@ -4,7 +4,6 @@ import { useDrop } from "react-dnd";
 
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 
 import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
@@ -16,7 +15,7 @@ import {
   HideShowToggle,
   ConfirmDialog,
   useIsMobile,
-  renderSwitch,
+  HovercardToggle,
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
 import { POSITIONS } from "../Consts";
@@ -159,8 +158,13 @@ function Team({ team, assigned, showHovercard, setUpdated }) {
           {assigned.length === 0 ? (
             ""
           ) : (
-            <Button size="small" onClick={() => setClearOpen(true)}>
-              Clear
+            <Button
+              size="small"
+              variant="outlined"
+              className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
+              onClick={() => setClearOpen(true)}
+            >
+              Clear team
             </Button>
           )}
         </div>
@@ -258,14 +262,10 @@ export function Header({ showHovercard, setShowHovercard }) {
               setErrorMsg={setErrorMsg}
             />
           </div>
-          <Box className="cut-page-top-bar__switch">
-            {renderSwitch(
-              showHovercard,
-              setShowHovercard,
-              "Disable Hovercard",
-              "Enable Hovercard"
-            )}
-          </Box>
+          <HovercardToggle
+            enabled={showHovercard}
+            setEnabled={setShowHovercard}
+          />
         </>
       }
     />

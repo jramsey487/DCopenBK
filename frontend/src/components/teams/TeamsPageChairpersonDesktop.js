@@ -68,7 +68,6 @@ export function UnassignedPanel({
       elevation={0}
       className="cut-page-active-panel teams-chairperson-unassigned-panel"
       sx={{
-        p: 3,
         borderRadius: "16px",
         border: isOver ? "2px solid #2563eb" : "1px solid",
         borderColor: isOver ? "primary.main" : "divider",
@@ -140,13 +139,14 @@ export function UnassignedPanel({
       <Typography
         className="teams-chairperson-drop-hint"
         variant="body2"
-        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem" }}
+        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
       >
         Drag ballkids onto a team card to assign them, or drop here to unassign.
       </Typography>
 
-      <Box sx={{ mb: 2.5, width: "100%" }}>
+      <Box className="teams-chairperson-unassigned-search" sx={{ mb: 2.5, width: "100%", minWidth: 0 }}>
         <SearchAndFilter
+          stacked
           setSearchKeyword={setSearchKeyword}
           filterGroup={filterGroup}
           setFilterGroup={setFilterGroup}

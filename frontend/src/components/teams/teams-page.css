@@ -336,6 +336,45 @@
     background: var(--tp-bg2);
   }
 
+  .teams-chairperson-head-secondary__assignment {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+  }
+
+  .teams-chairperson-team-btn.MuiButton-root {
+    text-transform: none;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: -0.01em;
+    border-radius: 8px;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .teams-chairperson-team-btn--end.MuiButton-outlined {
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+  }
+
+  .teams-chairperson-team-btn--end.MuiButton-outlined:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+  }
+
+  .teams-chairperson-team-btn--checkout-team.MuiButton-outlined {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+
+  .teams-chairperson-team-btn--checkout-team.MuiButton-outlined:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+  }
+
   .team-card.is-on-court .teams-chairperson-head-secondary {
     background: #ecfdf5;
   }
@@ -344,6 +383,7 @@
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
+    gap: 2px;
   }
 
   .teams-chairperson-unassigned {
@@ -387,6 +427,18 @@
   .teams-chairperson-page {
     max-width: 1400px;
     margin: 0 auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .teams-chairperson-page .team-card.teams-chairperson-card {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .teams-chairperson-page-header {
@@ -541,29 +593,76 @@
     align-items: flex-start;
   }
 
+  .teams-chairperson-split > .MuiGrid-item {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .teams-chairperson-main,
   .teams-chairperson-sidebar {
     max-height: calc(85vh - 8px);
     overflow: auto;
-  }
-
-  @media (min-width: 900px) {
-    .teams-chairperson-sidebar {
-      position: sticky;
-      top: 8px;
-    }
-  }
-
-  .teams-chairperson-sidebar .teams-chairperson-section {
-    margin-top: 0;
+    overflow-x: hidden;
   }
 
   .teams-chairperson-unassigned-panel {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 16px;
+  }
+
+  .teams-chairperson-unassigned-panel__head {
+    min-width: 0;
+  }
+
+  .teams-chairperson-unassigned-search {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .teams-chairperson-unassigned-search .search-and-filter--stacked {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .teams-chairperson-unassigned-search .search-and-filter__filters {
+    flex-wrap: wrap;
+    width: 100%;
+    min-width: 0;
+    gap: 6px 8px;
+  }
+
+  .teams-chairperson-unassigned-search .search-and-filter__label {
+    white-space: nowrap;
+    font-size: 0.875rem !important;
+  }
+
+  .teams-chairperson-unassigned-search .search-and-filter__toggle-group {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .teams-chairperson-unassigned-panel .teams-chairperson-drop-hint {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .teams-chairperson-unassigned-panel .cut-ballkid-chip {
+    max-width: 100%;
   }
 
   .teams-chairperson-sidebar .teams-chairperson-unassigned-grid--in-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teams-chairperson-sidebar .teams-chairperson-section {
+    margin-top: 0;
   }
 
   .teams-chairperson-sidebar .teams-chairperson-drop-hint {
@@ -647,4 +746,312 @@
     font-size: 12px;
     color: var(--tp-text3);
     margin: 0 0 8px;
+  }
+
+  .teams-mobile-unassigned-panel {
+    margin-top: 16px;
+  }
+
+  .teams-mobile-unassigned-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--tp-border);
+  }
+
+  .teams-mobile-unassigned-table {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .teams-mobile-unassigned-table__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 76px minmax(48px, max-content);
+    gap: 8px;
+    padding: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--tp-text2);
+    border-bottom: 1px solid var(--tp-border);
+  }
+
+  .teams-mobile-unassigned-table__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 76px minmax(48px, max-content);
+    gap: 8px;
+    align-items: start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--tp-border);
+  }
+
+  .teams-mobile-unassigned-table__row:last-child {
+    border-bottom: none;
+  }
+
+  .teams-mobile-unassigned-table__name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .teams-mobile-unassigned-table__name .ballkid-and-icon {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .teams-mobile-unassigned-table__position {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tp-text1);
+    line-height: 1.35;
+    padding-top: 2px;
+  }
+
+  .teams-mobile-unassigned-assign-col {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 48px;
+  }
+
+  .teams-mobile-assign-team-btn.MuiButton-root {
+    min-width: 44px;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: none;
+    border-radius: 6px;
+    font-family: inherit;
+  }
+
+  .teams-mobile-assign-team-btn--new.MuiButton-root {
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
+    padding: 4px 4px;
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .teams-mobile-unassigned-panel.is-finals .teams-mobile-unassigned-table__head,
+  .teams-mobile-unassigned-panel.is-finals .teams-mobile-unassigned-table__row {
+    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 108px);
+  }
+
+  .teams-mobile-unassigned-panel.is-finals .teams-mobile-assign-team-btn.MuiButton-root {
+    font-size: 0.62rem;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  @media (min-width: 900px) {
+    .teams-chairperson-sidebar {
+      position: sticky;
+      top: 8px;
+    }
+
+    .teams-chairperson-unassigned-panel {
+      padding: 20px;
+    }
+  }
+
+  /* Chairperson + public teams — mobile layout */
+  @media (max-width: 899.98px) {
+    .teams-chairperson-page .teams-chairperson-main,
+    .teams-chairperson-page .teams-chairperson-sidebar {
+      max-height: none;
+      overflow: visible;
+    }
+
+    .teams-chairperson-page .teams-chairperson-unassigned-panel {
+      margin-top: 8px;
+    }
+
+    .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .teams-chairperson-page .cut-page-top-bar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .teams-chairperson-page .cut-page-top-bar__title .ballkid-list-title {
+      font-size: 1.35rem !important;
+      line-height: 1.2;
+    }
+
+    .teams-chairperson-page .cut-page-top-bar__end {
+      margin-left: 0;
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .teams-chairperson-page .cut-page-top-bar__actions,
+    .teams-chairperson-page .teams-page-top-bar__controls {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .teams-chairperson-page .teams-page-top-bar__controls .teams-chairperson-pill {
+      width: 100%;
+      justify-content: space-between;
+      box-sizing: border-box;
+    }
+
+    .teams-chairperson-page .cut-page-top-bar__switch {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .teams-chairperson-page .teams-chairperson-pill {
+      width: 100%;
+      justify-content: space-between;
+      box-sizing: border-box;
+    }
+
+    .teams-chairperson-page .teams-chairperson-actions {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    .teams-chairperson-page .teams-chairperson-action-btn.MuiButton-root {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .team-card.teams-chairperson-card .team-card-head {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+
+    .team-card.teams-chairperson-card .team-card-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .teams-chairperson-head-actions {
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .teams-chairperson-head-secondary {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 0 12px 10px;
+    }
+
+    .teams-chairperson-head-secondary__assignment {
+      width: 100%;
+    }
+
+    .teams-chairperson-head-secondary .teams-chairperson-team-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .team-card.teams-chairperson-card .team-card-body {
+      padding: 4px 12px 12px;
+    }
+
+    .teams-chairperson-page .teams-chairperson-ballkid-row {
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+    }
+
+    .teams-chairperson-page .teams-chairperson-ballkid-chip-wrap {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+    }
+
+    .teams-chairperson-page .teams-chairperson-ballkid-row .cut-ballkid-chip {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .teams-chairperson-page .teams-chairperson-ballkid-actions {
+      width: auto;
+      flex-shrink: 0;
+      justify-content: flex-end;
+      gap: 2px;
+      padding-right: 0;
+      box-sizing: border-box;
+    }
+
+    .teams-chairperson-page .teams-chairperson-ballkid-actions .MuiIconButton-root {
+      padding: 6px;
+    }
+  }
+
+  @media (max-width: 639.98px) {
+    .teams-page-shell.page {
+      padding: 14px 12px 20px;
+    }
+
+    .teams-page-shell .cut-page-top-bar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .teams-page-shell .cut-page-top-bar__end {
+      margin-left: 0;
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .teams-page-shell .teams-page-top-bar__controls {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .teams-page-shell .teams-page-photo-toggle,
+    .teams-page-shell .past-finals-year-control {
+      width: 100%;
+      justify-content: space-between;
+      box-sizing: border-box;
+    }
+
+    .teams-page-shell .teams-page-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .teams-page-shell .team-card-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .teams-page-shell .team-card-assignment {
+      font-size: 13px;
+      line-height: 1.35;
+    }
   }

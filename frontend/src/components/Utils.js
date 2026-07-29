@@ -277,35 +277,49 @@ export function SearchAndFilter({
   filterGroup,
   setFilterGroup,
   filters = ["rookie", "captain", "chairperson", "back", "net"],
+  stacked = false,
 }) {
+  const filterControls = (
+    <div className="sxs search-and-filter__filters">
+      <Typography variant="body1" className="search-and-filter__label">
+        Filter to:
+      </Typography>
+      <ToggleButtonGroup
+        value={filterGroup}
+        size="small"
+        exclusive
+        onChange={(e, newVal) => setFilterGroup(newVal)}
+        className="search-and-filter__toggle-group"
+      >
+        {filters.map((filterName) => (
+          <ToggleButton
+            key={filterName}
+            value={filterName}
+            style={{ border: 0 }}
+          >
+            <Tooltip title={TOOLTIP_DICT[filterName]}>
+              {ICON_DICT[filterName]}
+            </Tooltip>
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </div>
+  );
+
+  if (stacked) {
+    return (
+      <div className="search-and-filter search-and-filter--stacked">
+        <SearchBox setSearchKeyword={setSearchKeyword} />
+        {filterControls}
+      </div>
+    );
+  }
+
   return (
     <Grid item xs={12} className="justify">
       <SearchBox setSearchKeyword={setSearchKeyword} />
       &emsp;
-      <div className="sxs">
-        <Typography variant="body1" noWrap>
-          Filter to:
-        </Typography>
-        &ensp;
-        <ToggleButtonGroup
-          value={filterGroup}
-          size="small"
-          exclusive
-          onChange={(e, newVal) => setFilterGroup(newVal)}
-        >
-          {filters.map((filterName) => (
-            <ToggleButton
-              key={filterName}
-              value={filterName}
-              style={{ border: 0 }}
-            >
-              <Tooltip title={TOOLTIP_DICT[filterName]}>
-                {ICON_DICT[filterName]}
-              </Tooltip>
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </div>
+      {filterControls}
     </Grid>
   );
 }
@@ -380,6 +394,23 @@ export function Banners() {
         <Banner key={banner.id} banner={banner} />
       ))}
     </Box>
+  );
+}
+
+export function HovercardToggle({ enabled, setEnabled }) {
+  return (
+    <div className="teams-chairperson-pill">
+      <span className="teams-chairperson-pill-label">Hover previews</span>
+      <Box className="sxs">
+        <Typography variant="body1">Disable</Typography>
+        <Switch
+          checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)}
+          inputProps={{ "aria-label": "Hover previews" }}
+        />
+        <Typography variant="body1">Enable</Typography>
+      </Box>
+    </div>
   );
 }
 

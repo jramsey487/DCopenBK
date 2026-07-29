@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
 
 import {
   filterBallkids,
@@ -12,109 +12,98 @@ import {
   HelpIcon,
   Alerts,
   Banners,
+  HovercardToggle,
 } from "../Utils";
-import {
-  SelfCutCard,
-  CutStatusSection,
-  CutBallkidRow,
-  patchCutBallkidInState,
-} from "./CutPageDesktop";
+import { patchCutBallkidInState } from "./CutPageDesktop";
 import { CUT_STATUSES } from "../Consts";
 import { cut } from "../HelpMessages";
+import {
+  CutMobileAssignTable,
+  buildCutAssignOptions,
+  CutStatusSectionMobile,
+  SelfCutCardMobile,
+} from "./CutPageMobileAssign";
 import "./ballkid-list-by-name.css";
 import "./cut-page-desktop.css";
+import "../teams/teams-page.css";
 
-function renderAssignCutButton(ballkid, section, patchCutBallkid) {
-  var color;
-  switch (section) {
-    case "Definitely Keep":
-      color = "success";
-      break;
-    case "Possibly Keep":
-      color = "primary";
-      break;
-    case "Possibly Cut":
-      color = "warning";
-      break;
-    case "Definitely Cut":
-      color = "error";
-      break;
-    default:
-      console.log("Unrecognized cut status: " + section);
-  }
-
-  return (
-    <Button
-      key={section}
-      sx={{ m: 0.2 }}
-      size="small"
-      color={color}
-      variant="outlined"
-      onClick={() => {
-        patchCutBallkid(ballkid, { cut_status: section });
-      }}
-    >
-      {section}
-    </Button>
-  );
-}
-
-function ActiveSection({ active, sections, patchCutBallkid, showHovercard }) {
+function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
 
-  const uncategorized = filterBallkids(active, searchKeyword, filterGroup).filter(
-    (ballkid) => ballkid.cut_status === ""
-  );
+  const uncategorized = filterBallkids(active, searchKeyword, filterGroup)
+    .filter((ballkid) => ballkid.cut_status === "")
+    .sort((a, b) =>
+      `${a.last_name} ${a.first_name}`.localeCompare(
+        `${b.last_name} ${b.first_name}`
+      )
+    );
+
+  const assignOptions = buildCutAssignOptions({
+    sections,
+    currentStatus: "",
+    includeActive: false,
+    includeSelfCut: true,
+  });
 
   return (
-    <div className="teams-chairperson-section">
-      <div className="teams-chairperson-section-head">
-        <div>
-          <span className="teams-chairperson-section-title">Active Ballkids</span>
-          <span className="teams-chairperson-section-count">
+    <Box
+      component={Paper}
+      elevation={0}
+      className="cut-page-active-panel teams-chairperson-unassigned-panel teams-mobile-unassigned-panel"
+      sx={{ mt: 1 }}
+    >
+      <Box className="teams-mobile-unassigned-panel__head">
+        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.15rem" }}>
+          Active ballkids{" "}
+          <Typography component="span" sx={{ opacity: 0.5, fontWeight: 600 }}>
             ({uncategorized.length})
-          </span>
-        </div>
-      </div>
+          </Typography>
+        </Typography>
+      </Box>
+
+      <Typography
+        className="teams-chairperson-drop-hint"
+        variant="body2"
+        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
+      >
+        Tap a category to assign each ballkid. Use section cards above to review
+        who is already categorized.
+      </Typography>
 
       {active.length === 0 ? (
-        <Typography>
+        <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
           There are currently no active ballkids left to categorize.
         </Typography>
       ) : (
-        <div>
-          <SearchAndFilter
-            setSearchKeyword={setSearchKeyword}
-            filterGroup={filterGroup}
-            setFilterGroup={setFilterGroup}
-            filters={["rookie", "supervet", "captain", "back", "net"]}
-          />
+        <>
+          <Box sx={{ mb: 2 }}>
+            <SearchAndFilter
+              stacked
+              setSearchKeyword={setSearchKeyword}
+              filterGroup={filterGroup}
+              setFilterGroup={setFilterGroup}
+              filters={["rookie", "supervet", "captain", "back", "net"]}
+            />
+          </Box>
 
-          <div className="cut-page-chip-list">
-            {uncategorized.map((ballkid) => (
-              <div key={ballkid.id} className="cut-page-mobile-assign-row">
-                <CutBallkidRow
-                  ballkid={ballkid}
-                  showHovercard={showHovercard}
-                  hoverCommentTypes={[
-                    "experience",
-                    "rank",
-                    "calibrated_avg",
-                    "last_day",
-                  ]}
-                />
-                <div className="cut-page-mobile-assign-actions">
-                  {sections.map((section) =>
-                    renderAssignCutButton(ballkid, section, patchCutBallkid)
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          {uncategorized.length === 0 ? (
+            <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
+              No uncategorized ballkids match your search or filters.
+            </Typography>
+          ) : (
+            <CutMobileAssignTable
+              ballkids={uncategorized}
+              assignOptions={assignOptions}
+              assignColumnTitle="Assign to"
+              onAssign={(ballkid, status) =>
+                patchCutBallkid(ballkid, { cut_status: status })
+              }
+            />
+          )}
+        </>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -152,7 +141,7 @@ export default function CutPageMobile() {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page">
+    <div className="page ballkid-list-page teams-page-shell cut-page-mobile">
       <Banners />
 
       <Alerts
@@ -162,22 +151,32 @@ export default function CutPageMobile() {
         setErrorMsg={setErrorMsg}
       />
 
-      <Box className="ballkid-list-title-row" sx={{ mb: 2 }}>
-        <Typography className="ballkid-list-title" variant="h4">
-          Cut Page
-        </Typography>
-        <HelpIcon page="Cut" message={cut} />
+      <Box className="cut-page-top-bar">
+        <Box className="cut-page-top-bar__title">
+          <Typography className="ballkid-list-title" variant="h4" component="h1">
+            Cut Page
+          </Typography>
+          <HelpIcon page="Cut" message={cut} />
+        </Box>
+        <Box className="cut-page-top-bar__end">
+          <Box className="cut-page-top-bar__toolbar-pills">
+            <HovercardToggle
+              enabled={showHovercard}
+              setEnabled={setShowHovercard}
+            />
+          </Box>
+        </Box>
       </Box>
 
       <Grid container spacing={2}>
         {sections.map((section) => (
           <Grid item xs={12} key={section}>
-            <CutStatusSection
+            <CutStatusSectionMobile
               section={section}
               active={active.filter(
                 (ballkid) => ballkid.cut_status === section
               )}
-              showHovercard={showHovercard}
+              sections={sections}
               patchCutBallkid={patchCutBallkid}
               refetchActive={refetchActive}
             />
@@ -185,20 +184,19 @@ export default function CutPageMobile() {
         ))}
 
         <Grid item xs={12}>
-          <SelfCutCard
+          <SelfCutCardMobile
             active={active}
-            showHovercard={showHovercard}
+            sections={sections}
             patchCutBallkid={patchCutBallkid}
             refetchActive={refetchActive}
           />
         </Grid>
 
         <Grid item xs={12}>
-          <ActiveSection
+          <ActiveSectionMobile
             active={active}
             sections={sections}
             patchCutBallkid={patchCutBallkid}
-            showHovercard={showHovercard}
           />
         </Grid>
       </Grid>

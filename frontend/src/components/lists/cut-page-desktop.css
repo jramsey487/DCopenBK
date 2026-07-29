@@ -43,8 +43,10 @@
 
 .cut-ballkid-chip__handle {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  align-self: stretch;
   width: 28px;
   flex-shrink: 0;
   background: linear-gradient(180deg, #eef2ff 0%, #e8eeff 100%);
@@ -322,6 +324,74 @@
   white-space: nowrap;
 }
 
+/* Toolbar pills (teams chairperson + cut hover toggle) */
+.teams-chairperson-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 14px;
+  background: #fff;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 20px;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.teams-chairperson-pill-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.teams-chairperson-pill .MuiSwitch-root {
+  margin: 0 -4px 0 0;
+}
+
+.teams-chairperson-pill .sxs {
+  gap: 4px;
+}
+
+.teams-chairperson-pill .MuiTypography-root {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+}
+
+.cut-page-top-bar__toolbar-pills,
+.teams-page-top-bar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cut-mobile-assign-table .teams-mobile-unassigned-table__head,
+.cut-mobile-assign-table .teams-mobile-unassigned-table__row {
+  grid-template-columns: minmax(0, 1fr) 72px minmax(76px, max-content);
+}
+
+.cut-mobile-assign-col {
+  min-width: 76px;
+}
+
+.cut-mobile-assign-btn.MuiButton-root {
+  font-size: 0.62rem !important;
+  line-height: 1.15 !important;
+  white-space: normal;
+  text-align: center;
+  padding: 4px 5px !important;
+}
+
+.cut-mobile-assign-table__name {
+  gap: 6px;
+}
+
+.cut-mobile-assign-table__name .cut-chip-meta-row {
+  flex-wrap: wrap;
+}
+
 @media (max-width: 900px) {
   .cut-page-top-bar__end {
     margin-left: 0;
@@ -363,6 +433,12 @@
     line-height: 1.35;
     padding-top: 8px !important;
     padding-bottom: 8px !important;
+  }
+
+  .cut-page-mobile .cut-page-top-bar__toolbar-pills,
+  .cut-page-mobile .cut-page-top-bar__toolbar-pills .teams-chairperson-pill {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .cut-page-mobile-toolbar {
@@ -421,9 +497,10 @@
 
 /* Compact chips for dense two-column lists */
 .cut-ballkid-chip--dense {
-  min-height: 0;
+  min-height: 34px;
   border-radius: 8px;
   box-shadow: none;
+  align-items: stretch;
 }
 
 .cut-ballkid-chip--dense:hover {
@@ -432,6 +509,8 @@
 
 .cut-ballkid-chip--dense .cut-ballkid-chip__handle {
   width: 16px;
+  align-self: stretch;
+  justify-content: center;
 }
 
 .cut-ballkid-chip--dense .cut-ballkid-chip__handle-dots {
@@ -448,7 +527,22 @@
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 3px 6px 3px 4px;
+  padding: 4px 6px 4px 4px;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__meta .MuiIcon-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0 !important;
+  line-height: 0;
+}
+
+.cut-ballkid-chip--dense .cut-chip-meta-row {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 3px;
 }
 
 .cut-ballkid-chip--dense .cut-ballkid-chip__name {
@@ -471,13 +565,9 @@
   line-height: 1.2 !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   padding: 0 3px !important;
-}
-
-.cut-ballkid-chip--dense .cut-chip-meta-row {
-  flex: 0 0 auto;
-  flex-wrap: nowrap;
-  gap: 3px;
 }
 
 .cut-ballkid-chip--dense .cut-chip-icon-group {

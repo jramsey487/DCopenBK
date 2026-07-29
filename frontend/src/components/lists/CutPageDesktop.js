@@ -25,7 +25,7 @@ import {
   HelpIcon,
   Banners,
   Alerts,
-  renderSwitch,
+  HovercardToggle,
 } from "../Utils";
 import {
   CUT_STATUSES,
@@ -122,7 +122,7 @@ function LastDayPill({ ballkid }) {
   );
 }
 
-function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
+export function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
   const group = getLocalStorage("group");
   const iconBadges = [];
 
@@ -773,13 +773,11 @@ export default function CutPageDesktop(props) {
             {renderCopyButtons(active, emails, setSuccessMsg)}
           </Box>
 
-          <Box className="cut-page-top-bar__switch">
-            {renderSwitch(
-              showHovercard,
-              setShowHovercard,
-              "Disable Hovercard",
-              "Enable Hovercard"
-            )}
+          <Box className="cut-page-top-bar__toolbar-pills">
+            <HovercardToggle
+              enabled={showHovercard}
+              setEnabled={setShowHovercard}
+            />
           </Box>
         </Box>
       </Box>

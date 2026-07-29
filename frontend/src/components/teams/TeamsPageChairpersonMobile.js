@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { getAuthHeader, Banners } from "../Utils";
-import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
+import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import {
   Teams,
   Header,
@@ -61,7 +61,11 @@ export default function TeamsPageChairpersonMobile(props) {
         nextShifts={nextShifts}
         setUpdated={setUpdated}
       />
-      <UnassignedPanel unassigned={unassigned} setUpdated={setUpdated} />
+      <UnassignedMobilePanel
+        unassigned={unassigned}
+        teams={teams}
+        setUpdated={setUpdated}
+      />
     </div>
   );
 }

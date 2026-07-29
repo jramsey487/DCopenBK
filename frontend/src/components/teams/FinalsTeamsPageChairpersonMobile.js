@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
-import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
+import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
 
 export default function FinalsTeamsPageChairpersonMobile(props) {
@@ -41,10 +41,10 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
       />
       {renderTeams(assigned, teams, showHovercard, setUpdated)}
 
-      <UnassignedPanel
+      <UnassignedMobilePanel
         unassigned={unassigned}
+        teams={teams}
         setUpdated={setUpdated}
-        showHovercard={showHovercard}
         isFinalsPage={true}
       />
     </div>

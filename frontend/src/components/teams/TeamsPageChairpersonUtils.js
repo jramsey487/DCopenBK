@@ -233,8 +233,13 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
               {assigned.length === 0 ? (
                 ""
               ) : (
-                <Button size="small" onClick={() => setClearOpen(true)}>
-                  End Team
+                <Button
+                  size="small"
+                  variant="outlined"
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
+                  onClick={() => setClearOpen(true)}
+                >
+                  End team
                 </Button>
               )}
             </div>
@@ -244,13 +249,17 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
             ""
           ) : (
             <div className="teams-chairperson-head-secondary">
-              <CourtAssignment nextShifts={nextShifts} />
+              <div className="teams-chairperson-head-secondary__assignment">
+                <CourtAssignment nextShifts={nextShifts} />
+              </div>
               <Button
                 size="small"
+                variant="outlined"
                 color="error"
+                className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
                 onClick={() => setCheckoutOpen(true)}
               >
-                Check Out All
+                Check out all
               </Button>
             </div>
           )}
@@ -286,6 +295,22 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
       )}
     </div>
   );
+}
+
+export function assignBallkidToTeam(ballkid, team, { isFinalsPage = false } = {}) {
+  const teamAssignDict = isFinalsPage
+    ? { finals_team: team }
+    : { current_team: team };
+
+  return fetch("/api/update-ballkid", {
+    method: "PATCH",
+    headers: getAuthHeader(),
+    body: JSON.stringify({
+      first_name: ballkid.first_name,
+      last_name: ballkid.last_name,
+      ...teamAssignDict,
+    }),
+  });
 }
 
 export function renderCheckoutUnassignedButton(setOpen) {
