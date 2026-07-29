@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
+import "./teams-page.css";
 import { useDrop } from "react-dnd";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 
 import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import SwapVert from "@mui/icons-material/SwapVert";
@@ -17,14 +14,98 @@ import {
   getAuthHeader,
   Alerts,
   HideShowToggle,
-  DraggableBallkidAndIcon,
   ConfirmDialog,
-  HelpIcon,
+  useIsMobile,
   renderSwitch,
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
 import { POSITIONS } from "../Consts";
-import { Tooltip } from "@mui/material";
+import {
+  TeamsDraggableBallkid,
+  TeamsChairpersonPageHeader,
+} from "./TeamsChairpersonShared";
+
+function renderSwitchButton(ballkid, setUpdated) {
+  return (
+    <Tooltip title="Switch">
+      <IconButton
+        size="small"
+        sx={{ p: 0.5 }}
+        onClick={() => {
+          fetch("/api/update-ballkid", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              first_name: ballkid.first_name,
+              last_name: ballkid.last_name,
+              finals_position:
+                ballkid.finals_position === "Back" ? "Net" : "Back",
+            }),
+          })
+            .then((response) => response.json())
+            .then(() => setUpdated(true));
+        }}
+      >
+        <SwapVert color="secondary" />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+function renderUnassignButton(ballkid, setUpdated) {
+  return (
+    <Tooltip title="Unassign">
+      <IconButton
+        size="small"
+        sx={{ p: 0.5 }}
+        onClick={() => {
+          fetch("/api/update-ballkid", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              first_name: ballkid.first_name,
+              last_name: ballkid.last_name,
+              finals_team: "",
+            }),
+          })
+            .then((response) => response.json())
+            .then(() => setUpdated(true));
+        }}
+      >
+        <RemoveCircleOutline color="primary" />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+function renderBallkidsOnTeam(assigned, showHovercard, setUpdated) {
+  return (
+    <div className="team-member-list">
+      {assigned.map((ballkid) => (
+        <div
+          key={`ballkid${ballkid.id}`}
+          className="teams-chairperson-ballkid-row"
+        >
+          <div className="teams-chairperson-ballkid-chip-wrap">
+            <TeamsDraggableBallkid
+              ballkid={ballkid}
+              commentTypes={["rank", "experience"]}
+              showHovercard={showHovercard}
+              hoverCommentTypes={["experience", "rank", "calibrated_avg"]}
+            />
+          </div>
+
+          <div className="teams-chairperson-ballkid-actions">
+            {!ballkid.preferred_position.includes("/")
+              ? ""
+              : renderSwitchButton(ballkid, setUpdated)}
+            {renderUnassignButton(ballkid, setUpdated)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Team({ team, assigned, showHovercard, setUpdated }) {
   const [clearOpen, setClearOpen] = useState(false);
@@ -46,8 +127,16 @@ function Team({ team, assigned, showHovercard, setUpdated }) {
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
+  const cardClass = [
+    "team-card",
+    "teams-chairperson-card",
+    isOver ? "is-drop-over" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <Grid item xs={12} sm={6} md={6} lg={6} xl={3} ref={dropRef}>
+    <div ref={dropRef} className={cardClass}>
       <ConfirmDialog
         message={`You are about to clear Team ${team} and unassign all ${
           assigned.length
@@ -61,126 +150,58 @@ function Team({ team, assigned, showHovercard, setUpdated }) {
         setUpdated={setUpdated}
       />
 
-      <Card sx={{ mb: 2 }} elevation={isOver ? 10 : 1}>
-        <CardContent>
-          <div className="justify">
-            <div className="sxs">
-              <Typography variant="h6">{team}</Typography>
-              <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                ({assigned.length})
-              </Typography>
-            </div>
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">{team}</span>
+          <span className="team-card-count">({assigned.length})</span>
+        </div>
+        <div className="teams-chairperson-head-actions">
+          {assigned.length === 0 ? (
+            ""
+          ) : (
+            <Button size="small" onClick={() => setClearOpen(true)}>
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
 
-            {assigned.length === 0 ? (
-              ""
-            ) : (
-              <Button size="small" onClick={(e) => setClearOpen(true)}>
-                Clear
-              </Button>
-            )}
-          </div>
+      <div className="team-card-body">
+        {POSITIONS.map((position) => {
+          const positionAssigned = assigned.filter(
+            (ballkid) => ballkid.finals_position === position
+          );
 
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ my: 1 }} />
-              <div className="sxs">
-                <Typography variant="subtitle1">{position}s</Typography>
-                <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                  (
-                  {
-                    assigned.filter(
-                      (ballkid) => ballkid.finals_position === position
-                    ).length
-                  }
-                  )
-                </Typography>
+          return (
+            <div className="team-position-block" key={position}>
+              <div className="team-position-head">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">
+                  ({positionAssigned.length})
+                </span>
               </div>
-              {renderBallkidsOnTeam(
-                assigned.filter(
-                  (ballkid) => ballkid.finals_position === position
-                ),
-                showHovercard,
-                setUpdated
+              {positionAssigned.length === 0 ? (
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s assigned yet.
+                </div>
+              ) : (
+                renderBallkidsOnTeam(
+                  positionAssigned,
+                  showHovercard,
+                  setUpdated
+                )
               )}
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </Grid>
-  );
-}
-
-function renderBallkidsOnTeam(assigned, showHovercard, setUpdated) {
-  return (
-    <div>
-      {assigned.map((ballkid) => (
-        <div key={`ballkid${ballkid.id}`} className="justify">
-          <DraggableBallkidAndIcon
-            ballkid={ballkid}
-            commentTypes={["rank", "experience"]}
-            showHovercard={showHovercard}
-            hoverCommentTypes={["experience", "rank", "calibrated_avg"]}
-          />
-
-          <div className="sxs">
-            {!ballkid.preferred_position.includes("/") ? (
-              ""
-            ) : (
-              <Tooltip title="Switch">
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  onClick={(e) => {
-                    fetch("/api/update-ballkid", {
-                      method: "PATCH",
-                      headers: getAuthHeader(),
-                      body: JSON.stringify({
-                        first_name: ballkid.first_name,
-                        last_name: ballkid.last_name,
-                        finals_position:
-                          ballkid.finals_position === "Back" ? "Net" : "Back",
-                      }),
-                    })
-                      .then((response) => response.json())
-                      .then(() => setUpdated(true));
-                  }}
-                >
-                  <SwapVert color="secondary" />
-                </IconButton>
-              </Tooltip>
-            )}
-
-            <Tooltip title="Unassign">
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
-                onClick={(e) => {
-                  fetch("/api/update-ballkid", {
-                    method: "PATCH",
-                    headers: getAuthHeader(),
-                    body: JSON.stringify({
-                      first_name: ballkid.first_name,
-                      last_name: ballkid.last_name,
-                      finals_team: "",
-                    }),
-                  })
-                    .then((response) => response.json())
-                    .then(() => setUpdated(true));
-                }}
-              >
-                <RemoveCircleOutline color="primary" />
-              </IconButton>
-            </Tooltip>
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 export function renderTeams(assigned, teams, showHovercard, setUpdated) {
   return (
-    <Grid container spacing={2}>
+    <div className="teams-page-grid teams-chairperson-teams-grid">
       {teams.map((team) => (
         <Team
           key={team}
@@ -190,7 +211,7 @@ export function renderTeams(assigned, teams, showHovercard, setUpdated) {
           setUpdated={setUpdated}
         />
       ))}
-    </Grid>
+    </div>
   );
 }
 
@@ -212,35 +233,41 @@ export function Header({ showHovercard, setShowHovercard }) {
   return tournament === null || tournament === undefined ? (
     ""
   ) : (
-    <div>
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
-      />
-
-      <Box className="justify" sx={{ mb: 1 }}>
-        <Box className="sxs">
-          <Typography variant="h4">Finals Teams</Typography>
-          &thinsp;
-          <HelpIcon page="Finals Teams" message={finalsTeams} />
-        </Box>
-
-        <HideShowToggle
-          teamType="finals"
-          defaultShow={tournament["show_finals_teams"]}
+    <TeamsChairpersonPageHeader
+      title="Finals Teams"
+      helpPage="Finals Teams"
+      helpMessage={finalsTeams}
+      alerts={
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
         />
-      </Box>
-
-      {renderSwitch(
-        showHovercard,
-        setShowHovercard,
-        "Disable Hovercard",
-        "Enable Hovercard"
-      )}
-    </div>
+      }
+      toolbar={
+        <>
+          <div className="teams-chairperson-pill">
+            <span className="teams-chairperson-pill-label">
+              Visible to ballkids
+            </span>
+            <HideShowToggle
+              teamType="finals"
+              defaultShow={tournament["show_finals_teams"]}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </div>
+          <Box className="cut-page-top-bar__switch">
+            {renderSwitch(
+              showHovercard,
+              setShowHovercard,
+              "Disable Hovercard",
+              "Enable Hovercard"
+            )}
+          </Box>
+        </>
+      }
+    />
   );
 }

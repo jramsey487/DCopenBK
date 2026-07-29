@@ -161,12 +161,12 @@
   .ballkid-profile-shell .ballkid-profile-checkin-btn {
     min-width: 0 !important;
     min-height: 0 !important;
-    padding: 4px 12px !important;
+    padding: 6px 14px !important;
     line-height: 1.3 !important;
     text-transform: none !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 12px !important;
-    border-radius: 20px !important;
+    border-radius: 8px !important;
     box-shadow: none !important;
   }
   
@@ -453,7 +453,13 @@
   .ballkid-profile-info-row--stack {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .ballkid-profile-info-row--stack .ballkid-profile-info-key {
+    line-height: 1.35;
   }
   
   .ballkid-profile-info-row--stack .ballkid-profile-info-val {

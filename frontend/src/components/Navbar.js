@@ -275,7 +275,7 @@ export default function Navbar({ isLoggedIn, setToken }) {
       <div className="app-navbar-inner">
         <div className="app-navbar-left">
           <Link className="app-navbar-brand" to={homeUrl}>
-            <BallcrewLogo variant="crest" size={isMobile ? 32 : 36} />
+            <BallcrewLogo variant="crest" height={isMobile ? 36 : 42} />
             <span className="app-navbar-title">Mubadala DC Open Ballcrew</span>
           </Link>
 

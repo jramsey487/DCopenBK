@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 
 import {
   getAuthHeader,
   SearchAndFilter,
   filterBallkids,
   ConfirmDialog,
-  DraggableBallkidAndIcon,
   Banners,
 } from "../Utils";
-import { MARGINS, POSITIONS } from "../Consts";
+import { POSITIONS } from "../Consts";
 import {
   Teams,
   Header,
   renderCheckoutUnassignedButton,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
+import { TeamsDraggableBallkid } from "./TeamsChairpersonShared";
 
-export function UnassignedDesktop({
+export function UnassignedPanel({
   unassigned,
   setUpdated,
   showHovercard = false,
@@ -32,6 +32,12 @@ export function UnassignedDesktop({
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
+
+  const filteredCount = filterBallkids(
+    unassigned,
+    searchKeyword,
+    filterGroup
+  ).length;
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -59,8 +65,18 @@ export function UnassignedDesktop({
     <Box
       component={Paper}
       ref={dropRef}
-      elevation={isOver ? 10 : 1}
-      sx={{ pl: { xs: 0, sm: 3 }, ml: { xs: 0, sm: 3 }, pb: 2 }}
+      elevation={0}
+      className="cut-page-active-panel teams-chairperson-unassigned-panel"
+      sx={{
+        p: 3,
+        borderRadius: "16px",
+        border: isOver ? "2px solid #2563eb" : "1px solid",
+        borderColor: isOver ? "primary.main" : "divider",
+        backgroundColor: "background.paper",
+        boxShadow: isOver
+          ? "0 10px 25px -5px rgba(13, 27, 62, 0.08)"
+          : "0 1px 3px 0 rgba(13, 27, 62, 0.04)",
+      }}
     >
       <ConfirmDialog
         message={`You are about to check out all ${
@@ -75,105 +91,149 @@ export function UnassignedDesktop({
         setUpdated={setUpdated}
       />
 
-      <div className="justify">
-        <div className="sxs">
-          <Typography variant="h5" sx={MARGINS}>
+      <Box
+        className="teams-chairperson-unassigned-panel__head"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1,
+          mb: 1.5,
+          pb: 1.5,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box className="sxs" sx={{ alignItems: "center" }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              fontSize: "1.15rem",
+              color: "#1e293b",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
             Unassigned
           </Typography>
-          &ensp;
-          <Typography variant="h6" sx={MARGINS}>
-            ({filterBallkids(unassigned, searchKeyword, filterGroup).length})
+          <Typography
+            component="span"
+            variant="body1"
+            sx={{
+              opacity: 0.5,
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              fontFamily: "Inter, sans-serif",
+              ml: 0.5,
+            }}
+          >
+            ({filteredCount})
           </Typography>
-        </div>
+        </Box>
 
         {unassigned.length === 0 || isFinalsPage
           ? ""
           : renderCheckoutUnassignedButton(setOpen)}
-      </div>
+      </Box>
 
-      <div>
+      <Typography
+        className="teams-chairperson-drop-hint"
+        variant="body2"
+        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem" }}
+      >
+        Drag ballkids onto a team card to assign them, or drop here to unassign.
+      </Typography>
+
+      <Box sx={{ mb: 2.5, width: "100%" }}>
         <SearchAndFilter
           setSearchKeyword={setSearchKeyword}
           filterGroup={filterGroup}
           setFilterGroup={setFilterGroup}
           filters={
             isFinalsPage
-              ? ["rookie", "supervet", "captain"]
-              : ["rookie", "supervet", "captain", "chairperson"]
+              ? ["rookie", "supervet", "captain", "back", "net"]
+              : ["rookie", "supervet", "captain", "chairperson", "back", "net"]
           }
         />
-        {POSITIONS.map((position) => {
+      </Box>
+
+      {unassigned.length === 0 ? (
+        <Typography sx={{ opacity: 0.7, fontSize: "0.9rem", fontFamily: "Inter, sans-serif" }}>
+          There are currently no {isFinalsPage ? "" : "checked in "}
+          ballkids who are unassigned.
+        </Typography>
+      ) : (
+        POSITIONS.map((position) => {
           const ballkids = filterBallkids(
             unassigned,
             searchKeyword,
             filterGroup
           ).filter((ballkid) => ballkid.position === position);
-          const half = Math.ceil(ballkids.length / 2);
 
           return (
-            <div key={position}>
-              <div className="sxs">
-                <Typography variant="h6" sx={MARGINS}>
+            <div className="teams-chairperson-position-block" key={position}>
+              <div className="cut-page-section-label">
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#64748b",
+                    textTransform: "uppercase",
+                    fontSize: "0.7rem",
+                    letterSpacing: "0.08em",
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
                   {position}s
                 </Typography>
-                <Typography variant="subtitle1" sx={{ ...MARGINS, ml: 1 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    opacity: 0.55,
+                    fontWeight: 600,
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
                   ({ballkids.length})
                 </Typography>
               </div>
 
               {ballkids.length === 0 ? (
-                <Typography variant="body1" sx={{ pb: 1 }}>
-                  There are currently no {isFinalsPage ? "" : "checked in "}
-                  {position.toLowerCase()}s who are unassigned.
-                </Typography>
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s in this pool.
+                </div>
               ) : (
-                <Grid container>
-                  {[ballkids.slice(0, half), ballkids.slice(half)].map(
-                    (sliced) =>
-                      sliced.length === 0 ? (
-                        ""
-                      ) : (
-                        <Grid
-                          container
-                          item
-                          key={sliced[0].id}
-                          direction="column"
-                          xs={12}
-                          sm={6}
-                          md={6}
-                          lg={6}
-                          xl={4}
-                        >
-                          {sliced.map((ballkid) => (
-                            <Grid key={ballkid.id} item sx={{ px: 1 }}>
-                              <DraggableBallkidAndIcon
-                                ballkid={ballkid}
-                                commentTypes={
-                                  isFinalsPage
-                                    ? ["rank", "experience"]
-                                    : ["checkout_teams"]
-                                }
-                                showHovercard={showHovercard}
-                                hoverCommentTypes={
-                                  isFinalsPage
-                                    ? ["experience", "rank", "calibrated_avg"]
-                                    : []
-                                }
-                              />
-                            </Grid>
-                          ))}
-                        </Grid>
-                      )
-                  )}
-                </Grid>
+                <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel">
+                  {ballkids.map((ballkid) => (
+                    <TeamsDraggableBallkid
+                      key={ballkid.id}
+                      ballkid={ballkid}
+                      commentTypes={
+                        isFinalsPage
+                          ? ["rank", "experience"]
+                          : ["checkout_teams"]
+                      }
+                      showHovercard={showHovercard}
+                      hoverCommentTypes={
+                        isFinalsPage
+                          ? ["experience", "rank", "calibrated_avg"]
+                          : []
+                      }
+                    />
+                  ))}
+                </div>
               )}
             </div>
           );
-        })}
-      </div>
+        })
+      )}
     </Box>
   );
 }
+
+/** @deprecated use UnassignedPanel */
+export const UnassignedDesktop = UnassignedPanel;
 
 export default function TeamsPageChairpersonDesktop(props) {
   const [assigned, setAssigned] = useState([]);
@@ -211,23 +271,27 @@ export default function TeamsPageChairpersonDesktop(props) {
   }, [updated]);
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
 
-      <Grid container className="justify-top">
-        <Grid
-          item
-          sm={6}
-          md={7}
-          lg={8}
-          xl={9}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
-        >
-          <Header />
+      <Header
+        topBarActions={
           <ActionsButtons
             numAssigned={assigned.length}
             setUpdated={setUpdated}
           />
+        }
+      />
+
+      <Grid container className="justify-top teams-chairperson-split" spacing={2}>
+        <Grid
+          item
+          xs={12}
+          md={7}
+          lg={8}
+          xl={9}
+          className="teams-chairperson-main"
+        >
           <Teams
             assigned={assigned}
             teams={teams}
@@ -238,13 +302,13 @@ export default function TeamsPageChairpersonDesktop(props) {
 
         <Grid
           item
-          sm={6}
+          xs={12}
           md={5}
           lg={4}
           xl={3}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
+          className="teams-chairperson-sidebar"
         >
-          <UnassignedDesktop unassigned={unassigned} setUpdated={setUpdated} />
+          <UnassignedPanel unassigned={unassigned} setUpdated={setUpdated} />
         </Grid>
       </Grid>
     </div>

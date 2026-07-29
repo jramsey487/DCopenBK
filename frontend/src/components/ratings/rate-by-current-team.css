@@ -1,3 +1,5 @@
+@import "../lists/ballkid-list-by-name.css";
+
 .rbt-page-shell {
     --rbt-nav: #0d1b3e;
     --rbt-red: #c8102e;
@@ -14,26 +16,6 @@
     letter-spacing: -0.01em;
   }
   
-  .rbt-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  
-  .rbt-page-title-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .rbt-page-shell .rbt-page-title {
-    font-size: 22px !important;
-    font-weight: 600 !important;
-    color: var(--rbt-text1) !important;
-  }
   
   .rbt-page-empty {
     padding: 40px 16px;

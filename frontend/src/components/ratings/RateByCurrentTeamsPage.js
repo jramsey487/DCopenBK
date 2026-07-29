@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
 import {
@@ -11,7 +9,6 @@ import {
   isCurrentHour,
   CourtAssignment,
   BallkidAndIcon,
-  HelpIcon,
   Banners,
   DraftRatingButton,
   ballkidImageSrc,
@@ -19,6 +16,8 @@ import {
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { rateByCurrentTeam } from "../HelpMessages";
+import { TeamsPageTopBar } from "../teams/TeamsChairpersonShared";
+import { TeamsPhotoToggle } from "../teams/TeamsShared";
 import "./rate-by-current-team.css";
 
 function personInitials(firstName, lastName) {
@@ -226,30 +225,20 @@ export default function RateByCurrentTeamsPage(props) {
   });
 
   return (
-    <div className="page rbt-page-shell">
+    <div className="page ballkid-list-page rbt-page-shell">
       <Banners />
 
-      <Box className="rbt-page-header">
-        <div className="rbt-page-title-row">
-          <Typography className="rbt-page-title" variant="h4">
-            Rate by Current Team
-          </Typography>
-          <HelpIcon page="Rate by Current Team" message={rateByCurrentTeam} />
-        </div>
-
-        <div className="rbt-page-photo-toggle">
-          <span className="rbt-page-photo-toggle-label">Show photos</span>
-          <button
-            type="button"
-            className={`rbt-page-photo-toggle-switch${
-              showPhotos ? " on" : ""
-            }`}
-            role="switch"
-            aria-checked={showPhotos}
-            onClick={() => setShowPhotos(!showPhotos)}
+      <TeamsPageTopBar
+        title="Rate by Current Team"
+        helpPage="Rate by Current Team"
+        helpMessage={rateByCurrentTeam}
+        controls={
+          <TeamsPhotoToggle
+            showPhotos={showPhotos}
+            onToggle={() => setShowPhotos(!showPhotos)}
           />
-        </div>
-      </Box>
+        }
+      />
 
       {assigned.length === 0 || (group !== "chairperson" && !showTeams) ? (
         <div className="rbt-page-empty">

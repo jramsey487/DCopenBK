@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link as RouterLink } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -18,14 +18,17 @@ import {
   filterBallkids,
   ConfirmDialog,
   BallkidCard,
+  BallkidAndIcon,
   HelpIcon,
   useIsMobile,
   Banners,
   CommentsText,
 } from "../Utils";
-import { CHECKOUT_OPTIONS, LAST_DAY_OPTIONS, MARGINS } from "../Consts";
+import { CHECKOUT_OPTIONS, LAST_DAY_OPTIONS } from "../Consts";
 import { checkin } from "../HelpMessages";
 import { IconButton, TextField } from "@mui/material";
+import "./ballkid-list-by-name.css";
+import "./checkin-page.css";
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
   const checkinString = isCheckedIn ? "Check Out" : "Check In";
@@ -36,6 +39,7 @@ function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
 
   return (
     <LoadingButton
+      className="checkin-action-btn"
       variant="outlined"
       loading={loading}
       color={color}
@@ -76,59 +80,110 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
     ""
   ) : ballkid.is_checked_in ? (
     <CommentsText ballkid={ballkid} commentType="checkout" layout={layout} />
+  ) : layout === "grid" ? (
+    <Box className="checkin-card-field" sx={{ mt: 1 }}>
+      <Typography variant="caption" className="checkin-card-field__label">
+        Check-out time
+      </Typography>
+      <Box className="checkin-card-field__controls">
+        <TextField
+          select
+          fullWidth
+          size="small"
+          value={comments}
+          disabled={disabled}
+          variant="outlined"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onChange={(e) => setComments(e.target.value)}
+          onDoubleClick={() => setDisabled(false)}
+        >
+          {CHECKOUT_OPTIONS.map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+        <IconButton
+          size="small"
+          color="primary"
+          disabled={disabled}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            setDisabled(true);
+            e.stopPropagation();
+            e.preventDefault();
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                checkout_comments: comments,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <Done />
+        </IconButton>
+      </Box>
+    </Box>
   ) : (
     <Box
-      className="sxs"
-      sx={{ mr: layout === "grid" ? 0 : 3, mt: layout === "grid" ? 1 : 0 }}
+      className="checkin-list-field"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
     >
-      <Typography>Check-out Time:</Typography>
-      &thinsp;
-      <TextField
-        select
-        value={comments}
-        disabled={disabled}
-        variant="standard"
-        sx={{ mx: 0.5 }}
-        style={{ minWidth: 75 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        onChange={(e) => setComments(e.target.value)}
-        onDoubleClick={() => setDisabled(false)}
-      >
-        {CHECKOUT_OPTIONS.map((value) => (
-          <MenuItem key={value} value={value}>
-            {value}
-          </MenuItem>
-        ))}
-      </TextField>
-      <IconButton
-        variant="outlined"
-        size="small"
-        color="primary"
-        disabled={disabled}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          setDisabled(true);
-          e.stopPropagation();
-          e.preventDefault();
-
-          fetch("/api/update-ballkid", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              first_name: ballkid.first_name,
-              last_name: ballkid.last_name,
-              checkout_comments: comments,
-            }),
-          })
-            .then((response) => response.json())
-            .then(() => setUpdated(true));
-        }}
-      >
-        <Done />
-      </IconButton>
+      <Typography component="span" className="checkin-list-field__label">
+        Check-out time
+      </Typography>
+      <Box className="checkin-list-field__controls">
+        <TextField
+          select
+          size="small"
+          variant="outlined"
+          value={comments}
+          disabled={disabled}
+          onChange={(e) => setComments(e.target.value)}
+          onDoubleClick={() => setDisabled(false)}
+        >
+          {CHECKOUT_OPTIONS.map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+        <IconButton
+          size="small"
+          color="primary"
+          disabled={disabled}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            setDisabled(true);
+            e.stopPropagation();
+            e.preventDefault();
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                checkout_comments: comments,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <Done />
+        </IconButton>
+      </Box>
     </Box>
   );
 }
@@ -141,124 +196,200 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
 
   return useIsMobile() || ballkid.is_checked_in ? (
     ""
+  ) : layout === "grid" ? (
+    <Box className="checkin-card-field" sx={{ mt: 1 }}>
+      <Typography variant="caption" className="checkin-card-field__label">
+        Last day
+      </Typography>
+      <Box className="checkin-card-field__controls">
+        <TextField
+          select
+          fullWidth
+          size="small"
+          value={comments}
+          disabled={disabled}
+          variant="outlined"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onChange={(e) => setComments(e.target.value)}
+          onDoubleClick={() => setDisabled(false)}
+        >
+          {LAST_DAY_OPTIONS.map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+        <IconButton
+          size="small"
+          color="primary"
+          disabled={disabled}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            setDisabled(true);
+            e.stopPropagation();
+            e.preventDefault();
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                last_day: comments,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <Done />
+        </IconButton>
+      </Box>
+    </Box>
   ) : (
     <Box
-      className="sxs"
-      sx={{ mr: layout === "grid" ? 0 : 3, mt: layout === "grid" ? 1 : 0 }}
+      className="checkin-list-field"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
     >
-      <Typography>Last Day:</Typography>
-      &thinsp;
-      <TextField
-        select
-        value={comments}
-        disabled={disabled}
-        variant="standard"
-        sx={{ mx: 0.5 }}
-        style={{ minWidth: 115 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        onChange={(e) => setComments(e.target.value)}
-        onDoubleClick={() => setDisabled(false)}
-      >
-        {LAST_DAY_OPTIONS.map((value) => (
-          <MenuItem key={value} value={value}>
-            {value}
-          </MenuItem>
-        ))}
-      </TextField>
-      <IconButton
-        variant="outlined"
-        size="small"
-        color="primary"
-        disabled={disabled}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          setDisabled(true);
-          e.stopPropagation();
-          e.preventDefault();
-
-          fetch("/api/update-ballkid", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              first_name: ballkid.first_name,
-              last_name: ballkid.last_name,
-              last_day: comments,
-            }),
-          })
-            .then((response) => response.json())
-            .then(() => setUpdated(true));
-        }}
-      >
-        <Done />
-      </IconButton>
+      <Typography component="span" className="checkin-list-field__label">
+        Last day
+      </Typography>
+      <Box className="checkin-list-field__controls">
+        <TextField
+          select
+          size="small"
+          variant="outlined"
+          value={comments}
+          disabled={disabled}
+          onChange={(e) => setComments(e.target.value)}
+          onDoubleClick={() => setDisabled(false)}
+        >
+          {LAST_DAY_OPTIONS.map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+        <IconButton
+          size="small"
+          color="primary"
+          disabled={disabled}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            setDisabled(true);
+            e.stopPropagation();
+            e.preventDefault();
+            fetch("/api/update-ballkid", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                first_name: ballkid.first_name,
+                last_name: ballkid.last_name,
+                last_day: comments,
+              }),
+            })
+              .then((response) => response.json())
+              .then(() => setUpdated(true));
+          }}
+        >
+          <Done />
+        </IconButton>
+      </Box>
     </Box>
   );
 }
 
+function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
+  const myId = Number(getLocalStorage("ballkid_id"));
+  const profileTo =
+    ballkid.id === myId ? "/me" : `/ballkid/${ballkid.id}`;
+
+  return (
+    <article className="checkin-list-row">
+      <RouterLink to={profileTo} className="checkin-list-row__identity">
+        <BallkidAndIcon ballkid={ballkid} />
+      </RouterLink>
+      <div className="checkin-list-row__fields">
+        <LastDayComments
+          ballkid={ballkid}
+          layout="list"
+          setUpdated={setUpdated}
+        />
+        <CheckoutComments
+          ballkid={ballkid}
+          layout="list"
+          setUpdated={setUpdated}
+        />
+      </div>
+      <div className="checkin-list-row__action">
+        <CheckinButton
+          ballkid={ballkid}
+          isCheckedIn={isCheckedIn}
+          setUpdated={setUpdated}
+        />
+      </div>
+    </article>
+  );
+}
+
 function renderBallkids(ballkids, isCheckedIn, layout, setUpdated) {
-  return ballkids.length === 0 ? (
-    <Typography variant="body1">
-      {isCheckedIn
-        ? "There are currently no ballkids checked in."
-        : "There are currently no ballkids checked out."}
-    </Typography>
-  ) : (
-    <Grid container spacing={layout === "grid" ? 2 : 1}>
-      {ballkids.map((ballkid) => (
-        <Grid
-          item
-          key={ballkid.id}
-          xs={layout === "grid" ? 6 : 12}
-          sm={layout === "grid" ? 4 : 12}
-          md={layout === "grid" ? 3 : 12}
-          lg={layout === "grid" ? 2 : 12}
-          xl={layout === "grid" ? 1 : 12}
-        >
-          <BallkidCard
+  if (ballkids.length === 0) {
+    return (
+      <div className="ballkid-list-empty">
+        {isCheckedIn
+          ? "There are currently no ballkids checked in."
+          : "There are currently no ballkids checked out."}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={
+        layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+      }
+    >
+      {ballkids.map((ballkid) =>
+        layout === "grid" ? (
+          <div className="ballkid-list-card-wrap" key={ballkid.id}>
+            <BallkidCard
+              ballkid={ballkid}
+              renderAdditional={
+                <Box className="checkin-card-actions checkin-card-actions--grid">
+                  <CheckinButton
+                    ballkid={ballkid}
+                    isCheckedIn={isCheckedIn}
+                    setUpdated={setUpdated}
+                  />
+                  <LastDayComments
+                    ballkid={ballkid}
+                    layout={layout}
+                    setUpdated={setUpdated}
+                  />
+                  <CheckoutComments
+                    ballkid={ballkid}
+                    layout={layout}
+                    setUpdated={setUpdated}
+                  />
+                </Box>
+              }
+            />
+          </div>
+        ) : (
+          <CheckinListRow
+            key={ballkid.id}
             ballkid={ballkid}
-            renderAdditional={
-              <Box
-                className={layout === "grid" ? "" : "sxs"}
-                textAlign="center"
-                sx={{ mt: layout === "grid" ? 1 : 0 }}
-              >
-                {layout === "grid" ? (
-                  <CheckinButton
-                    ballkid={ballkid}
-                    isCheckedIn={isCheckedIn}
-                    setUpdated={setUpdated}
-                  />
-                ) : (
-                  ""
-                )}
-                <LastDayComments
-                  ballkid={ballkid}
-                  layout={layout}
-                  setUpdated={setUpdated}
-                />
-                <CheckoutComments
-                  ballkid={ballkid}
-                  layout={layout}
-                  setUpdated={setUpdated}
-                />
-                {layout === "grid" ? (
-                  ""
-                ) : (
-                  <CheckinButton
-                    ballkid={ballkid}
-                    isCheckedIn={isCheckedIn}
-                    setUpdated={setUpdated}
-                  />
-                )}
-              </Box>
-            }
+            isCheckedIn={isCheckedIn}
+            setUpdated={setUpdated}
           />
-        </Grid>
-      ))}
-    </Grid>
+        )
+      )}
+    </div>
   );
 }
 
@@ -293,7 +424,7 @@ export default function CheckinPage(props) {
   }, [updated]);
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page checkin-page">
       <Banners />
 
       <ConfirmDialog
@@ -309,66 +440,75 @@ export default function CheckinPage(props) {
         setUpdated={setUpdated}
       />
 
-      <div className="justify">
-        <Box className="sxs" sx={{ mb: 1 }}>
-          <Typography variant="h4">Check-in</Typography>
-          &thinsp;
-          <HelpIcon page="Check-in" message={checkin} />
+      <Box className="ballkid-list-title-row" sx={{ mb: 2 }}>
+        <Typography className="ballkid-list-title" variant="h4">
+          Check-in
+        </Typography>
+        <HelpIcon page="Check-in" message={checkin} />
+        <Box sx={{ ml: "auto" }}>
+          <LayoutButtons layout={layout} setLayout={setLayout} />
         </Box>
-        <LayoutButtons layout={layout} setLayout={setLayout} />
+      </Box>
+
+      <div className="ballkid-list-toolbar">
+        <div className="ballkid-list-toolbar-search">
+          <SearchAndFilter
+            setSearchKeyword={setSearchKeyword}
+            filterGroup={filterGroup}
+            setFilterGroup={setFilterGroup}
+          />
+        </div>
       </div>
 
-      <SearchAndFilter
-        setSearchKeyword={setSearchKeyword}
-        filterGroup={filterGroup}
-        setFilterGroup={setFilterGroup}
-      />
-
-      <Grid container justifyContent="space-between">
-        <Grid item className="sxs">
-          <Typography variant="h5" sx={MARGINS}>
-            Checked In
-          </Typography>
-          &ensp;
-          <Typography variant="h6" sx={MARGINS}>
-            ({filterBallkids(checkedIn, searchKeyword, filterGroup).length})
-          </Typography>
-        </Grid>
-
-        {checkedIn.length > 0 && (
-          <Grid item sx={MARGINS}>
+      <section className="checkin-section">
+        <div className="checkin-section-head">
+          <div className="checkin-section-title-row">
+            <Typography className="checkin-section-title" variant="h5">
+              Checked in
+            </Typography>
+            <Typography className="checkin-section-count" variant="h6">
+              ({filterBallkids(checkedIn, searchKeyword, filterGroup).length})
+            </Typography>
+          </div>
+          {checkedIn.length > 0 ? (
             <Button
+              className="checkin-checkout-all-btn"
               variant="contained"
               color="error"
               onClick={() => setOpen(true)}
             >
-              Check Out All
+              Check out all
             </Button>
-          </Grid>
+          ) : null}
+        </div>
+
+        {renderBallkids(
+          filterBallkids(checkedIn, searchKeyword, filterGroup),
+          true,
+          layout,
+          setUpdated
         )}
-      </Grid>
+      </section>
 
-      {renderBallkids(
-        filterBallkids(checkedIn, searchKeyword, filterGroup),
-        true,
-        layout,
-        setUpdated
-      )}
+      <section className="checkin-section">
+        <div className="checkin-section-head">
+          <div className="checkin-section-title-row">
+            <Typography className="checkin-section-title" variant="h5">
+              Checked out
+            </Typography>
+            <Typography className="checkin-section-count" variant="h6">
+              ({filterBallkids(checkedOut, searchKeyword, filterGroup).length})
+            </Typography>
+          </div>
+        </div>
 
-      <Grid item className="sxs" sx={MARGINS}>
-        <Typography variant="h5">Checked Out</Typography>
-        &ensp;
-        <Typography variant="h6">
-          ({filterBallkids(checkedOut, searchKeyword, filterGroup).length})
-        </Typography>
-      </Grid>
-
-      {renderBallkids(
-        filterBallkids(checkedOut, searchKeyword, filterGroup),
-        false,
-        layout,
-        setUpdated
-      )}
+        {renderBallkids(
+          filterBallkids(checkedOut, searchKeyword, filterGroup),
+          false,
+          layout,
+          setUpdated
+        )}
+      </section>
     </div>
   );
 }

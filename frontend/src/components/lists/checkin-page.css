@@ -1,0 +1,205 @@
+.checkin-page .checkin-section + .checkin-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--bl-border, #e2e8f0);
+}
+
+.checkin-page .checkin-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.checkin-page .checkin-section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.checkin-page .checkin-section-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--bl-text1, #0d1b3e) !important;
+  letter-spacing: -0.01em;
+}
+
+.checkin-page .checkin-section-count {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--bl-text2, #64748b) !important;
+}
+
+.checkin-page .checkin-checkout-all-btn {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.02em;
+  text-transform: none !important;
+  box-shadow: none !important;
+  padding: 6px 14px !important;
+}
+
+.checkin-page .checkin-action-btn {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: none !important;
+}
+
+.checkin-page .checkin-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.checkin-page .checkin-card-actions--grid {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.checkin-page .checkin-card-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+}
+
+.checkin-page .checkin-card-field__label {
+  display: block;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bl-text2, #64748b) !important;
+  line-height: 1.2;
+}
+
+.checkin-page .checkin-card-field__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.checkin-page .checkin-card-field__controls .MuiTextField-root {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkin-page .checkin-card-field__controls .MuiOutlinedInput-root {
+  border-radius: 8px;
+  font-size: 0.8125rem;
+}
+
+.checkin-page .ballkid-list-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.checkin-page .ballkid-list-grid .MuiCardContent-root {
+  padding: 12px !important;
+}
+
+.checkin-page .checkin-card-actions--grid .checkin-action-btn {
+  width: 100%;
+}
+
+.checkin-page .checkin-list-row {
+  display: grid;
+  grid-template-columns: minmax(168px, 240px) 1fr auto;
+  align-items: center;
+  gap: 16px 20px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--bl-border, #e2e8f0);
+  border-radius: 10px;
+}
+
+.checkin-page .checkin-list-row__identity {
+  display: block;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.checkin-page .checkin-list-row__identity .ballkid-and-icon {
+  max-width: 100%;
+}
+
+.checkin-page .checkin-list-row__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  min-width: 0;
+}
+
+.checkin-page .checkin-list-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.checkin-page .checkin-list-field__label {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--bl-text2, #64748b) !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.checkin-page .checkin-list-field__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.checkin-page .checkin-list-field__controls .MuiTextField-root {
+  width: 108px;
+  min-width: 0;
+}
+
+.checkin-page .checkin-list-field__controls .MuiOutlinedInput-root {
+  border-radius: 8px;
+  font-size: 0.8125rem;
+}
+
+.checkin-page .checkin-list-field__controls .MuiOutlinedInput-input {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.checkin-page .checkin-list-row__action {
+  flex-shrink: 0;
+  justify-self: end;
+}
+
+.checkin-page .ballkid-list-stack {
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .checkin-page .checkin-list-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .checkin-page .checkin-list-row__action {
+    justify-self: stretch;
+  }
+
+  .checkin-page .checkin-list-row__action .checkin-action-btn {
+    width: 100%;
+  }
+}

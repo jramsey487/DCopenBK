@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-
 import {
   BallkidLink,
   Banners,
   getAuthHeader,
   getCurrentYear,
-  HelpIcon,
 } from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { pastFinalsTeams } from "../HelpMessages";
+import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import "./teams-page.css";
 
 function Team({ team, ballkids }) {
@@ -89,33 +86,31 @@ export default function PastFinalsTeamsPage() {
   };
 
   return (
-    <div className="page teams-page-shell">
+    <div className="page ballkid-list-page teams-page-shell">
       <Banners />
 
-      <Box className="teams-page-header">
-        <div className="teams-page-title-row">
-          <Typography className="teams-page-title" variant="h4">
-            Past Finals Teams
-          </Typography>
-          <HelpIcon page="Past Finals Teams" message={pastFinalsTeams} />
-        </div>
-
-        <div className="past-finals-year-control">
-          <label className="past-finals-year-label" htmlFor="past-finals-year">
-            Year
-          </label>
-          <input
-            id="past-finals-year"
-            className="past-finals-year-input"
-            type="number"
-            min={2000}
-            max={getCurrentYear()}
-            value={year}
-            onChange={handleYearChange}
-            aria-label="Finals year"
-          />
-        </div>
-      </Box>
+      <TeamsPageTopBar
+        title="Past Finals Teams"
+        helpPage="Past Finals Teams"
+        helpMessage={pastFinalsTeams}
+        controls={
+          <div className="past-finals-year-control">
+            <label className="past-finals-year-label" htmlFor="past-finals-year">
+              Year
+            </label>
+            <input
+              id="past-finals-year"
+              className="past-finals-year-input"
+              type="number"
+              min={2000}
+              max={getCurrentYear()}
+              value={year}
+              onChange={handleYearChange}
+              aria-label="Finals year"
+            />
+          </div>
+        }
+      />
 
       {loading ? (
         <div className="teams-page-empty">Loading past finals teams…</div>

@@ -98,6 +98,28 @@
   text-decoration: underline;
 }
 
+.cut-ballkid-chip__meta {
+  min-width: 0;
+}
+
+.cut-chip-meta-item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.cut-chip-meta-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cut-ballkid-chip__meta .cut-chip-meta-row .sxs {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
 .cut-chip-meta-row {
   display: flex;
   align-items: center;
@@ -175,6 +197,74 @@
   align-self: center;
 }
 
+.cut-page-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.cut-page-chip-grid > .teams-chairperson-ballkid-row,
+.cut-page-chip-list .teams-chairperson-ballkid-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+}
+
+.cut-page-chip-grid > .teams-chairperson-ballkid-row {
+  display: block;
+}
+
+.cut-page-chip-grid .teams-chairperson-ballkid-chip-wrap {
+  width: 100%;
+}
+
+.cut-page-chip-list .teams-chairperson-ballkid-chip-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.cut-page-chip-list .teams-chairperson-ballkid-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cut-page-chip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cut-page-mobile-assign-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid #e2e8f0;
+}
+
+.cut-page-mobile-assign-row:last-child {
+  border-bottom: none;
+}
+
+.cut-page-mobile-assign-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.cut-chip-pill--last.cut-chip-pill--muted {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
 .cut-page-active-panel {
   border-radius: 16px !important;
 }
@@ -194,14 +284,6 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-}
-
-.cut-page-top-bar__title .ballkid-list-title {
-  font-weight: 800 !important;
-  color: #0f172a !important;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 1.5rem !important;
-  white-space: nowrap;
 }
 
 .cut-page-top-bar__end {
@@ -245,6 +327,67 @@
     margin-left: 0;
     width: 100%;
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .cut-page-mobile .cut-page-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .cut-page-mobile .cut-page-top-bar__title .ballkid-list-title {
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .cut-page-mobile .cut-page-top-bar__end {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .cut-page-mobile .cut-page-top-bar__actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .cut-page-mobile .cut-page-top-bar__actions .MuiButton-root {
+    width: 100%;
+    max-width: 100%;
+    white-space: normal !important;
+    line-height: 1.35;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .cut-page-mobile-toolbar {
+    margin-top: 8px;
+    margin-bottom: 16px;
+  }
+
+  .cut-page-mobile-section-title {
+    margin-bottom: 12px;
+  }
+
+  .cut-page-mobile-section-title__text {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #0d1b3e !important;
+  }
+
+  .cut-page-mobile-section-title__count {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+  }
+
+  .cut-page-mobile .cut-page-columns {
+    margin-bottom: 4px;
   }
 }
 
@@ -315,6 +458,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__meta {
+  flex: 0 1 auto;
+  max-width: 58%;
+  min-width: 0;
+}
+
+.cut-ballkid-chip--dense .cut-ballkid-chip__meta .MuiTypography-root {
+  font-size: 0.68rem !important;
+  line-height: 1.2 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 3px !important;
 }
 
 .cut-ballkid-chip--dense .cut-chip-meta-row {

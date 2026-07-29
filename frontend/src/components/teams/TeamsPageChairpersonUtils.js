@@ -1,11 +1,8 @@
+import "./teams-page.css";
+
 import React, { useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
@@ -26,22 +23,23 @@ import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 import {
   getAuthHeader,
-  DraggableBallkidAndIcon,
   Alerts,
   HideShowToggle,
   isCurrentHour,
   CourtAssignment,
   useIsMobile,
   ConfirmDialog,
-  HelpIcon,
 } from "../Utils";
 import {
-  ON_COURT_GREEN,
   MARGINS,
   POSITIONS,
   TIMEOUT_MS,
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
+import {
+  TeamsDraggableBallkid,
+  TeamsChairpersonPageHeader,
+} from "./TeamsChairpersonShared";
 import { teams } from "../HelpMessages.js";
 
 function renderSwitchButton(ballkid, setUpdated) {
@@ -125,15 +123,20 @@ function renderCheckoutButton(ballkid, setUpdated) {
 
 function renderBallkidsOnTeam(ballkids, setUpdated) {
   return (
-    <div>
+    <div className="team-member-list">
       {ballkids.map((ballkid) => (
-        <div key={`ballkid${ballkid.id}`} className="justify">
-          <DraggableBallkidAndIcon
-            ballkid={ballkid}
-            commentTypes={["checkout_teams"]}
-          />
+        <div
+          key={`ballkid${ballkid.id}`}
+          className="teams-chairperson-ballkid-row"
+        >
+          <div className="teams-chairperson-ballkid-chip-wrap">
+            <TeamsDraggableBallkid
+              ballkid={ballkid}
+              commentTypes={["checkout_teams"]}
+            />
+          </div>
 
-          <div className="sxs">
+          <div className="teams-chairperson-ballkid-actions">
             {!ballkid.preferred_position.includes("/")
               ? ""
               : renderSwitchButton(ballkid, setUpdated)}
@@ -146,58 +149,12 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
   );
 }
 
-function renderTeamCardHeader(
-  team,
-  assigned,
-  nextShifts,
-  setCheckoutOpen,
-  setClearOpen
-) {
-  return (
-    <div>
-      <div className="justify">
-        <div className="sxs">
-          <Typography variant="h6">Team {team}</Typography>
-          <Typography variant="subtitle1" sx={{ ml: 1 }}>
-            ({assigned.length})
-          </Typography>
-        </div>
-
-        {assigned.length === 0 ? (
-          ""
-        ) : (
-          <Button size="small" onClick={(e) => setClearOpen(true)}>
-            End Team
-          </Button>
-        )}
-      </div>
-
-      <div className="justify">
-        <CourtAssignment nextShifts={nextShifts} />
-
-        {assigned.length === 0 ? (
-          ""
-        ) : (
-          <Button
-            size="small"
-            color="error"
-            onClick={() => setCheckoutOpen(true)}
-          >
-            Check Out All
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
-  const isMobile = useIsMobile();
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -216,16 +173,18 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
+  const cardClass = [
+    "team-card",
+    "teams-chairperson-card",
+    isOver ? "is-drop-over" : "",
+    isCurrentlyOn ? "is-on-court" : "",
+    isNewTeam ? "is-new-team" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <Grid
-      item
-      xs={12}
-      sm={isMobile ? 6 : 12}
-      md={6}
-      lg={4}
-      xl={3}
-      ref={dropRef}
-    >
+    <div ref={dropRef} className={cardClass}>
       <ConfirmDialog
         message={`You are about to check out all ${assigned.length} ballkid${
           assigned.length > 1 ? "s" : ""
@@ -254,61 +213,78 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
         setUpdated={setUpdated}
       />
 
-      <Card
-        sx={{
-          mb: 1,
-          backgroundColor: isCurrentlyOn ? ON_COURT_GREEN : "",
-          borderWidth: isNewTeam ? 1 : 0,
-          borderStyle: "dashed",
-          borderColor: "gray",
-        }}
-        elevation={isOver ? 10 : isNewTeam ? 0 : 1}
-      >
-        {isNewTeam ? (
-          <CardContent>
-            <Typography variant="h6">
-              {isNewTeam ? "New Team" : `Team ${team}`}
-            </Typography>
-          </CardContent>
-        ) : (
-          <CardContent>
-            {renderTeamCardHeader(
-              team,
-              assigned,
-              nextShifts,
-              setCheckoutOpen,
-              setClearOpen
-            )}
+      {isNewTeam ? (
+        <div className="team-card-head">
+          <div className="team-card-title-group">
+            <span className="team-card-title">New Team</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="team-card-head">
+            <div className="team-card-title-group">
+              <span className="team-card-title">Team {team}</span>
+              <span className="team-card-count">({assigned.length})</span>
+              {isCurrentlyOn ? (
+                <span className="team-card-oncourt-badge">On court</span>
+              ) : null}
+            </div>
+            <div className="teams-chairperson-head-actions">
+              {assigned.length === 0 ? (
+                ""
+              ) : (
+                <Button size="small" onClick={() => setClearOpen(true)}>
+                  End Team
+                </Button>
+              )}
+            </div>
+          </div>
 
+          {assigned.length === 0 ? (
+            ""
+          ) : (
+            <div className="teams-chairperson-head-secondary">
+              <CourtAssignment nextShifts={nextShifts} />
+              <Button
+                size="small"
+                color="error"
+                onClick={() => setCheckoutOpen(true)}
+              >
+                Check Out All
+              </Button>
+            </div>
+          )}
+
+          <div className="team-card-body">
             {assigned.length === 0
               ? ""
-              : POSITIONS.map((position) => (
-                  <div key={position}>
-                    <Divider sx={{ my: 1 }} />
-                    <div className="sxs">
-                      <Typography variant="subtitle1">{position}s</Typography>
-                      <Typography variant="subtitle2" sx={{ ml: 1 }}>
-                        (
-                        {
-                          assigned.filter(
-                            (ballkid) => ballkid.position === position
-                          ).length
-                        }
-                        )
-                      </Typography>
+              : POSITIONS.map((position) => {
+                  const positionBallkids = assigned.filter(
+                    (ballkid) => ballkid.position === position
+                  );
+
+                  return (
+                    <div className="team-position-block" key={position}>
+                      <div className="team-position-head">
+                        <span className="team-position-label">{position}s</span>
+                        <span className="team-position-count">
+                          ({positionBallkids.length})
+                        </span>
+                      </div>
+                      {positionBallkids.length === 0 ? (
+                        <div className="team-position-empty">
+                          No {position.toLowerCase()}s assigned yet.
+                        </div>
+                      ) : (
+                        renderBallkidsOnTeam(positionBallkids, setUpdated)
+                      )}
                     </div>
-                    {renderBallkidsOnTeam(
-                      assigned.filter(
-                        (ballkid) => ballkid.position === position
-                      ),
-                      setUpdated
-                    )}
-                  </div>
-                ))}
-          </CardContent>
-        )}
-      </Card>
-    </Grid>
+                  );
+                })}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -330,7 +306,7 @@ export function Teams({ assigned, teams, nextShifts, setUpdated }) {
   const isMobile = useIsMobile();
 
   return (
-    <Grid container spacing={2}>
+    <div className="teams-page-grid teams-chairperson-teams-grid">
       {teams.map((team) => (
         <Team
           key={team}
@@ -352,11 +328,11 @@ export function Teams({ assigned, teams, nextShifts, setUpdated }) {
           isNewTeam={true}
         />
       )}
-    </Grid>
+    </div>
   );
 }
 
-export function Header() {
+export function Header({ topBarActions }) {
   const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -374,29 +350,33 @@ export function Header() {
   return tournament === null || tournament === undefined ? (
     ""
   ) : (
-    <div>
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
-      />
-
-      <Box className="justify" sx={{ mb: 1 }}>
-        <Box className="sxs">
-          <Typography variant="h4">Current Teams</Typography>
-          &thinsp;
-          <HelpIcon page="Teams" message={teams} />
-        </Box>
-
-        <HideShowToggle
-          teamType=""
-          defaultShow={tournament["show_teams"]}
+    <TeamsChairpersonPageHeader
+      title="Current Teams"
+      helpPage="Teams"
+      helpMessage={teams}
+      alerts={
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
           setSuccessMsg={setSuccessMsg}
           setErrorMsg={setErrorMsg}
         />
-      </Box>
-    </div>
+      }
+      toolbar={
+        <div className="teams-chairperson-pill">
+          <span className="teams-chairperson-pill-label">
+            Visible to ballkids
+          </span>
+          <HideShowToggle
+            teamType=""
+            defaultShow={tournament["show_teams"]}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+        </div>
+      }
+      actions={topBarActions}
+    />
   );
 }
 
@@ -533,38 +513,25 @@ export function ActionsButtons({ numAssigned, setUpdated }) {
         setUpdated={setUpdated}
       />
 
-      <Box
-        className="sxs"
-        component="div"
-        sx={{
-          my: 0.5,
-          pb: 1,
-          overflowX: "scroll",
-          button: {
-            flex: "none",
-          },
-        }}
-      >
+      <Box className="teams-chairperson-actions" component="div">
         <Button
           variant="outlined"
-          color="secondary"
           size="small"
           disabled={numAssigned > 0}
-          startIcon={<AutoAwesome />}
+          className="teams-chairperson-action-btn teams-chairperson-action-btn--create"
+          startIcon={<AutoAwesome fontSize="small" />}
           onClick={() => setTeamsOpen(true)}
-          sx={{ mr: 0.3 }}
         >
-          Auto-create Teams
+          Auto-create teams
         </Button>
 
         <Button
           variant="outlined"
           size="small"
-          color="primary"
           disabled={numAssigned === 0}
-          startIcon={<RemoveCircleOutline />}
+          className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
+          startIcon={<RemoveCircleOutline fontSize="small" />}
           onClick={() => setUnassignOpen(true)}
-          sx={{ mx: 0.3 }}
         >
           Unassign all teams
         </Button>
@@ -572,11 +539,10 @@ export function ActionsButtons({ numAssigned, setUpdated }) {
         <Button
           variant="outlined"
           size="small"
-          color="error"
           disabled={numAssigned === 0}
-          startIcon={<HighlightOff />}
+          className="teams-chairperson-action-btn teams-chairperson-action-btn--checkout"
+          startIcon={<HighlightOff fontSize="small" />}
           onClick={() => setCheckoutOpen(true)}
-          sx={{ mx: 0.3 }}
         >
           Check out all teams
         </Button>

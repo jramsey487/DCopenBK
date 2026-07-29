@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDrop } from "react-dnd";
 
 import Card from "@mui/material/Card";
@@ -33,49 +33,93 @@ import {
   ICON_DICT,
   TOOLTIP_DICT,
   SUPERVET_THRESHOLD,
+  NUM_RATINGS_WARNING_THRESHOLD,
 } from "../Consts";
 import { cut } from "../HelpMessages";
+import { renderTeamsChipDragSurface } from "../teams/TeamsChairpersonShared";
 import "./cut-page-desktop.css";
 
-function CutDragHandle() {
-  return (
-    <div className="cut-ballkid-chip__handle" aria-hidden="true">
-      <div className="cut-ballkid-chip__handle-dots">
-        {[...Array(6)].map((_, i) => (
-          <span key={i} />
-        ))}
-      </div>
-    </div>
-  );
+export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch) {
+  setActive((prev) => {
+    if (patch.is_cut === true) {
+      return prev.filter((b) => b.id !== ballkid.id);
+    }
+    return prev.map((b) =>
+      b.id === ballkid.id ? { ...b, ...patch } : b
+    );
+  });
+
+  fetch("/api/update-ballkid", {
+    method: "PATCH",
+    headers: getAuthHeader(),
+    body: JSON.stringify({
+      first_name: ballkid.first_name,
+      last_name: ballkid.last_name,
+      ...patch,
+    }),
+  }).then((response) => {
+    if (!response.ok) {
+      refetchActive();
+    }
+  });
 }
 
-function renderCutChipDragSurface({
-  ref,
-  isDragging,
-  children,
-  hoverHandlers,
-  dense = false,
-}) {
-  return (
-    <div
-      ref={ref}
-      className={`cut-ballkid-chip${dense ? " cut-ballkid-chip--dense" : ""}${
-        isDragging ? " is-dragging" : ""
-      }`}
-      {...(hoverHandlers || {})}
-    >
-      <CutDragHandle />
-      {children}
-    </div>
-  );
+function cutCalibratedRankDisplay(ballkid) {
+  if (
+    ballkid.calibrated_avg !== null &&
+    ballkid.calibrated_avg !== undefined &&
+    ballkid.calibrated_avg !== ""
+  ) {
+    return Number(ballkid.calibrated_avg).toFixed(3);
+  }
+  if (ballkid.rank !== null && ballkid.rank !== undefined && ballkid.rank !== "") {
+    return String(ballkid.rank);
+  }
+  return null;
 }
 
-function cutLastDayLabel(ballkid) {
-  const day = ballkid.last_day;
-  if (day === "End" || day == null || day === "") {
+function CalibratedRankPill({ ballkid }) {
+  const value = cutCalibratedRankDisplay(ballkid);
+  if (value == null) {
     return null;
   }
-  return day.length > 3 ? day.substring(0, 3) : day;
+  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+
+  return (
+    <Tooltip title="Calibrated rank" arrow>
+      <span
+        className={`cut-chip-pill cut-chip-pill--rank${
+          muted ? " cut-chip-pill--muted" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </Tooltip>
+  );
+}
+
+function LastDayPill({ ballkid }) {
+  const label =
+    ballkid.last_day === null ||
+    ballkid.last_day === "" ||
+    ballkid.last_day === "End"
+      ? "End"
+      : ballkid.last_day.length > 3
+        ? ballkid.last_day.substring(0, 3)
+        : ballkid.last_day;
+  const isEnd = label === "End";
+
+  return (
+    <Tooltip title="Last day" arrow>
+      <span
+        className={`cut-chip-pill cut-chip-pill--last${
+          isEnd ? " cut-chip-pill--muted" : ""
+        }`}
+      >
+        {label}
+      </span>
+    </Tooltip>
+  );
 }
 
 function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
@@ -112,16 +156,13 @@ function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
     addIcon("supervet", ICON_DICT.supervet, TOOLTIP_DICT.supervet);
   }
 
-  const lastDay = cutLastDayLabel(ballkid);
-
   if (compact) {
-    return lastDay ? (
+    return (
       <div className="cut-chip-meta-row">
-        <Tooltip title="Last day" arrow>
-          <span className="cut-chip-pill cut-chip-pill--last">{lastDay}</span>
-        </Tooltip>
+        <CalibratedRankPill ballkid={ballkid} />
+        <LastDayPill ballkid={ballkid} />
       </div>
-    ) : null;
+    );
   }
 
   return (
@@ -138,72 +179,86 @@ function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
           </span>
         </Tooltip>
       ) : null}
-      {lastDay ? (
-        <Tooltip title="Last day" arrow>
-          <span className="cut-chip-pill cut-chip-pill--last">{lastDay}</span>
-        </Tooltip>
-      ) : null}
+      <CalibratedRankPill ballkid={ballkid} />
+      <LastDayPill ballkid={ballkid} />
     </div>
   );
 }
 
-function CutBallkidRow({
+export function CutBallkidRow({
   ballkid,
   showHovercard,
   hoverCommentTypes,
   actions,
   compactMeta = false,
-  dense = false,
+  dense = true,
 }) {
   return (
-    <div className={`cut-ballkid-row${dense ? " cut-ballkid-row--dense" : ""}`}>
-      <DraggableBallkidAndIcon
-        ballkid={ballkid}
-        layout="cut-chip"
-        showHovercard={showHovercard}
-        hoverCommentTypes={hoverCommentTypes}
-        metaSlot={
-          <CutBallkidMeta
-            ballkid={ballkid}
-            compact={compactMeta}
-            dense={dense}
-          />
-        }
-        renderCustom={(props) =>
-          renderCutChipDragSurface({
-            ...props,
-            dense,
-            hoverHandlers: showHovercard ? props.hoverHandlers : null,
-          })
-        }
-      />
+    <div
+      className={`teams-chairperson-ballkid-row cut-ballkid-row${
+        dense ? " cut-ballkid-row--dense" : ""
+      }`}
+    >
+      <div className="teams-chairperson-ballkid-chip-wrap">
+        <DraggableBallkidAndIcon
+          ballkid={ballkid}
+          layout="cut-chip"
+          showHovercard={showHovercard}
+          hoverCommentTypes={hoverCommentTypes}
+          metaSlot={
+            <CutBallkidMeta
+              ballkid={ballkid}
+              compact={compactMeta}
+              dense={dense}
+            />
+          }
+          renderCustom={(props) =>
+            renderTeamsChipDragSurface({
+              ...props,
+              dense: true,
+              hoverHandlers: showHovercard ? props.hoverHandlers : null,
+            })
+          }
+        />
+      </div>
       {actions ? (
-        <div className="cut-ballkid-row__actions">{actions}</div>
+        <div className="teams-chairperson-ballkid-actions cut-ballkid-row__actions">
+          {actions}
+        </div>
       ) : null}
     </div>
   );
 }
 
-function TwoColumnBallkidList({ ballkids, dense, ...rowProps }) {
-  const half = Math.ceil(ballkids.length / 2);
-  const columns = [ballkids.slice(0, half), ballkids.slice(half)];
-
+function CutBallkidGrid({ ballkids, ...rowProps }) {
   return (
-    <div className="cut-page-two-columns">
-      {columns.map((column, colIdx) =>
-        column.length === 0 ? null : (
-          <div key={colIdx} className="cut-page-two-columns__col">
-            {column.map((ballkid) => (
-              <CutBallkidRow
-                key={ballkid.id}
-                ballkid={ballkid}
-                dense={dense}
-                {...rowProps}
-              />
-            ))}
-          </div>
-        )
-      )}
+    <div className="teams-chairperson-unassigned-grid cut-page-chip-grid">
+      {ballkids.map((ballkid) => (
+        <CutBallkidRow
+          key={ballkid.id}
+          ballkid={ballkid}
+          dense
+          {...rowProps}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CutBallkidStack({ ballkids, actionsForBallkid, ...rowProps }) {
+  return (
+    <div className="cut-page-chip-list">
+      {ballkids.map((ballkid) => (
+        <CutBallkidRow
+          key={ballkid.id}
+          ballkid={ballkid}
+          dense
+          actions={
+            actionsForBallkid ? actionsForBallkid(ballkid) : undefined
+          }
+          {...rowProps}
+        />
+      ))}
     </div>
   );
 }
@@ -212,7 +267,8 @@ export function CutStatusSection({
   section,
   active,
   showHovercard,
-  setUpdated,
+  patchCutBallkid,
+  refetchActive,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -223,18 +279,9 @@ export function CutStatusSection({
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          cut_status: section,
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
+    drop: (ballkid) => {
+      patchCutBallkid(ballkid, { cut_status: section });
+    },
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
@@ -251,7 +298,7 @@ export function CutStatusSection({
         }}
         open={open}
         setOpen={setOpen}
-        setUpdated={setUpdated}
+        setUpdated={refetchActive}
       />
 
       <Card 
@@ -293,7 +340,7 @@ export function CutStatusSection({
                       }),
                     })
                       .then((response) => response.json())
-                      .then(() => setUpdated(true));
+                      .then(() => refetchActive());
               }}
             >
               {cutAllStr}
@@ -323,7 +370,7 @@ export function CutStatusSection({
                   section,
                   position,
                   showHovercard,
-                  setUpdated
+                  patchCutBallkid
                 )}
               </Box>
             </div>
@@ -339,109 +386,81 @@ export function renderBallkidsInSection(
   section,
   position,
   showHovercard,
-  setUpdated
+  patchCutBallkid
 ) {
-  return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      {active.map((ballkid) =>
-        !ballkid.preferred_position.startsWith(position) ? (
-          ""
-        ) : (
-          <CutBallkidRow
-            key={`ballkid${ballkid.id}`}
-            ballkid={ballkid}
-            dense
-            compactMeta={section === "Self-Cut"}
-            showHovercard={showHovercard}
-            hoverCommentTypes={["experience", "rank", "last_day"]}
-            actions={
-              <>
-                {section === "Self-Cut" ? (
-                  ""
-                ) : (
-                  <Tooltip title="Uncategorize">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        p: 0.6,
-                        borderRadius: "8px",
-                        "&:hover": { backgroundColor: "rgba(37, 99, 235, 0.08)" },
-                      }}
-                      onClick={() => {
-                        fetch("/api/update-ballkid", {
-                          method: "PATCH",
-                          headers: getAuthHeader(),
-                          body: JSON.stringify({
-                            first_name: ballkid.first_name,
-                            last_name: ballkid.last_name,
-                            cut_status: "",
-                          }),
-                        })
-                          .then((response) => response.json())
-                          .then(() => setUpdated(true));
-                      }}
-                    >
-                      <RemoveCircleOutline color="primary" sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Tooltip>
-                )}
+  const rows = active.filter((ballkid) =>
+    ballkid.preferred_position.startsWith(position)
+  );
 
-                {!section.includes("Cut") ? (
-                  ""
-                ) : (
-                  <Tooltip title="Cut">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        p: 0.6,
-                        borderRadius: "8px",
-                        "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
-                      }}
-                      onClick={() => {
-                        fetch("/api/update-ballkid", {
-                          method: "PATCH",
-                          headers: getAuthHeader(),
-                          body: JSON.stringify({
-                            first_name: ballkid.first_name,
-                            last_name: ballkid.last_name,
-                            is_cut: true,
-                            self_cut: section === "Self-Cut",
-                          }),
-                        })
-                          .then((response) => response.json())
-                          .then(() => setUpdated(true));
-                      }}
-                    >
-                      <Dangerous color="error" sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </>
-            }
-          />
-        )
+  return (
+    <CutBallkidStack
+      ballkids={rows}
+      compactMeta={section === "Self-Cut"}
+      showHovercard={showHovercard}
+      hoverCommentTypes={[
+        "experience",
+        "rank",
+        "calibrated_avg",
+        "last_day",
+      ]}
+      actionsForBallkid={(ballkid) => (
+        <>
+          {section === "Self-Cut" ? (
+            ""
+          ) : (
+            <Tooltip title="Uncategorize">
+              <IconButton
+                size="small"
+                sx={{
+                  p: 0.6,
+                  borderRadius: "8px",
+                  "&:hover": { backgroundColor: "rgba(37, 99, 235, 0.08)" },
+                }}
+                onClick={() => {
+                  patchCutBallkid(ballkid, { cut_status: "" });
+                }}
+              >
+                <RemoveCircleOutline color="primary" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+
+          {!section.includes("Cut") ? (
+            ""
+          ) : (
+            <Tooltip title="Cut">
+              <IconButton
+                size="small"
+                sx={{
+                  p: 0.6,
+                  borderRadius: "8px",
+                  "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
+                }}
+                onClick={() => {
+                  patchCutBallkid(ballkid, {
+                    is_cut: true,
+                    self_cut: section === "Self-Cut",
+                  });
+                }}
+              >
+                <Dangerous color="error" sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </>
       )}
-    </Box>
+    />
   );
 }
 
-function ActiveSection({ active, showHovercard, setUpdated }) {
+function ActiveSection({ active, showHovercard, patchCutBallkid }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          cut_status: "",
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
+    drop: (ballkid) => {
+      patchCutBallkid(ballkid, { cut_status: "" });
+    },
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
@@ -526,9 +545,8 @@ function ActiveSection({ active, showHovercard, setUpdated }) {
                 There are currently no active ballkids left to categorize.
               </Typography>
             ) : (
-              <TwoColumnBallkidList
+              <CutBallkidGrid
                 ballkids={filtered}
-                dense
                 showHovercard={showHovercard}
                 hoverCommentTypes={[
                   "experience",
@@ -594,30 +612,20 @@ export function renderCopyButtons(active, emails, setSuccessMsg) {
   );
 }
 
-export function SelfCutCard({ updated, showHovercard, setUpdated }) {
-  const [selfCut, setSelfCut] = useState([]);
+export function SelfCutCard({
+  active,
+  showHovercard,
+  patchCutBallkid,
+  refetchActive,
+}) {
+  const selfCut = active.filter((ballkid) => ballkid.cut_status === "Self-Cut");
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/self-cut-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setSelfCut(data));
-  }, [updated]);
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          cut_status: "Self-Cut",
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true)),
+    drop: (ballkid) => {
+      patchCutBallkid(ballkid, { cut_status: "Self-Cut" });
+    },
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
@@ -634,7 +642,7 @@ export function SelfCutCard({ updated, showHovercard, setUpdated }) {
         }}
         open={open}
         setOpen={setOpen}
-        setUpdated={setUpdated}
+        setUpdated={refetchActive}
       />
 
       <Card 
@@ -693,7 +701,7 @@ export function SelfCutCard({ updated, showHovercard, setUpdated }) {
                   "Self-Cut",
                   position,
                   showHovercard,
-                  setUpdated
+                  patchCutBallkid
                 )}
               </Box>
             </div>
@@ -707,13 +715,21 @@ export function SelfCutCard({ updated, showHovercard, setUpdated }) {
 export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
   const [emails, setEmails] = useState([]);
-  const [updated, setUpdated] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [showHovercard, setShowHovercard] = useState(true);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const sections = Object.keys(CUT_STATUSES).map((key) => CUT_STATUSES[key]);
+
+  const refetchActive = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  const patchCutBallkid = useCallback(
+    (ballkid, patch) =>
+      patchCutBallkidInState(setActive, refetchActive, ballkid, patch),
+    [refetchActive]
+  );
 
   useEffect(() => {
     fetch("/api/sorted-list", { headers: getAuthHeader() })
@@ -726,9 +742,8 @@ export default function CutPageDesktop(props) {
 
     fetch("/api/emails-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setEmails(data["emails"]))
-      .then(() => setUpdated(false));
-  }, [updated]);
+      .then((data) => setEmails(data["emails"]));
+  }, [refreshKey]);
 
   return (
     <div className="page ballkid-list-page">
@@ -787,14 +802,16 @@ export default function CutPageDesktop(props) {
                   (ballkid) => ballkid.cut_status === section
                 )}
                 showHovercard={showHovercard}
-                setUpdated={setUpdated}
+                patchCutBallkid={patchCutBallkid}
+                refetchActive={refetchActive}
               />
             ))}
 
             <SelfCutCard
-              updated={updated}
+              active={active}
               showHovercard={showHovercard}
-              setUpdated={setUpdated}
+              patchCutBallkid={patchCutBallkid}
+              refetchActive={refetchActive}
             />
           </Grid>
         </Grid>
@@ -810,7 +827,7 @@ export default function CutPageDesktop(props) {
           <ActiveSection
             active={active.filter((ballkid) => ballkid.cut_status === "")}
             showHovercard={showHovercard}
-            setUpdated={setUpdated}
+            patchCutBallkid={patchCutBallkid}
           />
         </Grid>
       </Grid>

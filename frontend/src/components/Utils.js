@@ -593,9 +593,11 @@ export function DraggableBallkidAndIcon({
     }
   }, [showHovercard]);
 
-  const metaBlock = (
+  const metaBlockInner = (
     <>
-      <Icons ballkid={ballkid} margin={0} isTeamsPage={true} showSupervet />
+      <span className="cut-chip-meta-item cut-chip-meta-icons">
+        <Icons ballkid={ballkid} margin={0} isTeamsPage={true} showSupervet />
+      </span>
       {commentTypes.map((commentType) => (
         <Box key={commentType} component="span" className="cut-chip-meta-item">
           <CommentsText ballkid={ballkid} commentType={commentType} />
@@ -603,6 +605,8 @@ export function DraggableBallkidAndIcon({
       ))}
     </>
   );
+
+  const metaBlock = <div className="cut-chip-meta-row">{metaBlockInner}</div>;
 
   const hovercardNode = showHovercard ? (
     <BallkidPopover
@@ -807,16 +811,54 @@ export function BallkidCard({ ballkid, renderAdditional }) {
           </AspectRatio>
         )}
         <CardContent>
-          <div className={layout === "grid" ? "" : "justify"}>
-            <div className={layout === "grid" ? "justify" : "sxs"}>
-              <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
-                {ballkid.first_name} {ballkid.last_name}
-              </Typography>
-              &thinsp;
-              <Icons ballkid={ballkid} margin={0} />
+          {layout === "grid" ? (
+            <>
+              <Box
+                className="ballkid-card-name-row"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  flexWrap: "nowrap",
+                  gap: 0.5,
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
+                  lineHeight: 1.25,
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  component="span"
+                  sx={{
+                    fontWeight: "medium",
+                    lineHeight: 1.25,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {ballkid.first_name} {ballkid.last_name}
+                </Typography>
+                <Box component="span" sx={{ flexShrink: 0, lineHeight: 0 }}>
+                  <Icons ballkid={ballkid} margin={0} />
+                </Box>
+              </Box>
+              {renderAdditional}
+            </>
+          ) : (
+            <div className="justify">
+              <div className="sxs">
+                <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
+                  {ballkid.first_name} {ballkid.last_name}
+                </Typography>
+                &thinsp;
+                <Icons ballkid={ballkid} margin={0} />
+              </div>
+              {renderAdditional}
             </div>
-            {renderAdditional}
-          </div>
+          )}
         </CardContent>
       </CardActionArea>
     </Card>

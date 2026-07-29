@@ -154,3 +154,9 @@
     border: 1px solid var(--bl-border);
     box-shadow: none;
   }
+
+  .ballkid-card-name-row .MuiIcon-root {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }

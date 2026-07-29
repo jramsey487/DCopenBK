@@ -1,22 +1,18 @@
 import React from "react";
 
 import crestSrc from "../assets/mubadala-dc-open-crest.png";
-import lockupSrc from "../assets/mubadala-dc-open-logo.png";
 
-/** Tournament mark: circular crest (login) or horizontal lockup. */
-export default function BallcrewLogo({ variant = "lockup", height = 32 }) {
-  const crest = variant === "crest";
-  const src = crest ? crestSrc : lockupSrc;
+/** Tournament crest mark (navbar, login, etc.). */
+export default function BallcrewLogo({ height = 32, size }) {
+  const px = size ?? height;
 
   return (
     <img
-      src={src}
+      src={crestSrc}
       alt="Mubadala DC Open"
-      height={height}
-      width={crest ? height : undefined}
-      className={
-        crest ? "ballcrew-logo-img ballcrew-logo-img--crest" : "ballcrew-logo-img"
-      }
+      height={px}
+      width={px}
+      className="ballcrew-logo-img ballcrew-logo-img--crest"
       draggable={false}
     />
   );

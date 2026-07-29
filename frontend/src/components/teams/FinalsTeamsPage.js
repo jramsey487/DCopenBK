@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-
-import { getAuthHeader, BallkidAndIcon, HelpIcon, Banners } from "../Utils";
+import {
+  getAuthHeader,
+  BallkidAndIcon,
+  Banners,
+  getLocalStorage,
+} from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { finalsTeamsNonchairperson } from "../HelpMessages";
+import { PersonPhotoTile, TeamsPhotoToggle } from "./TeamsShared";
+import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import "./teams-page.css";
 
-function Team({ team, assigned }) {
-  const teamAssigned = assigned.filter(
-    (ballkid) => ballkid.finals_team === team
-  );
-
+function Team({ team, assigned, isMyTeam, showPhotos }) {
   return (
-    <div className="team-card">
+    <div className={`team-card${isMyTeam ? " is-mine" : ""}`}>
       <div className="team-card-head">
         <div className="team-card-title-group">
           <span className="team-card-title">{team}</span>
-          <span className="team-card-count">({teamAssigned.length})</span>
+          <span className="team-card-count">({assigned.length})</span>
         </div>
       </div>
 
       <div className="team-card-body">
         {POSITIONS.map((position) => {
-          const positionAssigned = teamAssigned.filter(
+          const positionAssigned = assigned.filter(
             (ballkid) => ballkid.finals_position === position
           );
 
@@ -41,10 +41,20 @@ function Team({ team, assigned }) {
                 <div className="team-position-empty">
                   No {position.toLowerCase()}s assigned yet.
                 </div>
+              ) : showPhotos ? (
+                <div className="team-photo-grid">
+                  {positionAssigned.map((ballkid) => (
+                    <PersonPhotoTile key={ballkid.id} ballkid={ballkid} />
+                  ))}
+                </div>
               ) : (
                 <div className="team-member-list">
                   {positionAssigned.map((ballkid) => (
-                    <BallkidAndIcon key={ballkid.id} ballkid={ballkid} />
+                    <BallkidAndIcon
+                      key={ballkid.id}
+                      ballkid={ballkid}
+                      isTeamsPage
+                    />
                   ))}
                 </div>
               )}
@@ -59,6 +69,9 @@ function Team({ team, assigned }) {
 export default function FinalsTeamsPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [showFinalsTeams, setShowFinalsTeams] = useState(false);
+  const [showPhotos, setShowPhotos] = useState(true);
+
+  const myBallkidId = Number(getLocalStorage("ballkid_id"));
 
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
@@ -77,23 +90,42 @@ export default function FinalsTeamsPage(props) {
       .then((data) => setShowFinalsTeams(data["show_finals_teams"]));
   }, []);
 
+  const myFinalsTeam = assigned.find((b) => b.id === myBallkidId)?.finals_team;
+
+  const orderedTeams = [...teams].sort((a, b) => {
+    if (a === myFinalsTeam) return -1;
+    if (b === myFinalsTeam) return 1;
+    return 0;
+  });
+
   return (
-    <div className="page teams-page-shell">
+    <div className="page ballkid-list-page teams-page-shell">
       <Banners />
 
-      <Box className="teams-page-header">
-        <div className="teams-page-title-row">
-          <Typography className="teams-page-title" variant="h4">
-            Finals Teams
-          </Typography>
-          <HelpIcon page="Finals Teams" message={finalsTeamsNonchairperson} />
-        </div>
-      </Box>
+      <TeamsPageTopBar
+        title="Finals Teams"
+        helpPage="Finals Teams"
+        helpMessage={finalsTeamsNonchairperson}
+        controls={
+          <TeamsPhotoToggle
+            showPhotos={showPhotos}
+            onToggle={() => setShowPhotos(!showPhotos)}
+          />
+        }
+      />
 
       {assigned.length > 0 && showFinalsTeams ? (
         <div className="teams-page-grid">
-          {teams.map((team) => (
-            <Team key={team} team={team} assigned={assigned} />
+          {orderedTeams.map((team) => (
+            <Team
+              key={team}
+              team={team}
+              assigned={assigned.filter(
+                (ballkid) => ballkid.finals_team === team
+              )}
+              isMyTeam={team === myFinalsTeam}
+              showPhotos={showPhotos}
+            />
           ))}
         </div>
       ) : (

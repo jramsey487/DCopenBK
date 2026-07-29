@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 
 import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
-import { UnassignedDesktop } from "./TeamsPageChairpersonDesktop";
+import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
 import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
 
 export default function FinalsTeamsPageChairpersonDesktop(props) {
@@ -35,34 +35,35 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
   }, [updated]);
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
 
-      <Grid container className="justify-top">
+      <Header
+        showHovercard={showHovercard}
+        setShowHovercard={setShowHovercard}
+      />
+
+      <Grid container className="justify-top teams-chairperson-split" spacing={2}>
         <Grid
           item
-          sm={6}
+          xs={12}
           md={7}
           lg={8}
           xl={9}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
+          className="teams-chairperson-main"
         >
-          <Header
-            showHovercard={showHovercard}
-            setShowHovercard={setShowHovercard}
-          />
           {renderTeams(assigned, teams, showHovercard, setUpdated)}
         </Grid>
 
         <Grid
           item
-          sm={6}
+          xs={12}
           md={5}
           lg={4}
           xl={3}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
+          className="teams-chairperson-sidebar"
         >
-          <UnassignedDesktop
+          <UnassignedPanel
             unassigned={unassigned}
             setUpdated={setUpdated}
             showHovercard={showHovercard}

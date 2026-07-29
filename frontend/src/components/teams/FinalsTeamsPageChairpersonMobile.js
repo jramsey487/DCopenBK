@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 
 import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
-import { UnassignedMobile } from "./TeamsPageChairpersonMobile";
+import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
 import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
 
 export default function FinalsTeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
   const [updated, setUpdated] = useState(false);
+  const [showHovercard, setShowHovercard] = useState(true);
 
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
@@ -31,16 +32,19 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
   }, [updated]);
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
 
-      <Header />
-      {renderTeams(assigned, teams, setUpdated)}
+      <Header
+        showHovercard={showHovercard}
+        setShowHovercard={setShowHovercard}
+      />
+      {renderTeams(assigned, teams, showHovercard, setUpdated)}
 
-      <UnassignedMobile
+      <UnassignedPanel
         unassigned={unassigned}
-        teams={teams}
         setUpdated={setUpdated}
+        showHovercard={showHovercard}
         isFinalsPage={true}
       />
     </div>

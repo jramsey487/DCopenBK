@@ -1,3 +1,6 @@
+@import "../lists/ballkid-list-by-name.css";
+@import "../lists/cut-page-desktop.css";
+
 .teams-page-shell {
     --tp-nav: #0d1b3e;
     --tp-red: #c8102e;
@@ -14,26 +17,6 @@
     letter-spacing: -0.01em;
   }
   
-  .teams-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  
-  .teams-page-title-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .teams-page-shell .teams-page-title {
-    font-size: 22px !important;
-    font-weight: 600 !important;
-    color: var(--tp-text1) !important;
-  }
   
   .teams-page-photo-toggle {
     display: flex;
@@ -315,4 +298,353 @@
 
   .past-finals-year-input:focus {
     outline: none;
+  }
+
+  .team-card.teams-chairperson-card {
+    margin-bottom: 0;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .team-card.teams-chairperson-card.is-drop-over {
+    box-shadow: 0 0 0 2px var(--tp-nav);
+  }
+
+  .team-card.teams-chairperson-card.is-new-team {
+    border-style: dashed;
+    border-width: 1px;
+    border-color: var(--tp-text3);
+    box-shadow: none;
+  }
+
+  .teams-chairperson-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .teams-chairperson-head-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 16px 10px;
+    font-size: 13px;
+    color: var(--tp-text2);
+    background: var(--tp-bg2);
+  }
+
+  .team-card.is-on-court .teams-chairperson-head-secondary {
+    background: #ecfdf5;
+  }
+
+  .teams-chairperson-ballkid-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .teams-chairperson-unassigned {
+    background: var(--tp-bg1) !important;
+    border: 0.5px solid var(--tp-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04) !important;
+    transition: box-shadow 0.15s ease;
+  }
+
+  .teams-chairperson-unassigned.is-drop-over {
+    box-shadow: 0 0 0 2px var(--tp-nav) !important;
+  }
+
+  .teams-chairperson-unassigned-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px 8px;
+    border-bottom: 0.5px solid var(--tp-border);
+  }
+
+  .teams-chairperson-unassigned-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tp-text1);
+  }
+
+  .teams-chairperson-unassigned-count {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--tp-text2);
+  }
+
+  .teams-chairperson-unassigned-body {
+    padding: 8px 16px 16px;
+  }
+
+  .teams-chairperson-page {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .teams-chairperson-page-header {
+    margin-bottom: 0;
+  }
+
+  .teams-page-top-bar__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .cut-page-top-bar__actions .teams-chairperson-actions {
+    margin-bottom: 0;
+  }
+
+  .teams-chairperson-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--tp-bg0);
+    border: 0.5px solid var(--tp-border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .teams-chairperson-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 14px;
+    background: var(--tp-bg1);
+    border: 0.5px solid var(--tp-border);
+    border-radius: 20px;
+    cursor: default;
+  }
+
+  .teams-chairperson-pill-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tp-text2);
+    white-space: nowrap;
+  }
+
+  .teams-chairperson-pill .MuiSwitch-root {
+    margin: 0 -4px 0 0;
+  }
+
+  .teams-chairperson-pill .sxs {
+    gap: 4px;
+  }
+
+  .teams-chairperson-pill .MuiTypography-root {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--tp-text2) !important;
+  }
+
+  .teams-chairperson-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .teams-chairperson-action-btn.MuiButton-root {
+    flex: none;
+    text-transform: none;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    border-radius: 10px;
+    padding: 7px 14px;
+    min-height: 36px;
+    box-shadow: none;
+    font-family: inherit;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .teams-chairperson-action-btn .MuiButton-startIcon {
+    margin-right: 6px;
+    margin-left: -2px;
+  }
+
+  .teams-chairperson-action-btn .MuiButton-startIcon > *:nth-of-type(1) {
+    font-size: 1.05rem;
+  }
+
+  .teams-chairperson-action-btn--create.MuiButton-outlined {
+    color: #5b21b6;
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+  }
+
+  .teams-chairperson-action-btn--create.MuiButton-outlined:hover:not(.Mui-disabled) {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+    box-shadow: 0 2px 8px rgba(91, 33, 182, 0.12);
+  }
+
+  .teams-chairperson-action-btn--unassign.MuiButton-outlined {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+  }
+
+  .teams-chairperson-action-btn--unassign.MuiButton-outlined:hover:not(.Mui-disabled) {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    box-shadow: 0 2px 8px rgba(29, 78, 216, 0.12);
+  }
+
+  .teams-chairperson-action-btn--checkout.MuiButton-outlined {
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+
+  .teams-chairperson-action-btn--checkout.MuiButton-outlined:hover:not(.Mui-disabled) {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.12);
+  }
+
+  .teams-chairperson-action-btn.MuiButton-outlined.Mui-disabled {
+    color: var(--tp-text3);
+    background: var(--tp-bg0);
+    border-color: var(--tp-border);
+    opacity: 1;
+  }
+
+  .teams-chairperson-action-btn.MuiButton-outlined.Mui-disabled
+    .MuiButton-startIcon {
+    opacity: 0.55;
+  }
+
+  .teams-chairperson-teams-grid {
+    margin-bottom: 8px;
+  }
+
+  .teams-chairperson-split {
+    align-items: flex-start;
+  }
+
+  .teams-chairperson-main,
+  .teams-chairperson-sidebar {
+    max-height: calc(85vh - 8px);
+    overflow: auto;
+  }
+
+  @media (min-width: 900px) {
+    .teams-chairperson-sidebar {
+      position: sticky;
+      top: 8px;
+    }
+  }
+
+  .teams-chairperson-sidebar .teams-chairperson-section {
+    margin-top: 0;
+  }
+
+  .teams-chairperson-unassigned-panel {
+    width: 100%;
+  }
+
+  .teams-chairperson-sidebar .teams-chairperson-unassigned-grid--in-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .teams-chairperson-sidebar .teams-chairperson-drop-hint {
+    font-size: 11px;
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+
+  .teams-chairperson-section {
+    margin-top: 32px;
+    padding-top: 4px;
+  }
+
+  .teams-chairperson-main .teams-chairperson-section {
+    margin-top: 0;
+  }
+
+  .teams-chairperson-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .teams-chairperson-section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--tp-text1);
+    letter-spacing: -0.02em;
+  }
+
+  .teams-chairperson-section-count {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--tp-text2);
+    margin-left: 6px;
+  }
+
+  .teams-chairperson-unassigned {
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .teams-chairperson-unassigned-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+
+  .teams-chairperson-ballkid-chip-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .teams-chairperson-ballkid-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+  }
+
+  .teams-chairperson-ballkid-row .cut-ballkid-chip {
+    width: 100%;
+  }
+
+  .teams-chairperson-position-block {
+    margin-top: 16px;
+  }
+
+  .teams-chairperson-position-block:first-child {
+    margin-top: 0;
+  }
+
+  .teams-chairperson-drop-hint {
+    font-size: 12px;
+    color: var(--tp-text3);
+    margin: 0 0 8px;
   }

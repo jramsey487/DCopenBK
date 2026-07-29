@@ -1,56 +1,18 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-
 import {
   CourtAssignment,
   getAuthHeader,
   isCurrentHour,
   BallkidAndIcon,
-  HelpIcon,
   Banners,
-  ballkidImageSrc,
-  Icons,
   getLocalStorage,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
+import { PersonPhotoTile, TeamsPhotoToggle } from "./TeamsShared";
+import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import "./teams-page.css";
-
-function personInitials(firstName, lastName) {
-  const f = (firstName ?? "").trim()[0] ?? "";
-  const l = (lastName ?? "").trim()[0] ?? "";
-  return (f + l).toUpperCase() || "?";
-}
-
-function PersonPhotoTile({ ballkid }) {
-  const src = ballkidImageSrc(ballkid.image);
-  const [failed, setFailed] = useState(false);
-
-  return (
-    <div className="team-photo-tile">
-      <div className="team-photo-avatar">
-        {src && !failed ? (
-          <img
-            src={src}
-            alt=""
-            loading="lazy"
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          personInitials(ballkid.first_name, ballkid.last_name)
-        )}
-      </div>
-      <span className="team-photo-name">
-        {ballkid.first_name} {ballkid.last_name}
-      </span>
-      <span className="team-photo-role-icons">
-        <Icons ballkid={ballkid} margin={0} isTeamsPage />
-      </span>
-    </div>
-  );
-}
 
 function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
   const isCurrentlyOn =
@@ -166,30 +128,20 @@ export default function TeamsPage(props) {
   });
 
   return (
-    <div className="page teams-page-shell">
+    <div className="page ballkid-list-page teams-page-shell">
       <Banners />
 
-      <Box className="teams-page-header">
-        <div className="teams-page-title-row">
-          <Typography className="teams-page-title" variant="h4">
-            Current Teams
-          </Typography>
-          <HelpIcon page="Teams" message={teamsNonchairperson} />
-        </div>
-
-        <div className="teams-page-photo-toggle">
-          <span className="teams-page-photo-toggle-label">Show photos</span>
-          <button
-            type="button"
-            className={`teams-page-photo-toggle-switch${
-              showPhotos ? " on" : ""
-            }`}
-            role="switch"
-            aria-checked={showPhotos}
-            onClick={() => setShowPhotos(!showPhotos)}
+      <TeamsPageTopBar
+        title="Current Teams"
+        helpPage="Teams"
+        helpMessage={teamsNonchairperson}
+        controls={
+          <TeamsPhotoToggle
+            showPhotos={showPhotos}
+            onToggle={() => setShowPhotos(!showPhotos)}
           />
-        </div>
-      </Box>
+        }
+      />
 
       {assigned.length > 0 && showTeams ? (
         <div className="teams-page-grid">

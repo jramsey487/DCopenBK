@@ -41,6 +41,7 @@ import Edit from "@mui/icons-material/Edit";
 
 import RatingDialog from "../ratings/RatingDialog";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
+import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
 import { RaterParamsChart } from "./RaterParamsChart";
 import { BallkidParamsChart } from "./BallkidParamsChart";
@@ -192,7 +193,15 @@ function renderPreferredPosition(ballkid, setUpdated) {
   const ALL_POSITIONS = ["Back", "Net", "Back/Net", "Net/Back"];
 
   return (
-    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 1,
+        alignItems: "center",
+        pt: 0.25,
+      }}
+    >
       {ALL_POSITIONS.map((pos) => {
         const isSelected = ballkid.preferred_position === pos;
         return (
@@ -239,7 +248,15 @@ function renderPosition(ballkid, setUpdated) {
   const POSITIONS = ["Back", "Net"];
 
   return (
-    <Box sx={{ display: "flex", gap: 0.75, alignItems: "center" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 1,
+        alignItems: "center",
+        pt: 0.25,
+      }}
+    >
       {POSITIONS.map((pos) => {
         const isSelected = ballkid.position === pos;
         return (
@@ -1455,6 +1472,11 @@ export default function BallkidPageChairperson(props) {
               <ProfileCard title="Check-in history">
                 <div className="ballkid-profile-chart-wrap">
                   <CheckinHistoryChart pk={pk} />
+                </div>
+              </ProfileCard>
+              <ProfileCard title="Time under each captain">
+                <div className="ballkid-profile-chart-wrap">
+                  <CaptainHistoryChart pk={pk} />
                 </div>
               </ProfileCard>
               <ProfileCard title="Court time">
