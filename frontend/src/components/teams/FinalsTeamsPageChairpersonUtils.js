@@ -88,20 +88,37 @@ function renderBallkidsOnTeam(assigned, showHovercard, setUpdated) {
           <div className="teams-chairperson-ballkid-chip-wrap">
             <TeamsDraggableBallkid
               ballkid={ballkid}
-              commentTypes={["rank", "experience"]}
               showHovercard={showHovercard}
               hoverCommentTypes={["experience", "rank", "calibrated_avg"]}
             />
           </div>
-
-          <div className="teams-chairperson-ballkid-actions">
-            {!ballkid.preferred_position.includes("/")
-              ? ""
-              : renderSwitchButton(ballkid, setUpdated)}
-            {renderUnassignButton(ballkid, setUpdated)}
-          </div>
+          {renderBallkidRowActions(ballkid, setUpdated)}
         </div>
       ))}
+    </div>
+  );
+}
+
+function ballkidCanSwitchPosition(ballkid) {
+  return (
+    ballkid.preferred_position &&
+    String(ballkid.preferred_position).includes("/")
+  );
+}
+
+function renderBallkidRowActions(ballkid, setUpdated) {
+  const showSwitch = ballkidCanSwitchPosition(ballkid);
+
+  return (
+    <div className="teams-chairperson-ballkid-actions">
+      <div
+        className={`teams-chairperson-ballkid-switch-slot${
+          showSwitch ? "" : " is-empty"
+        }`}
+      >
+        {showSwitch ? renderSwitchButton(ballkid, setUpdated) : null}
+      </div>
+      {renderUnassignButton(ballkid, setUpdated)}
     </div>
   );
 }

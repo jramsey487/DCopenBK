@@ -55,13 +55,27 @@ import {
 } from "./Consts";
 import { Popover } from "@mui/material";
 
-export function Icons({ ballkid, margin, isTeamsPage = false }) {
+export function Icons({
+  ballkid,
+  margin,
+  isTeamsPage = false,
+  teamsChairpersonMinimal = false,
+}) {
   const group = getLocalStorage("group");
 
   if (ballkid.is_chairperson) {
     return (
       <Icon sx={{ mb: margin }}>
         {ICON_DICT["chairperson"]}
+      </Icon>
+    );
+  }
+
+  if (teamsChairpersonMinimal) {
+    return (
+      <Icon sx={{ mb: margin }}>
+        {ballkid.is_captain && ICON_DICT["captain"]}
+        {ballkid.num_years_experience === 0 && ICON_DICT["rookie"]}
       </Icon>
     );
   }
@@ -604,6 +618,7 @@ export function DraggableBallkidAndIcon({
   layout = "inline",
   renderCustom = null,
   metaSlot = null,
+  teamsChairpersonMinimal = false,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -627,7 +642,12 @@ export function DraggableBallkidAndIcon({
   const metaBlockInner = (
     <>
       <span className="cut-chip-meta-item cut-chip-meta-icons">
-        <Icons ballkid={ballkid} margin={0} isTeamsPage={true} showSupervet />
+        <Icons
+          ballkid={ballkid}
+          margin={0}
+          isTeamsPage={true}
+          teamsChairpersonMinimal={teamsChairpersonMinimal}
+        />
       </span>
       {commentTypes.map((commentType) => (
         <Box key={commentType} component="span" className="cut-chip-meta-item">

@@ -121,6 +121,31 @@ function renderCheckoutButton(ballkid, setUpdated) {
   );
 }
 
+function ballkidCanSwitchPosition(ballkid) {
+  return (
+    ballkid.preferred_position &&
+    String(ballkid.preferred_position).includes("/")
+  );
+}
+
+function renderBallkidRowActions(ballkid, setUpdated, { showCheckout = true } = {}) {
+  const showSwitch = ballkidCanSwitchPosition(ballkid);
+
+  return (
+    <div className="teams-chairperson-ballkid-actions">
+      <div
+        className={`teams-chairperson-ballkid-switch-slot${
+          showSwitch ? "" : " is-empty"
+        }`}
+      >
+        {showSwitch ? renderSwitchButton(ballkid, setUpdated) : null}
+      </div>
+      {renderUnassignButton(ballkid, setUpdated)}
+      {showCheckout ? renderCheckoutButton(ballkid, setUpdated) : null}
+    </div>
+  );
+}
+
 function renderBallkidsOnTeam(ballkids, setUpdated) {
   return (
     <div className="team-member-list">
@@ -130,19 +155,9 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
           className="teams-chairperson-ballkid-row"
         >
           <div className="teams-chairperson-ballkid-chip-wrap">
-            <TeamsDraggableBallkid
-              ballkid={ballkid}
-              commentTypes={["checkout_teams"]}
-            />
+            <TeamsDraggableBallkid ballkid={ballkid} />
           </div>
-
-          <div className="teams-chairperson-ballkid-actions">
-            {!ballkid.preferred_position.includes("/")
-              ? ""
-              : renderSwitchButton(ballkid, setUpdated)}
-            {renderUnassignButton(ballkid, setUpdated)}
-            {renderCheckoutButton(ballkid, setUpdated)}
-          </div>
+          {renderBallkidRowActions(ballkid, setUpdated)}
         </div>
       ))}
     </div>
@@ -229,20 +244,6 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
                 <span className="team-card-oncourt-badge">On court</span>
               ) : null}
             </div>
-            <div className="teams-chairperson-head-actions">
-              {assigned.length === 0 ? (
-                ""
-              ) : (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
-                  onClick={() => setClearOpen(true)}
-                >
-                  End team
-                </Button>
-              )}
-            </div>
           </div>
 
           {assigned.length === 0 ? (
@@ -252,15 +253,26 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
               <div className="teams-chairperson-head-secondary__assignment">
                 <CourtAssignment nextShifts={nextShifts} />
               </div>
-              <Button
-                size="small"
-                variant="outlined"
-                color="error"
-                className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
-                onClick={() => setCheckoutOpen(true)}
-              >
-                Check out all
-              </Button>
+              <div className="teams-chairperson-head-secondary__buttons">
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+                  onClick={() => setClearOpen(true)}
+                >
+                  End team
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+                  onClick={() => setCheckoutOpen(true)}
+                >
+                  Check out all
+                </Button>
+              </div>
             </div>
           )}
 

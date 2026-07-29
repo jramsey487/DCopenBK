@@ -209,10 +209,9 @@ export function UnassignedPanel({
                     <TeamsDraggableBallkid
                       key={ballkid.id}
                       ballkid={ballkid}
+                      teamsChairpersonMinimal
                       commentTypes={
-                        isFinalsPage
-                          ? ["rank", "experience"]
-                          : ["checkout_teams"]
+                        isFinalsPage ? [] : ["checkout_teams"]
                       }
                       showHovercard={showHovercard}
                       hoverCommentTypes={

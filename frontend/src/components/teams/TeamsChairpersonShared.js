@@ -38,11 +38,17 @@ export function renderTeamsChipDragSurface({
   );
 }
 
-export function TeamsDraggableBallkid(props) {
+export function TeamsDraggableBallkid({
+  teamsChairpersonMinimal = true,
+  commentTypes = [],
+  ...props
+}) {
   return (
     <DraggableBallkidAndIcon
       layout="cut-chip"
       renderCustom={renderTeamsChipDragSurface}
+      teamsChairpersonMinimal={teamsChairpersonMinimal}
+      commentTypes={commentTypes}
       {...props}
     />
   );
