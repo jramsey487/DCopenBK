@@ -484,6 +484,48 @@
   flex-wrap: wrap;
 }
 
+.cut-mobile-assign-btn-wrap {
+  display: inline-flex;
+  width: 100%;
+}
+
+.cut-mobile-assign-table--decision .cut-mobile-assign-btn-wrap {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__head,
+.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__row {
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, auto);
+}
+
+.cut-mobile-assign-table--decision .cut-mobile-assign-col {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px !important;
+  min-width: 0;
+  width: auto;
+}
+
+.cut-page .cut-mobile-assign-table--decision .cut-mobile-assign-btn--x.MuiButton-root {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  padding: 0 !important;
+  flex: 0 0 auto;
+}
+
+.cut-mobile-assign-btn__x {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 @media (max-width: 900px) {
   .cut-page-top-bar__end {
     margin-left: 0;
@@ -558,15 +600,30 @@
     margin-bottom: 4px;
   }
 
-  .cut-page-mobile .cut-mobile-assign-table {
+  .cut-page-mobile .cut-mobile-assign-table:not(.cut-mobile-assign-table--decision) {
     min-width: 480px;
     width: max(100%, 480px);
+  }
+
+  .cut-page-mobile .cut-mobile-assign-table--decision {
+    min-width: 0;
+    width: 100%;
   }
 
   .cut-page-mobile .cut-mobile-assign-table .teams-mobile-unassigned-table__head,
   .cut-page-mobile .cut-mobile-assign-table .teams-mobile-unassigned-table__row {
     grid-template-columns: minmax(156px, 1fr) 56px 160px;
     column-gap: 14px;
+  }
+
+  .cut-page-mobile
+    .cut-mobile-assign-table--decision
+    .teams-mobile-unassigned-table__head,
+  .cut-page-mobile
+    .cut-mobile-assign-table--decision
+    .teams-mobile-unassigned-table__row {
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, auto);
+    column-gap: 10px;
   }
 
   .cut-page-mobile .cut-mobile-assign-col {

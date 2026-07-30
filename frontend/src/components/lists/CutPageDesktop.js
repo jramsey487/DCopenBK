@@ -145,7 +145,12 @@ function LastDayPill({ ballkid }) {
   );
 }
 
-export function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
+export function CutBallkidMeta({
+  ballkid,
+  compact = false,
+  dense = false,
+  coreMetaOnly = false,
+}) {
   const group = getLocalStorage("group");
   const iconBadges = [];
 
@@ -163,6 +168,21 @@ export function CutBallkidMeta({ ballkid, compact = false, dense = false }) {
   if (ballkid.is_captain) {
     addIcon("captain", ICON_DICT.captain, TOOLTIP_DICT.captain);
   }
+
+  if (coreMetaOnly) {
+    if (group !== "ballkid" && ballkid.num_years_experience === 0) {
+      addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
+    }
+    return (
+      <div className="cut-chip-meta-row">
+        {iconBadges.length > 0 ? (
+          <div className="cut-chip-icon-group">{iconBadges}</div>
+        ) : null}
+        <LastDayPill ballkid={ballkid} />
+      </div>
+    );
+  }
+
   if (
     group !== "ballkid" &&
     ballkid.num_years_experience === 0 &&
@@ -213,8 +233,8 @@ export function CutBallkidRow({
   showHovercard,
   hoverCommentTypes,
   actions,
-  compactMeta = false,
   dense = true,
+  coreMetaOnly = false,
 }) {
   return (
     <div
@@ -231,8 +251,8 @@ export function CutBallkidRow({
           metaSlot={
             <CutBallkidMeta
               ballkid={ballkid}
-              compact={compactMeta}
               dense={dense}
+              coreMetaOnly={coreMetaOnly}
             />
           }
           renderCustom={(props) =>
@@ -418,7 +438,7 @@ export function renderBallkidsInSection(
   return (
     <CutBallkidStack
       ballkids={rows}
-      compactMeta={section === "Self-Cut"}
+      coreMetaOnly
       showHovercard={showHovercard}
       hoverCommentTypes={[
         "experience",
