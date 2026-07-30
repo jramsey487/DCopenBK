@@ -326,7 +326,7 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
       }}
     >
       <div className="checkin-list-row__identity">
-        <BallkidAndIcon ballkid={ballkid} plainName />
+        <BallkidAndIcon ballkid={ballkid} plainName showIcons />
       </div>
       <div
         className="checkin-list-row__fields"

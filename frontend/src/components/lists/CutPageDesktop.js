@@ -390,54 +390,33 @@ export function CutStatusSection({
             </Button>
           </div>
 
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ mt: 1.5, mb: 1.5, opacity: 0.6 }} />
-              <div className="sxs" style={{ alignItems: "center" }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#64748b", textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.8px", fontFamily: "Inter, sans-serif" }}>
-                  {position}s
-                </Typography>
-                <Typography variant="caption" sx={{ ml: 1, opacity: 0.5, fontWeight: 600, fontFamily: "Inter, sans-serif" }}>
-                  (
-                  {
-                    active.filter((ballkid) =>
-                      ballkid.preferred_position.startsWith(position)
-                    ).length
-                  }
-                  )
-                </Typography>
-              </div>
-              <Box sx={{ mt: 1 }}>
-                {renderBallkidsInSection(
-                  active.filter((ballkid) => ballkid.cut_status === section),
-                  section,
-                  position,
-                  showHovercard,
-                  patchCutBallkid
-                )}
-              </Box>
-            </div>
-          ))}
+          <CutDecisionSectionList
+            ballkids={active}
+            section={section}
+            showHovercard={showHovercard}
+            patchCutBallkid={patchCutBallkid}
+          />
         </CardContent>
       </Card>
     </Grid>
   );
 }
 
-export function renderBallkidsInSection(
-  active,
+export function CutDecisionSectionList({
+  ballkids,
   section,
-  position,
-  showHovercard,
-  patchCutBallkid
-) {
-  const rows = active.filter((ballkid) =>
-    ballkid.preferred_position.startsWith(position)
+  showHovercard = false,
+  patchCutBallkid,
+}) {
+  const sorted = [...ballkids].sort((a, b) =>
+    `${a.last_name} ${a.first_name}`.localeCompare(
+      `${b.last_name} ${b.first_name}`
+    )
   );
 
   return (
     <CutBallkidStack
-      ballkids={rows}
+      ballkids={sorted}
       coreMetaOnly
       showHovercard={showHovercard}
       hoverCommentTypes={[
@@ -697,34 +676,12 @@ export function SelfCutCard({
             </Button>
           </div>
 
-          {POSITIONS.map((position) => (
-            <div key={position}>
-              <Divider sx={{ mt: 1.5, mb: 1.5, opacity: 0.6 }} />
-              <div className="sxs" style={{ alignItems: "center" }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#64748b", textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.8px", fontFamily: "Inter, sans-serif" }}>
-                  {position}s
-                </Typography>
-                <Typography variant="caption" sx={{ ml: 1, opacity: 0.5, fontWeight: 600, fontFamily: "Inter, sans-serif" }}>
-                  (
-                  {
-                    selfCut.filter((ballkid) =>
-                      ballkid.preferred_position.startsWith(position)
-                    ).length
-                  }
-                  )
-                </Typography>
-              </div>
-              <Box sx={{ mt: 1 }}>
-                {renderBallkidsInSection(
-                  selfCut,
-                  "Self-Cut",
-                  position,
-                  showHovercard,
-                  patchCutBallkid
-                )}
-              </Box>
-            </div>
-          ))}
+          <CutDecisionSectionList
+            ballkids={selfCut}
+            section="Self-Cut"
+            showHovercard={showHovercard}
+            patchCutBallkid={patchCutBallkid}
+          />
         </CardContent>
       </Card>
     </Grid>

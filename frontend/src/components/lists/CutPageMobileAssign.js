@@ -8,7 +8,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { BallkidAndIcon, ConfirmDialog, getAuthHeader } from "../Utils";
-import { CutBallkidMeta } from "./CutPageDesktop";
+import { CutBallkidMeta, CutDecisionSectionList } from "./CutPageDesktop";
 
 export const CUT_ASSIGN_LABELS = {
   "Definitely Keep": "Def. keep",
@@ -73,13 +73,13 @@ function CutMobileAssignButtonLabel({ status }) {
   );
 }
 
+/** Active (uncategorized) ballkids only — full meta + assign buttons */
 export function CutMobileAssignTable({
   ballkids,
   assignOptions,
   onAssign,
   assignColumnTitle = "Assign",
   compactMeta = false,
-  decisionSection = false,
 }) {
   const [assigningId, setAssigningId] = useState(null);
 
@@ -96,11 +96,7 @@ export function CutMobileAssignTable({
 
   return (
     <div className="cut-mobile-assign-table-scroll">
-      <div
-        className={`teams-mobile-unassigned-table cut-mobile-assign-table${
-          decisionSection ? " cut-mobile-assign-table--decision" : ""
-        }`}
-      >
+      <div className="teams-mobile-unassigned-table cut-mobile-assign-table">
         <div className="teams-mobile-unassigned-table__head">
           <span>Name</span>
           <span className="cut-mobile-assign-table__head-pos">Pos.</span>
@@ -112,17 +108,11 @@ export function CutMobileAssignTable({
         {ballkids.map((ballkid) => (
           <div key={ballkid.id} className="teams-mobile-unassigned-table__row">
             <div className="teams-mobile-unassigned-table__name cut-mobile-assign-table__name">
-              <BallkidAndIcon
-                ballkid={ballkid}
-                plainName={decisionSection}
-                isTeamsPage={!decisionSection}
-                showSupervet={!decisionSection}
-              />
+              <BallkidAndIcon ballkid={ballkid} isTeamsPage showSupervet />
               <CutBallkidMeta
                 ballkid={ballkid}
                 dense
-                compact={compactMeta && !decisionSection}
-                coreMetaOnly={decisionSection}
+                compact={compactMeta}
               />
             </div>
             <div className="teams-mobile-unassigned-table__position">
@@ -141,21 +131,13 @@ export function CutMobileAssignTable({
                       variant="outlined"
                       color={option.color || sectionButtonColor(option.status)}
                       disabled={assigningId === ballkid.id}
-                      className={`teams-mobile-assign-team-btn cut-mobile-assign-btn${
-                        decisionSection ? " cut-mobile-assign-btn--x" : ""
-                      }`}
+                      className="teams-mobile-assign-team-btn cut-mobile-assign-btn"
                       aria-label={
                         option.status === "" ? "Active" : option.status
                       }
                       onClick={() => handleAssign(ballkid, option.status)}
                     >
-                      {decisionSection ? (
-                        <span className="cut-mobile-assign-btn__x" aria-hidden>
-                          ×
-                        </span>
-                      ) : (
-                        <CutMobileAssignButtonLabel status={option.status} />
-                      )}
+                      <CutMobileAssignButtonLabel status={option.status} />
                     </Button>
                   </span>
                 </Tooltip>
@@ -199,7 +181,6 @@ export function buildCutAssignOptions({
 export function CutStatusSectionMobile({
   section,
   active,
-  sections,
   patchCutBallkid,
   refetchActive,
 }) {
@@ -214,12 +195,6 @@ export function CutStatusSectionMobile({
       `${b.last_name} ${b.first_name}`
     )
   );
-
-  const assignOptions = buildCutAssignOptions({
-    sections,
-    currentStatus: section,
-    includeSelfCut: true,
-  });
 
   return (
     <Card elevation={0} sx={{ mb: 2, borderRadius: "16px", border: "1px solid", borderColor: "divider" }}>
@@ -289,14 +264,10 @@ export function CutStatusSectionMobile({
             No ballkids in this category.
           </Typography>
         ) : (
-          <CutMobileAssignTable
+          <CutDecisionSectionList
             ballkids={sorted}
-            assignOptions={assignOptions}
-            assignColumnTitle="Move to"
-            decisionSection
-            onAssign={(ballkid, status) =>
-              patchCutBallkid(ballkid, { cut_status: status })
-            }
+            section={section}
+            patchCutBallkid={patchCutBallkid}
           />
         )}
       </CardContent>
@@ -306,7 +277,6 @@ export function CutStatusSectionMobile({
 
 export function SelfCutCardMobile({
   active,
-  sections,
   patchCutBallkid,
   refetchActive,
 }) {
@@ -318,12 +288,6 @@ export function SelfCutCardMobile({
       `${b.last_name} ${b.first_name}`
     )
   );
-
-  const assignOptions = buildCutAssignOptions({
-    sections,
-    currentStatus: "Self-Cut",
-    includeSelfCut: false,
-  });
 
   return (
     <Card
@@ -386,14 +350,10 @@ export function SelfCutCardMobile({
             No self-cut ballkids.
           </Typography>
         ) : (
-          <CutMobileAssignTable
+          <CutDecisionSectionList
             ballkids={sorted}
-            assignOptions={assignOptions}
-            assignColumnTitle="Move to"
-            decisionSection
-            onAssign={(ballkid, status) =>
-              patchCutBallkid(ballkid, { cut_status: status })
-            }
+            section="Self-Cut"
+            patchCutBallkid={patchCutBallkid}
           />
         )}
       </CardContent>

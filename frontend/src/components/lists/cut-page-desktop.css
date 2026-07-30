@@ -489,32 +489,82 @@
   width: 100%;
 }
 
-.cut-mobile-assign-table--decision .cut-mobile-assign-btn-wrap {
-  width: auto;
-  flex: 0 0 auto;
+/* Decision sections: compact rows, × actions in a horizontal row (no wide table scroll) */
+.cut-mobile-assign-table-scroll--decision {
+  overflow-x: visible;
+  margin: 0;
+  padding: 0;
 }
 
-.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__head,
+.cut-mobile-assign-table--decision {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.cut-mobile-assign-table--decision.cut-mobile-assign-table--decision-cut
+  .teams-mobile-unassigned-table__head {
+  grid-template-columns: minmax(0, 1fr) auto 40px;
+}
+
+.cut-mobile-assign-table--decision
+  .teams-mobile-unassigned-table__head
+  .cut-mobile-assign-table__head-assign {
+  display: none;
+}
+
 .cut-mobile-assign-table--decision .teams-mobile-unassigned-table__row {
-  grid-template-columns: minmax(0, 1fr) 44px minmax(0, auto);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name position";
+  align-items: start;
+  column-gap: 10px;
+  row-gap: 4px;
 }
 
-.cut-mobile-assign-table--decision .cut-mobile-assign-col {
-  flex-direction: row;
-  flex-wrap: wrap;
+.cut-mobile-assign-table--decision.cut-mobile-assign-table--decision-cut
+  .teams-mobile-unassigned-table__row {
+  grid-template-columns: minmax(0, 1fr) auto 40px;
+  grid-template-areas: "name position cut";
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px !important;
-  min-width: 0;
-  width: auto;
 }
 
-.cut-page .cut-mobile-assign-table--decision .cut-mobile-assign-btn--x.MuiButton-root {
-  min-width: 36px !important;
-  min-height: 36px !important;
-  width: 36px !important;
-  padding: 0 !important;
-  flex: 0 0 auto;
+.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__name {
+  grid-area: name;
+}
+
+.cut-mobile-assign-table--decision .teams-mobile-unassigned-table__position {
+  grid-area: position;
+  text-align: right;
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+.cut-mobile-assign-table--decision .cut-mobile-decision-cut-col {
+  grid-area: cut;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.cut-mobile-assign-table__head-cut {
+  width: 40px;
+}
+
+.cut-mobile-assign-table--decision .cut-chip-icon-badge {
+  width: 20px;
+  height: 20px;
+}
+
+.cut-mobile-assign-table--decision .cut-chip-icon-badge svg,
+.cut-mobile-assign-table--decision .cut-chip-icon-badge .MuiIcon-root {
+  font-size: 1rem !important;
+  width: 1rem;
+  height: 1rem;
 }
 
 .cut-mobile-assign-btn__x {
@@ -600,6 +650,18 @@
     margin-bottom: 4px;
   }
 
+  .cut-page-mobile .cut-page-chip-list {
+    gap: 6px;
+  }
+
+  .cut-page-mobile .teams-chairperson-ballkid-row {
+    min-width: 0;
+  }
+
+  .cut-page-mobile .cut-ballkid-chip__content {
+    padding: 7px 10px 7px 8px;
+  }
+
   .cut-page-mobile .cut-mobile-assign-table:not(.cut-mobile-assign-table--decision) {
     min-width: 480px;
     width: max(100%, 480px);
@@ -618,20 +680,39 @@
 
   .cut-page-mobile
     .cut-mobile-assign-table--decision
-    .teams-mobile-unassigned-table__head,
+    .teams-mobile-unassigned-table__head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .cut-page-mobile
+    .cut-mobile-assign-table--decision.cut-mobile-assign-table--decision-cut
+    .teams-mobile-unassigned-table__head {
+    grid-template-columns: minmax(0, 1fr) auto 40px;
+  }
+
   .cut-page-mobile
     .cut-mobile-assign-table--decision
     .teams-mobile-unassigned-table__row {
-    grid-template-columns: minmax(0, 1fr) 44px minmax(0, auto);
-    column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name position";
   }
 
-  .cut-page-mobile .cut-mobile-assign-col {
+  .cut-page-mobile
+    .cut-mobile-assign-table--decision.cut-mobile-assign-table--decision-cut
+    .teams-mobile-unassigned-table__row {
+    grid-template-columns: minmax(0, 1fr) auto 40px;
+    grid-template-areas: "name position cut";
+  }
+
+  .cut-page-mobile
+    .cut-mobile-assign-table:not(.cut-mobile-assign-table--decision)
+    .cut-mobile-assign-col {
     min-width: 148px;
     gap: 10px !important;
   }
 
-  .cut-page-mobile .cut-mobile-assign-btn.MuiButton-root {
+  .cut-page-mobile
+    .cut-mobile-assign-btn.MuiButton-root:not(.cut-mobile-assign-btn--x) {
     min-height: 56px !important;
     min-width: 136px !important;
     padding: 11px 14px !important;

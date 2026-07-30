@@ -847,6 +847,7 @@ export function BallkidAndIcon({
   isTeamsPage = false,
   showSupervet = false,
   plainName = false,
+  showIcons = !plainName,
 }) {
   const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
 
@@ -880,12 +881,14 @@ export function BallkidAndIcon({
       ) : (
         <BallkidLink id={ballkid.id} name={displayName} />
       )}
-      <Icons
-        ballkid={ballkid}
-        margin={0}
-        isTeamsPage={isTeamsPage}
-        showSupervet={showSupervet}
-      />
+      {showIcons ? (
+        <Icons
+          ballkid={ballkid}
+          margin={0}
+          isTeamsPage={isTeamsPage}
+          showSupervet={showSupervet}
+        />
+      ) : null}
     </Box>
   );
 }

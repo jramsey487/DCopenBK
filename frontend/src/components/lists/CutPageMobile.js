@@ -165,7 +165,6 @@ export default function CutPageMobile() {
               active={active.filter(
                 (ballkid) => ballkid.cut_status === section
               )}
-              sections={sections}
               patchCutBallkid={patchCutBallkid}
               refetchActive={refetchActive}
             />
@@ -175,7 +174,6 @@ export default function CutPageMobile() {
         <Grid item xs={12}>
           <SelfCutCardMobile
             active={active}
-            sections={sections}
             patchCutBallkid={patchCutBallkid}
             refetchActive={refetchActive}
           />
