@@ -3,7 +3,7 @@ from rest_framework.test import APIClient
 
 from api.utils.consts import *
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import logging
 
 logger = logging.getLogger("api.utils")
@@ -21,6 +21,28 @@ def setup_testing_client(name="chairperson"):
 
 def get_current_year():
     return datetime.now().year
+
+
+def get_tournament_age_reference_date(year=None):
+    """Age for the Citi Open is measured as of July 23 of the tournament year."""
+    if year is None:
+        year = get_current_year()
+    return datetime(year, 7, 23)
+
+
+def calculate_ballkid_age(date_of_birth, year=None):
+    """
+    Tournament age from date of birth, as of July 23 of the given year
+    (defaults to the current calendar year).
+    """
+    reference = get_tournament_age_reference_date(year).date()
+    if isinstance(date_of_birth, datetime):
+        dob = date_of_birth.date()
+    elif isinstance(date_of_birth, date):
+        dob = date_of_birth
+    else:
+        raise TypeError("date_of_birth must be a date or datetime")
+    return int((reference - dob).days // 365.2425)
 
 
 def get_first_name(full_name):

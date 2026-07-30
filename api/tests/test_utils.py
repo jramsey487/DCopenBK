@@ -118,3 +118,15 @@ class TestUtils(TestCase):
         obj = datetime(year=2022, month=9, day=4, hour=3, minute=5, second=7)
 
         self.assertEqual(obj, datetime_str_to_datetime(input_str))
+
+    def test_tournament_age_reference_is_july_23(self):
+        ref = get_tournament_age_reference_date(2026)
+        self.assertEqual(datetime(2026, 7, 23), ref)
+
+    def test_calculate_ballkid_age_uses_tournament_year(self):
+        dob = datetime(2010, 3, 15)
+        expected = int(
+            (get_tournament_age_reference_date(2025).date() - dob.date()).days
+            // 365.2425
+        )
+        self.assertEqual(expected, calculate_ballkid_age(dob, year=2025))

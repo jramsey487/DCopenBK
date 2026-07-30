@@ -288,7 +288,7 @@ const FormCard = ({ title, children, icon: Icon }) => (
 function CreateBallkid() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [age, setAge] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [preferredPosition, setPreferredPosition] = useState("");
   const [numYearsExperience, setNumYearsExperience] = useState("");
   const [image, setImage] = useState("");
@@ -305,7 +305,7 @@ function CreateBallkid() {
       body: JSON.stringify({
         first_name: firstName,
         last_name: lastName,
-        age: age ? parseInt(age, 10) : null,
+        date_of_birth: dateOfBirth || null,
         image: image,
         preferred_position: preferredPosition,
         num_years_experience: numYearsExperience ? parseInt(numYearsExperience, 10) : 0,
@@ -317,7 +317,7 @@ function CreateBallkid() {
           setSuccessMsg("Ballkid created successfully!");
           setFirstName("");
           setLastName("");
-          setAge("");
+          setDateOfBirth("");
           setNumYearsExperience("");
           setPreferredPosition("");
           setIsCaptain(false);
@@ -356,12 +356,13 @@ function CreateBallkid() {
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            value={age}
-            label="Age"
+            value={dateOfBirth}
+            label="Date of birth"
             variant="outlined"
-            type="number"
+            type="date"
             required
-            onChange={(e) => setAge(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            onChange={(e) => setDateOfBirth(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>

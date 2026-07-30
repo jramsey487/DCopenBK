@@ -2,6 +2,7 @@ from rest_framework import serializers
 from api.models.ballkid import *
 from api.models.schedule import *
 from api.models.rating import *
+from api.utils.utils import calculate_ballkid_age
 
 
 class BallkidSerializer(serializers.ModelSerializer):
@@ -34,6 +35,12 @@ class BallkidSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ballkid
         fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.date_of_birth:
+            data["age"] = calculate_ballkid_age(instance.date_of_birth)
+        return data
 
 
 class ScheduleSerializer(serializers.ModelSerializer):

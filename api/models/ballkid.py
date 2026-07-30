@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -23,6 +23,7 @@ class Ballkid(models.Model):
     )
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
+    date_of_birth = models.DateField(null=True, blank=True)
     age = models.IntegerField(default=0)
     image = models.CharField(max_length=100, default=DEFAULT_IMAGE_FILE, blank=True)
     phone = PhoneNumberField(null=True, blank=True)
@@ -533,6 +534,11 @@ class Ballkid(models.Model):
             raise Exception(f"Unrecognized field {field}")
 
         self.save()
+
+    def save(self, *args, **kwargs):
+        if self.date_of_birth:
+            self.age = calculate_ballkid_age(self.date_of_birth)
+        super().save(*args, **kwargs)
 
     def get_name(self):
         """

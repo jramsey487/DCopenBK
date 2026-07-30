@@ -277,8 +277,7 @@ class BulkCreateSignups(APIView):
                 ].strip(),
                 SLASH_MONTH_DAY_YEAR_FORMAT_STR,
             )
-            first_day = datetime.strptime("07/19/2025", SLASH_MONTH_DAY_YEAR_FORMAT_STR)
-            age = (first_day - dob) // timedelta(days=365.2425)
+            age = calculate_ballkid_age(dob)
             image = f"static/img/{first_name.lower()}_{last_name.lower()}.jpg"
             image = image if os.path.isfile(image) else DEFAULT_IMAGE_FILE
             # TODO: Add a test for an upper case email getting created as lower case
@@ -318,6 +317,7 @@ class BulkCreateSignups(APIView):
                 ballkid.is_captain = is_captain
                 ballkid.is_chairperson = is_chairperson
                 ballkid.phone = phone
+                ballkid.date_of_birth = dob.date()
                 ballkid.age = age
                 ballkid.is_out_of_town = is_out_of_town
                 ballkid.emergency_name = emergency_name
@@ -331,6 +331,7 @@ class BulkCreateSignups(APIView):
                     first_name=first_name,
                     last_name=last_name,
                     user=user,
+                    date_of_birth=dob.date(),
                     age=age,
                     is_active=True,
                     is_captain=is_captain,
