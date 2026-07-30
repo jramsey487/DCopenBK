@@ -172,13 +172,15 @@ export function ProfileBrandedHero({
           <div className="ballkid-profile-hero-top">
             <div className="ballkid-profile-hero-title-block">
               <div className="ballkid-profile-hero-name-row">
-                <h1 className="ballkid-profile-hero-name">{name}</h1>
-                <ProfileRolePills ballkid={ballkid} />
+                <div className="ballkid-profile-hero-name-group">
+                  <h1 className="ballkid-profile-hero-name">{name}</h1>
+                  <ProfileRolePills ballkid={ballkid} />
+                </div>
+                {nameExtra ? (
+                  <div className="ballkid-profile-hero-menu">{nameExtra}</div>
+                ) : null}
               </div>
             </div>
-            {nameExtra ? (
-              <div className="ballkid-profile-hero-menu">{nameExtra}</div>
-            ) : null}
           </div>
           <div className="ballkid-profile-hero-meta-line">
             <div className="ballkid-profile-hero-meta-row">

@@ -57,21 +57,36 @@ export default function BallkidPageCaptain(props) {
 
   const isOwnProfile = ballkid.id === getLocalStorage("ballkid_id");
 
-  const ratingButton = isOwnProfile ? null : ballkid.have_draft ? (
-    <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
-  ) : (
-    <RatingButton
-      ballkid={ballkid}
-      setUpdated={setUpdated}
-      isMobile={isMobile}
-    />
+  const ratingButton = isOwnProfile ? null : (
+    <div className="ballkid-profile-hero-mobile-actions">
+      {ballkid.have_draft ? (
+        <DraftRatingButton
+          ballkid={ballkid}
+          setUpdated={setUpdated}
+          fullWidth={isMobile}
+          className="ballkid-profile-hero-rating-btn"
+          label="VIEW DRAFT"
+        />
+      ) : (
+        <RatingButton
+          ballkid={ballkid}
+          setUpdated={setUpdated}
+          fullWidth={isMobile}
+          className="ballkid-profile-hero-rating-btn"
+          label="GIVE RATING"
+        />
+      )}
+    </div>
   );
 
   const showCurrentInfo = !ballkid.is_cut && ballkid.is_active && showTeams;
 
   return (
     <ProfilePageShell>
-      <Box sx={{ "& .ballkid-profile-hero-meta-pills": { display: "none" } }}>
+      <Box
+        className="ballkid-profile-captain-hero"
+        sx={{ "& .ballkid-profile-hero-meta-pills": { display: "none" } }}
+      >
         <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
       </Box>
 

@@ -185,6 +185,29 @@
     .ballkid-profile-hero-actions-bar--inline {
       width: auto;
     }
+
+    .ballkid-profile-captain-hero .ballkid-profile-hero-meta-row {
+      display: none;
+    }
+
+    .ballkid-profile-captain-hero .ballkid-profile-hero-meta-line {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .ballkid-profile-captain-hero
+      .ballkid-profile-hero-actions-bar--inline,
+    .ballkid-profile-captain-hero .ballkid-profile-hero-mobile-actions,
+    .ballkid-profile-captain-hero .ballkid-profile-hero-rating-row {
+      width: auto;
+      max-width: none;
+      align-self: flex-start;
+    }
+
+    .ballkid-profile-captain-hero .ballkid-profile-hero-mobile-actions {
+      align-items: flex-start;
+    }
   }
   
   .ballkid-profile-hero-photo img {
@@ -195,29 +218,45 @@
   }
 
   .ballkid-profile-hero-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    display: block;
+    min-width: 0;
   }
 
   .ballkid-profile-hero-title-block {
-    flex: 1;
     min-width: 0;
   }
 
   .ballkid-profile-hero-menu {
+    grid-column: 2;
+    grid-row: 1;
     flex-shrink: 0;
-    line-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .ballkid-profile-hero-menu .MuiIconButton-root {
+    margin: -8px -8px -8px 0;
   }
 
   .ballkid-profile-hero-meta-pills,
   .ballkid-profile-hero-status {
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    line-height: normal;
   }
 
   .ballkid-profile-hero-status {
-    display: block;
+    margin-top: 0;
+  }
+
+  .ballkid-profile-hero-status .ballkid-profile-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
   }
 
   .ballkid-profile-hero-meta-row:empty {
@@ -226,10 +265,24 @@
 
   .ballkid-profile-hero-meta-pills .ballkid-profile-hero-pills {
     margin-top: 0;
+    align-items: center;
+    gap: 6px;
   }
 
-  .ballkid-profile-hero-status {
-    margin-top: 0;
+  .ballkid-profile-hero-meta-row .ballkid-profile-pill,
+  .ballkid-profile-hero-meta-row .ballkid-profile-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 26px;
+    padding: 4px 11px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.25;
+    border-radius: 20px;
+    border-width: 0.5px;
+    border-style: solid;
   }
 
   .ballkid-profile-hero-mobile-actions {
@@ -334,6 +387,10 @@
   }
 
   @media (max-width: 767px) {
+    .ballkid-profile-hero-mobile-actions {
+      gap: 10px;
+    }
+
     .ballkid-profile-shell
       .ballkid-profile-hero-mobile-actions
       .ballkid-profile-checkin-btn,
@@ -343,9 +400,9 @@
       width: 100% !important;
       max-width: 100% !important;
       flex: 1 1 auto;
-      min-height: 38px !important;
-      padding: 8px 18px !important;
-      font-size: 13px !important;
+      min-height: 46px !important;
+      padding: 12px 20px !important;
+      font-size: 14px !important;
       line-height: 1.35 !important;
       box-sizing: border-box;
     }
@@ -374,10 +431,22 @@
   }
   
   .ballkid-profile-hero-name-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ballkid-profile-hero-name-group {
+    grid-column: 1;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
+    min-width: 0;
   }
   
   .ballkid-profile-hero-role-icons {
@@ -452,8 +521,6 @@
   
   .ballkid-profile-hero-meta-pills .ballkid-profile-pill {
     border-radius: 20px;
-    font-size: 11px;
-    padding: 4px 11px;
   }
   
   .ballkid-profile-pill--rookie {

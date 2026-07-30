@@ -199,7 +199,7 @@ export function RatingButton({
         disableElevation
         color="primary"
         size="small"
-        fullWidth={fullWidth || isProfileHero}
+        fullWidth={fullWidth}
         className={className}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -251,12 +251,20 @@ export function RatingButton({
   );
 }
 
-export function DraftRatingButton({ ballkid, setUpdated }) {
+export function DraftRatingButton({
+  ballkid,
+  setUpdated,
+  fullWidth = false,
+  className,
+  label = "View Draft",
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState();
 
   const pk = getLocalStorage("ballkid_id");
   const isMobile = useIsMobile();
+  const isProfileHero =
+    className && String(className).includes("ballkid-profile-hero-rating-btn");
 
   useEffect(() => {
     fetch(`/api/get-draft-rating/${pk}/${ballkid.id}`, {
@@ -271,7 +279,13 @@ export function DraftRatingButton({ ballkid, setUpdated }) {
   return draft === null || draft === undefined ? (
     ""
   ) : (
-    <div>
+    <div
+      className={
+        fullWidth || isProfileHero
+          ? "ballkid-profile-hero-rating-row"
+          : undefined
+      }
+    >
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -280,19 +294,22 @@ export function DraftRatingButton({ ballkid, setUpdated }) {
         draft={draft}
       />
       <Button
-        color="secondary"
+        color={isProfileHero ? "primary" : "secondary"}
         variant="contained"
         size="small"
-        endIcon={<Edit />}
+        fullWidth={fullWidth}
+        className={className}
+        endIcon={isProfileHero ? undefined : <Edit />}
+        disableElevation={isProfileHero}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        sx={{ my: isMobile ? 1 : 0.2 }}
+        sx={isProfileHero ? { my: 0 } : { my: isMobile ? 1 : 0.2 }}
       >
-        View Draft
+        {label}
       </Button>
     </div>
   );
