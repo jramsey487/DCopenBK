@@ -12,7 +12,6 @@ import {
   HelpIcon,
   Alerts,
   Banners,
-  HovercardToggle,
 } from "../Utils";
 import { patchCutBallkidInState } from "./CutPageDesktop";
 import { CUT_STATUSES } from "../Consts";
@@ -24,8 +23,8 @@ import {
   SelfCutCardMobile,
 } from "./CutPageMobileAssign";
 import "./ballkid-list-by-name.css";
-import "./cut-page-desktop.css";
 import "../teams/teams-page.css";
+import "./cut-page-desktop.css";
 
 function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -42,7 +41,6 @@ function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
   const assignOptions = buildCutAssignOptions({
     sections,
     currentStatus: "",
-    includeActive: false,
     includeSelfCut: true,
   });
 
@@ -111,7 +109,6 @@ export default function CutPageMobile() {
   const [active, setActive] = useState([]);
 
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showHovercard, setShowHovercard] = useState(true);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -141,7 +138,7 @@ export default function CutPageMobile() {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page teams-page-shell cut-page-mobile">
+    <div className="page ballkid-list-page teams-page-shell cut-page cut-page-mobile">
       <Banners />
 
       <Alerts
@@ -157,14 +154,6 @@ export default function CutPageMobile() {
             Cut Page
           </Typography>
           <HelpIcon page="Cut" message={cut} />
-        </Box>
-        <Box className="cut-page-top-bar__end">
-          <Box className="cut-page-top-bar__toolbar-pills">
-            <HovercardToggle
-              enabled={showHovercard}
-              setEnabled={setShowHovercard}
-            />
-          </Box>
         </Box>
       </Box>
 

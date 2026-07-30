@@ -28,7 +28,6 @@ import MoreVert from "@mui/icons-material/MoreVert";
 import Dangerous from "@mui/icons-material/Dangerous";
 import ArrowCircleUp from "@mui/icons-material/ArrowCircleUp";
 import ArrowCircleDown from "@mui/icons-material/ArrowCircleDown";
-import RateReview from "@mui/icons-material/RateReview";
 import Archive from "@mui/icons-material/Archive";
 import Unarchive from "@mui/icons-material/Unarchive";
 import ReportOff from "@mui/icons-material/ReportOff";
@@ -39,7 +38,6 @@ import Done from "@mui/icons-material/Done";
 import Close from "@mui/icons-material/Close";
 import Edit from "@mui/icons-material/Edit";
 
-import RatingDialog from "../ratings/RatingDialog";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
@@ -54,6 +52,7 @@ import {
   getTimeFloat,
   getDurationStr,
   Alerts,
+  RatingButton,
   toPercent,
   getTimeStr,
 } from "../Utils";
@@ -85,7 +84,7 @@ const CHAIR_TABS = [
   { id: "cuts", label: "Previous cuts" },
 ];
 
-function profileHeaderStatus(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
+function profileHeaderStatus(ballkid) {
   if (ballkid.is_cut) {
     return (
       <span className="ballkid-profile-status ballkid-profile-status--cut">
@@ -100,8 +99,20 @@ function profileHeaderStatus(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
       </span>
     );
   }
+  return <CheckinStatusBadge checkedIn={ballkid.is_checked_in} />;
+}
+
+function profileHeaderActions(
+  ballkid,
+  setUpdated,
+  setErrorMsg,
+  setSuccessMsg
+) {
+  if (ballkid.is_cut || !ballkid.is_active) {
+    return null;
+  }
   return (
-    <CheckinSection
+    <ChairpersonHeroMobileActions
       ballkid={ballkid}
       setUpdated={setUpdated}
       setErrorMsg={setErrorMsg}
@@ -121,7 +132,7 @@ function profileOverflowMenu(ballkid, setUpdated) {
   );
 }
 
-function CheckinSection({ ballkid, setUpdated, setErrorMsg, setSuccessMsg }) {
+function useCheckinToggle(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
   const [loading, setLoading] = useState(false);
   const checkedIn = ballkid.is_checked_in;
 
@@ -159,32 +170,76 @@ function CheckinSection({ ballkid, setUpdated, setErrorMsg, setSuccessMsg }) {
       .finally(() => setLoading(false));
   };
 
+  return { loading, checkedIn, toggleCheckin };
+}
+
+function CheckinStatusBadge({ checkedIn }) {
   return (
-    <div className="ballkid-profile-checkin-toolbar">
-      <span
-        className={
-          checkedIn
-            ? "ballkid-profile-status ballkid-profile-status--in"
-            : "ballkid-profile-status ballkid-profile-status--out"
-        }
-      >
-        {checkedIn ? "Checked in" : "Checked out"}
-      </span>
-      <LoadingButton
-        type="button"
-        size="small"
-        className={`ballkid-profile-checkin-btn${
-          checkedIn
-            ? " ballkid-profile-checkin-btn--out"
-            : " ballkid-profile-checkin-btn--in"
-        }`}
-        variant="contained"
+    <span
+      className={
+        checkedIn
+          ? "ballkid-profile-status ballkid-profile-status--in"
+          : "ballkid-profile-status ballkid-profile-status--out"
+      }
+    >
+      {checkedIn ? "Checked in" : "Checked out"}
+    </span>
+  );
+}
+
+function CheckinToggleButton({ loading, checkedIn, toggleCheckin, fullWidth }) {
+  return (
+    <LoadingButton
+      type="button"
+      size={fullWidth ? "medium" : "small"}
+      fullWidth={fullWidth}
+      className={`ballkid-profile-checkin-btn${
+        checkedIn
+          ? " ballkid-profile-checkin-btn--out"
+          : " ballkid-profile-checkin-btn--in"
+      }`}
+      variant="contained"
+      loading={loading}
+      color={checkedIn ? "error" : "success"}
+      onClick={toggleCheckin}
+    >
+      {checkedIn ? "Check out" : "Check in"}
+    </LoadingButton>
+  );
+}
+
+function ChairpersonHeroMobileActions({
+  ballkid,
+  setUpdated,
+  setErrorMsg,
+  setSuccessMsg,
+}) {
+  const isMobile = useIsMobile();
+  const { loading, checkedIn, toggleCheckin } = useCheckinToggle(
+    ballkid,
+    setUpdated,
+    setErrorMsg,
+    setSuccessMsg
+  );
+  const showRating = ballkid.id !== getLocalStorage("ballkid_id");
+
+  return (
+    <div className="ballkid-profile-hero-mobile-actions">
+      <CheckinToggleButton
         loading={loading}
-        color={checkedIn ? "error" : "success"}
-        onClick={toggleCheckin}
-      >
-        {checkedIn ? "Check out" : "Check in"}
-      </LoadingButton>
+        checkedIn={checkedIn}
+        toggleCheckin={toggleCheckin}
+        fullWidth={isMobile}
+      />
+      {showRating ? (
+        <RatingButton
+          ballkid={ballkid}
+          setUpdated={setUpdated}
+          fullWidth={isMobile}
+          className="ballkid-profile-hero-rating-btn"
+          label="GIVE RATING"
+        />
+      ) : null}
     </div>
   );
 }
@@ -193,15 +248,7 @@ function renderPreferredPosition(ballkid, setUpdated) {
   const ALL_POSITIONS = ["Back", "Net", "Back/Net", "Net/Back"];
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 1,
-        alignItems: "center",
-        pt: 0.25,
-      }}
-    >
+    <Box className="ballkid-profile-preferred-position-picker">
       {ALL_POSITIONS.map((pos) => {
         const isSelected = ballkid.preferred_position === pos;
         return (
@@ -211,15 +258,29 @@ function renderPreferredPosition(ballkid, setUpdated) {
             variant={isSelected ? "contained" : "outlined"}
             color={isSelected ? "primary" : "inherit"}
             disableElevation
+            className="ballkid-profile-preferred-position-btn"
             sx={{
-              borderRadius: "16px",
-              textTransform: "none",
+              borderRadius: "8px",
+              textTransform: "uppercase",
+              letterSpacing: "0.03em",
               px: 1.5,
-              py: 0.25,
+              py: 0.5,
               fontSize: "0.8125rem",
-              fontWeight: isSelected ? 600 : 400,
-              opacity: isSelected ? 1 : 0.7,
+              fontWeight: 600,
+              lineHeight: 1.3,
+              opacity: isSelected ? 1 : 0.85,
+              boxShadow: "none",
               "&:hover": { opacity: 1 },
+              ...(isSelected
+                ? {
+                    backgroundColor: "var(--bp-nav)",
+                    color: "#fff",
+                    "&:hover": { backgroundColor: "#152a5c" },
+                  }
+                : {
+                    borderColor: "var(--bp-border)",
+                    color: "var(--bp-nav)",
+                  }),
             }}
             onClick={() => {
               if (isSelected) return;
@@ -714,17 +775,9 @@ const menuPaperProps = {
 function ActiveOverflowMenu(props) {
   const ballkid = props.ballkid;
   const [anchorEl, setAnchorEl] = useState(null);
-  const [open, setOpen] = useState(false);
 
   return (
     <Box sx={{ position: "relative", zIndex: 10, display: "inline-block" }}>
-      <RatingDialog
-        open={open}
-        setOpen={setOpen}
-        ballkid={props.ballkid}
-        setUpdated={props.setUpdated}
-      />
-
       <IconButton
         onClick={(e) => {
           e.stopPropagation();
@@ -752,20 +805,6 @@ function ActiveOverflowMenu(props) {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {ballkid.id === getLocalStorage("ballkid_id") ? null : (
-          <MenuItem
-            onClick={() => {
-              setAnchorEl(null);
-              setOpen(true);
-            }}
-          >
-            <ListItemIcon>
-              <RateReview fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Give Rating</ListItemText>
-          </MenuItem>
-        )}
-
         {ballkid.is_captain ? (
           <MenuItem
             onClick={() => {
@@ -1338,7 +1377,8 @@ export default function BallkidPageChairperson(props) {
       <ProfileBrandedHero
         ballkid={ballkid}
         nameExtra={profileOverflowMenu(ballkid, setUpdated)}
-        status={profileHeaderStatus(
+        status={profileHeaderStatus(ballkid)}
+        actions={profileHeaderActions(
           ballkid,
           setUpdated,
           setErrorMsg,
@@ -1366,7 +1406,7 @@ export default function BallkidPageChairperson(props) {
               value={ballkid.emergency_phone}
             />
             <ProfileInfoRow label="Preferred position" stack>
-              {renderPreferredPosition(ballkid, setUpdated, isMobile)}
+              {renderPreferredPosition(ballkid, setUpdated)}
             </ProfileInfoRow>
           </ProfileCard>
 

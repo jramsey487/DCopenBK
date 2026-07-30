@@ -697,21 +697,39 @@
     min-width: 0;
   }
 
+  @media (max-width: 767px) {
+    .teams-chairperson-unassigned-search .search-and-filter--stacked {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .teams-chairperson-unassigned-search .search-and-filter__filters {
+      width: auto;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+
+    .teams-chairperson-unassigned-search .search-and-filter__toggle-group {
+      flex-wrap: nowrap !important;
+    }
+  }
+
   .teams-chairperson-unassigned-search .search-and-filter__filters {
-    flex-wrap: wrap;
-    width: 100%;
     min-width: 0;
     gap: 6px 8px;
   }
 
-  .teams-chairperson-unassigned-search .search-and-filter__label {
-    white-space: nowrap;
-    font-size: 0.875rem !important;
-  }
+  @media (min-width: 768px) {
+    .teams-chairperson-unassigned-search .search-and-filter__filters {
+      width: 100%;
+    }
 
-  .teams-chairperson-unassigned-search .search-and-filter__toggle-group {
-    flex-wrap: wrap;
-    max-width: 100%;
+    .teams-chairperson-unassigned-search .search-and-filter__toggle-group {
+      flex-wrap: wrap !important;
+      max-width: 100%;
+    }
   }
 
   .teams-chairperson-unassigned-panel .teams-chairperson-drop-hint {

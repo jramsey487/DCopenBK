@@ -1,0 +1,108 @@
+.search-and-filter {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.search-and-filter--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.search-and-filter--stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.search-and-filter__search {
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.search-and-filter__search .MuiTextField-root {
+  width: 100%;
+}
+
+.search-and-filter__filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.search-and-filter__label {
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.25;
+}
+
+.search-and-filter__label.MuiTypography-root {
+  margin: 0;
+}
+
+.search-and-filter__toggle-group {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap !important;
+}
+
+@media (max-width: 767px) {
+  .search-and-filter__label {
+    display: none;
+  }
+
+  .search-and-filter--inline,
+  .search-and-filter--stacked {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .search-and-filter__search {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .search-and-filter__search .MuiTextField-root {
+    width: 100%;
+  }
+
+  .search-and-filter__search .MuiInputBase-root {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .search-and-filter__search .MuiInputBase-input {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    font-size: 14px;
+  }
+
+  .search-and-filter__filters {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .search-and-filter__toggle-group {
+    flex-wrap: nowrap !important;
+  }
+
+  .search-and-filter__toggle-group .MuiToggleButton-root {
+    padding: 5px 6px;
+  }
+
+  .search-and-filter__toggle-group .MuiIcon-root {
+    font-size: 1.15rem;
+  }
+}

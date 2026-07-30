@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -305,16 +305,35 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
 }
 
 function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
+  const navigate = useNavigate();
   const myId = Number(getLocalStorage("ballkid_id"));
   const profileTo =
     ballkid.id === myId ? "/me" : `/ballkid/${ballkid.id}`;
 
+  const goToProfile = () => navigate(profileTo);
+
   return (
-    <article className="checkin-list-row">
-      <RouterLink to={profileTo} className="checkin-list-row__identity">
-        <BallkidAndIcon ballkid={ballkid} />
-      </RouterLink>
-      <div className="checkin-list-row__fields">
+    <article
+      className="checkin-list-row"
+      role="link"
+      tabIndex={0}
+      onClick={goToProfile}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goToProfile();
+        }
+      }}
+    >
+      <div className="checkin-list-row__identity">
+        <BallkidAndIcon ballkid={ballkid} plainName />
+      </div>
+      <div
+        className="checkin-list-row__fields"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
         <LastDayComments
           ballkid={ballkid}
           layout="list"
@@ -326,7 +345,12 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
           setUpdated={setUpdated}
         />
       </div>
-      <div className="checkin-list-row__action">
+      <div
+        className="checkin-list-row__action"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
         <CheckinButton
           ballkid={ballkid}
           isCheckedIn={isCheckedIn}

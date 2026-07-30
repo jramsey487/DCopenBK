@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { Banners, ballkidImageSrc, Icons } from "../Utils";
+import { Banners, ballkidImageSrc, Icons, useIsMobile } from "../Utils";
 import "./ballkid-profile.css";
 
 const BackChevron = () => (
@@ -157,6 +157,8 @@ export function ProfileBrandedHero({
     ballkid.is_cut !== "true" &&
     ballkid.position;
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="ballkid-profile-hero-band">
       <ProfileBackLink to={backTo} label={backLabel} />
@@ -166,7 +168,7 @@ export function ProfileBrandedHero({
           lastName={ballkid.last_name}
           image={ballkid.image}
         />
-        <div className="ballkid-profile-hero-body">
+        <div className="ballkid-profile-hero-head">
           <div className="ballkid-profile-hero-top">
             <div className="ballkid-profile-hero-title-block">
               <div className="ballkid-profile-hero-name-row">
@@ -178,21 +180,30 @@ export function ProfileBrandedHero({
               <div className="ballkid-profile-hero-menu">{nameExtra}</div>
             ) : null}
           </div>
-          <div className="ballkid-profile-hero-meta">
-            <div className="ballkid-profile-hero-meta-pills">
-              <ProfilePositionPills
-                preferred={ballkid.preferred_position}
-                current={showCurrentPosition ? ballkid.position : null}
-              />
+          <div className="ballkid-profile-hero-meta-line">
+            <div className="ballkid-profile-hero-meta-row">
+              <div className="ballkid-profile-hero-meta-pills">
+                <ProfilePositionPills
+                  preferred={ballkid.preferred_position}
+                  current={showCurrentPosition ? ballkid.position : null}
+                />
+              </div>
+              {status ? (
+                <div className="ballkid-profile-hero-status">{status}</div>
+              ) : null}
             </div>
-            {status ? (
-              <div className="ballkid-profile-hero-status">{status}</div>
-            ) : null}
-            {actions ? (
-              <div className="ballkid-profile-hero-actions">{actions}</div>
+            {actions && !isMobile ? (
+              <div className="ballkid-profile-hero-actions-bar ballkid-profile-hero-actions-bar--inline">
+                {actions}
+              </div>
             ) : null}
           </div>
         </div>
+        {actions && isMobile ? (
+          <div className="ballkid-profile-hero-actions-bar ballkid-profile-hero-actions-bar--dock">
+            {actions}
+          </div>
+        ) : null}
       </div>
     </div>
   );

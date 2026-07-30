@@ -32,6 +32,8 @@ import Tooltip from "@mui/material/Tooltip";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
+import "./search-and-filter.css";
+
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 import AspectRatio from "@mui/joy/AspectRatio";
@@ -159,13 +161,29 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
 }
 
 // Date is the default date filled in in the RatingDialog when giving a rating
-export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
+export function RatingButton({
+  ballkid,
+  setUpdated,
+  isMobile,
+  date = null,
+  fullWidth = false,
+  className,
+  label = "GIVE RATING",
+}) {
   const [open, setOpen] = useState(false);
 
   const hasRated = ballkid.num_my_ratings > 0;
+  const isProfileHero =
+    className && String(className).includes("ballkid-profile-hero-rating-btn");
 
   return (
-    <div>
+    <div
+      className={
+        fullWidth || isProfileHero
+          ? "ballkid-profile-hero-rating-row"
+          : undefined
+      }
+    >
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -175,51 +193,59 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
       />
 
       <Button
-        variant={hasRated ? "outlined" : "contained"}
+        variant={
+          isProfileHero ? "contained" : hasRated ? "outlined" : "contained"
+        }
         disableElevation
         color="primary"
         size="small"
+        fullWidth={fullWidth || isProfileHero}
+        className={className}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={hasRated ? <Check /> : ""}
-        sx={{
-          my: isMobile ? 1 : 0.2,
-          fontFamily:
-            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          fontWeight: 600,
-          fontSize: 13,
-          letterSpacing: "0.03em",
-          borderRadius: "8px",
-          px: 2.25,
-          py: 0.75,
-          transition: "all 0.15s ease",
-          ...(hasRated
-            ? {
-                color: "#0d1b3e",
-                borderColor: "#e2e8f0",
-                backgroundColor: "#fff",
-                boxShadow: "none",
-                "&:hover": {
-                  borderColor: "#0d1b3e",
-                  backgroundColor: "#f8fafc",
-                },
-              }
+        endIcon={isProfileHero ? undefined : hasRated ? <Check /> : ""}
+        sx={
+          isProfileHero
+            ? { my: 0 }
             : {
-                backgroundColor: "#0d1b3e",
-                boxShadow: "0 1px 2px rgba(13, 27, 62, 0.15)",
-                "&:hover": {
-                  backgroundColor: "#152a5c",
-                  boxShadow: "0 4px 10px rgba(13, 27, 62, 0.25)",
-                  transform: "translateY(-1px)",
-                },
-              }),
-        }}
+                my: isMobile ? 1 : 0.2,
+                fontFamily:
+                  'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                fontWeight: 600,
+                fontSize: 13,
+                letterSpacing: "0.03em",
+                borderRadius: "8px",
+                px: 2.25,
+                py: 0.75,
+                transition: "all 0.15s ease",
+                ...(hasRated
+                  ? {
+                      color: "#0d1b3e",
+                      borderColor: "#e2e8f0",
+                      backgroundColor: "#fff",
+                      boxShadow: "none",
+                      "&:hover": {
+                        borderColor: "#0d1b3e",
+                        backgroundColor: "#f8fafc",
+                      },
+                    }
+                  : {
+                      backgroundColor: "#0d1b3e",
+                      boxShadow: "0 1px 2px rgba(13, 27, 62, 0.15)",
+                      "&:hover": {
+                        backgroundColor: "#152a5c",
+                        boxShadow: "0 4px 10px rgba(13, 27, 62, 0.25)",
+                        transform: "translateY(-1px)",
+                      },
+                    }),
+              }
+        }
       >
-        GIVE RATING
+        {label}
       </Button>
     </div>
   );
@@ -295,7 +321,11 @@ export function SearchAndFilter({
 }) {
   const filterControls = (
     <div className="sxs search-and-filter__filters">
-      <Typography variant="body1" className="search-and-filter__label">
+      <Typography
+        component="span"
+        variant="body1"
+        className="search-and-filter__label"
+      >
         Filter to:
       </Typography>
       <ToggleButtonGroup
@@ -330,11 +360,12 @@ export function SearchAndFilter({
   }
 
   return (
-    <Grid item xs={12} className="justify">
-      <SearchBox setSearchKeyword={setSearchKeyword} />
-      &emsp;
+    <div className="search-and-filter search-and-filter--inline">
+      <div className="search-and-filter__search">
+        <SearchBox setSearchKeyword={setSearchKeyword} />
+      </div>
       {filterControls}
-    </Grid>
+    </div>
   );
 }
 
@@ -794,7 +825,14 @@ export function BallkidPopover({
   );
 }
 
-export function BallkidAndIcon({ ballkid, isTeamsPage = false, showSupervet = false }) {
+export function BallkidAndIcon({
+  ballkid,
+  isTeamsPage = false,
+  showSupervet = false,
+  plainName = false,
+}) {
+  const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
+
   return (
     <Box
       className="ballkid-and-icon"
@@ -809,10 +847,22 @@ export function BallkidAndIcon({ ballkid, isTeamsPage = false, showSupervet = fa
         flexWrap: "wrap",
       }}
     >
-      <BallkidLink
-        id={ballkid.id}
-        name={`${ballkid.first_name} ${ballkid.last_name}`}
-      />
+      {plainName ? (
+        <Typography
+          component="span"
+          variant="subtitle1"
+          className="ballkid-list-plain-name"
+          sx={{
+            fontWeight: 700,
+            lineHeight: 1.25,
+            color: "inherit",
+          }}
+        >
+          {displayName}
+        </Typography>
+      ) : (
+        <BallkidLink id={ballkid.id} name={displayName} />
+      )}
       <Icons
         ballkid={ballkid}
         margin={0}
@@ -881,9 +931,12 @@ export function BallkidCard({ ballkid, renderAdditional }) {
                 <Typography
                   variant="subtitle1"
                   component="span"
+                  className="ballkid-card-name"
+                  title={`${ballkid.first_name} ${ballkid.last_name}`}
                   sx={{
-                    fontWeight: "medium",
+                    fontWeight: 700,
                     lineHeight: 1.25,
+                    flex: "1 1 auto",
                     minWidth: 0,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -892,16 +945,28 @@ export function BallkidCard({ ballkid, renderAdditional }) {
                 >
                   {ballkid.first_name} {ballkid.last_name}
                 </Typography>
-                <Box component="span" sx={{ flexShrink: 0, lineHeight: 0 }}>
+                <Box
+                  component="span"
+                  className="ballkid-card-name-icons"
+                  sx={{
+                    flexShrink: 0,
+                    lineHeight: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "2px",
+                  }}
+                >
                   <Icons ballkid={ballkid} margin={0} />
                 </Box>
               </Box>
-              {renderAdditional}
+              {renderAdditional ? (
+                <Box className="ballkid-card-meta">{renderAdditional}</Box>
+              ) : null}
             </>
           ) : (
             <div className="justify">
               <div className="sxs">
-                <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {ballkid.first_name} {ballkid.last_name}
                 </Typography>
                 &thinsp;

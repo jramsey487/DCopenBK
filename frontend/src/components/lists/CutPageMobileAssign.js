@@ -6,7 +6,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 
-import { BallkidLink, ConfirmDialog, getAuthHeader } from "../Utils";
+import { BallkidAndIcon, ConfirmDialog, getAuthHeader } from "../Utils";
 import { CutBallkidMeta } from "./CutPageDesktop";
 
 export const CUT_ASSIGN_LABELS = {
@@ -45,11 +45,39 @@ function preferredPositionLabel(ballkid) {
   return "—";
 }
 
+function assignButtonLines(status) {
+  if (status === "") {
+    return ["Active"];
+  }
+  if (status === "Self-Cut") {
+    return ["Self", "Cut"];
+  }
+  const space = status.indexOf(" ");
+  if (space === -1) {
+    return [status];
+  }
+  return [status.slice(0, space), status.slice(space + 1)];
+}
+
+function CutMobileAssignButtonLabel({ status }) {
+  const lines = assignButtonLines(status);
+  return (
+    <span className="cut-mobile-assign-btn__label">
+      {lines.map((line) => (
+        <span key={line} className="cut-mobile-assign-btn__line">
+          {line}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function CutMobileAssignTable({
   ballkids,
   assignOptions,
   onAssign,
   assignColumnTitle = "Assign",
+  compactMeta = false,
 }) {
   const [assigningId, setAssigningId] = useState(null);
 
@@ -65,42 +93,47 @@ export function CutMobileAssignTable({
   };
 
   return (
-    <div className="teams-mobile-unassigned-table cut-mobile-assign-table">
-      <div className="teams-mobile-unassigned-table__head">
-        <span>Name</span>
-        <span>Preferred position</span>
-        <span>{assignColumnTitle}</span>
-      </div>
-
-      {ballkids.map((ballkid) => (
-        <div key={ballkid.id} className="teams-mobile-unassigned-table__row">
-          <div className="teams-mobile-unassigned-table__name cut-mobile-assign-table__name">
-            <BallkidLink
-              id={ballkid.id}
-              name={`${ballkid.first_name} ${ballkid.last_name}`}
-            />
-            <CutBallkidMeta ballkid={ballkid} dense />
-          </div>
-          <div className="teams-mobile-unassigned-table__position">
-            {preferredPositionLabel(ballkid)}
-          </div>
-          <div className="teams-mobile-unassigned-assign-col cut-mobile-assign-col">
-            {assignOptions.map((option) => (
-              <Button
-                key={`${ballkid.id}-${option.status}`}
-                size="small"
-                variant="outlined"
-                color={option.color || sectionButtonColor(option.status)}
-                disabled={assigningId === ballkid.id}
-                className="teams-mobile-assign-team-btn cut-mobile-assign-btn"
-                onClick={() => handleAssign(ballkid, option.status)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
+    <div className="cut-mobile-assign-table-scroll">
+      <div className="teams-mobile-unassigned-table cut-mobile-assign-table">
+        <div className="teams-mobile-unassigned-table__head">
+          <span>Name</span>
+          <span className="cut-mobile-assign-table__head-pos">Pos.</span>
+          <span className="cut-mobile-assign-table__head-assign">
+            {assignColumnTitle}
+          </span>
         </div>
-      ))}
+
+        {ballkids.map((ballkid) => (
+          <div key={ballkid.id} className="teams-mobile-unassigned-table__row">
+            <div className="teams-mobile-unassigned-table__name cut-mobile-assign-table__name">
+              <BallkidAndIcon ballkid={ballkid} isTeamsPage showSupervet />
+              <CutBallkidMeta
+                ballkid={ballkid}
+                dense
+                compact={compactMeta}
+              />
+            </div>
+            <div className="teams-mobile-unassigned-table__position">
+              {preferredPositionLabel(ballkid)}
+            </div>
+            <div className="teams-mobile-unassigned-assign-col cut-mobile-assign-col">
+              {assignOptions.map((option) => (
+                <Button
+                  key={`${ballkid.id}-${option.status}`}
+                  size="small"
+                  variant="outlined"
+                  color={option.color || sectionButtonColor(option.status)}
+                  disabled={assigningId === ballkid.id}
+                  className="teams-mobile-assign-team-btn cut-mobile-assign-btn"
+                  onClick={() => handleAssign(ballkid, option.status)}
+                >
+                  <CutMobileAssignButtonLabel status={option.status} />
+                </Button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -109,17 +142,8 @@ export function buildCutAssignOptions({
   sections,
   currentStatus,
   includeSelfCut = true,
-  includeActive = true,
 }) {
   const options = [];
-
-  if (includeActive && currentStatus !== "") {
-    options.push({
-      status: "",
-      label: CUT_ASSIGN_LABELS[""],
-      color: "inherit",
-    });
-  }
 
   sections.forEach((section) => {
     if (section !== currentStatus) {
@@ -239,6 +263,7 @@ export function CutStatusSectionMobile({
             ballkids={sorted}
             assignOptions={assignOptions}
             assignColumnTitle="Move to"
+            compactMeta={section === "Self-Cut"}
             onAssign={(ballkid, status) =>
               patchCutBallkid(ballkid, { cut_status: status })
             }
@@ -335,6 +360,7 @@ export function SelfCutCardMobile({
             ballkids={sorted}
             assignOptions={assignOptions}
             assignColumnTitle="Move to"
+            compactMeta
             onAssign={(ballkid, status) =>
               patchCutBallkid(ballkid, { cut_status: status })
             }

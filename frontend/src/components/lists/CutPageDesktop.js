@@ -12,7 +12,6 @@ import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
 
-import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import Dangerous from "@mui/icons-material/Dangerous";
 
 import {
@@ -64,35 +63,59 @@ export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch)
   });
 }
 
-function cutCalibratedRankDisplay(ballkid) {
+function hasCalibratedAverage(ballkid) {
+  const avg = ballkid.calibrated_avg;
+  if (avg === null || avg === undefined || avg === "") {
+    return false;
+  }
+  const numericAvg = Number(avg);
+  if (Number.isNaN(numericAvg)) {
+    return false;
+  }
+  const numRatings = ballkid.num_ratings;
   if (
-    ballkid.calibrated_avg !== null &&
-    ballkid.calibrated_avg !== undefined &&
-    ballkid.calibrated_avg !== ""
+    numRatings !== null &&
+    numRatings !== undefined &&
+    numRatings !== ""
   ) {
-    return Number(ballkid.calibrated_avg).toFixed(3);
+    return Number(numRatings) > 0;
+  }
+  return numericAvg !== 0;
+}
+
+function cutCalibratedRankDisplay(ballkid) {
+  if (hasCalibratedAverage(ballkid)) {
+    return {
+      label: "Calibrated average",
+      value: Number(ballkid.calibrated_avg).toFixed(3),
+    };
   }
   if (ballkid.rank !== null && ballkid.rank !== undefined && ballkid.rank !== "") {
-    return String(ballkid.rank);
+    return {
+      label: "Calibrated rank",
+      value: String(ballkid.rank),
+    };
   }
   return null;
 }
 
 function CalibratedRankPill({ ballkid }) {
-  const value = cutCalibratedRankDisplay(ballkid);
-  if (value == null) {
+  const display = cutCalibratedRankDisplay(ballkid);
+  if (display == null) {
     return null;
   }
-  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+  const muted =
+    display.label === "Calibrated average" &&
+    ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
 
   return (
-    <Tooltip title="Calibrated rank" arrow>
+    <Tooltip title={display.label} arrow>
       <span
         className={`cut-chip-pill cut-chip-pill--rank${
           muted ? " cut-chip-pill--muted" : ""
         }`}
       >
-        {value}
+        {display.value}
       </span>
     </Tooltip>
   );
@@ -403,52 +426,28 @@ export function renderBallkidsInSection(
         "calibrated_avg",
         "last_day",
       ]}
-      actionsForBallkid={(ballkid) => (
-        <>
-          {section === "Self-Cut" ? (
-            ""
-          ) : (
-            <Tooltip title="Uncategorize">
-              <IconButton
-                size="small"
-                sx={{
-                  p: 0.6,
-                  borderRadius: "8px",
-                  "&:hover": { backgroundColor: "rgba(37, 99, 235, 0.08)" },
-                }}
-                onClick={() => {
-                  patchCutBallkid(ballkid, { cut_status: "" });
-                }}
-              >
-                <RemoveCircleOutline color="primary" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          )}
-
-          {!section.includes("Cut") ? (
-            ""
-          ) : (
-            <Tooltip title="Cut">
-              <IconButton
-                size="small"
-                sx={{
-                  p: 0.6,
-                  borderRadius: "8px",
-                  "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
-                }}
-                onClick={() => {
-                  patchCutBallkid(ballkid, {
-                    is_cut: true,
-                    self_cut: section === "Self-Cut",
-                  });
-                }}
-              >
-                <Dangerous color="error" sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          )}
-        </>
-      )}
+      actionsForBallkid={(ballkid) =>
+        !section.includes("Cut") ? null : (
+          <Tooltip title="Cut">
+            <IconButton
+              size="small"
+              sx={{
+                p: 0.6,
+                borderRadius: "8px",
+                "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
+              }}
+              onClick={() => {
+                patchCutBallkid(ballkid, {
+                  is_cut: true,
+                  self_cut: section === "Self-Cut",
+                });
+              }}
+            >
+              <Dangerous color="error" sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        )
+      }
     />
   );
 }
@@ -746,7 +745,7 @@ export default function CutPageDesktop(props) {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page">
+    <div className="page ballkid-list-page cut-page">
       <Banners />
 
       <Alerts

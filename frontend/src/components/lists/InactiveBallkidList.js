@@ -22,6 +22,7 @@ import "./ballkid-list-by-name.css";
 function renderUnarchiveButton(ballkid, setUpdated) {
   return (
     <Button
+      className="ballkid-list-action-btn"
       variant="outlined"
       color="success"
       size="small"
@@ -42,7 +43,7 @@ function renderUnarchiveButton(ballkid, setUpdated) {
           .then(() => setUpdated(true));
       }}
     >
-      Un-Archive
+      Un-archive
     </Button>
   );
 }
@@ -50,8 +51,8 @@ function renderUnarchiveButton(ballkid, setUpdated) {
 function renderUncutButton(ballkid, setUpdated) {
   return (
     <Button
+      className="ballkid-list-action-btn"
       variant="outlined"
-      label="Cut"
       color="success"
       size="small"
       onMouseDown={(e) => e.stopPropagation()}
@@ -78,13 +79,15 @@ function renderUncutButton(ballkid, setUpdated) {
 
 function renderBallkids(ballkids, section, layout, setUpdated) {
   return ballkids.length === 0 ? (
-    <div className="ballkid-list-empty" style={{ textAlign: "left", marginBottom: "2rem" }}>
+    <div className="ballkid-list-empty ballkid-list-section-content" style={{ textAlign: "left", marginBottom: "2rem" }}>
       There are currently no {section} ballkids.
     </div>
   ) : (
     <div
       className={
-        layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+        layout === "grid"
+          ? "ballkid-list-grid ballkid-list-section-content"
+          : "ballkid-list-stack ballkid-list-section-content"
       }
       style={{ marginBottom: "2rem" }}
     >
@@ -161,10 +164,9 @@ export default function InactiveBallkidList(props) {
       </div>
 
       <Box
-        className="sxs"
+        className="sxs ballkid-list-section-head"
         sx={{
           mt: 3,
-          mb: 0,
           alignItems: "center",
           borderBottom: "1px solid",
           borderColor: "divider",
@@ -191,10 +193,9 @@ export default function InactiveBallkidList(props) {
       )}
 
       <Box
-        className="sxs"
+        className="sxs ballkid-list-section-head"
         sx={{
           mt: 3,
-          mb: 0,
           alignItems: "center",
           borderBottom: "1px solid",
           borderColor: "divider",
