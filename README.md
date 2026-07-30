@@ -418,8 +418,11 @@ cp .env.example .env
 # Create your virtual environment folder
 python -m venv .venv
 
-# Start your virtual environment
+# Activate the virtual environment
+# Linux/macOS:
 source .venv/bin/activate
+# Windows (cmd):      .venv\Scripts\activate.bat
+# Windows (PowerShell): .venv\Scripts\Activate.ps1
 
 # Install django in the virtual environment
 pip install django
