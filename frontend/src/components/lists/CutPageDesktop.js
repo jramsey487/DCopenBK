@@ -63,6 +63,25 @@ export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch)
   });
 }
 
+/** Cut page list order: years of experience (desc), then calibrated rank (asc). */
+export function compareCutPageBallkids(a, b) {
+  const yoeDiff =
+    (b.num_years_experience ?? 0) - (a.num_years_experience ?? 0);
+  if (yoeDiff !== 0) {
+    return yoeDiff;
+  }
+
+  const rankA = a.rank ?? Number.MAX_SAFE_INTEGER;
+  const rankB = b.rank ?? Number.MAX_SAFE_INTEGER;
+  if (rankA !== rankB) {
+    return rankA - rankB;
+  }
+
+  return `${a.last_name} ${a.first_name}`.localeCompare(
+    `${b.last_name} ${b.first_name}`
+  );
+}
+
 function hasCalibratedAverage(ballkid) {
   const avg = ballkid.calibrated_avg;
   if (avg === null || avg === undefined || avg === "") {
@@ -408,11 +427,7 @@ export function CutDecisionSectionList({
   showHovercard = false,
   patchCutBallkid,
 }) {
-  const sorted = [...ballkids].sort((a, b) =>
-    `${a.last_name} ${a.first_name}`.localeCompare(
-      `${b.last_name} ${b.first_name}`
-    )
-  );
+  const sorted = [...ballkids].sort(compareCutPageBallkids);
 
   return (
     <CutBallkidStack
@@ -544,7 +559,7 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
               </Typography>
             ) : (
               <CutBallkidGrid
-                ballkids={filtered}
+                ballkids={[...filtered].sort(compareCutPageBallkids)}
                 showHovercard={showHovercard}
                 hoverCommentTypes={[
                   "experience",

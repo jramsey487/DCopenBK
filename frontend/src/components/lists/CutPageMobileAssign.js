@@ -8,7 +8,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { BallkidAndIcon, ConfirmDialog, getAuthHeader } from "../Utils";
-import { CutBallkidMeta, CutDecisionSectionList } from "./CutPageDesktop";
+import { CutBallkidMeta, CutDecisionSectionList, compareCutPageBallkids } from "./CutPageDesktop";
 
 export const CUT_ASSIGN_LABELS = {
   "Definitely Keep": "Def. keep",
@@ -190,11 +190,7 @@ export function CutStatusSectionMobile({
   const cutAllColor = shouldCut ? "error" : "success";
   const cutAllVariant = shouldCut ? "contained" : "outlined";
 
-  const sorted = [...active].sort((a, b) =>
-    `${a.last_name} ${a.first_name}`.localeCompare(
-      `${b.last_name} ${b.first_name}`
-    )
-  );
+  const sorted = [...active].sort(compareCutPageBallkids);
 
   return (
     <Card elevation={0} sx={{ mb: 2, borderRadius: "16px", border: "1px solid", borderColor: "divider" }}>
@@ -283,11 +279,7 @@ export function SelfCutCardMobile({
   const selfCut = active.filter((ballkid) => ballkid.cut_status === "Self-Cut");
   const [open, setOpen] = useState(false);
 
-  const sorted = [...selfCut].sort((a, b) =>
-    `${a.last_name} ${a.first_name}`.localeCompare(
-      `${b.last_name} ${b.first_name}`
-    )
-  );
+  const sorted = [...selfCut].sort(compareCutPageBallkids);
 
   return (
     <Card

@@ -13,7 +13,7 @@ import {
   Alerts,
   Banners,
 } from "../Utils";
-import { patchCutBallkidInState } from "./CutPageDesktop";
+import { patchCutBallkidInState, compareCutPageBallkids } from "./CutPageDesktop";
 import { CUT_STATUSES } from "../Consts";
 import { cut } from "../HelpMessages";
 import {
@@ -32,11 +32,7 @@ function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
 
   const uncategorized = filterBallkids(active, searchKeyword, filterGroup)
     .filter((ballkid) => ballkid.cut_status === "")
-    .sort((a, b) =>
-      `${a.last_name} ${a.first_name}`.localeCompare(
-        `${b.last_name} ${b.first_name}`
-      )
-    );
+    .sort(compareCutPageBallkids);
 
   const assignOptions = buildCutAssignOptions({
     sections,
