@@ -186,7 +186,7 @@
       width: auto;
     }
 
-    .ballkid-profile-captain-hero .ballkid-profile-hero-meta-row {
+    .ballkid-profile-captain-hero .ballkid-profile-hero-meta-row:not(.ballkid-profile-hero-meta-row--accent) {
       display: none;
     }
 
@@ -433,7 +433,7 @@
   .ballkid-profile-hero-name-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+    align-items: start;
     column-gap: 10px;
     row-gap: 10px;
     width: 100%;
@@ -442,11 +442,42 @@
 
   .ballkid-profile-hero-name-group {
     grid-column: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
     min-width: 0;
+    width: 100%;
+  }
+
+  .ballkid-profile-hero-meta-row--accent {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  @media (max-width: 767px) {
+    .ballkid-profile-hero-meta-row--accent {
+      flex-wrap: wrap;
+    }
+  }
+
+  .ballkid-profile-hero-accent-line {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .ballkid-profile-hero-accent-line .ballkid-profile-hero-role-icons {
+    flex-shrink: 0;
+  }
+
+  .ballkid-profile-hero-accent-line .ballkid-profile-hero-meta-pills {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .ballkid-profile-hero-accent-line .ballkid-profile-hero-pills {
+    margin-top: 0;
+    flex-wrap: nowrap;
   }
   
   .ballkid-profile-hero-role-icons {
