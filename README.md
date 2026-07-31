@@ -31,6 +31,7 @@ A full-stack web application for managing ball kids at the **Citi Open** tennis 
   - [Data Export & Debug Tools](#data-export--debug-tools)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
+  - [Dev users (management commands)](#dev-users-management-commands)
 - [Deployment](#deployment)
 
 ---
@@ -439,6 +440,80 @@ python manage.py migrate
 # Start dev server
 python manage.py runserver
 ```
+
+### Dev users (management commands)
+
+Dev management commands (`bootstrap_dev`, `create_dev_user`) only run when Django **`DEBUG` is `True`**. Settings load from a **`.env` file in the project root** (`citiopen/settings.py` uses `environs`).
+
+**1. Activate the virtual environment** (from the project root):
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+
+# Windows (Command Prompt)
+.venv\Scripts\activate.bat
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+**2. Enable debug mode** — add or edit `.env`:
+
+```bash
+DEBUG=True
+```
+
+If you do not use a `.env` file, set `DEBUG` for the current shell only:
+
+```bash
+# macOS / Linux
+export DEBUG=True
+
+# Windows (Command Prompt)
+set DEBUG=True
+
+# Windows (PowerShell)
+$env:DEBUG="True"
+```
+
+**3. Apply migrations** (if you have not already, or after pulling new model changes):
+
+```bash
+python manage.py migrate
+```
+
+**4. Create users**
+
+First-time setup — default chairperson (log in and open `/debug` as **`local.chair`** / **`password`**):
+
+```bash
+python manage.py bootstrap_dev
+```
+
+Add ballkids, captains, or chairpersons:
+
+```bash
+python manage.py create_dev_user --first Jane --last Doe --role ballkid
+python manage.py create_dev_user --first Pat --last Lee --role captain --yoe 4
+python manage.py create_dev_user --first Sam --last Kim --role chairperson --dob 2008-06-15
+```
+
+`DEBUG` defaults to `False` if unset, so dev user commands will error until you turn it on.
+
+These commands create Django auth groups, ballkid profiles, login users (`firstname.lastname`), and API tokens—the same linking behavior as the Debug page and `POST /accounts/register`.
+
+| Flag | Purpose |
+|------|---------|
+| `--role` | Required: `ballkid`, `captain`, or `chairperson` (sets Django group and `is_captain` / `is_chairperson` on the profile) |
+| `--password` | Login password (default: `password`) |
+| `--email` | Default: `first.last@example.com` |
+| `--position` | `Back`, `Net`, `Back/Net`, or `Net/Back` (default: `Back`) |
+| `--yoe` | Years of experience (default: `0`) |
+| `--dob` | Date of birth `YYYY-MM-DD` |
+| `--profile-only` | Ballkid row only, no login user |
+
+Re-running the same name updates the profile and role; the password is only set when the user is first created.
 
 ### Frontend
 

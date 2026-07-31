@@ -30,23 +30,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # - name: Install rcal
-      #   run: |
-      #     eval `ssh-agent -s`
-      #     ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
-      #     pip install git+ssh://git@github.com/jtiosue/rcal.git
-
       - name: Run deploy prep script
         run: sh deploy.sh
 
       - name: Build backend
         run: python manage.py collectstatic --no-input --clear
-
-      # - name: Clone rcal
-      #   run: |
-      #     eval `ssh-agent -s`
-      #     ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
-      #     git clone git+ssh://git@github.com/jtiosue/rcal.git
 
       - name: Deploy
         env:
