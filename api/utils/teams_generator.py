@@ -3,7 +3,41 @@ from api.utils.consts import *
 
 from django.db.models import Q
 
+from datetime import date
 import math
+
+
+def get_previous_captains(ballkid_ids):
+    """
+    Returns a dict mapping ballkid_id -> set of captain ids, representing the
+    captain(s) each ballkid had on the most recent day strictly before today
+    that they have a CaptainHistory entry for. Used as a soft constraint when
+    auto-generating teams so ballkids aren't repeatedly placed under the same
+    captain day after day.
+    """
+    histories = CaptainHistory.objects.filter(
+        ballkid_id__in=ballkid_ids,
+        start__date__lt=date.today(),
+    ).order_by("ballkid_id", "-start")
+
+    previous_captains = {}
+    latest_start = {}
+
+    for history in histories:
+        bid = history.ballkid_id
+
+        # First entry seen per ballkid (since ordered by -start) is their
+        # most recent captain assignment
+        if bid not in latest_start:
+            latest_start[bid] = history.start
+            previous_captains[bid] = set()
+
+        # Include every captain assigned at that same moment, in case the
+        # ballkid had co-captains on their most recent team
+        if history.start == latest_start[bid]:
+            previous_captains[bid].add(history.captain_id)
+
+    return previous_captains
 
 
 class Team:
@@ -11,6 +45,7 @@ class Team:
         self.number = num
         self.ballkids = {position: [] for position in [POSITION.N, POSITION.B]}
         self.experienced = {position: [] for position in [POSITION.N, POSITION.B]}
+        self.captain_ids = set()
 
     def get_number(self):
         return self.number
@@ -42,6 +77,9 @@ class Team:
         ):
             self.experienced[position].append(ballkid)
 
+        if ballkid.is_captain:
+            self.captain_ids.add(ballkid.id)
+
     def __repr__(self):
         return str(
             [
@@ -69,7 +107,25 @@ class TeamsGenerator:
                 ]
             ]
 
-    def get_smallest_team(self, position=None, max_size=None):
+    def get_eligible_teams(self, avoid_captain_ids=None):
+        """
+        Returns the list of teams whose captain(s) don't overlap with
+        avoid_captain_ids. This is a soft constraint: if every team conflicts
+        (e.g. there aren't enough distinct captains to go around), falls back
+        to the full list of teams rather than returning nothing.
+        """
+        if not avoid_captain_ids:
+            return self.teams
+
+        eligible = [
+            team
+            for team in self.teams
+            if not (team.captain_ids & avoid_captain_ids)
+        ]
+
+        return eligible if eligible else self.teams
+
+    def get_smallest_team(self, position=None, max_size=None, avoid_captain_ids=None):
         """
         Returns the smallest team in the list of teams.
 
@@ -78,13 +134,17 @@ class TeamsGenerator:
         number of ballkids at that position
         max_size(int): if max_size is not None, then will not return a team which already
         has the max number of ballkids
+        avoid_captain_ids(set): if provided, prefer teams whose captain(s) don't overlap
+        with this set (soft constraint - falls back to all teams if none qualify)
         """
+        candidate_teams = self.get_eligible_teams(avoid_captain_ids)
+
         # Keep track of both the smallest team and the team with the fewest ballkids at
         # the position of interest
-        smallest_team = self.teams[0]
-        smallest_position_team = self.teams[0]
+        smallest_team = candidate_teams[0]
+        smallest_position_team = candidate_teams[0]
 
-        for team in self.teams:
+        for team in candidate_teams:
             # Update smallest team
             if team.size() < smallest_team.size():
                 smallest_team = team
@@ -100,9 +160,10 @@ class TeamsGenerator:
 
         return smallest_position_team
 
-    def get_team_without_experienced_position(self, position):
+    def get_team_without_experienced_position(self, position, avoid_captain_ids=None):
+        candidate_teams = self.get_eligible_teams(avoid_captain_ids)
         eligible_teams = [
-            team for team in self.teams if not team.has_experienced(position)
+            team for team in candidate_teams if not team.has_experienced(position)
         ]
         return eligible_teams[0] if len(eligible_teams) > 0 else None
 
@@ -133,7 +194,7 @@ class TeamsGenerator:
         max_ballkids_per_team = math.ceil(len(all) / len(self.teams))
 
         captains = all.filter(Q(is_chairperson=True) | Q(is_captain=True))
-        supervets = (
+        supervets = list(
             all.exclude(id__in=captains)
             .filter(num_years_experience__gt=0)
             .filter(
@@ -144,9 +205,15 @@ class TeamsGenerator:
 
         ballkids = list(
             all.exclude(id__in=captains)
-            .exclude(id__in=supervets)
+            .exclude(id__in=[s.id for s in supervets])
             .order_by("?")
             .order_by("-num_years_experience")
+        )
+
+        # Soft constraint: avoid placing a ballkid with the same captain they
+        # had on their most recent previous day, where possible
+        previous_captains = get_previous_captains(
+            [b.id for b in supervets] + [b.id for b in ballkids]
         )
 
         # Do not restart team_counter to 0 inside for loop to maximize likelihood
@@ -166,17 +233,27 @@ class TeamsGenerator:
                 team_counter = (team_counter + 1) % len(self.teams)
 
         for supervet in supervets:
-            team = self.get_team_without_experienced_position(supervet.position)
+            avoid_captain_ids = previous_captains.get(supervet.id, set())
+
+            team = self.get_team_without_experienced_position(
+                supervet.position, avoid_captain_ids=avoid_captain_ids
+            )
             if team is None:
                 team = self.get_smallest_team(
-                    supervet.position, max_size=max_ballkids_per_team
+                    supervet.position,
+                    max_size=max_ballkids_per_team,
+                    avoid_captain_ids=avoid_captain_ids,
                 )
 
             team.add_ballkid(supervet)
 
         for ballkid in ballkids:
+            avoid_captain_ids = previous_captains.get(ballkid.id, set())
+
             team = self.get_smallest_team(
-                ballkid.position, max_size=max_ballkids_per_team
+                ballkid.position,
+                max_size=max_ballkids_per_team,
+                avoid_captain_ids=avoid_captain_ids,
             )
             team.add_ballkid(ballkid)
 
