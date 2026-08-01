@@ -413,11 +413,17 @@ Body: { "username": "first.last", "password": "..." }
 Make sure you have postgres installed and are using Python 3.10
 
 ```bash
+# (Windows Only) Ensure you have these Visual Studio packages installed (install everything, all checkboxes)
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
 # Set environment variables (see citiopen/settings.py for required vars) (is this needed?)
 cp .env.example .env
 
 # Create your virtual environment folder
 python -m venv .venv
+
+# (Optional, if you get a permissions error when running activate script)
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Activate the virtual environment
 # Linux/macOS:
@@ -444,8 +450,9 @@ python manage.py runserver
 ### Dev users (management commands)
 
 Dev management commands (`bootstrap_dev`, `create_dev_user`) only run when Django **`DEBUG` is `True`**. Settings load from a **`.env` file in the project root** (`citiopen/settings.py` uses `environs`).
+**1. Install postgres: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
 
-**1. Activate the virtual environment** (from the project root):
+**2. Activate the virtual environment** (from the project root):
 
 ```bash
 # macOS / Linux
@@ -458,7 +465,7 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 ```
 
-**2. Enable debug mode** — add or edit `.env`:
+**3. Enable debug mode** — add or edit `.env`:
 
 ```bash
 DEBUG=True
@@ -477,13 +484,13 @@ set DEBUG=True
 $env:DEBUG="True"
 ```
 
-**3. Apply migrations** (if you have not already, or after pulling new model changes):
+**4. Apply migrations** (if you have not already, or after pulling new model changes):
 
 ```bash
 python manage.py migrate
 ```
 
-**4. Create users**
+**5. Create users**
 
 First-time setup — default chairperson (log in and open `/debug` as **`local.chair`** / **`password`**):
 
@@ -518,7 +525,11 @@ Re-running the same name updates the profile and role; the password is only set 
 ### Frontend
 
 ```bash
+cd <your project directory)
 cd frontend
+
+# (Optional) Install node.js
+https://nodejs.org/en/download
 
 # Install dependencies
 npm install
@@ -529,7 +540,7 @@ npm start
 
 The frontend proxy is configured in `package.json` to forward API requests to `http://localhost:8000`.
 
-To build the frontend for production and move it to the Django static directory:
+(may not be needed) To build the frontend for production and move it to the Django static directory:
 ```bash
 npm run relocate
 ```
