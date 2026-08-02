@@ -1,89 +1,112 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-
-import AspectRatio from "@mui/joy/AspectRatio";
-import { Icons, Banners, getAuthHeader, useIsMobile } from "../Utils";
+import { getAuthHeader } from "../Utils";
+import {
+  ProfilePageShell,
+  ProfileLoadingState,
+  ProfileErrorState,
+  ProfileBrandedHero,
+  ProfileContent,
+  ProfileCard,
+  ProfileInfoRow,
+  ProfilePositionPills,
+} from "./BallkidProfileLayout";
 
 export default function BallkidPage(props) {
   const [ballkid, setBallkid] = useState(null);
   const [showTeams, setShowTeams] = useState(false);
+  const [loadState, setLoadState] = useState("loading");
 
-  const isMobile = useIsMobile();
   const { pk } = useParams();
 
   useEffect(() => {
-    fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setBallkid(data));
+    setLoadState("loading");
+    let cancelled = false;
 
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setShowTeams(data["show_teams"]));
+    Promise.all([
+      fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() }).then(
+        (response) => (response.ok ? response.json() : Promise.reject(response))
+      ),
+      fetch("/api/get-tournament", {
+        method: "GET",
+        headers: getAuthHeader(),
+      }).then((response) =>
+        response.ok ? response.json() : { show_teams: false }
+      ),
+    ])
+      .then(([ballkidData, tournamentData]) => {
+        if (cancelled) {
+          return;
+        }
+        setBallkid(ballkidData);
+        setShowTeams(tournamentData.show_teams);
+        setLoadState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBallkid(null);
+          setLoadState("error");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [pk]);
 
-  return ballkid == null ? (
-    ""
-  ) : (
-    <div className="page">
-      <Banners />
+  if (loadState === "loading") {
+    return <ProfileLoadingState />;
+  }
 
-      <div className="sxs">
-        <Typography variant="h4">
-          {ballkid.first_name} {ballkid.last_name}
-        </Typography>
-        &ensp;
-        <Icons ballkid={ballkid} margin={0} />
-      </div>
+  if (loadState === "error" || ballkid == null) {
+    return (
+      <ProfileErrorState>
+        Could not load this profile. Try refreshing or heading back to the
+        roster.
+      </ProfileErrorState>
+    );
+  }
 
-      <Grid container>
-        <Grid
-          item
-          xs={12}
-          sm={4}
-          md={3}
-          lg={2}
-          sx={{ pr: 2, pl: isMobile ? 2 : 0, mb: 1 }}
-        >
-          <AspectRatio ratio="1/1">
-            <Box width="95%" component="img" src={"../" + ballkid.image} />
-          </AspectRatio>
-        </Grid>
+  const showCurrent =
+    ballkid.is_cut !== "true" &&
+    ballkid.is_cut !== true &&
+    ballkid.is_active &&
+    showTeams;
 
-        <Grid item xs={12} sm={8} md={9} lg={10}>
-          <Typography variant="h6"> Info:</Typography>
-          <Typography variant="body1">
-            Years experience: {ballkid.num_years_experience}
-          </Typography>
-          <Typography variant="body1">
-            Preferred position: {ballkid.preferred_position}
-          </Typography>
-          <br />
-          {ballkid.is_cut || !ballkid.is_active || !showTeams ? (
-            ""
-          ) : (
-            <div>
-              <Typography variant="h6"> Current Info: </Typography>
-              <Typography variant="body1">
-                Position: {ballkid.position}
-              </Typography>
-              <Typography variant="body1">
-                Current Team:{" "}
-                {ballkid.current_team === 0
+  return (
+    <ProfilePageShell>
+      <ProfileBrandedHero
+        ballkid={ballkid}
+        backTo="/list"
+        backLabel="Back to roster"
+      />
+
+      <ProfileContent>
+        <ProfileCard title="Info">
+          <ProfileInfoRow
+            label="Experience"
+            value={`${ballkid.num_years_experience} years`}
+          />
+          <ProfileInfoRow label="Preferred position">
+            <ProfilePositionPills preferred={ballkid.preferred_position} />
+          </ProfileInfoRow>
+        </ProfileCard>
+
+        {showCurrent ? (
+          <ProfileCard title="Current tournament">
+            <ProfileInfoRow label="Position" value={ballkid.position} />
+            <ProfileInfoRow
+              label="Current team"
+              value={
+                ballkid.current_team === 0
                   ? "Unassigned"
-                  : ballkid.current_team}
-              </Typography>
-              <br />
-            </div>
-          )}
-        </Grid>
-      </Grid>
-    </div>
+                  : ballkid.current_team
+              }
+            />
+          </ProfileCard>
+        ) : null}
+      </ProfileContent>
+    </ProfilePageShell>
   );
 }
