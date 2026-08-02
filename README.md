@@ -443,6 +443,29 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### Frontend
+
+```bash
+cd <your project directory)
+cd frontend
+
+# (Optional) Install node.js
+https://nodejs.org/en/download
+
+# Install dependencies
+npm install
+
+# Start dev server (proxies API calls to localhost:8000)
+npm start
+```
+
+The frontend proxy is configured in `package.json` to forward API requests to `http://localhost:8000`.
+
+(may not be needed) To build the frontend for production and move it to the Django static directory:
+```bash
+npm run relocate
+```
+
 ### Dev users (management commands)
 
 Dev management commands (`bootstrap_dev`, `create_dev_user`) only run when Django **`DEBUG` is `True`**. Settings load from a **`.env` file in the project root** (`citiopen/settings.py` uses `environs`).
@@ -517,29 +540,6 @@ These commands create Django auth groups, ballkid profiles, login users (`firstn
 | `--profile-only` | Ballkid row only, no login user |
 
 Re-running the same name updates the profile and role; the password is only set when the user is first created.
-
-### Frontend
-
-```bash
-cd <your project directory)
-cd frontend
-
-# (Optional) Install node.js
-https://nodejs.org/en/download
-
-# Install dependencies
-npm install
-
-# Start dev server (proxies API calls to localhost:8000)
-npm start
-```
-
-The frontend proxy is configured in `package.json` to forward API requests to `http://localhost:8000`.
-
-(may not be needed) To build the frontend for production and move it to the Django static directory:
-```bash
-npm run relocate
-```
 
 ---
 
