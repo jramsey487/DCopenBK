@@ -20,32 +20,33 @@
   min-width: 0;
   min-height: 52px;
   background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(13, 27, 62, 0.05);
+  border-radius: 14px;
+  border: 1px solid #e8ecf1;
+  box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
   overflow: hidden;
   cursor: grab;
   transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .cut-ballkid-chip:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 14px rgba(13, 27, 62, 0.08);
+  border-color: #ccd4e0;
+  box-shadow: 0 6px 16px rgba(13, 27, 62, 0.08);
+  transform: translateY(-1px);
 }
 
 .cut-ballkid-chip:active,
 .cut-ballkid-chip.is-dragging {
   cursor: grabbing;
-  box-shadow: 0 8px 24px rgba(13, 27, 62, 0.12);
-  border-color: #93c5fd;
+  box-shadow: 0 10px 26px rgba(13, 27, 62, 0.14);
+  border-color: #0d1b3e;
 }
 
 .cut-ballkid-chip.is-dragging {
-  opacity: 0.94;
-  transform: translateY(-1px);
+  opacity: 0.92;
+  transform: translateY(-2px);
 }
 
 .cut-ballkid-chip__handle {
@@ -54,27 +55,29 @@
   align-items: center;
   justify-content: center;
   align-self: stretch;
-  width: 28px;
+  width: 22px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #eef2ff 0%, #e8eeff 100%);
-  border-right: 1px solid #e2e8f0;
-}
-
-.cut-ballkid-chip:hover .cut-ballkid-chip__handle {
-  background: linear-gradient(180deg, #e0e7ff 0%, #d9e2ff 100%);
+  background: transparent;
+  border-right: none;
 }
 
 .cut-ballkid-chip__handle-dots {
   display: grid;
-  grid-template-columns: repeat(2, 4px);
+  grid-template-columns: repeat(2, 3.5px);
   gap: 3px;
+  opacity: 0.32;
+  transition: opacity 0.15s ease;
+}
+
+.cut-ballkid-chip:hover .cut-ballkid-chip__handle-dots {
+  opacity: 0.75;
 }
 
 .cut-ballkid-chip__handle-dots span {
-  width: 4px;
-  height: 4px;
+  width: 3.5px;
+  height: 3.5px;
   border-radius: 50%;
-  background: #64748b;
+  background: #0d1b3e;
 }
 
 .cut-ballkid-chip__content {
@@ -751,17 +754,17 @@
 /* Compact chips for dense two-column lists */
 .cut-ballkid-chip--dense {
   min-height: 34px;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: none;
   align-items: stretch;
 }
 
 .cut-ballkid-chip--dense:hover {
-  box-shadow: 0 2px 8px rgba(13, 27, 62, 0.06);
+  box-shadow: 0 3px 10px rgba(13, 27, 62, 0.07);
 }
 
 .cut-ballkid-chip--dense .cut-ballkid-chip__handle {
-  width: 16px;
+  width: 14px;
   align-self: stretch;
   justify-content: center;
 }

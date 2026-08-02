@@ -31,7 +31,6 @@ import {
   POSITIONS,
   ICON_DICT,
   TOOLTIP_DICT,
-  SUPERVET_THRESHOLD,
   NUM_RATINGS_WARNING_THRESHOLD,
 } from "../Consts";
 import { cut } from "../HelpMessages";
@@ -213,9 +212,6 @@ export function CutBallkidMeta({
   }
   if (group !== "ballkid" && ballkid.num_years_experience === 0) {
     addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
-  }
-  if (ballkid.num_years_experience > SUPERVET_THRESHOLD) {
-    addIcon("supervet", ICON_DICT.supervet, TOOLTIP_DICT.supervet);
   }
 
   if (compact) {
