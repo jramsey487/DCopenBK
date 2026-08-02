@@ -57,6 +57,7 @@ import {
   SUPERVET_THRESHOLD,
 } from "./Consts";
 import { Popover } from "@mui/material";
+import { YoePill } from "./teams/TeamsShared";
 
 export function Icons({
   ballkid,
@@ -855,6 +856,7 @@ export function BallkidAndIcon({
   isTeamsPage = false,
   plainName = false,
   showIcons = !plainName,
+  showYoe = false,
 }) {
   const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
 
@@ -888,6 +890,7 @@ export function BallkidAndIcon({
       ) : (
         <BallkidLink id={ballkid.id} name={displayName} />
       )}
+      {showYoe ? <YoePill ballkid={ballkid} /> : null}
       {showIcons ? (
         <Icons
           ballkid={ballkid}

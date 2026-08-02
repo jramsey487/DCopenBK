@@ -10,11 +10,11 @@ import {
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
-import { PersonPhotoTile, TeamsPhotoToggle } from "./TeamsShared";
+import { PersonPhotoTile, TeamsPhotoToggle, TeamsYoeToggle } from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import "./teams-page.css";
 
-function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
+function Team({ team, assigned, nextShifts, isMyTeam, showPhotos, showYoe }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
@@ -60,7 +60,11 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
               ) : showPhotos ? (
                 <div className="team-photo-grid">
                   {positionBallkids.map((ballkid) => (
-                    <PersonPhotoTile key={ballkid.id} ballkid={ballkid} />
+                    <PersonPhotoTile
+                      key={ballkid.id}
+                      ballkid={ballkid}
+                      showYoe={showYoe}
+                    />
                   ))}
                 </div>
               ) : (
@@ -70,6 +74,7 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos }) {
                       key={ballkid.id}
                       ballkid={ballkid}
                       isTeamsPage
+                      showYoe={showYoe}
                     />
                   ))}
                 </div>
@@ -88,6 +93,7 @@ export default function TeamsPage(props) {
   const [nextShifts, setNextShifts] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
   const [showPhotos, setShowPhotos] = useState(true);
+  const [showYoe, setShowYoe] = useState(false);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
 
@@ -136,10 +142,16 @@ export default function TeamsPage(props) {
         helpPage="Teams"
         helpMessage={teamsNonchairperson}
         controls={
-          <TeamsPhotoToggle
-            showPhotos={showPhotos}
-            onToggle={() => setShowPhotos(!showPhotos)}
-          />
+          <>
+            <TeamsPhotoToggle
+              showPhotos={showPhotos}
+              onToggle={() => setShowPhotos(!showPhotos)}
+            />
+            <TeamsYoeToggle
+              showYoe={showYoe}
+              onToggle={() => setShowYoe(!showYoe)}
+            />
+          </>
         }
       />
 
@@ -155,6 +167,7 @@ export default function TeamsPage(props) {
               nextShifts={nextShifts.filter((shift) => shift.team === team)}
               isMyTeam={team === myTeam}
               showPhotos={showPhotos}
+              showYoe={showYoe}
             />
           ))}
         </div>

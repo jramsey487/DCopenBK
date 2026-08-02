@@ -638,6 +638,7 @@ class UpdateBallkid(APIView):
         serializer = self.serializer_class(data=request.data, partial=True)
 
         if serializer.is_valid():
+            validated_data = serializer.validated_data
             logger.info(f"[UpdateBallkid] serializer data: {serializer.data}")
 
             # Get ballkid with the corresponding first and last names

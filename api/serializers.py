@@ -38,8 +38,13 @@ class BallkidSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if instance.date_of_birth:
-            data["age"] = calculate_ballkid_age(instance.date_of_birth)
+        date_of_birth = (
+            instance.get("date_of_birth")
+            if isinstance(instance, dict)
+            else getattr(instance, "date_of_birth", None)
+        )
+        if date_of_birth:
+            data["age"] = calculate_ballkid_age(date_of_birth)
         return data
 
 
