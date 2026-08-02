@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { Banners, ballkidImageSrc, Icons, useIsMobile } from "../Utils";
+import { Banners, ballkidImageSrc, Icons, useIsMobile, getLocalStorage } from "../Utils";
 import "./ballkid-profile.css";
 
 const BackChevron = () => (
@@ -70,7 +70,9 @@ export function ProfilePositionPills({ preferred, current }) {
 }
 
 export function ProfileRolePills({ ballkid }) {
+  const group = getLocalStorage("group");
   const showRookie =
+    group !== "ballkid" &&
     ballkid?.num_years_experience === 0 &&
     !ballkid?.is_captain &&
     !ballkid?.is_chairperson;
