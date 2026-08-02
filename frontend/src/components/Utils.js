@@ -98,9 +98,6 @@ export function Icons({
       {group !== "ballkid" &&
         ballkid.num_years_experience === 0 &&
         ICON_DICT["rookie"]}
-      {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
-        isTeamsPage &&
-        ICON_DICT["supervet"]}
     </Icon>
   );
 }
@@ -845,7 +842,6 @@ export function BallkidPopover({
 export function BallkidAndIcon({
   ballkid,
   isTeamsPage = false,
-  showSupervet = false,
   plainName = false,
   showIcons = !plainName,
 }) {
@@ -886,7 +882,6 @@ export function BallkidAndIcon({
           ballkid={ballkid}
           margin={0}
           isTeamsPage={isTeamsPage}
-          showSupervet={showSupervet}
         />
       ) : null}
     </Box>

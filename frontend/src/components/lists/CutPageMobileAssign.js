@@ -108,7 +108,7 @@ export function CutMobileAssignTable({
         {ballkids.map((ballkid) => (
           <div key={ballkid.id} className="teams-mobile-unassigned-table__row">
             <div className="teams-mobile-unassigned-table__name cut-mobile-assign-table__name">
-              <BallkidAndIcon ballkid={ballkid} isTeamsPage showSupervet />
+              <BallkidAndIcon ballkid={ballkid} isTeamsPage />
               <CutBallkidMeta
                 ballkid={ballkid}
                 dense
