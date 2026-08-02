@@ -382,7 +382,7 @@ The **Ticket** model tracks ticket allocations per ballkid per session (Sunday t
 - `POST /api/bulk-checkin`
 - History backfill: `create-checkin-history`, `create-team-history`, `create-captain-history`, `create-finals-history`, `create-cut-history`
 
-**Frontend pages:** `DebugPage`, `FeedbackPage`, `GamePage`
+**Frontend pages:** `DebugPage`, `FeedbackPage`
 
 ---
 
