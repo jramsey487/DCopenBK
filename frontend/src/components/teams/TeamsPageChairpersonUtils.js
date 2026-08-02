@@ -251,23 +251,24 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
           ) : (
             <div className="teams-chairperson-head-secondary">
               <div className="teams-chairperson-head-secondary__assignment">
-                <CourtAssignment nextShifts={nextShifts} />
+                <CourtAssignment nextShifts={nextShifts} showIcon />
               </div>
               <div className="teams-chairperson-head-secondary__buttons">
                 <Button
                   size="small"
                   variant="outlined"
-                  color="error"
-                  className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
+                  startIcon={<RemoveCircleOutline fontSize="small" />}
                   onClick={() => setClearOpen(true)}
                 >
-                  End team
+                  Unassign team
                 </Button>
                 <Button
                   size="small"
                   variant="outlined"
                   color="error"
                   className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+                  startIcon={<HighlightOff fontSize="small" />}
                   onClick={() => setCheckoutOpen(true)}
                 >
                   Check out all

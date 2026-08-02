@@ -43,6 +43,7 @@ import Edit from "@mui/icons-material/Edit";
 import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
 import Help from "@mui/icons-material/Help";
+import BedtimeOutlined from "@mui/icons-material/BedtimeOutlined";
 
 import RatingDialog from "./ratings/RatingDialog";
 import { CheckinHistoryChart } from "./ballkid/CheckinHistoryChart";
@@ -77,7 +78,11 @@ export function Icons({
     return (
       <Icon sx={{ mb: margin }}>
         {ballkid.is_captain && ICON_DICT["captain"]}
-        {ballkid.num_years_experience === 0 && ICON_DICT["rookie"]}
+        {ballkid.num_years_experience === 0 && (
+          <Tooltip title={TOOLTIP_DICT["rookie"]}>
+            <span>{ICON_DICT["rookie"]}</span>
+          </Tooltip>
+        )}
       </Icon>
     );
   }
@@ -572,7 +577,7 @@ export function TabbedSections({ sections }) {
   );
 }
 
-export function CourtAssignment({ nextShifts }) {
+export function CourtAssignment({ nextShifts, showIcon = false }) {
   const hasAnotherShift = nextShifts.length > 0;
   const isCurrentlyOn =
     hasAnotherShift && isCurrentHour(nextShifts[0]["start"]);
@@ -580,7 +585,13 @@ export function CourtAssignment({ nextShifts }) {
   const time = hasAnotherShift ? dayHourToStr(nextShifts[0]["start"]) : "";
 
   return (
-    <Typography variant="subtitle2">
+    <Typography
+      variant="subtitle2"
+      sx={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+    >
+      {showIcon && !hasAnotherShift ? (
+        <BedtimeOutlined sx={{ fontSize: "1rem", color: "text.secondary" }} />
+      ) : null}
       {!hasAnotherShift
         ? "No more shifts"
         : isCurrentlyOn

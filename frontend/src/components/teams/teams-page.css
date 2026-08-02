@@ -326,11 +326,10 @@
 
   .teams-chairperson-head-secondary {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 0 16px 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0 16px 12px;
     font-size: 13px;
     color: var(--tp-text2);
     background: var(--tp-bg2);
@@ -344,34 +343,18 @@
 
   .teams-chairperson-head-secondary__buttons {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
     width: 100%;
     flex-shrink: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--tp-border);
   }
 
   .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  @media (min-width: 640px) {
-    .teams-chairperson-head-secondary {
-      flex-direction: row;
-      align-items: center;
-    }
-
-    .teams-chairperson-head-secondary__buttons {
-      flex-direction: row;
-      width: auto;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn {
-      width: auto;
-    }
+    width: auto;
   }
 
   .teams-chairperson-team-btn.MuiButton-root {
@@ -739,6 +722,17 @@
 
   .teams-chairperson-unassigned-panel .cut-ballkid-chip {
     max-width: 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 8px;
+  }
+
+  .teams-chairperson-unassigned-panel .cut-ballkid-chip:hover {
+    background: var(--tp-bg0);
+    border: none;
+    box-shadow: none;
+    transform: none;
   }
 
   .teams-chairperson-sidebar .teams-chairperson-unassigned-grid--in-panel {
@@ -811,11 +805,33 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 6px 0;
+    padding: 6px 4px;
+    border-radius: 8px;
+    transition: background 0.12s ease;
+  }
+
+  .teams-chairperson-ballkid-row:hover {
+    background: var(--tp-bg0);
   }
 
   .teams-chairperson-ballkid-row .cut-ballkid-chip {
     width: 100%;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .teams-chairperson-ballkid-row .cut-ballkid-chip:hover,
+  .teams-chairperson-ballkid-row .cut-ballkid-chip.is-dragging {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .teams-chairperson-ballkid-row .cut-ballkid-chip.is-dragging {
+    opacity: 0.6;
   }
 
   .teams-chairperson-position-block {
@@ -1143,4 +1159,19 @@
       font-size: 13px;
       line-height: 1.35;
     }
+  }
+
+  /* Drag handles: one consistent look everywhere on this page (team
+     cards + unassigned panel), always visible instead of fading in
+     on hover, so it's clear at a glance which rows are draggable. */
+  .teams-chairperson-page .cut-ballkid-chip__handle-dots {
+    opacity: 0.6;
+  }
+
+  .teams-chairperson-page .cut-ballkid-chip:hover .cut-ballkid-chip__handle-dots {
+    opacity: 0.6;
+  }
+
+  .teams-chairperson-page .cut-ballkid-chip__handle-dots span {
+    background: var(--tp-nav);
   }

@@ -2,18 +2,21 @@ import React from "react";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
 
 import { DraggableBallkidAndIcon, HelpIcon } from "../Utils";
 
 export function TeamsDragHandle() {
   return (
-    <div className="cut-ballkid-chip__handle" aria-hidden="true">
-      <div className="cut-ballkid-chip__handle-dots">
-        {[...Array(6)].map((_, i) => (
-          <span key={i} />
-        ))}
+    <Tooltip title="Drag to reassign" enterDelay={400}>
+      <div className="cut-ballkid-chip__handle" aria-hidden="true">
+        <div className="cut-ballkid-chip__handle-dots">
+          {[...Array(6)].map((_, i) => (
+            <span key={i} />
+          ))}
+        </div>
       </div>
-    </div>
+    </Tooltip>
   );
 }
 
