@@ -58,7 +58,7 @@ DCopenBK is used by tournament staff (chairpersons) and team captains to run the
 ## Project Structure
 
 ```
-citiopen/
+DCopenBK/
 ├── citiopen/           # Django project settings, root URLs, WSGI/ASGI
 ├── api/
 │   ├── models/
@@ -90,7 +90,7 @@ citiopen/
 │       ├── leaderboards/  # All leaderboard views
 │       └── settings/   # Account settings, tournament config, debug page
 ├── Dockerfile
-├── fly.toml            # Fly.io deployment config (app: citiopenballkids)
+├── fly.toml            # Fly.io deployment config (app: dcopenbk)
 ├── deploy.sh
 └── manage.py
 ```
@@ -545,7 +545,7 @@ Re-running the same name updates the profile and role; the password is only set 
 
 ## Deployment
 
-The app is deployed to **Fly.io** as `citiopenballkids` (region: `iad`).
+The app is deployed to **Fly.io** as `dcopenbk` (region: `iad`).
 
 ```bash
 # Deploy
