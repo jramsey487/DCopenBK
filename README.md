@@ -446,7 +446,7 @@ python manage.py runserver
 ### Frontend
 
 ```bash
-cd <your project directory)
+cd <your project directory locally>
 cd frontend
 
 # (Optional) Install node.js
