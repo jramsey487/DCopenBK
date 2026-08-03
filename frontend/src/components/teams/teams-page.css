@@ -426,11 +426,11 @@
 
   .team-card.teams-chairperson-card .teams-chairperson-ballkid-row {
     align-items: center;
-    min-height: 40px;
+    min-height: 30px;
   }
 
   .team-card.teams-chairperson-card .cut-ballkid-chip--dense {
-    min-height: 40px;
+    min-height: 30px;
     height: 100%;
   }
 
