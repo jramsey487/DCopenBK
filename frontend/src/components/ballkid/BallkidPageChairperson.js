@@ -1432,17 +1432,27 @@ export default function BallkidPageChairperson(props) {
                     disabled={ballkid.num_tickets === 0}
                     size="small"
                     onClick={() => {
+                      const newTickets = ballkid.num_tickets - 1;
+
+                      // 1. Instantly update local state
+                      setBallkid((prev) => ({ ...prev, num_tickets: newTickets }));
+
+                      // 2. Send background patch request
                       fetch("/api/update-ballkid", {
                         method: "PATCH",
                         headers: getAuthHeader(),
                         body: JSON.stringify({
                           first_name: ballkid.first_name,
                           last_name: ballkid.last_name,
-                          num_tickets: ballkid.num_tickets - 1,
+                          num_tickets: newTickets,
                         }),
                       })
                         .then((response) => response.json())
-                        .then(() => setUpdated(true));
+                        .catch(() => {
+                          // Revert on error
+                          setBallkid((prev) => ({ ...prev, num_tickets: ballkid.num_tickets }));
+                          setErrorMsg("Failed to update ticket count.");
+                        });
                     }}
                     sx={{ p: 0.5 }}
                   >
@@ -1451,17 +1461,27 @@ export default function BallkidPageChairperson(props) {
                   <IconButton
                     size="small"
                     onClick={() => {
+                      const newTickets = ballkid.num_tickets + 1;
+                      
+                      // 1. Instantly update local state so UI responds immediately
+                      setBallkid((prev) => ({ ...prev, num_tickets: newTickets }));
+
+                      // 2. Send the request to the backend silently in the background
                       fetch("/api/update-ballkid", {
                         method: "PATCH",
                         headers: getAuthHeader(),
                         body: JSON.stringify({
                           first_name: ballkid.first_name,
                           last_name: ballkid.last_name,
-                          num_tickets: ballkid.num_tickets + 1,
+                          num_tickets: newTickets,
                         }),
                       })
                         .then((response) => response.json())
-                        .then(() => setUpdated(true));
+                        .catch(() => {
+                          // Optional: Revert local state if the server request fails
+                          setBallkid((prev) => ({ ...prev, num_tickets: ballkid.num_tickets }));
+                          setErrorMsg("Failed to update ticket count.");
+                        });
                     }}
                     sx={{ p: 0.5 }}
                   >
