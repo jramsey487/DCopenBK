@@ -92,7 +92,7 @@ export default function TeamsPage(props) {
   const [teams, setTeams] = useState([]);
   const [nextShifts, setNextShifts] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
-  const [showPhotos, setShowPhotos] = useState(true);
+  const [showPhotos, setShowPhotos] = useState(false);
   const [showYoe, setShowYoe] = useState(false);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));

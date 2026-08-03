@@ -1229,4 +1229,10 @@
     color: var(--tp-text1);
     font-weight: 600;
     text-decoration: none;
-}
+  }
+
+  .team-member-list .ballkid-and-icon a {
+    color: var(--tp-text1);
+    font-weight: 600;
+    text-decoration: none;
+  }

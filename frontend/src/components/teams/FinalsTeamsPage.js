@@ -69,7 +69,7 @@ function Team({ team, assigned, isMyTeam, showPhotos }) {
 export default function FinalsTeamsPage(props) {
   const [assigned, setAssigned] = useState([]);
   const [showFinalsTeams, setShowFinalsTeams] = useState(false);
-  const [showPhotos, setShowPhotos] = useState(true);
+  const [showPhotos, setShowPhotos] = useState(false);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
 
