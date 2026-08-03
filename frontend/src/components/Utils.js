@@ -1029,6 +1029,25 @@ export function HelpIcon({ page, message }) {
   );
 }
 
+function CheckoutTimePill({ ballkid, hideWhenEnd = false }) {
+  const value = ballkid?.checkout_comments ?? "End";
+  if (hideWhenEnd && value === "End") {
+    return null;
+  }
+  const isEnd = value === "End";
+  return (
+    <Tooltip title="Today's checkout time" arrow>
+      <span
+        className={`cut-chip-pill cut-chip-pill--last${
+          isEnd ? " cut-chip-pill--muted" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </Tooltip>
+  );
+}
+
 export function CommentsText({
   ballkid,
   commentType,
@@ -1038,42 +1057,37 @@ export function CommentsText({
   switch (commentType) {
     case "checkout_teams":
       return (
-        <Box className="sxs">
+        <Box
+          className="sxs"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.5,
+            my: layout === "grid" ? 1 : 0,
+          }}
+        >
           {showLabel ? (
             <Typography variant="subtitle2">Today's Checkout Time: </Typography>
-          ) : (
-            ""
-          )}
-          {ballkid.checkout_comments === "End" ? (
-            ""
-          ) : (
-            <Typography
-              sx={{ mx: 0.5, px: 0.5, my: layout === "grid" ? 1 : 0 }}
-              bgcolor="orange"
-              variant="body2"
-            >
-              {ballkid.checkout_comments}
-            </Typography>
-          )}
+          ) : null}
+          <CheckoutTimePill ballkid={ballkid} hideWhenEnd />
         </Box>
       );
 
     case "checkout":
       return (
-        <Box className="sxs">
+        <Box
+          className="sxs"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.5,
+            my: layout === "grid" ? 1 : 0,
+          }}
+        >
           {showLabel ? (
             <Typography variant="subtitle2">Today's Checkout Time: </Typography>
-          ) : (
-            ""
-          )}
-
-          <Typography
-            sx={{ mx: 0.5, px: 0.5, my: layout === "grid" ? 1 : 0 }}
-            bgcolor={ballkid.checkout_comments === "End" ? "" : "orange"}
-            variant="body2"
-          >
-            {ballkid?.checkout_comments ?? ""}
-          </Typography>
+          ) : null}
+          <CheckoutTimePill ballkid={ballkid} />
         </Box>
       );
 
