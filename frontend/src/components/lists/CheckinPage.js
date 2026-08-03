@@ -309,8 +309,7 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
 function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
   const navigate = useNavigate();
   const myId = Number(getLocalStorage("ballkid_id"));
-  const profileTo =
-    ballkid.id === myId ? "/me" : `/ballkid/${ballkid.id}`;
+  const profileTo = ballkid.id === myId ? "/me" : `/ballkid/${ballkid.id}`;
 
   const goToProfile = () => navigate(profileTo);
   const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
@@ -338,36 +337,49 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
         </Typography>
         <div className="checkin-list-row__meta cut-chip-meta-row">
           <Icons ballkid={ballkid} margin={0} />
+          {isCheckedIn ? (
+            <CheckoutComments
+              ballkid={ballkid}
+              layout="list"
+              setUpdated={setUpdated}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <div className="checkin-list-row__right">
+        {!isCheckedIn ? (
           <div
             className="checkin-list-row__fields"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="presentation"
           >
-          <LastDayComments
-            ballkid={ballkid}
-            layout="list"
-            setUpdated={setUpdated}
-          />
-          <CheckoutComments
-            ballkid={ballkid}
-            layout="list"
-            setUpdated={setUpdated}
-          />
+            <LastDayComments
+              ballkid={ballkid}
+              layout="list"
+              setUpdated={setUpdated}
+            />
+            <CheckoutComments
+              ballkid={ballkid}
+              layout="list"
+              setUpdated={setUpdated}
+            />
           </div>
+        ) : null}
+
+        <div
+          className="checkin-list-row__action"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          role="presentation"
+        >
+          <CheckinButton
+            ballkid={ballkid}
+            isCheckedIn={isCheckedIn}
+            setUpdated={setUpdated}
+          />
         </div>
-      </div>
-      <div
-        className="checkin-list-row__action"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        role="presentation"
-      >
-        <CheckinButton
-          ballkid={ballkid}
-          isCheckedIn={isCheckedIn}
-          setUpdated={setUpdated}
-        />
       </div>
     </article>
   );
