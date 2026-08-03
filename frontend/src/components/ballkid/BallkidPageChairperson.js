@@ -244,11 +244,19 @@ function ChairpersonHeroMobileActions({
   );
 }
 
-function renderPreferredPosition(ballkid, setUpdated) {
+function renderPreferredPosition(ballkid, setBallkid, setUpdated) {
   const ALL_POSITIONS = ["Back", "Net", "Back/Net", "Net/Back"];
 
   return (
-    <Box className="ballkid-profile-preferred-position-picker">
+    <Box
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 1,
+        alignItems: "center",
+        pt: 0.25,
+      }}
+    >
       {ALL_POSITIONS.map((pos) => {
         const isSelected = ballkid.preferred_position === pos;
         return (
@@ -258,32 +266,34 @@ function renderPreferredPosition(ballkid, setUpdated) {
             variant={isSelected ? "contained" : "outlined"}
             color={isSelected ? "primary" : "inherit"}
             disableElevation
-            className="ballkid-profile-preferred-position-btn"
             sx={{
-              borderRadius: "8px",
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
+              borderRadius: "16px",
+              textTransform: "none",
               px: 1.5,
-              py: 0.5,
+              py: 0.25,
               fontSize: "0.8125rem",
-              fontWeight: 600,
-              lineHeight: 1.3,
-              opacity: isSelected ? 1 : 0.85,
+              fontWeight: isSelected ? 600 : 400,
+              opacity: isSelected ? 1 : 0.7,
               boxShadow: "none",
               "&:hover": { opacity: 1 },
               ...(isSelected
                 ? {
                     backgroundColor: "var(--bp-nav)",
                     color: "#fff",
-                    "&:hover": { backgroundColor: "#152a5c" },
+                    "&:hover": { backgroundColor: "var(--bp-nav)" },
                   }
                 : {
                     borderColor: "var(--bp-border)",
-                    color: "var(--bp-nav)",
+                    color: "inherit",
                   }),
             }}
             onClick={() => {
               if (isSelected) return;
+
+              // 1. Instantly update local state for a snap-fast UI
+              setBallkid((prev) => ({ ...prev, preferred_position: pos }));
+
+              // 2. Send the update to the backend silently
               fetch("/api/update-ballkid", {
                 method: "PATCH",
                 headers: getAuthHeader(),
@@ -294,7 +304,10 @@ function renderPreferredPosition(ballkid, setUpdated) {
                 }),
               })
                 .then((response) => response.json())
-                .then(() => setUpdated(true));
+                .catch(() => {
+                  // Revert back if request fails
+                  setBallkid((prev) => ({ ...prev, preferred_position: ballkid.preferred_position }));
+                });
             }}
           >
             {pos}
