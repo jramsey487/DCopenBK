@@ -99,7 +99,6 @@ function profileHeaderStatus(ballkid) {
       </span>
     );
   }
-  return <CheckinStatusBadge checkedIn={ballkid.is_checked_in} />;
 }
 
 function profileHeaderActions(
@@ -171,20 +170,6 @@ function useCheckinToggle(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
   };
 
   return { loading, checkedIn, toggleCheckin };
-}
-
-function CheckinStatusBadge({ checkedIn }) {
-  return (
-    <span
-      className={
-        checkedIn
-          ? "ballkid-profile-status ballkid-profile-status--in"
-          : "ballkid-profile-status ballkid-profile-status--out"
-      }
-    >
-      {checkedIn ? "Checked in" : "Checked out"}
-    </span>
-  );
 }
 
 function CheckinToggleButton({ loading, checkedIn, toggleCheckin, fullWidth }) {
