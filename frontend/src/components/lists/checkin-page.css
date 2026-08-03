@@ -116,7 +116,7 @@
 
 .checkin-page .checkin-list-row {
   display: grid;
-  grid-template-columns: minmax(168px, 240px) 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 16px 20px;
   padding: 12px 16px;
@@ -138,29 +138,58 @@
 }
 
 .checkin-page .checkin-list-row__identity {
-  display: block;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
   min-width: 0;
   color: var(--bl-text1, #0d1b3e);
   pointer-events: none;
 }
 
-.checkin-page .checkin-list-row__identity .ballkid-list-plain-name {
+.checkin-page .checkin-list-row__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.9375rem !important;
   font-weight: 700 !important;
   color: var(--bl-text1, #0d1b3e) !important;
 }
 
-.checkin-page .checkin-list-row__identity .ballkid-and-icon {
-  max-width: 100%;
+.checkin-page .checkin-list-row__meta {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 3px;
+  min-width: 0;
+}
+
+.checkin-page .checkin-list-row__meta .MuiIcon-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0 !important;
+  line-height: 0;
 }
 
 .checkin-page .checkin-list-row__fields {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 12px 20px;
+  gap: 6px;
   min-width: 0;
   cursor: default;
+  pointer-events: auto;
+}
+
+.checkin-page .checkin-list-row__fields .cut-chip-pill {
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
 }
 
 .checkin-page .checkin-list-field {
@@ -234,20 +263,16 @@
   .checkin-page .checkin-list-row__identity {
     flex: 1;
     min-width: 0;
-  }
-
-  .checkin-page .checkin-list-row__identity .ballkid-and-icon {
     flex-wrap: nowrap;
-    width: 100%;
-    max-width: 100%;
+    gap: 8px;
   }
 
-  .checkin-page .checkin-list-row__identity .ballkid-list-plain-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+  .checkin-page .checkin-list-row__name {
     font-size: 1rem !important;
+  }
+
+  .checkin-page .checkin-list-row__meta {
+    flex-shrink: 0;
   }
 
   .checkin-page .checkin-list-row__fields {

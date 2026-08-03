@@ -19,6 +19,7 @@ import {
   ConfirmDialog,
   BallkidCard,
   BallkidAndIcon,
+  Icons,
   HelpIcon,
   useIsMobile,
   Banners,
@@ -28,6 +29,7 @@ import { CHECKOUT_OPTIONS, LAST_DAY_OPTIONS } from "../Consts";
 import { checkin } from "../HelpMessages";
 import { IconButton, TextField } from "@mui/material";
 import "./ballkid-list-by-name.css";
+import "./cut-page-desktop.css";
 import "./checkin-page.css";
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
@@ -311,6 +313,7 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
     ballkid.id === myId ? "/me" : `/ballkid/${ballkid.id}`;
 
   const goToProfile = () => navigate(profileTo);
+  const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
 
   return (
     <article
@@ -326,24 +329,33 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
       }}
     >
       <div className="checkin-list-row__identity">
-        <BallkidAndIcon ballkid={ballkid} plainName showIcons />
-      </div>
-      <div
-        className="checkin-list-row__fields"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        role="presentation"
-      >
-        <LastDayComments
-          ballkid={ballkid}
-          layout="list"
-          setUpdated={setUpdated}
-        />
-        <CheckoutComments
-          ballkid={ballkid}
-          layout="list"
-          setUpdated={setUpdated}
-        />
+        <Typography
+          component="span"
+          variant="subtitle1"
+          className="ballkid-list-plain-name checkin-list-row__name"
+        >
+          {displayName}
+        </Typography>
+        <div className="checkin-list-row__meta cut-chip-meta-row">
+          <Icons ballkid={ballkid} margin={0} />
+          <div
+            className="checkin-list-row__fields"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+          <LastDayComments
+            ballkid={ballkid}
+            layout="list"
+            setUpdated={setUpdated}
+          />
+          <CheckoutComments
+            ballkid={ballkid}
+            layout="list"
+            setUpdated={setUpdated}
+          />
+          </div>
+        </div>
       </div>
       <div
         className="checkin-list-row__action"
