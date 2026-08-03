@@ -31,7 +31,6 @@ import {
   ConfirmDialog,
 } from "../Utils";
 import {
-  MARGINS,
   POSITIONS,
   TIMEOUT_MS,
   TARGET_NUM_BALLKIDS_PER_TEAM,
@@ -63,7 +62,7 @@ function renderSwitchButton(ballkid, setUpdated) {
             .then(() => setUpdated(true))
         }
       >
-        <SwapVert color="secondary" />
+        <SwapVert className="teams-chairperson-ballkid-action-icon" sx={{ color: "#7c5ce0" }} />
       </IconButton>
     </Tooltip>
   );
@@ -89,7 +88,7 @@ function renderUnassignButton(ballkid, setUpdated) {
             .then(() => setUpdated(true));
         }}
       >
-        <RemoveCircleOutline color="primary" />
+        <RemoveCircleOutline className="teams-chairperson-ballkid-action-icon" color="primary" />
       </IconButton>
     </Tooltip>
   );
@@ -115,7 +114,7 @@ function renderCheckoutButton(ballkid, setUpdated) {
             .then(() => setUpdated(true));
         }}
       >
-        <HighlightOff color="error" />
+        <HighlightOff className="teams-chairperson-ballkid-action-icon" color="error" />
       </IconButton>
     </Tooltip>
   );
@@ -271,7 +270,7 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
                   startIcon={<HighlightOff fontSize="small" />}
                   onClick={() => setCheckoutOpen(true)}
                 >
-                  Check out all
+                  Check out team
                 </Button>
               </div>
             </div>
@@ -331,11 +330,11 @@ export function renderCheckoutUnassignedButton(setOpen) {
     <Button
       variant="outlined"
       size="small"
-      color="error"
-      sx={MARGINS}
+      className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+      startIcon={<HighlightOff fontSize="small" />}
       onClick={() => setOpen(true)}
     >
-      Check Out All
+      Check out all
     </Button>
   );
 }
@@ -343,9 +342,16 @@ export function renderCheckoutUnassignedButton(setOpen) {
 export function Teams({ assigned, teams, nextShifts, setUpdated }) {
   const isMobile = useIsMobile();
 
+  const sortedTeams = [...teams].sort((a, b) => {
+    const aEmpty = !assigned.some((ballkid) => ballkid.current_team === a);
+    const bEmpty = !assigned.some((ballkid) => ballkid.current_team === b);
+    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+    return a - b;
+  });
+
   return (
     <div className="teams-page-grid teams-chairperson-teams-grid">
-      {teams.map((team) => (
+      {sortedTeams.map((team) => (
         <Team
           key={team}
           team={team}

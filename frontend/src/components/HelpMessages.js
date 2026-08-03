@@ -140,7 +140,7 @@ export const ticketsPage = (
 export const teams = (
   <DialogContentText>
     This page allows you to create teams and control whether or not ballkids and
-    captains can view the teams.
+    captains can view teams.
     <br /> <br />
     The hide/show toggle controls whether or not ballkids and captains can view
     the teams. Toggling to "Show" will make all teams publicly visible for
