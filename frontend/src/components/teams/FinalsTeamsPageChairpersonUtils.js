@@ -181,7 +181,7 @@ function Team({ team, assigned, showHovercard, setUpdated }) {
               className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
               onClick={() => setClearOpen(true)}
             >
-              Clear team
+              Unassign team
             </Button>
           )}
         </div>

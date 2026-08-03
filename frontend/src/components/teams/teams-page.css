@@ -488,7 +488,7 @@
     margin: 0 auto;
     overflow-x: hidden;
     box-sizing: border-box;
-    padding-right: 0px;
+    /* padding-right: 16px; */
   }
 
   .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
@@ -554,6 +554,7 @@
 
   .teams-chairperson-pill .sxs {
     gap: 4px;
+    align-items: center;
   }
 
   .teams-chairperson-pill .MuiTypography-root {
@@ -908,15 +909,18 @@
 
   .teams-mobile-unassigned-table__name {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 4px;
-    min-width: 0;
   }
 
-  .teams-mobile-unassigned-table__name .ballkid-and-icon {
-    width: 100%;
-    max-width: 100%;
+  .teams-mobile-unassigned-table__name .MuiIcon-root:empty {
+    display: none;
+  }
+
+  .teams-mobile-unassigned-table__name > .sxs > .MuiTypography-root {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 
   .teams-mobile-unassigned-table__position {
@@ -1082,6 +1086,7 @@
 
     .teams-chairperson-head-secondary__buttons {
       width: 100%;
+      flex-direction: column;
     }
 
     .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn {
@@ -1123,6 +1128,15 @@
 
     .teams-chairperson-page .teams-chairperson-ballkid-actions .MuiIconButton-root {
       padding: 6px;
+    }
+
+    .teams-chairperson-page .cut-ballkid-chip__handle-dots {
+      opacity: 0.85;   /* was 0.6 */
+      display: none;
+    }
+
+    .teams-chairperson-page .cut-ballkid-chip__handle {
+      display: none;
     }
   }
 
@@ -1200,4 +1214,10 @@
 
   .teams-chairperson-page .cut-ballkid-chip--dense .cut-ballkid-chip__content {
     justify-content: flex-start;
+  }
+
+  .teams-chairperson-page .cut-chip-meta-icons .MuiIcon-root:empty {
+    display: none;
+    width: 0;
+    min-width: 0;
   }
