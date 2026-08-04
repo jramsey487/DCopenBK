@@ -440,20 +440,9 @@
     min-height: 30px;
   }
 
-  .team-card.teams-chairperson-card .cut-ballkid-chip--dense {
-    min-height: 30px;
-    height: 100%;
-  }
-
   .team-card.teams-chairperson-card .teams-chairperson-ballkid-chip-wrap {
     display: flex;
     align-items: stretch;
-  }
-
-  .team-card.teams-chairperson-card
-    .cut-ballkid-chip--dense
-    .cut-ballkid-chip__meta:empty {
-    display: none;
   }
 
   .teams-chairperson-unassigned {
@@ -745,21 +734,6 @@
     word-break: break-word;
   }
 
-  .teams-chairperson-unassigned-panel .cut-ballkid-chip {
-    max-width: 100%;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 8px;
-  }
-
-  .teams-chairperson-unassigned-panel .cut-ballkid-chip:hover {
-    background: var(--tp-bg0);
-    border: none;
-    box-shadow: none;
-    transform: none;
-  }
-
   .teams-chairperson-sidebar .teams-chairperson-unassigned-grid--in-panel {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -831,26 +805,6 @@
 
   .teams-chairperson-ballkid-row:hover {
     background: var(--tp-bg0);
-  }
-
-  .teams-chairperson-ballkid-row .cut-ballkid-chip {
-    width: 100%;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .teams-chairperson-ballkid-row .cut-ballkid-chip:hover,
-  .teams-chairperson-ballkid-row .cut-ballkid-chip.is-dragging {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  .teams-chairperson-ballkid-row .cut-ballkid-chip.is-dragging {
-    opacity: 0.6;
   }
 
   .teams-chairperson-position-block {
@@ -1118,7 +1072,7 @@
       width: auto;
     }
 
-    .teams-chairperson-page .teams-chairperson-ballkid-row .cut-ballkid-chip {
+    .teams-chairperson-page .teams-chairperson-ballkid-row .ballkid-chip {
       width: 100%;
       max-width: 100%;
     }
@@ -1135,15 +1089,6 @@
 
     .teams-chairperson-page .teams-chairperson-ballkid-actions .MuiIconButton-root {
       padding: 6px;
-    }
-
-    .teams-chairperson-page .cut-ballkid-chip__handle-dots {
-      opacity: 0.85;
-      display: none;
-    }
-
-    .teams-chairperson-page .cut-ballkid-chip__handle {
-      display: none;
     }
   }
 
@@ -1192,31 +1137,6 @@
       font-size: 13px;
       line-height: 1.35;
     }
-  }
-
-  .teams-chairperson-page .cut-ballkid-chip__handle-dots {
-    opacity: 0.85;
-  }
-
-  .teams-chairperson-page .cut-ballkid-chip__handle-dots span {
-    background: #a78bfa;
-  }
-
-  .teams-chairperson-page .cut-ballkid-chip--dense .cut-ballkid-chip__name {
-    flex: 0 1 auto;
-    max-width: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .teams-chairperson-page .cut-ballkid-chip--dense .cut-ballkid-chip__meta {
-    flex: 0 0 auto;
-    max-width: none;
-  }
-
-  .teams-chairperson-page .cut-ballkid-chip--dense .cut-ballkid-chip__content {
-    justify-content: flex-start;
   }
 
   .teams-chairperson-page .cut-chip-meta-icons .MuiIcon-root:empty {

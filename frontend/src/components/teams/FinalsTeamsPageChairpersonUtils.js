@@ -19,10 +19,9 @@ import {
 } from "../Utils";
 import { finalsTeams } from "../HelpMessages";
 import { POSITIONS } from "../Consts";
-import {
-  TeamsDraggableBallkid,
-  TeamsChairpersonPageHeader,
-} from "./TeamsChairpersonShared";
+import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
+import { DraggableBallkidChip } from "../BallkidChip";
+
 
 function renderSwitchButton(ballkid, setUpdated) {
   return (
@@ -86,7 +85,7 @@ function renderBallkidsOnTeam(assigned, showHovercard, setUpdated) {
           className="teams-chairperson-ballkid-row"
         >
           <div className="teams-chairperson-ballkid-chip-wrap">
-            <TeamsDraggableBallkid
+            <DraggableBallkidChip
               ballkid={ballkid}
               showHovercard={showHovercard}
               hoverCommentTypes={["experience", "rank", "calibrated_avg"]}

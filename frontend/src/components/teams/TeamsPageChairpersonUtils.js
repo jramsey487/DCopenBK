@@ -35,10 +35,8 @@ import {
   TIMEOUT_MS,
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
-import {
-  TeamsDraggableBallkid,
-  TeamsChairpersonPageHeader,
-} from "./TeamsChairpersonShared";
+import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
+import { DraggableBallkidChip } from "../BallkidChip";
 import { teams } from "../HelpMessages.js";
 
 function renderSwitchButton(ballkid, setUpdated) {
@@ -154,7 +152,7 @@ function renderBallkidsOnTeam(ballkids, setUpdated) {
           className="teams-chairperson-ballkid-row"
         >
           <div className="teams-chairperson-ballkid-chip-wrap">
-            <TeamsDraggableBallkid ballkid={ballkid} />
+            <DraggableBallkidChip ballkid={ballkid} />
           </div>
           {renderBallkidRowActions(ballkid, setUpdated)}
         </div>

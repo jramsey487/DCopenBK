@@ -2,60 +2,8 @@ import React from "react";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Tooltip from "@mui/material/Tooltip";
 
-import { DraggableBallkidAndIcon, HelpIcon } from "../Utils";
-
-export function TeamsDragHandle() {
-  return (
-    <Tooltip title="Drag to reassign" enterDelay={400}>
-      <div className="cut-ballkid-chip__handle" aria-hidden="true">
-        <div className="cut-ballkid-chip__handle-dots">
-          {[...Array(6)].map((_, i) => (
-            <span key={i} />
-          ))}
-        </div>
-      </div>
-    </Tooltip>
-  );
-}
-
-export function renderTeamsChipDragSurface({
-  ref,
-  isDragging,
-  children,
-  hoverHandlers,
-  dense = true,
-}) {
-  return (
-    <div
-      ref={ref}
-      className={`cut-ballkid-chip${dense ? " cut-ballkid-chip--dense" : ""}${
-        isDragging ? " is-dragging" : ""
-      }`}
-      {...(hoverHandlers || {})}
-    >
-      <TeamsDragHandle />
-      {children}
-    </div>
-  );
-}
-
-export function TeamsDraggableBallkid({
-  teamsChairpersonMinimal = true,
-  commentTypes = [],
-  ...props
-}) {
-  return (
-    <DraggableBallkidAndIcon
-      layout="cut-chip"
-      renderCustom={renderTeamsChipDragSurface}
-      teamsChairpersonMinimal={teamsChairpersonMinimal}
-      commentTypes={commentTypes}
-      {...props}
-    />
-  );
-}
+import { HelpIcon } from "../Utils";
 
 export function TeamsPageTopBar({ title, helpPage, helpMessage, controls = null }) {
   return (

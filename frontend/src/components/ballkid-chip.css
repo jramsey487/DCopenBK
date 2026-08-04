@@ -1,0 +1,198 @@
+.ballkid-chip {
+    display: flex;
+    align-items: stretch;
+    flex: 1;
+    min-width: 0;
+    min-height: 52px;
+    background: transparent;
+    border-radius: 8px;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+    cursor: grab;
+    transition:
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+  }
+  
+  .ballkid-chip:hover {
+    background: #f8fafc;
+  }
+
+  .ballkid-chip:active,
+  .ballkid-chip.is-dragging {
+    cursor: grabbing;
+    box-shadow: 0 10px 26px rgba(13, 27, 62, 0.14);
+    opacity: 0.92;
+    transform: translateY(-2px);
+  }
+  
+  .ballkid-chip__handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    width: 22px;
+    flex-shrink: 0;
+    background: transparent;
+    border-right: none;
+  }
+  
+  .ballkid-chip__handle-dots {
+    display: grid;
+    grid-template-columns: repeat(2, 3.5px);
+    gap: 3px;
+    opacity: 0.85;
+  }
+  
+  .ballkid-chip__handle-dots span {
+    width: 3.5px;
+    height: 3.5px;
+    border-radius: 50%;
+    background: #a78bfa;
+  }
+  
+  /* Drag handle is desktop-only everywhere the chip is used */
+  @media (max-width: 899.98px) {
+    .ballkid-chip__handle {
+      display: none;
+    }
+  }
+  
+  .ballkid-chip__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px 8px 10px;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+  
+  .ballkid-chip__name {
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  
+  .ballkid-chip__name a {
+    color: #0d1b3e;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .ballkid-chip__name a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+  
+  .ballkid-chip__meta {
+    min-width: 0;
+  }
+  
+  .ballkid-chip__meta .cut-chip-meta-row .sxs {
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+  
+  .ballkid-chip--dense {
+    min-height: 30px;
+    border-radius: 10px;
+    align-items: stretch;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__handle {
+    width: 14px;
+    align-self: stretch;
+    justify-content: center;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__handle-dots {
+    grid-template-columns: repeat(2, 3px);
+    gap: 2px;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__handle-dots span {
+    width: 3px;
+    height: 3px;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__content {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 4px;
+    justify-content: flex-start;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__meta .MuiIcon-root {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0 !important;
+    line-height: 0;
+  }
+  
+  .ballkid-chip--dense .cut-chip-meta-row {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 3px;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__name {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__meta {
+    flex: 0 1 auto;
+    max-width: 58%;
+    min-width: 0;
+  }
+  
+  .ballkid-chip--dense .ballkid-chip__meta .MuiTypography-root {
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 3px !important;
+  }
+  
+  .ballkid-chip--dense .cut-chip-icon-group {
+    padding: 0 2px;
+    gap: 0;
+    border: none;
+    background: transparent;
+  }
+  
+  .ballkid-chip--dense .cut-chip-icon-badge {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .ballkid-chip--dense .cut-chip-icon-badge svg {
+    font-size: 0.85rem !important;
+  }
+  
+  .ballkid-chip--dense .cut-chip-pill {
+    padding: 0 5px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    min-height: 18px;
+  }
+
+  .ballkid-chip--dense .ballkid-chip__meta:empty {
+    display: none;
+  }

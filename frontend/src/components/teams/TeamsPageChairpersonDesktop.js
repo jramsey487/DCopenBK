@@ -20,7 +20,7 @@ import {
   renderCheckoutUnassignedButton,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
-import { TeamsDraggableBallkid } from "./TeamsChairpersonShared";
+import { DraggableBallkidChip } from "../BallkidChip";
 
 export function UnassignedPanel({
   unassigned,
@@ -206,7 +206,7 @@ export function UnassignedPanel({
               ) : (
                 <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel">
                   {ballkids.map((ballkid) => (
-                    <TeamsDraggableBallkid
+                    <DraggableBallkidChip
                       key={ballkid.id}
                       ballkid={ballkid}
                       teamsChairpersonMinimal

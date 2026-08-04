@@ -728,17 +728,17 @@ export function DraggableBallkidAndIcon({
   const innerContent =
     layout === "cut-chip" ? (
       <Box
-        className="cut-ballkid-chip__content"
+        className="ballkid-chip__content"
         sx={{ flex: 1, minWidth: 0 }}
         {...(renderCustom ? {} : hoverHandlers)}
       >
-        <Box className="cut-ballkid-chip__name">
+        <Box className="ballkid-chip__name">
           <BallkidLink
             id={ballkid.id}
             name={`${ballkid.first_name} ${ballkid.last_name}`}
           />
         </Box>
-        <Box className="cut-ballkid-chip__meta">
+        <Box className="ballkid-chip__meta">
           {metaSlot ?? metaBlock}
         </Box>
       </Box>

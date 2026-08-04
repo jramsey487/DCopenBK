@@ -34,7 +34,7 @@ import {
   NUM_RATINGS_WARNING_THRESHOLD,
 } from "../Consts";
 import { cut } from "../HelpMessages";
-import { renderTeamsChipDragSurface } from "../teams/TeamsChairpersonShared";
+import { renderBallkidChipDragSurface } from "../BallkidChip";
 import "./cut-page-desktop.css";
 
 export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch) {
@@ -252,7 +252,7 @@ export function CutBallkidRow({
             />
           }
           renderCustom={(props) =>
-            renderTeamsChipDragSurface({
+            renderBallkidChipDragSurface({
               ...props,
               dense: true,
               hoverHandlers: showHovercard ? props.hoverHandlers : null,
