@@ -861,3 +861,47 @@
 .cut-ballkid-row--dense .cut-ballkid-row__actions .MuiIconButton-root {
   padding: 4px;
 }
+
+/* Match teams/finals-page chip styling on Cut Page drag chips */
+.cut-page .cut-ballkid-chip__handle-dots {
+  opacity: 0.85;
+}
+
+.cut-page .cut-ballkid-chip__handle-dots span {
+  background: #a78bfa;
+}
+
+.cut-page .cut-ballkid-chip--dense .cut-ballkid-chip__name {
+  flex: 0 1 auto;
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cut-page .cut-ballkid-chip--dense .cut-ballkid-chip__meta {
+  flex: 0 0 auto;
+  max-width: none;
+}
+
+.cut-page .cut-ballkid-chip--dense .cut-ballkid-chip__content {
+  justify-content: flex-start;
+}
+
+.cut-page-two-columns .cut-ballkid-chip--dense .cut-ballkid-chip__name {
+  flex: 0 1 auto;
+  max-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.cut-page-two-columns .cut-ballkid-chip--dense .cut-ballkid-chip__content {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.cut-page-two-columns .cut-ballkid-chip--dense .cut-ballkid-chip__meta {
+  flex: 0 0 auto;
+  max-width: none;
+}

@@ -102,12 +102,6 @@ function hasCalibratedAverage(ballkid) {
 }
 
 function cutCalibratedRankDisplay(ballkid) {
-  if (hasCalibratedAverage(ballkid)) {
-    return {
-      label: "Calibrated average",
-      value: Number(ballkid.calibrated_avg).toFixed(3),
-    };
-  }
   if (ballkid.rank !== null && ballkid.rank !== undefined && ballkid.rank !== "") {
     return {
       label: "Calibrated rank",
@@ -122,17 +116,10 @@ function CalibratedRankPill({ ballkid }) {
   if (display == null) {
     return null;
   }
-  const muted =
-    display.label === "Calibrated average" &&
-    ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
 
   return (
     <Tooltip title={display.label} arrow>
-      <span
-        className={`cut-chip-pill cut-chip-pill--rank${
-          muted ? " cut-chip-pill--muted" : ""
-        }`}
-      >
+      <span className="cut-chip-pill cut-chip-pill--rank">
         {display.value}
       </span>
     </Tooltip>
@@ -140,25 +127,22 @@ function CalibratedRankPill({ ballkid }) {
 }
 
 function LastDayPill({ ballkid }) {
-  const label =
+  if (
     ballkid.last_day === null ||
     ballkid.last_day === "" ||
     ballkid.last_day === "End"
-      ? "End"
-      : ballkid.last_day.length > 3
-        ? ballkid.last_day.substring(0, 3)
-        : ballkid.last_day;
-  const isEnd = label === "End";
+  ) {
+    return null;
+  }
+
+  const label =
+    ballkid.last_day.length > 3
+      ? ballkid.last_day.substring(0, 3)
+      : ballkid.last_day;
 
   return (
     <Tooltip title="Last day" arrow>
-      <span
-        className={`cut-chip-pill cut-chip-pill--last${
-          isEnd ? " cut-chip-pill--muted" : ""
-        }`}
-      >
-        {label}
-      </span>
+      <span className="cut-chip-pill cut-chip-pill--last">{label}</span>
     </Tooltip>
   );
 }
@@ -171,7 +155,6 @@ export function CutBallkidMeta({
 }) {
   const group = getLocalStorage("group");
   const iconBadges = [];
-
   const addIcon = (key, icon, title) => {
     iconBadges.push(
       <Tooltip key={key} title={title} arrow>
@@ -218,7 +201,6 @@ export function CutBallkidMeta({
     return (
       <div className="cut-chip-meta-row">
         <CalibratedRankPill ballkid={ballkid} />
-        <LastDayPill ballkid={ballkid} />
       </div>
     );
   }
@@ -238,7 +220,6 @@ export function CutBallkidMeta({
         </Tooltip>
       ) : null}
       <CalibratedRankPill ballkid={ballkid} />
-      <LastDayPill ballkid={ballkid} />
     </div>
   );
 }
@@ -289,16 +270,22 @@ export function CutBallkidRow({
 }
 
 function CutBallkidGrid({ ballkids, ...rowProps }) {
+  const midpoint = Math.ceil(ballkids.length / 2);
+  const leftColumn = ballkids.slice(0, midpoint);
+  const rightColumn = ballkids.slice(midpoint);
+
   return (
-    <div className="teams-chairperson-unassigned-grid cut-page-chip-grid">
-      {ballkids.map((ballkid) => (
-        <CutBallkidRow
-          key={ballkid.id}
-          ballkid={ballkid}
-          dense
-          {...rowProps}
-        />
-      ))}
+    <div className="cut-page-two-columns">
+      <div className="cut-page-two-columns__col">
+        {leftColumn.map((ballkid) => (
+          <CutBallkidRow key={ballkid.id} ballkid={ballkid} dense {...rowProps} />
+        ))}
+      </div>
+      <div className="cut-page-two-columns__col">
+        {rightColumn.map((ballkid) => (
+          <CutBallkidRow key={ballkid.id} ballkid={ballkid} dense {...rowProps} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -329,7 +316,6 @@ export function CutStatusSection({
   refetchActive,
 }) {
   const [open, setOpen] = useState(false);
-
   const shouldCut = section.includes("Cut") ? true : false;
   const cutAllStr = section.includes("Cut") ? "Cut All" : "Keep All";
   const cutAllColor = section.includes("Cut") ? "error" : "success";
@@ -358,34 +344,68 @@ export function CutStatusSection({
         setOpen={setOpen}
         setUpdated={refetchActive}
       />
-
-      <Card 
-        sx={{ 
-          mb: 2, 
+      <Card
+        sx={{
+          mb: 2,
           borderRadius: "16px",
           transition: "all 0.2s ease-in-out",
           border: isOver ? "2px solid #2563eb" : "1px solid",
           borderColor: isOver ? "primary.main" : "divider",
           boxShadow: isOver ? "0 10px 25px -5px rgba(0, 0, 0, 0.05)" : "0 1px 3px 0 rgba(0, 0, 0, 0.02)"
-        }} 
+        }}
         elevation={0}
       >
         <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-          <div className="justify" style={{ alignItems: "center" }}>
-            <div className="sxs" style={{ alignItems: "baseline" }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.05rem", color: "#1e293b", fontFamily: "Inter, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 8, width: "100%" }}>
+            <Box
+              sx={{
+                minWidth: 0,
+                flex: "1 1 auto",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
+            >
+              <Typography
+                component="span"
+                variant="h6"
+                sx={{
+                  display: "inline",
+                  fontWeight: 700,
+                  fontSize: "1.05rem",
+                  color: "#1e293b",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
                 {section}
               </Typography>
-              &ensp;
-              <Typography variant="subtitle1" sx={{ opacity: 0.5, fontWeight: 600, fontSize: "0.85rem", fontFamily: "Inter, sans-serif" }}>
+              {" "}
+              <Typography
+                component="span"
+                variant="subtitle1"
+                sx={{
+                  opacity: 0.5,
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
                 ({active.length})
               </Typography>
-            </div>
+            </Box>
             <Button
               size="small"
               color={cutAllColor}
               variant={cutAllVariant}
-              sx={{ textTransform: "none", fontWeight: 600, borderRadius: "10px", px: 2, fontFamily: "Inter, sans-serif" }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "10px",
+                px: 2,
+                fontFamily: "Inter, sans-serif",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
               onClick={(e) => {
                 shouldCut
                   ? setOpen(true)
@@ -404,7 +424,6 @@ export function CutStatusSection({
               {cutAllStr}
             </Button>
           </div>
-
           <CutDecisionSectionList
             ballkids={active}
             section={section}
@@ -478,9 +497,8 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
       component={Paper}
       ref={dropRef}
       elevation={0}
-      className="cut-page-active-panel"
+      className="cut-page-active-panel teams-chairperson-unassigned-panel"
       sx={{
-        p: 3,
         borderRadius: "16px",
         border: isOver ? "2px solid #2563eb" : "1px solid",
         borderColor: isOver ? "primary.main" : "divider",
@@ -494,7 +512,7 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
         className="sxs"
         sx={{
           mt: 0,
-          mb: 2,
+          mb: 1.5,
           alignItems: "center",
           borderBottom: "1px solid",
           borderColor: "divider",
@@ -509,6 +527,14 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
           ({active.length})
         </Typography>
       </Box>
+
+      <Typography
+        className="teams-chairperson-drop-hint"
+        variant="body2"
+        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
+      >
+        Drag ballkids onto a decision card to categorize them, or drop here to return them to Active.
+      </Typography>
 
       <Box sx={{ mb: 2.5, width: "100%" }}>
         <SearchAndFilter
@@ -654,33 +680,67 @@ export function SelfCutCard({
         setUpdated={refetchActive}
       />
 
-      <Card 
-        sx={{ 
-          mb: 2, 
+      <Card
+        sx={{
+          mb: 2,
           borderRadius: "16px",
           border: isOver ? "2px solid #dc2626" : "1px solid",
           borderColor: isOver ? "error.main" : "divider",
           boxShadow: isOver ? "0 10px 25px -5px rgba(0, 0, 0, 0.05)" : "0 1px 3px 0 rgba(0, 0, 0, 0.02)"
-        }} 
+        }}
         elevation={0}
       >
         <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-          <div className="justify" style={{ alignItems: "center" }}>
-            <div className="sxs" style={{ alignItems: "baseline" }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.05rem", color: "#1e293b", fontFamily: "Inter, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 8, width: "100%" }}>
+            <Box
+              sx={{
+                minWidth: 0,
+                flex: "1 1 auto",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
+            >
+              <Typography
+                component="span"
+                variant="h6"
+                sx={{
+                  display: "inline",
+                  fontWeight: 700,
+                  fontSize: "1.05rem",
+                  color: "#1e293b",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
                 Self-Cut
               </Typography>
-              &ensp;
-              <Typography variant="subtitle1" sx={{ opacity: 0.5, fontWeight: 600, fontSize: "0.85rem", fontFamily: "Inter, sans-serif" }}>
+              {" "}
+              <Typography
+                component="span"
+                variant="subtitle1"
+                sx={{
+                  opacity: 0.5,
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
                 ({selfCut.length})
               </Typography>
-            </div>
-
+            </Box>
             <Button
               size="small"
               color="error"
               variant="contained"
-              sx={{ textTransform: "none", fontWeight: 600, borderRadius: "10px", px: 2, fontFamily: "Inter, sans-serif" }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "10px",
+                px: 2,
+                fontFamily: "Inter, sans-serif",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
               onClick={(e) => setOpen(true)}
             >
               Cut All
