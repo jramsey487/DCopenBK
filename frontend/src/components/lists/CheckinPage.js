@@ -31,6 +31,7 @@ import { IconButton, TextField } from "@mui/material";
 import "./ballkid-list-by-name.css";
 import "./cut-page-desktop.css";
 import "./checkin-page.css";
+import "../ballkid-badges.css";
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
   const checkinString = isCheckedIn ? "Check Out" : "Check In";
@@ -335,7 +336,7 @@ function CheckinListRow({ ballkid, isCheckedIn, setUpdated }) {
         >
           {displayName}
         </Typography>
-        <div className="checkin-list-row__meta cut-chip-meta-row">
+        <div className="checkin-list-row__meta badge-row">
           <Icons ballkid={ballkid} margin={0} />
           {isCheckedIn ? (
             <CheckoutComments

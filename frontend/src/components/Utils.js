@@ -58,7 +58,7 @@ import {
 } from "./Consts";
 import { Popover } from "@mui/material";
 import { YoePill } from "./teams/TeamsShared";
-
+import "./ballkid-badges.css";
 export function Icons({
   ballkid,
   margin,
@@ -698,7 +698,7 @@ export function DraggableBallkidAndIcon({
 
   const metaBlockInner = (
     <>
-      <span className="cut-chip-meta-item cut-chip-meta-icons">
+      <span className="badge-item cut-chip-meta-icons">
         <Icons
           ballkid={ballkid}
           margin={0}
@@ -707,14 +707,14 @@ export function DraggableBallkidAndIcon({
         />
       </span>
       {commentTypes.map((commentType) => (
-        <Box key={commentType} component="span" className="cut-chip-meta-item">
+        <Box key={commentType} component="span" className="badge-item">
           <CommentsText ballkid={ballkid} commentType={commentType} />
         </Box>
       ))}
     </>
   );
 
-  const metaBlock = <div className="cut-chip-meta-row">{metaBlockInner}</div>;
+  const metaBlock = <div className="badge-row">{metaBlockInner}</div>;
 
   const hovercardNode = showHovercard ? (
     <BallkidPopover

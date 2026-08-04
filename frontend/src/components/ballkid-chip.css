@@ -94,7 +94,7 @@
     min-width: 0;
   }
   
-  .ballkid-chip__meta .cut-chip-meta-row .sxs {
+  .ballkid-chip__meta .badge-row .sxs {
     flex-wrap: nowrap;
     gap: 2px;
   }
@@ -137,7 +137,7 @@
     line-height: 0;
   }
   
-  .ballkid-chip--dense .cut-chip-meta-row {
+  .ballkid-chip--dense .badge-row {
     flex: 0 0 auto;
     flex-wrap: nowrap;
     align-items: center;

@@ -13,14 +13,6 @@
   min-width: 0;
 }
 
-.cut-chip-meta-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-}
-
 .cut-chip-icon-group {
   display: inline-flex;
   align-items: center;
@@ -364,7 +356,7 @@
   gap: 6px;
 }
 
-.cut-mobile-assign-table__name .cut-chip-meta-row {
+.cut-mobile-assign-table__name .badge-row {
   flex-wrap: wrap;
 }
 

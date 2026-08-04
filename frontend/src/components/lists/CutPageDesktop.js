@@ -36,6 +36,7 @@ import {
 import { cut } from "../HelpMessages";
 import { renderBallkidChipDragSurface } from "../BallkidChip";
 import "./cut-page-desktop.css";
+import "../ballkid-badges.css";
 
 export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch) {
   setActive((prev) => {
@@ -175,7 +176,7 @@ export function CutBallkidMeta({
       addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
     }
     return (
-      <div className="cut-chip-meta-row">
+      <div className="badge-row">
         {iconBadges.length > 0 ? (
           <div className="cut-chip-icon-group">{iconBadges}</div>
         ) : null}
@@ -199,14 +200,14 @@ export function CutBallkidMeta({
 
   if (compact) {
     return (
-      <div className="cut-chip-meta-row">
+      <div className="badge-row">
         <CalibratedRankPill ballkid={ballkid} />
       </div>
     );
   }
 
   return (
-    <div className="cut-chip-meta-row">
+    <div className="badge-row">
       {iconBadges.length > 0 ? (
         <div className="cut-chip-icon-group">{iconBadges}</div>
       ) : null}
