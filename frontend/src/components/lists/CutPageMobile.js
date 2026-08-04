@@ -23,7 +23,6 @@ import {
   SelfCutCardMobile,
 } from "./CutPageMobileAssign";
 import "./ballkid-list-by-name.css";
-import "../teams/teams-page.css";
 import "./cut-page-desktop.css";
 
 function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
@@ -44,20 +43,17 @@ function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
     <Box
       component={Paper}
       elevation={0}
-      className="cut-page-active-panel teams-chairperson-unassigned-panel teams-mobile-unassigned-panel"
+      className="cut-page-active-panel"
       sx={{ mt: 1 }}
     >
-      <Box className="teams-mobile-unassigned-panel__head">
-        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.15rem" }}>
-          Active ballkids{" "}
-          <Typography component="span" sx={{ opacity: 0.5, fontWeight: 600 }}>
-            ({uncategorized.length})
-          </Typography>
+      <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.15rem" }}>
+        Active ballkids{" "}
+        <Typography component="span" sx={{ opacity: 0.5, fontWeight: 600 }}>
+          ({uncategorized.length})
         </Typography>
-      </Box>
+      </Typography>
 
       <Typography
-        className="teams-chairperson-drop-hint"
         variant="body2"
         sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
       >
@@ -134,7 +130,7 @@ export default function CutPageMobile() {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page teams-page-shell cut-page cut-page-mobile">
+    <div className="page ballkid-list-page cut-page cut-page-mobile">
       <Banners />
 
       <Alerts
