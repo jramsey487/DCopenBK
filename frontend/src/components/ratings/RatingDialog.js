@@ -7,6 +7,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import Rating from "@mui/material/Rating";
+import Slider from "@mui/material/Slider";
 import Link from "@mui/material/Link";
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -17,10 +18,54 @@ import {
   getToday,
   getLocalStorage,
   getDayFromHyphenated,
+  useIsMobile,
 } from "../Utils";
 import "./rating-dialog.css";
 
+const RATING_SLIDER_MARKS = [
+  { value: 0, label: "0" },
+  { value: 1 },
+  { value: 2 },
+  { value: 3 },
+  { value: 4 },
+  { value: 5, label: "5" },
+];
+
+function formatSliderRating(value) {
+  if (value == null) return "—";
+  const n = Number(value);
+  if (Number.isNaN(n)) return "—";
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 export function RatingAndLabel({ label, rating, setRating }) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="rating-dialog-grade-row rating-dialog-grade-row--slider">
+        <div className="rating-dialog-grade-slider-head">
+          <span className="rating-dialog-grade-label">{label}</span>
+          <span className="rating-dialog-grade-value">
+            {formatSliderRating(rating)}
+          </span>
+        </div>
+        <Slider
+          className="rating-dialog-grade-slider"
+          aria-label={label}
+          value={rating ?? 0}
+          min={0}
+          max={5}
+          step={0.5}
+          marks={RATING_SLIDER_MARKS}
+          valueLabelDisplay="auto"
+          valueLabelFormat={(v) => (v === 0 ? "—" : formatSliderRating(v))}
+          onChange={(_, newVal) => setRating(newVal === 0 ? null : newVal)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="rating-dialog-grade-row">
       <span className="rating-dialog-grade-label">{label}</span>

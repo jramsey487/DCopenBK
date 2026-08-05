@@ -118,9 +118,10 @@
     row-gap: 8px;
   }
   
-  @media (max-width: 520px) {
+  @media (max-width: 750px) {
     .rating-dialog-grades {
       grid-template-columns: 1fr;
+      row-gap: 10px;
     }
   }
   
@@ -133,6 +134,29 @@
     border-radius: 8px;
     background: var(--rd-bg0);
     border: 1px solid var(--rd-border); /* was 0.5px — matches the 1px border on the boxes above */
+  }
+
+  .rating-dialog-grade-row--slider {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 10px 14px 6px;
+  }
+
+  .rating-dialog-grade-slider-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .rating-dialog-grade-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--rd-nav);
+    min-width: 2.25ch;
+    text-align: right;
   }
   
   .rating-dialog-grade-label {
@@ -148,6 +172,41 @@
   
   .rating-dialog-grade-row .MuiRating-iconEmpty {
     color: var(--rd-border);
+  }
+
+  .rating-dialog-grade-slider.MuiSlider-root {
+    color: var(--rd-nav);
+    padding: 12px 0 18px !important;
+    width: 100%;
+  }
+
+  .rating-dialog-grade-slider .MuiSlider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .rating-dialog-grade-slider .MuiSlider-mark {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--rd-border);
+  }
+
+  .rating-dialog-grade-slider .MuiSlider-markActive {
+    background-color: currentColor;
+  }
+
+  .rating-dialog-grade-slider .MuiSlider-markLabel {
+    top: 28px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--rd-text3);
+  }
+
+  .rating-dialog-grade-slider .MuiSlider-valueLabel {
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--rd-nav);
   }
   
   .rating-dialog-comments {
@@ -301,4 +360,40 @@
   width: auto;
   height: 32px !important;
   max-height: 32px !important;
+}
+
+/* Match check-in / check-out action button height on mobile */
+@media (max-width: 750px) {
+  .rating-btn.MuiButton-root {
+    min-height: 44px !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+  }
+
+  .ratings-page .rate-card-actions .ballkid-profile-hero-rating-row,
+  .ratings-page .rate-team-member-row .ballkid-profile-hero-rating-row,
+  .ratings-page .rate-photo-tile-action .ballkid-profile-hero-rating-row {
+    min-height: 44px;
+  }
+
+  .ratings-page .rate-card-actions .rating-btn,
+  .ratings-page .rate-team-member-row .rating-btn,
+  .ratings-page .rate-photo-tile-action .rating-btn {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 44px !important;
+  }
+
+  .ratings-page .rate-photo-tile-action {
+    min-height: 44px;
+  }
+
+  .ratings-page .rate-photo-tile-action .rating-btn {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    font-size: 14px !important;
+  }
 }

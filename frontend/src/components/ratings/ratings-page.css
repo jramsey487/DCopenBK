@@ -486,6 +486,13 @@
   min-height: 32px;
 }
 
+@media (max-width: 750px) {
+  .ratings-page .rate-team-member-row .ballkid-profile-hero-rating-row,
+  .ratings-page .rate-photo-tile .ballkid-profile-hero-rating-row {
+    min-height: 44px;
+  }
+}
+
 /* Photo tiles need wider columns than teams page (rating buttons). */
 .ratings-page.rate-by-current-team-page .team-photo-grid {
   grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
@@ -531,6 +538,12 @@
   display: flex;
   justify-content: center;
   min-height: 32px;
+}
+
+@media (max-width: 750px) {
+  .ratings-page .rate-photo-tile-action {
+    min-height: 44px;
+  }
 }
 
 .ratings-page .rate-photo-tile-action .rating-btn,
