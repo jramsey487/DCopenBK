@@ -12,6 +12,19 @@
   gap: 0;
 }
 
+.ballkid-row-two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  column-gap: 16px;
+  align-items: start;
+  justify-content: start;
+}
+
+.ballkid-row-two-columns__col {
+  min-width: 0;
+  overflow: visible;
+}
+
 .ballkid-row {
   display: flex;
   align-items: center;
@@ -54,4 +67,15 @@
   min-width: 0;
   width: 100%;
   max-width: 100%;
+}
+
+/* No trailing actions: size to content so missing pills don't leave a gap */
+.ballkid-row--fit {
+  width: max-content;
+  max-width: 100%;
+}
+
+.ballkid-row--fit .ballkid-chip {
+  flex: 0 0 auto;
+  width: auto;
 }

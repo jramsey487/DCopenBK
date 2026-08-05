@@ -9,7 +9,12 @@ import {
   ConfirmDialog,
 } from "../Utils";
 import ScheduleCalendar from "./ScheduleCalendar";
+import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
+import { schedule, scheduleNonchairperson } from "../HelpMessages";
 import "./schedule-mobile.css";
+import "../teams/teams-page.css";
+import "../lists/ballkid-list-by-name.css";
+import "../lists/cut-page-desktop.css";
 
 function parseSlashDate(dateStr) {
   const [mm, dd, yyyy] = dateStr.split("/");
@@ -94,14 +99,9 @@ function TeamSheetMember({ member }) {
         {memberInitials(member.name)}
       </span>
       <span className="sheet-member-name">{member.name}</span>
-      <div className="sheet-member-meta">
-        {member.isCaptain ? (
-          <span className="sheet-cap-badge">Captain</span>
-        ) : null}
-        <span className={member.pos === "Net" ? "pos-n" : "pos-b"}>
-          {member.pos}
-        </span>
-      </div>
+      {member.isCaptain ? (
+        <span className="sheet-cap-badge">Captain</span>
+      ) : null}
     </li>
   );
 }
@@ -369,90 +369,114 @@ export default function ScheduleMobileView({
   const closeSheet = () => setSheetTeam(null);
   const showScrollHint = courts.length > 4;
 
-  return (
-    <div className="schedule-page-shell">
-      <div className="page schedule-page">
-        <div className="page-header">
-          <div className="title-row">
-            <span className="page-title">Schedule</span>
-            {isToday ? <span className="today-badge">Today</span> : null}
-          </div>
-          <div className="controls-row">
-            <div className="date-picker-wrap">
-              <div className="date-group">
-                <button
-                  type="button"
-                  className="date-arrow"
-                  aria-label="Previous day"
-                  onClick={() => setDate(shiftSlashDate(date, -1))}
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  className="date-center"
-                  onClick={() => setCalendarOpen(true)}
-                >
-                  {formatShortDate(date)}
-                </button>
-                <button
-                  type="button"
-                  className="date-arrow"
-                  aria-label="Next day"
-                  onClick={() => setDate(shiftSlashDate(date, 1))}
-                >
-                  ›
-                </button>
-              </div>
-              <button
-                type="button"
-                className={`cal-toggle-btn${calendarOpen ? " on" : ""}`}
-                aria-label="Open calendar"
-                onClick={() => setCalendarOpen(true)}
-              >
-                <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
-                  <path d="M1.5 5.5h11" stroke="currentColor" strokeWidth="1.1" />
-                  <path d="M4 1.2v2.6M10 1.2v2.6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-                </svg>
-              </button>
-              {calendarOpen ? (
-                <ScheduleCalendar
-                  date={date}
-                  today={getToday()}
-                  onSelect={setDate}
-                  onClose={() => setCalendarOpen(false)}
-                />
-              ) : null}
-            </div>
-            <div className="ctrl-divider" />
-            <button
-              type="button"
-              className={`my-shifts-btn${myShiftsOn ? " on" : ""}`}
-              onClick={() => setMyShiftsOn(!myShiftsOn)}
-            >
-              <svg viewBox="0 0 13 13" fill="none" aria-hidden="true">
-                <circle
-                  cx="6.5"
-                  cy="4"
-                  r="2.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                />
-                <path
-                  d="M1 12c0-3.038 2.462-5.5 5.5-5.5S12 8.962 12 12"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              My shifts
-            </button>
-          </div>
-          {chairpersonActions ? (
-            <div className="chairperson-actions">{chairpersonActions}</div>
-          ) : null}
+  const scheduleToolbar = (
+    <div className="schedule-header-controls">
+      <div className="date-picker-wrap">
+        <div className="date-group">
+          <button
+            type="button"
+            className="date-arrow"
+            aria-label="Previous day"
+            onClick={() => setDate(shiftSlashDate(date, -1))}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="date-center"
+            onClick={() => setCalendarOpen(true)}
+          >
+            {formatShortDate(date)}
+          </button>
+          <button
+            type="button"
+            className="date-arrow"
+            aria-label="Next day"
+            onClick={() => setDate(shiftSlashDate(date, 1))}
+          >
+            ›
+          </button>
         </div>
+        <button
+          type="button"
+          className={`cal-toggle-btn${calendarOpen ? " on" : ""}`}
+          aria-label="Open calendar"
+          onClick={() => setCalendarOpen(true)}
+        >
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <rect
+              x="1.5"
+              y="2.5"
+              width="11"
+              height="10"
+              rx="1.5"
+              stroke="currentColor"
+              strokeWidth="1.1"
+            />
+            <path
+              d="M1.5 5.5h11"
+              stroke="currentColor"
+              strokeWidth="1.1"
+            />
+            <path
+              d="M4 1.2v2.6M10 1.2v2.6"
+              stroke="currentColor"
+              strokeWidth="1.1"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+        {calendarOpen ? (
+          <ScheduleCalendar
+            date={date}
+            today={getToday()}
+            onSelect={setDate}
+            onClose={() => setCalendarOpen(false)}
+          />
+        ) : null}
+      </div>
+      <button
+        type="button"
+        className={`my-shifts-btn${myShiftsOn ? " on" : ""}`}
+        onClick={() => setMyShiftsOn(!myShiftsOn)}
+      >
+        <svg viewBox="0 0 13 13" fill="none" aria-hidden="true">
+          <circle
+            cx="6.5"
+            cy="4"
+            r="2.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M1 12c0-3.038 2.462-5.5 5.5-5.5S12 8.962 12 12"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
+        My shifts
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="schedule-page-shell teams-page-shell">
+      <div className="page schedule-page ballkid-list-page teams-chairperson-page">
+        <TeamsChairpersonPageHeader
+          title="Schedule"
+          helpPage="Schedule"
+          helpMessage={isChairperson ? schedule : scheduleNonchairperson}
+          titleExtra={
+            isToday ? <span className="today-badge">Today</span> : null
+          }
+          actions={
+            chairpersonActions ? (
+              <div className="teams-chairperson-actions">{chairpersonActions}</div>
+            ) : null
+          }
+          toolbar={scheduleToolbar}
+        />
 
         {shifts.length === 0 ? (
           emptyContent ? (

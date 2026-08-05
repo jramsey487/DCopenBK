@@ -27,6 +27,7 @@ export function TeamsChairpersonPageHeader({
   title,
   helpPage,
   helpMessage,
+  titleExtra = null,
   alerts = null,
   toolbar = null,
   actions = null,
@@ -41,6 +42,7 @@ export function TeamsChairpersonPageHeader({
           <Typography className="ballkid-list-title" variant="h4" component="h1">
             {title}
           </Typography>
+          {titleExtra}
           <HelpIcon page={helpPage} message={helpMessage} />
         </Box>
         {hasEnd ? (

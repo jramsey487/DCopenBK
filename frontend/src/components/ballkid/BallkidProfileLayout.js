@@ -36,18 +36,14 @@ function positionsFromLabel(label) {
   return [s];
 }
 
-export function ProfilePositionPills({ preferred, current }) {
-  const parts = new Set();
-  positionsFromLabel(preferred).forEach((p) => parts.add(p));
-  if (current) {
-    positionsFromLabel(current).forEach((p) => parts.add(p));
-  }
-  if (parts.size === 0) {
+export function ProfilePositionPills({ preferred }) {
+  const parts = positionsFromLabel(preferred);
+  if (parts.length === 0) {
     return null;
   }
   return (
-    <div className="ballkid-profile-hero-pills">
-      {[...parts].map((pos) => {
+    <div className="ballkid-profile-position-pills">
+      {parts.map((pos) => {
         const key = pos.toLowerCase();
         const variant =
           key === "net"
@@ -153,12 +149,6 @@ export function ProfileBrandedHero({
   status,
 }) {
   const name = `${ballkid.first_name} ${ballkid.last_name}`;
-  const showCurrentPosition =
-    ballkid.is_active &&
-    ballkid.is_cut !== true &&
-    ballkid.is_cut !== "true" &&
-    ballkid.position;
-
   const isMobile = useIsMobile();
 
   return (
@@ -187,12 +177,6 @@ export function ProfileBrandedHero({
             <div className="ballkid-profile-hero-meta-row ballkid-profile-hero-meta-row--accent">
               <div className="ballkid-profile-hero-accent-line">
                 <ProfileRolePills ballkid={ballkid} />
-                <div className="ballkid-profile-hero-meta-pills">
-                  <ProfilePositionPills
-                    preferred={ballkid.preferred_position}
-                    current={showCurrentPosition ? ballkid.position : null}
-                  />
-                </div>
               </div>
               {status ? (
                 <div className="ballkid-profile-hero-status">{status}</div>

@@ -17,15 +17,9 @@ import {
   ProfileContent,
   ProfileCard,
   ProfileInfoRow,
+  ProfilePositionPills,
 } from "./BallkidProfileLayout";
 import "../schedule/schedule-mobile.css";
-
-function positionPillVariant(position) {
-  const key = (position ?? "").toLowerCase();
-  if (key === "net") return "ballkid-profile-pill--net";
-  if (key === "back") return "ballkid-profile-pill--back";
-  return "ballkid-profile-pill--rookie";
-}
 
 export default function BallkidPageCaptain(props) {
   const [ballkid, setBallkid] = useState(null);
@@ -75,10 +69,7 @@ export default function BallkidPageCaptain(props) {
 
   return (
     <ProfilePageShell>
-      <Box
-        className="ballkid-profile-captain-hero"
-        sx={{ "& .ballkid-profile-hero-meta-pills": { display: "none" } }}
-      >
+      <Box className="ballkid-profile-captain-hero">
         <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
       </Box>
 
@@ -91,26 +82,14 @@ export default function BallkidPageCaptain(props) {
           />
           <ProfileInfoRow label="Phone" value={ballkid.phone} />
           <ProfileInfoRow label="Preferred position">
-            <span
-              className={`ballkid-profile-pill ${positionPillVariant(
-                ballkid.preferred_position
-              )}`}
-            >
-              {ballkid.preferred_position}
-            </span>
+            <ProfilePositionPills preferred={ballkid.preferred_position} />
           </ProfileInfoRow>
         </ProfileCard>
 
         {!showCurrentInfo ? null : (
           <ProfileCard title="Current tournament">
             <ProfileInfoRow label="Position">
-              <span
-                className={`ballkid-profile-pill ${positionPillVariant(
-                  ballkid.position
-                )}`}
-              >
-                {ballkid.position}
-              </span>
+              <ProfilePositionPills preferred={ballkid.position} />
             </ProfileInfoRow>
             <ProfileInfoRow label="Current team">
               {ballkid.current_team === 0 ? (

@@ -57,33 +57,54 @@ import { Popover } from "@mui/material";
 import { YoePill } from "./teams/TeamsShared";
 import "./ballkid-badges.css";
 
+export function ballkidIconNodes(ballkid, { isTeamsPage = false } = {}) {
+  const group = getLocalStorage("group");
+  const icons = [];
+
+  if (ballkid.is_chairperson) {
+    icons.push(ICON_DICT.chairperson);
+  }
+  if (ballkid.is_captain) {
+    icons.push(ICON_DICT.captain);
+  }
+  if (
+    group !== "ballkid" &&
+    ballkid.num_years_experience === 0 &&
+    ballkid.is_out_of_town &&
+    isTeamsPage
+  ) {
+    icons.push(ICON_DICT.outOfTownRookie);
+  } else if (
+    group !== "ballkid" &&
+    ballkid.num_years_experience > 0 &&
+    ballkid.is_out_of_town &&
+    isTeamsPage
+  ) {
+    icons.push(ICON_DICT.outOfTownBallkid);
+  }
+  if (group !== "ballkid" && ballkid.num_years_experience === 0) {
+    icons.push(ICON_DICT.rookie);
+  }
+  if (ballkid.num_years_experience > SUPERVET_THRESHOLD && isTeamsPage) {
+    icons.push(ICON_DICT.supervet);
+  }
+
+  return icons;
+}
+
 export function Icons({
   ballkid,
   margin,
   isTeamsPage = false,
 }) {
-  const group = getLocalStorage("group");
+  const icons = ballkidIconNodes(ballkid, { isTeamsPage });
+  if (icons.length === 0) {
+    return null;
+  }
 
   return (
     <Icon sx={{ mb: margin }}>
-      {ballkid.is_chairperson && ICON_DICT["chairperson"]}
-      {ballkid.is_captain && ICON_DICT["captain"]}
-      {group !== "ballkid" &&
-        ballkid.num_years_experience === 0 &&
-        ballkid.is_out_of_town &&
-        isTeamsPage &&
-        ICON_DICT["outOfTownRookie"]}
-      {group !== "ballkid" &&
-        ballkid.num_years_experience > 0 &&
-        ballkid.is_out_of_town &&
-        isTeamsPage &&
-        ICON_DICT["outOfTownBallkid"]}
-      {group !== "ballkid" &&
-        ballkid.num_years_experience === 0 &&
-        ICON_DICT["rookie"]}
-      {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
-        isTeamsPage &&
-        ICON_DICT["supervet"]}
+      {icons}
     </Icon>
   );
 }
@@ -703,7 +724,7 @@ export function BallkidLink({ id, name }) {
   );
 }
 
-export function BallkidCard({ ballkid, renderAdditional }) {
+export function BallkidCard({ ballkid, renderAdditional, renderNameTrailing }) {
   const layout = getLocalStorage("layout") ?? "list";
 
   return (
@@ -771,6 +792,22 @@ export function BallkidCard({ ballkid, renderAdditional }) {
                 >
                   <Icons ballkid={ballkid} margin={0} />
                 </Box>
+                {renderNameTrailing ? (
+                  <Box
+                    component="span"
+                    className="ballkid-card-name-trailing"
+                    sx={{
+                      flexShrink: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      minWidth: 0,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    {renderNameTrailing}
+                  </Box>
+                ) : null}
               </Box>
               {renderAdditional ? (
                 <Box className="ballkid-card-meta">{renderAdditional}</Box>

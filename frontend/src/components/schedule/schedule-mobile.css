@@ -193,28 +193,6 @@
   box-sizing: border-box;
 }
 
-.schedule-page .page-header {
-  flex-shrink: 0;
-  padding: 14px 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-bottom: 0.5px solid var(--sched-border);
-  background: var(--sched-bg0);
-}
-
-.schedule-page .title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.schedule-page .page-title {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--sched-text1);
-}
-
 .schedule-page .today-badge {
   padding: 3px 8px;
   background: #fff1f2;
@@ -223,6 +201,36 @@
   font-size: 11px;
   font-weight: 500;
   border: 0.5px solid #fecdd3;
+}
+
+.schedule-page .teams-chairperson-page-header {
+  flex-shrink: 0;
+  padding: 14px 16px 0;
+  border-bottom: 0.5px solid var(--sched-border);
+  background: var(--sched-bg0);
+}
+
+.schedule-page .teams-chairperson-page-header .cut-page-top-bar {
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.schedule-page .schedule-header-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.schedule-page .schedule-header-controls .date-picker-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-page .schedule-header-controls .date-group {
+  max-width: none;
 }
 
 .schedule-page .controls-row {
@@ -324,13 +332,6 @@
   background: var(--sched-nav);
   color: #fff;
   border-color: var(--sched-nav);
-}
-
-.schedule-page .ctrl-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--sched-border);
-  flex-shrink: 0;
 }
 
 /* Calendar popover */
@@ -511,12 +512,6 @@
 .schedule-page .my-shifts-btn svg {
   width: 13px;
   height: 13px;
-}
-
-.schedule-page .chairperson-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .schedule-page .schedule-body {
@@ -1099,16 +1094,8 @@
   line-height: 1.3;
 }
 
-.schedule-sheet .sheet-member-meta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
 .schedule-sheet .sheet-cap-badge {
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1119,42 +1106,13 @@
   border: 1px solid #fde68a;
 }
 
-.schedule-sheet .pos-n {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #dbeafe;
-}
-
-.schedule-sheet .pos-b {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-/* Wider screens: header on one row, larger chips, centered team dialog */
+/* Wider screens: larger chips, centered team dialog */
 @media (min-width: 640px) {
-  .schedule-page .page-header {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px 20px;
-    padding: 18px 24px 14px;
+  .schedule-page .teams-chairperson-page-header {
+    padding: 18px 24px 0;
   }
 
-  .schedule-page .page-title {
-    font-size: 22px;
-  }
-
-  .schedule-page .controls-row {
+  .schedule-page .schedule-header-controls {
     width: auto;
     flex: 1 1 320px;
     justify-content: flex-end;
@@ -1224,4 +1182,12 @@
   .schedule-sheet .sheet-body {
     padding: 18px 22px 22px;
   }
+}
+.schedule-edit-date-toolbar {
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-edit-date-toolbar .MuiTextField-root {
+  min-width: 160px;
 }

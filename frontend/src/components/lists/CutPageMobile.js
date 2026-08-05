@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 
@@ -9,13 +8,13 @@ import {
   filterBallkids,
   getAuthHeader,
   SearchAndFilter,
-  HelpIcon,
   Alerts,
   Banners,
 } from "../Utils";
 import { patchCutBallkidInState, compareCutPageBallkids } from "./CutPageDesktop";
 import { CUT_STATUSES } from "../Consts";
 import { cut } from "../HelpMessages";
+import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import {
   CutMobileAssignTable,
   buildCutAssignOptions,
@@ -24,6 +23,7 @@ import {
 } from "./CutPageMobileAssign";
 import "./ballkid-list-by-name.css";
 import "./cut-page-desktop.css";
+import "../teams/teams-page.css";
 
 function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -43,31 +43,31 @@ function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
     <Box
       component={Paper}
       elevation={0}
-      className="cut-page-active-panel"
-      sx={{ mt: 1 }}
+      className="ballkid-pool-panel teams-chairperson-unassigned-panel teams-mobile-unassigned-panel cut-page-active-panel"
     >
-      <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.15rem" }}>
-        Active ballkids{" "}
-        <Typography component="span" sx={{ opacity: 0.5, fontWeight: 600 }}>
-          ({uncategorized.length})
-        </Typography>
-      </Typography>
+      <Box className="ballkid-pool-panel__head teams-chairperson-unassigned-panel__head">
+        <Box className="sxs" sx={{ alignItems: "center", gap: 0.5 }}>
+          <span className="teams-chairperson-unassigned-title">
+            Active ballkids
+          </span>
+          <span className="teams-chairperson-unassigned-count">
+            ({uncategorized.length})
+          </span>
+        </Box>
+      </Box>
 
-      <Typography
-        variant="body2"
-        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
-      >
+      <Typography className="teams-chairperson-drop-hint" variant="body2">
         Tap a category to assign each ballkid. Use section cards above to review
         who is already categorized.
       </Typography>
 
       {active.length === 0 ? (
-        <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
+        <div className="team-position-empty">
           There are currently no active ballkids left to categorize.
-        </Typography>
+        </div>
       ) : (
         <>
-          <Box sx={{ mb: 2 }}>
+          <Box className="ballkid-pool-panel__search teams-chairperson-unassigned-search">
             <SearchAndFilter
               stacked
               setSearchKeyword={setSearchKeyword}
@@ -78,9 +78,9 @@ function ActiveSectionMobile({ active, sections, patchCutBallkid }) {
           </Box>
 
           {uncategorized.length === 0 ? (
-            <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
+            <div className="team-position-empty">
               No uncategorized ballkids match your search or filters.
-            </Typography>
+            </div>
           ) : (
             <CutMobileAssignTable
               ballkids={uncategorized}
@@ -130,55 +130,46 @@ export default function CutPageMobile() {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page cut-page cut-page-mobile">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page cut-page cut-page-mobile">
       <Banners />
 
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
+      <TeamsChairpersonPageHeader
+        title="Cut Page"
+        helpPage="Cut"
+        helpMessage={cut}
+        alerts={
+          <Alerts
+            successMsg={successMsg}
+            errorMsg={errorMsg}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+        }
       />
 
-      <Box className="cut-page-top-bar">
-        <Box className="cut-page-top-bar__title">
-          <Typography className="ballkid-list-title" variant="h4" component="h1">
-            Cut Page
-          </Typography>
-          <HelpIcon page="Cut" message={cut} />
-        </Box>
-      </Box>
-
-      <Grid container spacing={2}>
+      <div className="teams-page-grid teams-chairperson-teams-grid cut-page-mobile-sections">
         {sections.map((section) => (
-          <Grid item xs={12} key={section}>
-            <CutStatusSectionMobile
-              section={section}
-              active={active.filter(
-                (ballkid) => ballkid.cut_status === section
-              )}
-              patchCutBallkid={patchCutBallkid}
-              refetchActive={refetchActive}
-            />
-          </Grid>
-        ))}
-
-        <Grid item xs={12}>
-          <SelfCutCardMobile
-            active={active}
+          <CutStatusSectionMobile
+            key={section}
+            section={section}
+            active={active.filter((ballkid) => ballkid.cut_status === section)}
             patchCutBallkid={patchCutBallkid}
             refetchActive={refetchActive}
           />
-        </Grid>
+        ))}
 
-        <Grid item xs={12}>
-          <ActiveSectionMobile
-            active={active}
-            sections={sections}
-            patchCutBallkid={patchCutBallkid}
-          />
-        </Grid>
-      </Grid>
+        <SelfCutCardMobile
+          active={active}
+          patchCutBallkid={patchCutBallkid}
+          refetchActive={refetchActive}
+        />
+      </div>
+
+      <ActiveSectionMobile
+        active={active}
+        sections={sections}
+        patchCutBallkid={patchCutBallkid}
+      />
     </div>
   );
 }

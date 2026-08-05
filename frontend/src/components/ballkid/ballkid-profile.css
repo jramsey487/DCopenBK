@@ -240,15 +240,11 @@
   margin: -8px -8px -8px 0;
 }
 
-.ballkid-profile-hero-meta-pills,
 .ballkid-profile-hero-status {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   line-height: normal;
-}
-
-.ballkid-profile-hero-status {
   margin-top: 0;
 }
 
@@ -263,13 +259,6 @@
   display: none;
 }
 
-.ballkid-profile-hero-meta-pills .ballkid-profile-hero-pills {
-  margin-top: 0;
-  align-items: center;
-  gap: 6px;
-}
-
-.ballkid-profile-hero-meta-row .ballkid-profile-pill,
 .ballkid-profile-hero-meta-row .ballkid-profile-status {
   display: inline-flex;
   align-items: center;
@@ -517,16 +506,6 @@
   flex-shrink: 0;
 }
 
-.ballkid-profile-hero-accent-line .ballkid-profile-hero-meta-pills {
-  min-width: 0;
-  flex: 0 1 auto;
-}
-
-.ballkid-profile-hero-accent-line .ballkid-profile-hero-pills {
-  margin-top: 0;
-  flex-wrap: nowrap;
-}
-
 .ballkid-profile-hero-role-icons {
   display: inline-flex;
   align-items: center;
@@ -563,10 +542,9 @@
   color: var(--bp-text2);
 }
 
-.ballkid-profile-hero-pills {
+.ballkid-profile-position-pills {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
   flex-wrap: wrap;
   align-items: center;
 }
@@ -597,18 +575,10 @@
   cursor: default;
 }
 
-.ballkid-profile-hero-meta-pills .ballkid-profile-pill {
-  border-radius: 20px;
-}
-
 .ballkid-profile-pill--rookie {
   background: #fff7ed;
   color: #c2410c;
   border-color: #fed7aa;
-}
-
-.ballkid-profile-hero-meta-pills:empty {
-  display: none;
 }
 
 .ballkid-profile-status {
@@ -777,7 +747,7 @@
   word-break: break-word;
 }
 
-.ballkid-profile-info-val .ballkid-profile-hero-pills {
+.ballkid-profile-info-val .ballkid-profile-position-pills {
   margin-top: 0;
   justify-content: flex-end;
 }

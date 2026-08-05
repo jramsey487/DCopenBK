@@ -9,7 +9,6 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
   const [updated, setUpdated] = useState(false);
-  const [showHovercard, setShowHovercard] = useState(true);
 
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
@@ -35,12 +34,8 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
     <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
 
-      <Header
-        showHovercard={showHovercard}
-        setShowHovercard={setShowHovercard}
-        isFinalsPage={true}
-      />
-      {renderTeams(assigned, teams, showHovercard, setUpdated)}
+      <Header isFinalsPage={true} showHovercardToggle={false} />
+      {renderTeams(assigned, teams, false, setUpdated)}
 
       <UnassignedMobilePanel
         unassigned={unassigned}

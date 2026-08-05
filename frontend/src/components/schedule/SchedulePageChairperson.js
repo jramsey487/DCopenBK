@@ -15,10 +15,14 @@ import {
   getAuthHeader,
   getToday,
   ConfirmDialog,
-  HelpIcon,
   Banners,
 } from "../Utils";
 import { schedule } from "../HelpMessages";
+import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
+import "./schedule-mobile.css";
+import "../teams/teams-page.css";
+import "../lists/ballkid-list-by-name.css";
+import "../lists/cut-page-desktop.css";
 
 function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);
@@ -189,14 +193,15 @@ export default function SchedulePageChairperson(props) {
         <Button
           variant="outlined"
           size="small"
+          className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
           onClick={() => setEditing(!editing)}
         >
           {editing ? "Save Schedule" : "Edit Schedule"}
         </Button>
         <Button
-          variant="contained"
-          color="error"
+          variant="outlined"
           size="small"
+          className="teams-chairperson-action-btn teams-chairperson-action-btn--checkout"
           onClick={() => setOpen(true)}
         >
           Delete Schedule
@@ -238,57 +243,57 @@ export default function SchedulePageChairperson(props) {
   }
 
   return (
-    <div className="page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
       {deleteDialog}
 
-      <div className="sxs" sx={{ mb: 2 }}>
-        <Typography variant="h4">Schedule</Typography>
-        &thinsp;
-        <HelpIcon page="Schedule" message={schedule} />
-      </div>
-
-      <Box className="justify" sx={{ mb: 2 }}>
-        <Box className="sxs">
-          <Typography variant="body1">
-            Showing schedule for: &thinsp;
-          </Typography>
-          <LocalizationProvider dateAdapter={AdapterLuxon}>
-            <DatePicker
-              renderInput={(props) => (
-                <TextField sx={{ mx: 2 }} variant="standard" {...props} />
-              )}
-              label="Date"
-              value={date}
-              mask={"__/__/____"}
-              onChange={(newValue) => {
-                setDate(newValue.toLocaleString());
-              }}
-            />
-          </LocalizationProvider>
-        </Box>
-        {shifts.length === 0 ? (
-          ""
-        ) : (
-          <div className="sxs" style={{ float: "right" }}>
-            <Button
-              variant="outlined"
-              sx={{ m: 1 }}
-              onClick={() => setEditing(!editing)}
-            >
-              {editing ? "Save Schedule" : "Edit Schedule"}
-            </Button>
-
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => setOpen(true)}
-            >
-              Delete Schedule
-            </Button>
-          </div>
-        )}
-      </Box>
+      <TeamsChairpersonPageHeader
+        title="Schedule"
+        helpPage="Schedule"
+        helpMessage={schedule}
+        actions={
+          shifts.length === 0 ? null : (
+            <div className="teams-chairperson-actions">
+              <Button
+                variant="outlined"
+                size="small"
+                className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
+                onClick={() => setEditing(!editing)}
+              >
+                {editing ? "Save Schedule" : "Edit Schedule"}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                className="teams-chairperson-action-btn teams-chairperson-action-btn--checkout"
+                onClick={() => setOpen(true)}
+              >
+                Delete Schedule
+              </Button>
+            </div>
+          )
+        }
+        toolbar={
+          <Box className="schedule-edit-date-toolbar sxs">
+            <Typography variant="body2" sx={{ color: "var(--tp-text2)" }}>
+              Showing schedule for
+            </Typography>
+            <LocalizationProvider dateAdapter={AdapterLuxon}>
+              <DatePicker
+                renderInput={(props) => (
+                  <TextField size="small" variant="outlined" {...props} />
+                )}
+                label="Date"
+                value={date}
+                mask={"__/__/____"}
+                onChange={(newValue) => {
+                  setDate(newValue.toLocaleString());
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+        }
+      />
 
       {shifts.length === 0 ? (
         <CreateSchedule date={date} setUpdated={setUpdated} />

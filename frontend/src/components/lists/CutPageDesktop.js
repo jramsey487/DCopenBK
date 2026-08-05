@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDrop } from "react-dnd";
 
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
@@ -12,13 +10,13 @@ import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
 
 import Dangerous from "@mui/icons-material/Dangerous";
+import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 
 import {
   filterBallkids,
   getAuthHeader,
   SearchAndFilter,
   ConfirmDialog,
-  HelpIcon,
   Banners,
   Alerts,
   HovercardToggle,
@@ -28,10 +26,74 @@ import {
   POSITIONS,
 } from "../Consts";
 import { cut } from "../HelpMessages";
-import { DraggableBallkidRow } from "../BallkidChip";
+import { DraggableBallkidRow, DraggableBallkidRowTwoColumns } from "../BallkidChip";
+import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "./cut-page-desktop.css";
+import "../teams/teams-page.css";
 import "../ballkid-badges.css";
 import "../ballkid-row.css";
+
+/** Shared decision / Self-Cut card chrome matching teams chairperson cards. */
+export function CutDecisionCard({
+  title,
+  count,
+  isOver = false,
+  dropRef = null,
+  action = null,
+  emptyMessage = null,
+  dialog = null,
+  children,
+  className = "",
+}) {
+  const cardClass = [
+    "team-card",
+    "teams-chairperson-card",
+    "cut-decision-card",
+    isOver ? "is-drop-over" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div ref={dropRef} className={cardClass}>
+      {dialog}
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">{title}</span>
+          <span className="team-card-count">({count})</span>
+        </div>
+        {action ? (
+          <div className="teams-chairperson-head-actions">{action}</div>
+        ) : null}
+      </div>
+      <div className="team-card-body">
+        {count === 0 && emptyMessage ? (
+          <div className="team-position-empty">{emptyMessage}</div>
+        ) : (
+          children
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function CutBulkActionButton({ shouldCut, onClick, label }) {
+  return (
+    <Button
+      size="small"
+      variant="outlined"
+      className={
+        shouldCut
+          ? "teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team"
+          : "teams-chairperson-team-btn teams-chairperson-team-btn--end"
+      }
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  );
+}
 
 export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch) {
   setActive((prev) => {
@@ -90,37 +152,6 @@ function cutCommentTypesForSection(section) {
     : ["experience", "rank", "last_day"];
 }
 
-function CutBallkidGrid({ ballkids, ...rowProps }) {
-  const midpoint = Math.ceil(ballkids.length / 2);
-  const leftColumn = ballkids.slice(0, midpoint);
-  const rightColumn = ballkids.slice(midpoint);
-
-  return (
-    <div className="cut-page-two-columns">
-      <div className="cut-page-two-columns__col ballkid-row-list">
-        {leftColumn.map((ballkid) => (
-          <DraggableBallkidRow
-            key={ballkid.id}
-            ballkid={ballkid}
-            dense
-            {...rowProps}
-          />
-        ))}
-      </div>
-      <div className="cut-page-two-columns__col ballkid-row-list">
-        {rightColumn.map((ballkid) => (
-          <DraggableBallkidRow
-            key={ballkid.id}
-            ballkid={ballkid}
-            dense
-            {...rowProps}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function CutBallkidStack({ ballkids, actionsForBallkid, ...rowProps }) {
   return (
     <div className="cut-page-chip-list ballkid-row-list">
@@ -145,12 +176,11 @@ export function CutStatusSection({
   showHovercard,
   patchCutBallkid,
   refetchActive,
+  emptyMessage = null,
 }) {
   const [open, setOpen] = useState(false);
-  const shouldCut = section.includes("Cut") ? true : false;
-  const cutAllStr = section.includes("Cut") ? "Cut All" : "Keep All";
-  const cutAllColor = section.includes("Cut") ? "error" : "success";
-  const cutAllVariant = section.includes("Cut") ? "contained" : "outlined";
+  const shouldCut = section.includes("Cut");
+  const cutAllStr = shouldCut ? "Cut All" : "Keep All";
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -161,109 +191,59 @@ export function CutStatusSection({
   });
 
   return (
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3} ref={dropRef}>
-      <ConfirmDialog
-        message={`You are about to cut all ${active.length} ballkid${
-          active.length > 1 ? "s" : ""
-        }. This will be publicly visible to all ballkids and captains.`}
-        url={"/api/cut-all"}
-        body={{
-          cut_status: section,
-          should_cut: true,
-        }}
-        open={open}
-        setOpen={setOpen}
-        setUpdated={refetchActive}
-      />
-      <Card
-        sx={{
-          mb: 2,
-          borderRadius: "16px",
-          transition: "all 0.2s ease-in-out",
-          border: isOver ? "2px solid #2563eb" : "1px solid",
-          borderColor: isOver ? "primary.main" : "divider",
-          boxShadow: isOver ? "0 10px 25px -5px rgba(0, 0, 0, 0.05)" : "0 1px 3px 0 rgba(0, 0, 0, 0.02)"
-        }}
-        elevation={0}
-      >
-        <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 8, width: "100%" }}>
-            <Box
-              sx={{
-                minWidth: 0,
-                flex: "1 1 auto",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <Typography
-                component="span"
-                variant="h6"
-                sx={{
-                  display: "inline",
-                  fontWeight: 700,
-                  fontSize: "1.05rem",
-                  color: "#1e293b",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {section}
-              </Typography>
-              {" "}
-              <Typography
-                component="span"
-                variant="subtitle1"
-                sx={{
-                  opacity: 0.5,
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                ({active.length})
-              </Typography>
-            </Box>
-            <Button
-              size="small"
-              color={cutAllColor}
-              variant={cutAllVariant}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: "10px",
-                px: 2,
-                fontFamily: "Inter, sans-serif",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-              onClick={(e) => {
-                shouldCut
-                  ? setOpen(true)
-                  : fetch("/api/cut-all", {
-                      method: "PATCH",
-                      headers: getAuthHeader(),
-                      body: JSON.stringify({
-                        cut_status: section,
-                        should_cut: shouldCut,
-                      }),
-                    })
-                      .then((response) => response.json())
-                      .then(() => refetchActive());
-              }}
-            >
-              {cutAllStr}
-            </Button>
-          </div>
-          <CutDecisionSectionList
-            ballkids={active}
-            section={section}
-            showHovercard={showHovercard}
-            patchCutBallkid={patchCutBallkid}
+    <CutDecisionCard
+      title={section}
+      count={active.length}
+      isOver={isOver}
+      dropRef={dropRef}
+      emptyMessage={emptyMessage}
+      dialog={
+        <ConfirmDialog
+          message={`You are about to cut all ${active.length} ballkid${
+            active.length > 1 ? "s" : ""
+          }. This will be publicly visible to all ballkids and captains.`}
+          url={"/api/cut-all"}
+          body={{
+            cut_status: section,
+            should_cut: true,
+          }}
+          open={open}
+          setOpen={setOpen}
+          setUpdated={refetchActive}
+        />
+      }
+      action={
+        active.length === 0 && emptyMessage ? null : (
+          <CutBulkActionButton
+            shouldCut={shouldCut}
+            label={cutAllStr}
+            onClick={() => {
+              if (shouldCut) {
+                setOpen(true);
+                return;
+              }
+              fetch("/api/cut-all", {
+                method: "PATCH",
+                headers: getAuthHeader(),
+                body: JSON.stringify({
+                  cut_status: section,
+                  should_cut: false,
+                }),
+              })
+                .then((response) => response.json())
+                .then(() => refetchActive());
+            }}
           />
-        </CardContent>
-      </Card>
-    </Grid>
+        )
+      }
+    >
+      <CutDecisionSectionList
+        ballkids={active}
+        section={section}
+        showHovercard={showHovercard}
+        patchCutBallkid={patchCutBallkid}
+      />
+    </CutDecisionCard>
   );
 }
 
@@ -274,6 +254,7 @@ export function CutDecisionSectionList({
   patchCutBallkid,
 }) {
   const sorted = [...ballkids].sort(compareCutPageBallkids);
+  const canCut = section.includes("Cut");
 
   return (
     <CutBallkidStack
@@ -281,28 +262,41 @@ export function CutDecisionSectionList({
       commentTypes={cutCommentTypesForSection(section)}
       showHovercard={showHovercard}
       hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
-      actionsForBallkid={(ballkid) =>
-        !section.includes("Cut") ? null : (
-          <Tooltip title="Cut">
+      actionsForBallkid={(ballkid) => (
+        <div className="teams-chairperson-ballkid-actions">
+          <Tooltip title="Unassign">
             <IconButton
               size="small"
-              sx={{
-                p: 0.6,
-                borderRadius: "8px",
-                "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
-              }}
-              onClick={() => {
-                patchCutBallkid(ballkid, {
-                  is_cut: true,
-                  self_cut: section === "Self-Cut",
-                });
-              }}
+              sx={{ p: 0.5 }}
+              onClick={() => patchCutBallkid(ballkid, { cut_status: "" })}
             >
-              <Dangerous color="error" sx={{ fontSize: 18 }} />
+              <RemoveCircleOutline
+                className="teams-chairperson-ballkid-action-icon"
+                color="primary"
+              />
             </IconButton>
           </Tooltip>
-        )
-      }
+          {canCut ? (
+            <Tooltip title="Cut">
+              <IconButton
+                size="small"
+                sx={{ p: 0.5 }}
+                onClick={() => {
+                  patchCutBallkid(ballkid, {
+                    is_cut: true,
+                    self_cut: section === "Self-Cut",
+                  });
+                }}
+              >
+                <Dangerous
+                  className="teams-chairperson-ballkid-action-icon"
+                  color="error"
+                />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+        </div>
+      )}
     />
   );
 }
@@ -318,52 +312,41 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
+  const filteredCount = filterBallkids(active, searchKeyword, filterGroup).length;
+
   return (
     <Box
       component={Paper}
       ref={dropRef}
       elevation={0}
-      className="cut-page-active-panel teams-chairperson-unassigned-panel"
-      sx={{
-        borderRadius: "16px",
-        border: isOver ? "2px solid #2563eb" : "1px solid",
-        borderColor: isOver ? "primary.main" : "divider",
-        backgroundColor: "background.paper",
-        boxShadow: isOver
-          ? "0 10px 25px -5px rgba(13, 27, 62, 0.08)"
-          : "0 1px 3px 0 rgba(13, 27, 62, 0.04)",
-      }}
+      className={[
+        "ballkid-pool-panel",
+        "teams-chairperson-unassigned-panel",
+        "cut-page-active-panel",
+        isOver ? "is-drop-over" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <Box
-        className="sxs"
-        sx={{
-          mt: 0,
-          mb: 1.5,
-          alignItems: "center",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          pb: 1.5,
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.15rem", color: "#1e293b", fontFamily: "Inter, sans-serif" }}>
-          Active Ballkids
-        </Typography>
-        &ensp;
-        <Typography variant="body1" sx={{ opacity: 0.5, fontWeight: 600, fontSize: "0.95rem", fontFamily: "Inter, sans-serif" }}>
-          ({active.length})
-        </Typography>
+      <Box className="ballkid-pool-panel__head teams-chairperson-unassigned-panel__head">
+        <Box className="sxs" sx={{ alignItems: "center", gap: 0.5 }}>
+          <span className="teams-chairperson-unassigned-title">
+            Active Ballkids
+          </span>
+          <span className="teams-chairperson-unassigned-count">
+            ({filteredCount})
+          </span>
+        </Box>
       </Box>
 
-      <Typography
-        className="teams-chairperson-drop-hint"
-        variant="body2"
-        sx={{ color: "#64748b", mb: 2, fontSize: "0.8rem", lineHeight: 1.45 }}
-      >
-        Drag ballkids onto a decision card to categorize them, or drop here to return them to Active.
+      <Typography className="teams-chairperson-drop-hint" variant="body2">
+        Drag ballkids onto a decision card to categorize them, or drop here to
+        return them to Active.
       </Typography>
 
-      <Box sx={{ mb: 2.5, width: "100%" }}>
+      <Box className="ballkid-pool-panel__search teams-chairperson-unassigned-search">
         <SearchAndFilter
+          stacked
           setSearchKeyword={setSearchKeyword}
           filterGroup={filterGroup}
           setFilterGroup={setFilterGroup}
@@ -371,71 +354,57 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
         />
       </Box>
 
-      {POSITIONS.map((position) => {
-        const filtered = filterBallkids(
-          active,
-          searchKeyword,
-          filterGroup
-        ).filter((ballkid) => ballkid.preferred_position.startsWith(position));
-        return (
-          <div key={position}>
-            <div className="cut-page-section-label">
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 700,
-                  color: "#64748b",
-                  textTransform: "uppercase",
-                  fontSize: "0.7rem",
-                  letterSpacing: "0.08em",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {position}s
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ opacity: 0.55, fontWeight: 600, fontFamily: "Inter, sans-serif" }}
-              >
-                ({filtered.length})
-              </Typography>
-            </div>
+      {active.length === 0 ? (
+        <div className="team-position-empty">
+          There are currently no active ballkids left to categorize.
+        </div>
+      ) : (
+        POSITIONS.map((position) => {
+          const ballkids = filterBallkids(
+            active,
+            searchKeyword,
+            filterGroup
+          ).filter((ballkid) =>
+            ballkid.preferred_position.startsWith(position)
+          );
 
-            {active.length === 0 ? (
-              <Typography sx={{ opacity: 0.7, py: 1, fontSize: "0.9rem", fontFamily: "Inter, sans-serif" }}>
-                There are currently no active ballkids left to categorize.
-              </Typography>
-            ) : (
-              <CutBallkidGrid
-                ballkids={[...filtered].sort(compareCutPageBallkids)}
-                commentTypes={["experience", "rank", "last_day"]}
-                showHovercard={showHovercard}
-                hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
-              />
-            )}
-          </div>
-        );
-      })}
+          return (
+            <div
+              className="ballkid-pool-position-block teams-chairperson-position-block"
+              key={position}
+            >
+              <div className="team-position-head cut-page-section-label">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">({ballkids.length})</span>
+              </div>
+
+              {ballkids.length === 0 ? (
+                <div className="team-position-empty">
+                  No {position.toLowerCase()}s in this pool.
+                </div>
+              ) : (
+                <DraggableBallkidRowTwoColumns
+                  ballkids={[...ballkids].sort(compareCutPageBallkids)}
+                  commentTypes={["experience", "rank", "last_day"]}
+                  showHovercard={showHovercard}
+                  hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
+                />
+              )}
+            </div>
+          );
+        })
+      )}
     </Box>
   );
 }
 
 export function renderCopyButtons(active, emails, setSuccessMsg) {
-  const buttonSx = {
-    textTransform: "none",
-    fontWeight: 600,
-    borderRadius: "10px",
-    px: 1.5,
-    fontFamily: "Inter, sans-serif",
-    whiteSpace: "nowrap",
-  };
-
   return (
-    <>
+    <Box className="teams-chairperson-actions" component="div">
       <Button
         size="small"
         variant="outlined"
-        sx={buttonSx}
+        className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
         onClick={() => {
           const names = active
             .filter(
@@ -455,7 +424,7 @@ export function renderCopyButtons(active, emails, setSuccessMsg) {
       <Button
         size="small"
         variant="outlined"
-        sx={buttonSx}
+        className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
         onClick={() => {
           navigator.clipboard.writeText(emails);
           setSuccessMsg(
@@ -465,7 +434,7 @@ export function renderCopyButtons(active, emails, setSuccessMsg) {
       >
         Copy all ballkid emails
       </Button>
-    </>
+    </Box>
   );
 }
 
@@ -474,6 +443,7 @@ export function SelfCutCard({
   showHovercard,
   patchCutBallkid,
   refetchActive,
+  emptyMessage = null,
 }) {
   const selfCut = active.filter((ballkid) => ballkid.cut_status === "Self-Cut");
   const [open, setOpen] = useState(false);
@@ -487,97 +457,44 @@ export function SelfCutCard({
   });
 
   return (
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3} ref={dropRef}>
-      <ConfirmDialog
-        message={`You are about to cut all ${selfCut.length} ballkid${
-          selfCut.length > 1 ? "s" : ""
-        }. This will be publicly visible to all ballkids and captains.`}
-        url={"/api/cut-all"}
-        body={{
-          should_cut: true,
-          self_cut: true,
-        }}
-        open={open}
-        setOpen={setOpen}
-        setUpdated={refetchActive}
-      />
-
-      <Card
-        sx={{
-          mb: 2,
-          borderRadius: "16px",
-          border: isOver ? "2px solid #dc2626" : "1px solid",
-          borderColor: isOver ? "error.main" : "divider",
-          boxShadow: isOver ? "0 10px 25px -5px rgba(0, 0, 0, 0.05)" : "0 1px 3px 0 rgba(0, 0, 0, 0.02)"
-        }}
-        elevation={0}
-      >
-        <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 8, width: "100%" }}>
-            <Box
-              sx={{
-                minWidth: 0,
-                flex: "1 1 auto",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <Typography
-                component="span"
-                variant="h6"
-                sx={{
-                  display: "inline",
-                  fontWeight: 700,
-                  fontSize: "1.05rem",
-                  color: "#1e293b",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                Self-Cut
-              </Typography>
-              {" "}
-              <Typography
-                component="span"
-                variant="subtitle1"
-                sx={{
-                  opacity: 0.5,
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                ({selfCut.length})
-              </Typography>
-            </Box>
-            <Button
-              size="small"
-              color="error"
-              variant="contained"
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: "10px",
-                px: 2,
-                fontFamily: "Inter, sans-serif",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-              onClick={(e) => setOpen(true)}
-            >
-              Cut All
-            </Button>
-          </div>
-
-          <CutDecisionSectionList
-            ballkids={selfCut}
-            section="Self-Cut"
-            showHovercard={showHovercard}
-            patchCutBallkid={patchCutBallkid}
+    <CutDecisionCard
+      title="Self-Cut"
+      count={selfCut.length}
+      isOver={isOver}
+      dropRef={dropRef}
+      emptyMessage={emptyMessage}
+      dialog={
+        <ConfirmDialog
+          message={`You are about to cut all ${selfCut.length} ballkid${
+            selfCut.length > 1 ? "s" : ""
+          }. This will be publicly visible to all ballkids and captains.`}
+          url={"/api/cut-all"}
+          body={{
+            should_cut: true,
+            self_cut: true,
+          }}
+          open={open}
+          setOpen={setOpen}
+          setUpdated={refetchActive}
+        />
+      }
+      action={
+        selfCut.length === 0 && emptyMessage ? null : (
+          <CutBulkActionButton
+            shouldCut
+            label="Cut All"
+            onClick={() => setOpen(true)}
           />
-        </CardContent>
-      </Card>
-    </Grid>
+        )
+      }
+    >
+      <CutDecisionSectionList
+        ballkids={selfCut}
+        section="Self-Cut"
+        showHovercard={showHovercard}
+        patchCutBallkid={patchCutBallkid}
+      />
+    </CutDecisionCard>
   );
 }
 
@@ -615,52 +532,40 @@ export default function CutPageDesktop(props) {
   }, [refreshKey]);
 
   return (
-    <div className="page ballkid-list-page cut-page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page cut-page">
       <Banners />
 
-      <Alerts
-        successMsg={successMsg}
-        errorMsg={errorMsg}
-        setSuccessMsg={setSuccessMsg}
-        setErrorMsg={setErrorMsg}
+      <TeamsChairpersonPageHeader
+        title="Cut Page"
+        helpPage="Cut"
+        helpMessage={cut}
+        alerts={
+          <Alerts
+            successMsg={successMsg}
+            errorMsg={errorMsg}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+        }
+        actions={renderCopyButtons(active, emails, setSuccessMsg)}
+        toolbar={
+          <HovercardToggle
+            enabled={showHovercard}
+            setEnabled={setShowHovercard}
+          />
+        }
       />
 
-      <Box className="cut-page-top-bar">
-        <Box className="cut-page-top-bar__title">
-          <Typography
-            className="ballkid-list-title"
-            variant="h4"
-            component="h1"
-          >
-            Cut Page
-          </Typography>
-          <HelpIcon page="Cut" message={cut} />
-        </Box>
-
-        <Box className="cut-page-top-bar__end">
-          <Box className="cut-page-top-bar__actions">
-            {renderCopyButtons(active, emails, setSuccessMsg)}
-          </Box>
-
-          <Box className="cut-page-top-bar__toolbar-pills">
-            <HovercardToggle
-              enabled={showHovercard}
-              setEnabled={setShowHovercard}
-            />
-          </Box>
-        </Box>
-      </Box>
-
-      <Grid container className="justify-top cut-page-columns" spacing={3}>
+      <Grid container className="justify-top teams-chairperson-split" spacing={2}>
         <Grid
           item
-          sm={12}
+          xs={12}
           md={7}
-          lg={7}
-          xl={8}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
+          lg={8}
+          xl={9}
+          className="teams-chairperson-main"
         >
-          <Grid container spacing={2}>
+          <div className="teams-page-grid teams-chairperson-teams-grid">
             {sections.map((section) => (
               <CutStatusSection
                 key={section}
@@ -680,16 +585,16 @@ export default function CutPageDesktop(props) {
               patchCutBallkid={patchCutBallkid}
               refetchActive={refetchActive}
             />
-          </Grid>
+          </div>
         </Grid>
 
         <Grid
           item
-          sm={12}
+          xs={12}
           md={5}
-          lg={5}
-          xl={4}
-          style={{ maxHeight: "85vh", overflow: "auto" }}
+          lg={4}
+          xl={3}
+          className="teams-chairperson-sidebar ballkid-pool-panel-slot"
         >
           <ActiveSection
             active={active.filter((ballkid) => ballkid.cut_status === "")}

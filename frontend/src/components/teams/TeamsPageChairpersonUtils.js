@@ -438,37 +438,69 @@ export function renderTeams(assigned, teams, showHovercard, setUpdated) {
   );
 }
 
-export function Header({ topBarActions, showHovercard, setShowHovercard, isFinalsPage = false }) {
+export function Header({
+  topBarActions,
+  showHovercard,
+  setShowHovercard,
+  isFinalsPage = false,
+  showHovercardToggle = true,
+}) {
   const [tournament, setTournament] = useState();
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
+    if (isFinalsPage) {
+      return;
+    }
     fetch("/api/get-tournament", { method: "GET", headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setTournament(data));
-  }, []);
+  }, [isFinalsPage]);
 
-  return tournament === null || tournament === undefined ? "" : (
+  if (!isFinalsPage && (tournament === null || tournament === undefined)) {
+    return "";
+  }
+
+  const toolbarItems = (
+    <>
+      {!isFinalsPage ? (
+        <div className="teams-chairperson-pill">
+          <span className="teams-chairperson-pill-label">Visible to ballkids</span>
+          <HideShowToggle
+            teamType=""
+            defaultShow={tournament["show_teams"]}
+            setSuccessMsg={setSuccessMsg}
+            setErrorMsg={setErrorMsg}
+          />
+        </div>
+      ) : null}
+      {isFinalsPage && showHovercardToggle ? (
+        <HovercardToggle
+          enabled={showHovercard}
+          setEnabled={setShowHovercard}
+        />
+      ) : null}
+    </>
+  );
+
+  const hasToolbar =
+    (!isFinalsPage && tournament) || (isFinalsPage && showHovercardToggle);
+
+  return (
     <TeamsChairpersonPageHeader
       title={isFinalsPage ? "Finals Teams" : "Current Teams"}
       helpPage={isFinalsPage ? "Finals Teams" : "Teams"}
       helpMessage={isFinalsPage ? finalsTeams : teams}
-      alerts={<Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />}
-      toolbar={
-        <>
-          <div className="teams-chairperson-pill">
-            <span className="teams-chairperson-pill-label">Visible to ballkids</span>
-            <HideShowToggle
-              teamType={isFinalsPage ? "finals" : ""}
-              defaultShow={isFinalsPage ? tournament["show_finals_teams"] : tournament["show_teams"]}
-              setSuccessMsg={setSuccessMsg}
-              setErrorMsg={setErrorMsg}
-            />
-          </div>
-          {isFinalsPage ? <HovercardToggle enabled={showHovercard} setEnabled={setShowHovercard} /> : null}
-        </>
+      alerts={
+        <Alerts
+          successMsg={successMsg}
+          errorMsg={errorMsg}
+          setSuccessMsg={setSuccessMsg}
+          setErrorMsg={setErrorMsg}
+        />
       }
+      toolbar={hasToolbar ? toolbarItems : null}
       actions={topBarActions}
     />
   );

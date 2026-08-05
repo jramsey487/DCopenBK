@@ -8,6 +8,7 @@ import {
   BallkidPopover,
   CommentsText,
   Icons,
+  ballkidIconNodes,
 } from "./Utils";
 import "./ballkid-chip.css";
 import "./ballkid-row.css";
@@ -23,6 +24,18 @@ export function BallkidChipHandle() {
         </div>
       </div>
     </Tooltip>
+  );
+}
+
+function BallkidMetaIcons({ ballkid }) {
+  if (ballkidIconNodes(ballkid).length === 0) {
+    return null;
+  }
+
+  return (
+    <span className="badge-item ballkid-meta-icons">
+      <Icons ballkid={ballkid} margin={0} />
+    </span>
   );
 }
 
@@ -60,8 +73,16 @@ export function DraggableBallkidRow({
     }
   }, [showHovercard]);
 
+  const rowClass = [
+    "ballkid-row",
+    dense ? "ballkid-row--dense" : "",
+    actions ? "" : "ballkid-row--fit",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`ballkid-row${dense ? " ballkid-row--dense" : ""}`}>
+    <div className={rowClass}>
       <div
         ref={drag}
         className={`ballkid-chip${dense ? " ballkid-chip--dense" : ""}${
@@ -79,9 +100,7 @@ export function DraggableBallkidRow({
           </Box>
           <Box className="ballkid-chip__meta">
             <div className="badge-row">
-              <span className="badge-item ballkid-meta-icons">
-                <Icons ballkid={ballkid} margin={0} />
-              </span>
+              <BallkidMetaIcons ballkid={ballkid} />
               {commentTypes.map((commentType) => (
                 <CommentsText
                   key={commentType}
@@ -104,6 +123,36 @@ export function DraggableBallkidRow({
           setAnchorEl={setAnchorEl}
         />
       ) : null}
+    </div>
+  );
+}
+
+/** Split a ballkid list into two equal columns (cut active / teams unassigned). */
+export function DraggableBallkidRowTwoColumns({ ballkids, ...rowProps }) {
+  const midpoint = Math.ceil(ballkids.length / 2);
+  const leftColumn = ballkids.slice(0, midpoint);
+  const rightColumn = ballkids.slice(midpoint);
+
+  return (
+    <div className="ballkid-row-two-columns">
+      <div className="ballkid-row-two-columns__col ballkid-row-list">
+        {leftColumn.map((ballkid) => (
+          <DraggableBallkidRow
+            key={ballkid.id}
+            ballkid={ballkid}
+            {...rowProps}
+          />
+        ))}
+      </div>
+      <div className="ballkid-row-two-columns__col ballkid-row-list">
+        {rightColumn.map((ballkid) => (
+          <DraggableBallkidRow
+            key={ballkid.id}
+            ballkid={ballkid}
+            {...rowProps}
+          />
+        ))}
+      </div>
     </div>
   );
 }

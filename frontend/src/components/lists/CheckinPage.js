@@ -30,21 +30,24 @@ import { IconButton, TextField } from "@mui/material";
 import "./ballkid-list-by-name.css";
 import "./cut-page-desktop.css";
 import "./checkin-page.css";
+import "../teams/teams-page.css";
 import "../ballkid-badges.css";
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
   const checkinString = isCheckedIn ? "Check Out" : "Check In";
-  const color = isCheckedIn ? "error" : "success";
   const newCheckinStatus = isCheckedIn ? false : true;
 
   const [loading, setLoading] = useState(false);
 
   return (
     <LoadingButton
-      className="checkin-action-btn"
+      className={
+        isCheckedIn
+          ? "teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-action-btn"
+          : "teams-chairperson-team-btn teams-chairperson-team-btn--keep checkin-action-btn"
+      }
       variant="outlined"
       loading={loading}
-      color={color}
       size="small"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
@@ -81,7 +84,7 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
   return useIsMobile() ? (
     ""
   ) : ballkid.is_checked_in ? (
-    <CommentsText ballkid={ballkid} commentType="checkout" layout={layout} />
+    <CommentsText ballkid={ballkid} commentType="checkout" />
   ) : layout === "grid" ? (
     <Box className="checkin-card-field" sx={{ mt: 1 }}>
       <Typography variant="caption" className="checkin-card-field__label">
@@ -407,6 +410,15 @@ function renderBallkids(ballkids, isCheckedIn, layout, setUpdated) {
           <div className="ballkid-list-card-wrap" key={ballkid.id}>
             <BallkidCard
               ballkid={ballkid}
+              renderNameTrailing={
+                isCheckedIn ? (
+                  <CheckoutComments
+                    ballkid={ballkid}
+                    layout={layout}
+                    setUpdated={setUpdated}
+                  />
+                ) : null
+              }
               renderAdditional={
                 <Box className="checkin-card-actions checkin-card-actions--grid">
                   <CheckinButton
@@ -414,16 +426,20 @@ function renderBallkids(ballkids, isCheckedIn, layout, setUpdated) {
                     isCheckedIn={isCheckedIn}
                     setUpdated={setUpdated}
                   />
-                  <LastDayComments
-                    ballkid={ballkid}
-                    layout={layout}
-                    setUpdated={setUpdated}
-                  />
-                  <CheckoutComments
-                    ballkid={ballkid}
-                    layout={layout}
-                    setUpdated={setUpdated}
-                  />
+                  {!isCheckedIn ? (
+                    <>
+                      <LastDayComments
+                        ballkid={ballkid}
+                        layout={layout}
+                        setUpdated={setUpdated}
+                      />
+                      <CheckoutComments
+                        ballkid={ballkid}
+                        layout={layout}
+                        setUpdated={setUpdated}
+                      />
+                    </>
+                  ) : null}
                 </Box>
               }
             />
@@ -472,7 +488,7 @@ export default function CheckinPage(props) {
   }, [updated]);
 
   return (
-    <div className="page ballkid-list-page checkin-page">
+    <div className="page ballkid-list-page checkin-page teams-page-shell">
       <Banners />
 
       <ConfirmDialog
@@ -520,9 +536,9 @@ export default function CheckinPage(props) {
           </div>
           {checkedIn.length > 0 ? (
             <Button
-              className="checkin-checkout-all-btn"
-              variant="contained"
-              color="error"
+              className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-checkout-all-btn"
+              variant="outlined"
+              size="small"
               onClick={() => setOpen(true)}
             >
               Check out all

@@ -18,13 +18,13 @@ import {
 } from "../Utils";
 import { inactive } from "../HelpMessages";
 import "./ballkid-list-by-name.css";
+import "../teams/teams-page.css";
 
 function renderUnarchiveButton(ballkid, setUpdated) {
   return (
     <Button
-      className="ballkid-list-action-btn"
+      className="teams-chairperson-team-btn teams-chairperson-team-btn--keep ballkid-list-action-btn"
       variant="outlined"
-      color="success"
       size="small"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
@@ -51,9 +51,8 @@ function renderUnarchiveButton(ballkid, setUpdated) {
 function renderUncutButton(ballkid, setUpdated) {
   return (
     <Button
-      className="ballkid-list-action-btn"
+      className="teams-chairperson-team-btn teams-chairperson-team-btn--keep ballkid-list-action-btn"
       variant="outlined"
-      color="success"
       size="small"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
@@ -136,7 +135,7 @@ export default function InactiveBallkidList(props) {
   }, [updated]);
 
   return (
-    <div className="page ballkid-list-page">
+    <div className="page ballkid-list-page teams-page-shell">
       <Banners />
 
       <Box

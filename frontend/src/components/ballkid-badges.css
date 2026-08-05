@@ -13,6 +13,11 @@
   line-height: 0;
 }
 
+.ballkid-meta-icons:empty,
+.ballkid-meta-icons .MuiIcon-root:empty {
+  display: none;
+}
+
 .ballkid-pill {
   display: inline-flex;
   align-items: center;

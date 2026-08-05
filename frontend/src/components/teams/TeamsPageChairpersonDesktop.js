@@ -20,7 +20,7 @@ import {
   renderCheckoutUnassignedButton,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
-import { DraggableBallkidRow } from "../BallkidChip";
+import { DraggableBallkidRowTwoColumns } from "../BallkidChip";
 
 export function UnassignedPanel({
   unassigned,
@@ -66,9 +66,8 @@ export function UnassignedPanel({
       component={Paper}
       ref={dropRef}
       elevation={0}
-      className="cut-page-active-panel teams-chairperson-unassigned-panel"
+      className="ballkid-pool-panel teams-chairperson-unassigned-panel cut-page-active-panel"
       sx={{
-        borderRadius: "16px",
         border: isOver ? "2px solid #2563eb" : "1px solid",
         borderColor: isOver ? "primary.main" : "divider",
         backgroundColor: "background.paper",
@@ -90,20 +89,7 @@ export function UnassignedPanel({
         setUpdated={setUpdated}
       />
 
-      <Box
-        className="teams-chairperson-unassigned-panel__head"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 1,
-          mb: 1.5,
-          pb: 1.5,
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
+      <Box className="ballkid-pool-panel__head teams-chairperson-unassigned-panel__head">
         <Box className="sxs" sx={{ alignItems: "center" }}>
           <Typography
             variant="h6"
@@ -144,7 +130,7 @@ export function UnassignedPanel({
         Drag ballkids onto a team card to assign them, or drop here to unassign.
       </Typography>
 
-      <Box className="teams-chairperson-unassigned-search" sx={{ mb: 2.5, width: "100%", minWidth: 0 }}>
+      <Box className="ballkid-pool-panel__search teams-chairperson-unassigned-search">
         <SearchAndFilter
           stacked
           setSearchKeyword={setSearchKeyword}
@@ -172,7 +158,10 @@ export function UnassignedPanel({
           ).filter((ballkid) => ballkid.position === position);
 
           return (
-            <div className="teams-chairperson-position-block" key={position}>
+            <div
+              className="ballkid-pool-position-block teams-chairperson-position-block"
+              key={position}
+            >
               <div className="cut-page-section-label">
                 <Typography
                   variant="subtitle2"
@@ -204,23 +193,18 @@ export function UnassignedPanel({
                   No {position.toLowerCase()}s in this pool.
                 </div>
               ) : (
-                <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel ballkid-row-grid">
-                  {ballkids.map((ballkid) => (
-                    <DraggableBallkidRow
-                      key={ballkid.id}
-                      ballkid={ballkid}
-                      commentTypes={
-                        isFinalsPage ? ["rank", "experience"] : ["checkout_teams"]
-                      }
-                      showHovercard={showHovercard}
-                      hoverCommentTypes={
-                        isFinalsPage
-                          ? ["experience", "rank", "calibrated_avg"]
-                          : []
-                      }
-                    />
-                  ))}
-                </div>
+                <DraggableBallkidRowTwoColumns
+                  ballkids={ballkids}
+                  commentTypes={
+                    isFinalsPage ? ["rank", "experience"] : ["checkout_teams"]
+                  }
+                  showHovercard={showHovercard}
+                  hoverCommentTypes={
+                    isFinalsPage
+                      ? ["experience", "rank", "calibrated_avg"]
+                      : []
+                  }
+                />
               )}
             </div>
           );

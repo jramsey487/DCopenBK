@@ -103,6 +103,7 @@
     min-height: 30px;
     border-radius: 10px;
     align-items: stretch;
+    overflow: visible;
   }
   
   .ballkid-chip--dense .ballkid-chip__handle {
@@ -123,6 +124,7 @@
   
   .ballkid-chip--dense .ballkid-chip__content {
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 6px;
     padding: 4px 6px 4px 4px;
@@ -143,19 +145,23 @@
     align-items: center;
     gap: 3px;
   }
-  
+
   .ballkid-chip--dense .ballkid-chip__name {
-    flex: 0 1 auto;
-    min-width: 0;
+    flex: 0 0 auto;
+    min-width: max-content;
     font-size: 0.78rem;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    line-height: 1.25;
   }
-  
+
+  .ballkid-chip--dense .ballkid-chip__name a {
+    white-space: nowrap;
+  }
+
   .ballkid-chip--dense .ballkid-chip__meta {
-    flex: 0 1 auto;
-    max-width: 58%;
+    flex: 0 0 auto;
+    max-width: none;
     min-width: 0;
   }
   

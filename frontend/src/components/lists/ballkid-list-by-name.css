@@ -261,7 +261,8 @@
     overflow: visible !important;
   }
 
-  .ballkid-list-page .ballkid-list-action-btn.MuiButton-root {
+  .ballkid-list-page
+    .ballkid-list-action-btn.MuiButton-root:not(.teams-chairperson-team-btn) {
     border-radius: 8px !important;
     font-weight: 600 !important;
     font-size: 13px !important;
@@ -273,7 +274,8 @@
     font-family: inherit;
   }
 
-  .ballkid-list-page .ballkid-list-action-btn.MuiButton-outlined {
+  .ballkid-list-page
+    .ballkid-list-action-btn.MuiButton-outlined:not(.teams-chairperson-team-btn) {
     border-width: 1px !important;
   }
 
