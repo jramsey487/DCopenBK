@@ -1,66 +1,50 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import Switch from "@mui/material/Switch";
-
 import {
   LayoutButtons,
   getAuthHeader,
-  RatingButton,
   getLocalStorage,
   BallkidCard,
   setLocalStorage,
-  HelpIcon,
-  Banners,
   getDay,
-  DraftRatingButton,
 } from "../Utils";
-import { MARGINS } from "../Consts";
 import { rateByPastTeam } from "../HelpMessages";
+import {
+  RatingsPageShell,
+  FilterTogglePill,
+  RateBallkidMeta,
+  RateActionButton,
+} from "./RatingsPageShared";
 
-// Date is the default date for which to give the ballkid a rating
-function renderBallkid(ballkid, layout, setUpdated, date = null) {
-  return ballkid === undefined || ballkid === null ? (
-    ""
-  ) : (
-    <Grid
-      item
-      key={ballkid.id}
-      xs={layout === "grid" ? 6 : 12}
-      sm={layout === "grid" ? 4 : 12}
-      md={layout === "grid" ? 3 : 12}
-      lg={layout === "grid" ? 2 : 12}
-      xl={layout === "grid" ? 1 : 12}
-    >
+function BallkidTile({ ballkid, setUpdated, date = null }) {
+  if (!ballkid) {
+    return null;
+  }
+
+  return (
+    <div className="ballkid-list-card-wrap">
       <BallkidCard
         ballkid={ballkid}
         renderAdditional={
-          <Box textAlign="center" sx={{ mt: layout === "grid" ? 1 : 0 }}>
-            {ballkid.have_draft ? (
-              <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
-            ) : (
-              <RatingButton
+          <div className="rate-card-actions">
+            <div className="rate-card-actions__btn">
+              <RateActionButton
                 ballkid={ballkid}
                 setUpdated={setUpdated}
                 date={date}
               />
-            )}
-            <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-              My total ratings:{" "}
-              <Box fontWeight="fontWeightRegular" display="inline">
-                {ballkid.num_my_ratings}
-              </Box>
-            </Typography>
-          </Box>
+            </div>
+            <RateBallkidMeta
+              lines={[`My total ratings: ${ballkid.num_my_ratings}`]}
+            />
+          </div>
         }
       />
-    </Grid>
+    </div>
   );
 }
 
-export default function RateByPastTeamPage(props) {
+export default function RateByPastTeamPage() {
   const [ballkids, setBallkids] = useState([]);
   const [unratedBallkids, setUnratedBallkids] = useState([]);
   const [pastTeams, setPastTeams] = useState({});
@@ -90,56 +74,70 @@ export default function RateByPastTeamPage(props) {
       .then(() => setUpdated(false));
   }, [pk, updated]);
 
+  const pool = showUnrated ? unratedBallkids : ballkids;
+  const dates = Object.keys(pastTeams);
+
   return (
-    <div className="page">
-      <Banners />
-
-      <div className="justify">
-        <Box className="sxs" sx={{ mb: 1 }}>
-          <Typography variant="h4">Rate by Past Team</Typography>
-          &thinsp;
-          <HelpIcon page="Rate by Past Team" message={rateByPastTeam} />
-        </Box>
-
-        <LayoutButtons layout={layout} setLayout={setLayout} />
-      </div>
-
-      <div className="sxs">
-        <Typography variant="body1">Show All Ballkids</Typography>
-        <Switch
-          checked={showUnrated}
-          onClick={(e) => {
-            setShowUnrated(e.target.checked);
-            setLocalStorage("showUnrated", e.target.checked);
-          }}
-        />
-        <Typography variant="body1">Show Ballkids to Rate</Typography>
-      </div>
-
-      {Object.keys(pastTeams).length === 0 ? (
-        <Typography>There are no past teams to show.</Typography>
+    <RatingsPageShell
+      className="rate-by-past-team-page"
+      title="Rate by Past Team"
+      helpPage="Rate by Past Team"
+      helpMessage={rateByPastTeam}
+      toolbar={
+        <>
+          <FilterTogglePill
+            checked={showUnrated}
+            onChange={(checked) => {
+              setShowUnrated(checked);
+              setLocalStorage("showUnrated", checked);
+            }}
+            offLabel="All ballkids"
+            onLabel="To rate"
+          />
+          <LayoutButtons layout={layout} setLayout={setLayout} />
+        </>
+      }
+    >
+      {dates.length === 0 ? (
+        <div className="rate-empty">There are no past teams to show.</div>
       ) : (
-        Object.keys(pastTeams).map((date) => (
-          <div key={date}>
-            <Typography variant="h5" sx={MARGINS}>
-              {date}
-            </Typography>
+        dates.map((date) => {
+          const members = pastTeams[date]
+            .map((ballkidId) => pool.find((ballkid) => ballkid.id === ballkidId))
+            .filter(Boolean);
 
-            <Grid container spacing={layout === "grid" ? 2 : 1}>
-              {pastTeams[date].map((ballkidId) =>
-                renderBallkid(
-                  (showUnrated ? unratedBallkids : ballkids).find(
-                    (ballkid) => ballkid.id === ballkidId
-                  ),
-                  layout,
-                  setUpdated,
-                  getDay(date)
-                )
+          return (
+            <section className="rate-past-section" key={date}>
+              <div className="rate-past-section-head">
+                <h2 className="rate-past-section-title">{date}</h2>
+                <span className="ballkid-list-count">({members.length})</span>
+              </div>
+              {members.length === 0 ? (
+                <div className="rate-empty">
+                  No ballkids match the current filter for this day.
+                </div>
+              ) : (
+                <div
+                  className={
+                    layout === "grid"
+                      ? "ballkid-list-grid"
+                      : "ballkid-list-stack"
+                  }
+                >
+                  {members.map((ballkid) => (
+                    <BallkidTile
+                      key={`${date}-${ballkid.id}`}
+                      ballkid={ballkid}
+                      setUpdated={setUpdated}
+                      date={getDay(date)}
+                    />
+                  ))}
+                </div>
               )}
-            </Grid>
-          </div>
-        ))
+            </section>
+          );
+        })
       )}
-    </div>
+    </RatingsPageShell>
   );
 }

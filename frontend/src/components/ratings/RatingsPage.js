@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Switch from "@mui/material/Switch";
 import Link from "@mui/material/Link";
 import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { HelpIcon, Banners, getAuthHeader, getCurrentYear } from "../Utils";
+import { getAuthHeader, getCurrentYear } from "../Utils";
 import { viewRatings } from "../HelpMessages";
 import RatingsGrid from "./RatingsGrid";
+import {
+  RatingsPageShell,
+  RatingsGridPanel,
+  YearPillControl,
+  RatingsModeToggle,
+} from "./RatingsPageShared";
 
-export default function RatingsPage(props) {
+export default function RatingsPage() {
   const [ratings, setRatings] = useState([]);
   const [year, setYear] = useState(getCurrentYear());
 
@@ -33,9 +35,9 @@ export default function RatingsPage(props) {
   }, [year, updated]);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`/api/calibrated-ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => {
-        setLoading(false);
         if (response.status === 203) {
           setCalibrationWarning(
             "Warning: Insufficient data for effective overall calibration."
@@ -49,32 +51,51 @@ export default function RatingsPage(props) {
         }
         return response.json();
       })
-      .then((data) => setCalibrated(data));
+      .then((data) => setCalibrated(data))
+      .finally(() => setLoading(false));
   }, [year]);
 
+  const handleModeChange = (checked) => {
+    setShowCalibrated(checked);
+    setShowCalibrationWarning(checked);
+  };
+
   return (
-    <div className="page">
-      <Banners />
-
-      <Box className="sxs" sx={{ mb: 2 }}>
-        <Typography variant="h4">View Ratings</Typography>
-        &thinsp;
-        <HelpIcon page="View Ratings" message={viewRatings} />
-      </Box>
-
-      <Box className="sxs" sx={{ mb: 2 }}>
-        <Typography variant="body1">Showing ratings for: &thinsp;</Typography>
-        <TextField
-          variant="standard"
-          value={year}
-          type="number"
-          sx={{ mx: 2, maxWidth: "100px" }}
-          onChange={(e) => setYear(e.target.value)}
-        />
-      </Box>
-
+    <RatingsPageShell
+      title="View Ratings"
+      helpPage="View Ratings"
+      helpMessage={viewRatings}
+      toolbar={
+        <>
+          <YearPillControl
+            id="view-ratings-year"
+            label="Year"
+            value={year}
+            onChange={setYear}
+          />
+          <RatingsModeToggle
+            showCalibrated={showCalibrated}
+            onChange={handleModeChange}
+          />
+        </>
+      }
+      footer={
+        <>
+          For more information on how calibration is done, see{" "}
+          <Link
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
+          >
+            here
+          </Link>
+          .
+        </>
+      }
+    >
       <Collapse in={showCalibrationWarning && calibrationWarning !== ""}>
         <Alert
+          className="ratings-alert"
           severity="warning"
           onClose={() => setShowCalibrationWarning(false)}
         >
@@ -82,36 +103,18 @@ export default function RatingsPage(props) {
         </Alert>
       </Collapse>
 
-      <div className="sxs">
-        <Typography variant="body1">Raw Ratings</Typography>
-        <Switch
-          checked={showCalibrated}
-          onClick={(e) => {
-            setShowCalibrated(e.target.checked);
-            setShowCalibrationWarning(e.target.checked);
-          }}
-        />
-        <Typography variant="body1">Calibrated Ratings</Typography>
-      </div>
       {showCalibrated && loading ? (
-        <CircularProgress className="center-div" size={30} />
+        <RatingsGridPanel loading>
+          <CircularProgress size={28} />
+        </RatingsGridPanel>
       ) : (
-        <RatingsGrid
-          ratings={showCalibrated ? calibrated : ratings}
-          setUpdated={setUpdated}
-        />
+        <RatingsGridPanel>
+          <RatingsGrid
+            ratings={showCalibrated ? calibrated : ratings}
+            setUpdated={setUpdated}
+          />
+        </RatingsGridPanel>
       )}
-
-      <Typography variant="body2" sx={{ mt: 1 }}>
-        For more information on how calibration is done, see{" "}
-        <Link
-          target="_blank"
-          href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
-        >
-          here
-        </Link>
-        .
-      </Typography>
-    </div>
+    </RatingsPageShell>
   );
 }

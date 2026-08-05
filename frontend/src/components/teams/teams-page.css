@@ -285,6 +285,7 @@
     line-height: 0;
   }
 
+  .year-pill-control,
   .past-finals-year-control {
     display: flex;
     align-items: center;
@@ -295,12 +296,14 @@
     border-radius: 20px;
   }
 
+  .year-pill-label,
   .past-finals-year-label {
     font-size: 13px;
     font-weight: 500;
     color: var(--tp-text2);
   }
 
+  .year-pill-input,
   .past-finals-year-input {
     width: 72px;
     font-family: inherit;
@@ -314,12 +317,15 @@
     -moz-appearance: textfield;
   }
 
+  .year-pill-input::-webkit-outer-spin-button,
+  .year-pill-input::-webkit-inner-spin-button,
   .past-finals-year-input::-webkit-outer-spin-button,
   .past-finals-year-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
 
+  .year-pill-input:focus,
   .past-finals-year-input:focus {
     outline: none;
   }
@@ -1011,6 +1017,7 @@
     }
 
     .teams-page-shell .teams-page-photo-toggle,
+    .teams-page-shell .year-pill-control,
     .teams-page-shell .past-finals-year-control {
       width: 100%;
       justify-content: space-between;

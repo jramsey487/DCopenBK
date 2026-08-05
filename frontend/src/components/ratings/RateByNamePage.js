@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-
 import {
   LayoutButtons,
   getAuthHeader,
-  RatingButton,
   getLocalStorage,
-  useIsMobile,
   SearchAndFilter,
   filterBallkids,
   BallkidCard,
-  HelpIcon,
-  Banners,
-  DraftRatingButton,
-  renderSwitch,
 } from "../Utils";
 import { rateByName, rateByNameNonchairperson } from "../HelpMessages";
+import {
+  RatingsPageShell,
+  FilterTogglePill,
+  RateBallkidMeta,
+  RateActionButton,
+} from "./RatingsPageShared";
 
 function getBallkidsToRender(
   ballkids,
@@ -30,34 +26,25 @@ function getBallkidsToRender(
 ) {
   const pk = getLocalStorage("ballkid_id");
 
-  // If teams are hidden and they are saying to show their team, then don't show anyone
-  // regardless of captain or chairperson
   if (showTeam && !tournamentShowTeams) {
     return [];
   }
 
-  // If ballkid is unassigned and they are saying to show their team, then don't show anyone
   if (myTeam === 0 && showTeam) {
     return [];
   }
 
-  var ballkidsToRender = ballkids;
-  // If showUnrated is not checked, then show all. Otherwise only show ballkids who have not
-  // yet been rated by the checked in captain
+  let ballkidsToRender = ballkids;
   ballkidsToRender = !showUnrated
     ? ballkidsToRender
     : ballkidsToRender.filter(
         (ballkid) => ballkid.num_my_ratings === 0 && ballkid.id !== pk
       );
 
-  // If showTeam is not checked, then show all. Otherwise only show the ballkid's currently
-  // assigned team
   ballkidsToRender = !showTeam
     ? ballkidsToRender
     : ballkidsToRender.filter((ballkid) => ballkid.current_team === myTeam);
 
-  // If showDrafts is not checked, then show all. Otherwise only show the ballkids who have
-  // saved ratings drafts for them
   ballkidsToRender = !showDrafts
     ? ballkidsToRender
     : ballkidsToRender.filter((ballkid) => ballkid.have_draft === true);
@@ -66,74 +53,51 @@ function getBallkidsToRender(
 }
 
 function BallkidsSection({ ballkids, layout, setUpdated }) {
-  const isMobile = useIsMobile();
   const isChairperson = getLocalStorage("group") === "chairperson";
+  const myId = getLocalStorage("ballkid_id");
 
-  return ballkids.length === 0 ? (
-    <Typography variant="body1">There are no ballkids to rate.</Typography>
-  ) : (
-    <Grid container spacing={layout === "grid" ? 2 : 1}>
+  if (ballkids.length === 0) {
+    return <div className="rate-empty">There are no ballkids to rate.</div>;
+  }
+
+  return (
+    <div
+      className={
+        layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+      }
+    >
       {ballkids.map((ballkid) => (
-        <Grid
-          item
-          key={ballkid.id}
-          xs={layout === "grid" ? 6 : 12}
-          sm={layout === "grid" ? 4 : 12}
-          md={layout === "grid" ? 3 : 12}
-          lg={layout === "grid" ? 2 : 12}
-          xl={layout === "grid" ? 1 : 12}
-        >
+        <div className="ballkid-list-card-wrap" key={ballkid.id}>
           <BallkidCard
             ballkid={ballkid}
             renderAdditional={
-              <Box textAlign="center" sx={{ mt: layout === "grid" ? 1 : 0 }}>
-                {ballkid.id === getLocalStorage("ballkid_id") ? (
-                  ""
-                ) : ballkid.have_draft ? (
-                  <DraftRatingButton
+              <div className="rate-card-actions">
+                <div className="rate-card-actions__btn">
+                  <RateActionButton
                     ballkid={ballkid}
                     setUpdated={setUpdated}
                   />
-                ) : (
-                  <RatingButton
-                    ballkid={ballkid}
-                    setUpdated={setUpdated}
-                    isMobile={isMobile}
-                  />
-                )}
-
-                <Box>
-                  {!isChairperson ? (
-                    ""
-                  ) : (
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      Total ratings:{" "}
-                      <Box fontWeight="fontWeightRegular" display="inline">
-                        {ballkid.num_ratings}
-                      </Box>
-                    </Typography>
-                  )}
-                  {ballkid.id === getLocalStorage("ballkid_id") ? (
-                    ""
-                  ) : (
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      My total ratings:{" "}
-                      <Box fontWeight="fontWeightRegular" display="inline">
-                        {ballkid.num_my_ratings}
-                      </Box>
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
+                </div>
+                <RateBallkidMeta
+                  lines={[
+                    isChairperson
+                      ? `Total ratings: ${ballkid.num_ratings}`
+                      : null,
+                    `My total ratings: ${
+                      ballkid.id === myId ? "—" : ballkid.num_my_ratings
+                    }`,
+                  ]}
+                />
+              </div>
             }
           />
-        </Grid>
+        </div>
       ))}
-    </Grid>
+    </div>
   );
 }
 
-export default function RateByNamePage(props) {
+export default function RateByNamePage() {
   const [ballkids, setBallkids] = useState([]);
   const [myTeam, setMyTeam] = useState();
   const [tournamentShowTeams, setTournamentShowTeams] = useState(false);
@@ -167,90 +131,67 @@ export default function RateByNamePage(props) {
       .then(() => setUpdated(false));
   }, [pk, updated]);
 
-  return (
-    <div className="page">
-      <Banners />
+  const visibleBallkids = filterBallkids(
+    getBallkidsToRender(
+      ballkids,
+      showUnrated,
+      showTeam,
+      showDrafts,
+      myTeam,
+      tournamentShowTeams
+    ),
+    searchKeyword,
+    filterGroup
+  );
 
-      <div className="justify">
-        <Box className="sxs" sx={{ mb: 1 }}>
-          <Typography variant="h4">Rate by Name</Typography>
-          &ensp;
-          <Typography variant="h6">
-            (
-            {
-              filterBallkids(
-                getBallkidsToRender(
-                  ballkids,
-                  showUnrated,
-                  showTeam,
-                  showDrafts,
-                  myTeam,
-                  tournamentShowTeams
-                ),
-                searchKeyword,
-                filterGroup
-              ).length
-            }
-            )
-          </Typography>
-          &thinsp;
-          <HelpIcon
-            page="Rate by Name"
-            message={isChairperson ? rateByName : rateByNameNonchairperson}
+  return (
+    <RatingsPageShell
+      className="rate-by-name-page"
+      title="Rate by Name"
+      titleExtra={
+        <span className="ballkid-list-count">({visibleBallkids.length})</span>
+      }
+      helpPage="Rate by Name"
+      helpMessage={isChairperson ? rateByName : rateByNameNonchairperson}
+      toolbar={
+        <>
+          <FilterTogglePill
+            checked={showUnrated}
+            onChange={setShowUnrated}
+            offLabel="All ballkids"
+            onLabel="To rate"
           />
-        </Box>
-        <LayoutButtons layout={layout} setLayout={setLayout} />
+          <FilterTogglePill
+            checked={showTeam}
+            onChange={setShowTeam}
+            offLabel="All teams"
+            onLabel="My team"
+          />
+          <FilterTogglePill
+            checked={showDrafts}
+            onChange={setShowDrafts}
+            offLabel="All"
+            onLabel="Drafts only"
+          />
+          <LayoutButtons layout={layout} setLayout={setLayout} />
+        </>
+      }
+    >
+      <div className="ballkid-list-toolbar rate-toolbar">
+        <div className="ballkid-list-toolbar-search">
+          <SearchAndFilter
+            setSearchKeyword={setSearchKeyword}
+            filterGroup={filterGroup}
+            setFilterGroup={setFilterGroup}
+          />
+        </div>
       </div>
 
-      <Grid container>
-        <Grid item className="sxs" xs={12} sm={12} md={6} lg={4} xl={3}>
-          {renderSwitch(
-            showUnrated,
-            setShowUnrated,
-            "Show All Ballkids",
-            "Show Ballkids to Rate"
-          )}
-        </Grid>
-        <Grid item className="sxs" xs={12} sm={12} md={6} lg={4} xl={3}>
-          {renderSwitch(
-            showTeam,
-            setShowTeam,
-            "Show All Teams",
-            "Show My Team Only"
-          )}
-        </Grid>
-        <Grid item className="sxs" xs={12} sm={12} md={6} lg={4} xl={3}>
-          {renderSwitch(
-            showDrafts,
-            setShowDrafts,
-            "Show All Ballkids",
-            "Show Draft Ratings Only",
-            "showUnrated"
-          )}
-        </Grid>
-      </Grid>
-
-      <SearchAndFilter
-        setSearchKeyword={setSearchKeyword}
-        filterGroup={filterGroup}
-        setFilterGroup={setFilterGroup}
-      />
       <BallkidsSection
-        ballkids={filterBallkids(
-          getBallkidsToRender(
-            ballkids,
-            showUnrated,
-            showTeam,
-            showDrafts,
-            myTeam,
-            tournamentShowTeams
-          ),
-          searchKeyword,
-          filterGroup
-        )}
+        ballkids={visibleBallkids}
         layout={layout}
         setUpdated={setUpdated}
       />
-    </div>
+    </RatingsPageShell>
   );
 }

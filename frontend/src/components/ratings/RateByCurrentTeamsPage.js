@@ -1,77 +1,26 @@
 import React, { useState, useEffect } from "react";
 
-import Button from "@mui/material/Button";
-
 import {
   getAuthHeader,
-  RatingButton,
   getLocalStorage,
   isCurrentHour,
   CourtAssignment,
   BallkidAndIcon,
-  Banners,
-  DraftRatingButton,
   ballkidImageSrc,
   Icons,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { rateByCurrentTeam } from "../HelpMessages";
-import { TeamsPageTopBar } from "../teams/TeamsChairpersonShared";
-import { TeamsPhotoToggle } from "../teams/TeamsShared";
-import "./rate-by-current-team.css";
+import { TeamsPhotoToggle, personInitials } from "../teams/TeamsShared";
+import { RatingsPageShell, RateActionButton } from "./RatingsPageShared";
 
-function personInitials(firstName, lastName) {
-  const f = (firstName ?? "").trim()[0] ?? "";
-  const l = (lastName ?? "").trim()[0] ?? "";
-  return (f + l).toUpperCase() || "?";
-}
-
-function RatingActionButton({ ballkid, setUpdated }) {
-  if (ballkid.id === getLocalStorage("ballkid_id")) {
-    return (
-      <Button
-        variant="outlined"
-        disableElevation
-        disabled
-        size="small"
-        sx={{
-          fontFamily:
-            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          fontWeight: 600,
-          fontSize: 13,
-          letterSpacing: "0.03em",
-          borderRadius: "8px",
-          px: 2.25,
-          py: 0.75,
-          color: "#94a3b8",
-          borderColor: "#e2e8f0",
-          backgroundColor: "#fff",
-          "&.Mui-disabled": {
-            color: "#94a3b8",
-            borderColor: "#e2e8f0",
-            backgroundColor: "#fff",
-          },
-        }}
-      >
-        GIVE RATING
-      </Button>
-    );
-  }
-
-  return ballkid.have_draft ? (
-    <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
-  ) : (
-    <RatingButton ballkid={ballkid} setUpdated={setUpdated} />
-  );
-}
-
-function PersonPhotoTile({ ballkid, setUpdated }) {
+function RatePersonPhotoTile({ ballkid, setUpdated }) {
   const src = ballkidImageSrc(ballkid.image);
   const [failed, setFailed] = useState(false);
 
   return (
-    <div className="rbt-photo-tile">
-      <div className="rbt-photo-avatar">
+    <div className="team-photo-tile rate-photo-tile">
+      <div className="team-photo-avatar">
         {src && !failed ? (
           <img
             src={src}
@@ -83,15 +32,14 @@ function PersonPhotoTile({ ballkid, setUpdated }) {
           personInitials(ballkid.first_name, ballkid.last_name)
         )}
       </div>
-      <span className="rbt-photo-name">
+      <span className="team-photo-name">
         {ballkid.first_name} {ballkid.last_name}
       </span>
-      <span className="rbt-photo-role-icons">
-        <Icons ballkid={ballkid} margin={0} isTeamsPage />
+      <span className="team-photo-role-icons">
+        <Icons ballkid={ballkid} margin={0} />
       </span>
-
-      <div className="rbt-photo-tile-action">
-        <RatingActionButton ballkid={ballkid} setUpdated={setUpdated} />
+      <div className="rate-photo-tile-action">
+        <RateActionButton ballkid={ballkid} setUpdated={setUpdated} />
       </div>
     </div>
   );
@@ -103,46 +51,46 @@ function Team({ team, assigned, nextShifts, setUpdated, showPhotos, isMyTeam }) 
 
   return (
     <div
-      className={`rbt-team-card${isMyTeam ? " is-mine" : ""}${
+      className={`team-card${isMyTeam ? " is-mine" : ""}${
         isCurrentlyOn ? " is-on-court" : ""
       }`}
     >
-      <div className="rbt-team-card-head">
-        <div className="rbt-team-card-title-group">
-          <span className="rbt-team-card-title">Team {team}</span>
-          <span className="rbt-team-card-count">({assigned.length})</span>
+      <div className="team-card-head">
+        <div className="team-card-title-group">
+          <span className="team-card-title">Team {team}</span>
+          <span className="team-card-count">({assigned.length})</span>
           {isCurrentlyOn ? (
-            <span className="rbt-team-card-oncourt-badge">On court</span>
+            <span className="team-card-oncourt-badge">On court</span>
           ) : null}
         </div>
-        <span className="rbt-team-card-assignment">
+        <span className="team-card-assignment">
           <CourtAssignment nextShifts={nextShifts} />
         </span>
       </div>
 
-      <div className="rbt-team-card-body">
+      <div className="team-card-body">
         {POSITIONS.map((position) => {
           const positionAssigned = assigned.filter(
             (ballkid) => ballkid.position === position
           );
 
           return (
-            <div className="rbt-position-block" key={position}>
-              <div className="rbt-position-head">
-                <span className="rbt-position-label">{position}s</span>
-                <span className="rbt-position-count">
+            <div className="team-position-block" key={position}>
+              <div className="team-position-head">
+                <span className="team-position-label">{position}s</span>
+                <span className="team-position-count">
                   ({positionAssigned.length})
                 </span>
               </div>
 
               {positionAssigned.length === 0 ? (
-                <div className="rbt-position-empty">
+                <div className="team-position-empty">
                   No {position.toLowerCase()}s assigned yet.
                 </div>
               ) : showPhotos ? (
-                <div className="rbt-photo-grid">
+                <div className="team-photo-grid">
                   {positionAssigned.map((ballkid) => (
-                    <PersonPhotoTile
+                    <RatePersonPhotoTile
                       key={ballkid.id}
                       ballkid={ballkid}
                       setUpdated={setUpdated}
@@ -150,11 +98,11 @@ function Team({ team, assigned, nextShifts, setUpdated, showPhotos, isMyTeam }) 
                   ))}
                 </div>
               ) : (
-                <div className="rbt-member-list">
+                <div className="team-member-list">
                   {positionAssigned.map((ballkid) => (
-                    <div className="rbt-member-row" key={ballkid.id}>
+                    <div className="rate-team-member-row" key={ballkid.id}>
                       <BallkidAndIcon ballkid={ballkid} />
-                      <RatingActionButton
+                      <RateActionButton
                         ballkid={ballkid}
                         setUpdated={setUpdated}
                       />
@@ -170,7 +118,7 @@ function Team({ team, assigned, nextShifts, setUpdated, showPhotos, isMyTeam }) 
   );
 }
 
-export default function RateByCurrentTeamsPage(props) {
+export default function RateByCurrentTeamsPage() {
   const [assigned, setAssigned] = useState([]);
   const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -225,27 +173,24 @@ export default function RateByCurrentTeamsPage(props) {
   });
 
   return (
-    <div className="page ballkid-list-page rbt-page-shell">
-      <Banners />
-
-      <TeamsPageTopBar
-        title="Rate by Current Team"
-        helpPage="Rate by Current Team"
-        helpMessage={rateByCurrentTeam}
-        controls={
-          <TeamsPhotoToggle
-            showPhotos={showPhotos}
-            onToggle={() => setShowPhotos(!showPhotos)}
-          />
-        }
-      />
-
+    <RatingsPageShell
+      className="rate-by-current-team-page"
+      title="Rate by Current Team"
+      helpPage="Rate by Current Team"
+      helpMessage={rateByCurrentTeam}
+      toolbar={
+        <TeamsPhotoToggle
+          showPhotos={showPhotos}
+          onToggle={() => setShowPhotos(!showPhotos)}
+        />
+      }
+    >
       {assigned.length === 0 || (group !== "chairperson" && !showTeams) ? (
-        <div className="rbt-page-empty">
+        <div className="rate-empty">
           There are currently no teams assigned.
         </div>
       ) : (
-        <div className="rbt-page-grid">
+        <div className="teams-page-grid">
           {orderedTeams.map((team) => (
             <Team
               key={team}
@@ -261,6 +206,6 @@ export default function RateByCurrentTeamsPage(props) {
           ))}
         </div>
       )}
-    </div>
+    </RatingsPageShell>
   );
 }

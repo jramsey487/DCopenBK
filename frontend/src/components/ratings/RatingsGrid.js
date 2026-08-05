@@ -16,7 +16,6 @@ import Cancel from "@mui/icons-material/Cancel";
 
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { getLocalStorage, ConfirmDialog, getAuthHeader } from "../Utils";
-import { DATA_GRID_HEIGHT } from "../Consts";
 
 export default function RatingsGrid({ ratings, setUpdated }) {
   const [open, setOpen] = useState(false);
@@ -109,12 +108,13 @@ export default function RatingsGrid({ ratings, setUpdated }) {
           <Tooltip title="Delete">
             <IconButton
               size="small"
+              sx={{ p: 0.5 }}
               onClick={() => {
                 setDeleteRatingId(rowData.id);
                 setOpen(true);
               }}
             >
-              <Delete />
+              <Delete className="teams-chairperson-ballkid-action-icon" />
             </IconButton>
           </Tooltip>
 
@@ -123,6 +123,7 @@ export default function RatingsGrid({ ratings, setUpdated }) {
           >
             <IconButton
               size="small"
+              sx={{ p: 0.5 }}
               color={rowData.row.status === "Excluded" ? "error" : ""}
               onClick={() =>
                 fetch(`/api/exclude-rating/${rowData.id}`, {
@@ -136,7 +137,11 @@ export default function RatingsGrid({ ratings, setUpdated }) {
                 })
               }
             >
-              {rowData.row.status === "Exclude" ? <Cancel /> : <HighlightOff />}
+              {rowData.row.status === "Exclude" ? (
+                <Cancel className="teams-chairperson-ballkid-action-icon" />
+              ) : (
+                <HighlightOff className="teams-chairperson-ballkid-action-icon" />
+              )}
             </IconButton>
           </Tooltip>
         </Box>
@@ -283,7 +288,7 @@ export default function RatingsGrid({ ratings, setUpdated }) {
             readOnly
           />
         ),
-      width: ratingColWidth,
+      width: 138,
     },
     {
       field: "effortRating",
@@ -353,7 +358,7 @@ export default function RatingsGrid({ ratings, setUpdated }) {
         method="PATCH"
       />
 
-      <div style={{ height: DATA_GRID_HEIGHT }}>
+      <div className="ratings-grid-frame">
         <DataGrid
           columns={columns}
           rows={rows}

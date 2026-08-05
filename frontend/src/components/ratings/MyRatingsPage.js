@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-
-import { HelpIcon, Banners, getAuthHeader, getLocalStorage } from "../Utils";
+import { getAuthHeader, getLocalStorage } from "../Utils";
 import RatingsGrid from "./RatingsGrid";
 import { viewMyRatings, viewMyRatingsNonchairperson } from "../HelpMessages";
+import { RatingsPageShell, RatingsGridPanel } from "./RatingsPageShared";
 
-export default function MyRatingsPage(props) {
+export default function MyRatingsPage() {
   const [ratings, setRatings] = useState([]);
   const [updated, setUpdated] = useState(false);
 
@@ -22,23 +20,16 @@ export default function MyRatingsPage(props) {
   }, [ballkidId, updated]);
 
   return (
-    <div className="page">
-      <Banners />
-
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">View My Ratings</Typography>
-        &thinsp;
-        <HelpIcon
-          page="View My Ratings"
-          message={
-            group === "chairperson"
-              ? viewMyRatings
-              : viewMyRatingsNonchairperson
-          }
-        />
-      </Box>
-
-      <RatingsGrid ratings={ratings} setUpdated={setUpdated} />
-    </div>
+    <RatingsPageShell
+      title="View My Ratings"
+      helpPage="View My Ratings"
+      helpMessage={
+        group === "chairperson" ? viewMyRatings : viewMyRatingsNonchairperson
+      }
+    >
+      <RatingsGridPanel>
+        <RatingsGrid ratings={ratings} setUpdated={setUpdated} />
+      </RatingsGridPanel>
+    </RatingsPageShell>
   );
 }

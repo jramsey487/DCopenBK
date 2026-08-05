@@ -1,0 +1,493 @@
+/* View Ratings / My Ratings — shared page chrome */
+
+.ratings-page .ratings-page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ratings-page .ratings-mode-pill__switch {
+  align-items: center;
+  gap: 6px;
+}
+
+.ratings-page .ratings-mode-pill__side {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tp-text2, #64748b);
+  white-space: nowrap;
+}
+
+.ratings-page .ratings-grid-panel {
+  background: var(--tp-bg1, #fff);
+  border: 0.5px solid var(--tp-border, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: none;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ratings-page .ratings-grid-panel.is-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 32px;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-root {
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: var(--tp-text1, #0d1b3e);
+  --DataGrid-rowBorderColor: transparent;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-main {
+  border: none;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnHeaders {
+  background: transparent;
+  border-bottom: 0.5px solid var(--tp-border, #e2e8f0);
+  min-height: 40px !important;
+  max-height: 40px !important;
+  line-height: 40px !important;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnHeader {
+  padding: 0 12px;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnHeaderTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tp-text2, #64748b);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnSeparator {
+  color: var(--tp-border, #e2e8f0);
+  opacity: 1;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-iconSeparator {
+  color: var(--tp-border, #e2e8f0);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnHeader:focus,
+.ratings-page .ratings-grid-panel .MuiDataGrid-columnHeader:focus-within,
+.ratings-page .ratings-grid-panel .MuiDataGrid-cell:focus,
+.ratings-page .ratings-grid-panel .MuiDataGrid-cell:focus-within {
+  outline: none;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-iconButtonContainer .MuiIconButton-root,
+.ratings-page .ratings-grid-panel .MuiDataGrid-menuIconButton {
+  color: var(--tp-text3, #94a3b8);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-row {
+  min-height: 40px !important;
+  max-height: 40px !important;
+  background: transparent;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-row:hover {
+  background: rgba(13, 27, 62, 0.03);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-row.Mui-selected,
+.ratings-page .ratings-grid-panel .MuiDataGrid-row.Mui-selected:hover {
+  background: rgba(13, 27, 62, 0.05);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-cell {
+  border-bottom: 0.5px solid rgba(226, 232, 240, 0.7);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tp-text1, #0d1b3e);
+  line-height: 1.3;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-cellContent {
+  font-size: inherit;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-virtualScroller {
+  background: transparent;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-footerContainer {
+  min-height: 44px;
+  border-top: 0.5px solid var(--tp-border, #e2e8f0);
+  background: transparent;
+}
+
+.ratings-page .ratings-grid-panel .MuiTablePagination-root {
+  color: var(--tp-text2, #64748b);
+  font-size: 12px;
+}
+
+.ratings-page .ratings-grid-panel .MuiTablePagination-selectLabel,
+.ratings-page .ratings-grid-panel .MuiTablePagination-displayedRows {
+  font-size: 12px;
+  color: var(--tp-text2, #64748b);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer {
+  padding: 6px 10px;
+  gap: 4px;
+  min-height: 44px;
+  border-bottom: 0.5px solid var(--tp-border, #e2e8f0);
+  background: transparent;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer .MuiButton-root {
+  text-transform: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--tp-text2, #64748b);
+  border-radius: 6px;
+  padding: 4px 8px;
+  min-width: 0;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer .MuiButton-root:hover {
+  background: rgba(13, 27, 62, 0.04);
+  color: var(--tp-text1, #0d1b3e);
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer .MuiButton-startIcon {
+  margin-right: 4px;
+}
+
+.ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer .MuiButton-startIcon > *:nth-of-type(1) {
+  font-size: 16px;
+}
+
+.ratings-page .ratings-grid-panel a {
+  color: var(--tp-nav, #0d1b3e);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ratings-page .ratings-grid-panel a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ratings-page .ratings-grid-panel .MuiRating-root {
+  opacity: 0.95;
+}
+
+.ratings-page .ratings-grid-panel .MuiIconButton-root {
+  color: var(--tp-text3, #94a3b8);
+}
+
+.ratings-page .ratings-grid-panel .MuiIconButton-root:hover {
+  background: rgba(13, 27, 62, 0.05);
+  color: var(--tp-text1, #0d1b3e);
+}
+
+.ratings-page .ratings-grid-panel .MuiIconButton-colorError {
+  color: var(--tp-red-text, #b91c1c);
+}
+
+.ratings-page .ratings-page-footer {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tp-text2, #64748b);
+}
+
+.ratings-page .ratings-page-footer a {
+  color: var(--tp-blue-text, #1d4ed8);
+  font-weight: 600;
+}
+
+.ratings-page .ratings-alert {
+  border-radius: 10px;
+}
+
+.ratings-page .ratings-grid-frame {
+  height: min(75vh, 720px);
+  width: 100%;
+  min-height: 320px;
+}
+
+.ratings-page .ratings-grid-frame .MuiDataGrid-root {
+  height: 100%;
+}
+
+@media (max-width: 899.98px) {
+  .ratings-page .cut-page-top-bar__end {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ratings-page .teams-page-top-bar__controls,
+  .ratings-page .cut-page-top-bar__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .ratings-page .year-pill-control,
+  .ratings-page .ratings-mode-pill,
+  .ratings-page .teams-chairperson-pill,
+  .ratings-page .teams-page-photo-toggle {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .ratings-page .ratings-mode-pill .ratings-mode-pill__switch {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ratings-page .cut-page-top-bar__actions .MuiToggleButtonGroup-root,
+  .ratings-page .teams-page-top-bar__controls .MuiToggleButtonGroup-root {
+    width: 100%;
+  }
+
+  .ratings-page .cut-page-top-bar__actions .MuiToggleButton-root,
+  .ratings-page .teams-page-top-bar__controls .MuiToggleButton-root {
+    flex: 1;
+  }
+
+  .ratings-page .ratings-grid-frame {
+    height: min(70vh, 560px);
+    min-height: 280px;
+  }
+
+  .ratings-page .ratings-grid-panel .MuiDataGrid-toolbarContainer {
+    flex-wrap: wrap;
+  }
+}
+
+.ratings-page .rate-toolbar {
+  margin-bottom: 4px;
+}
+
+.ratings-page .rate-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.ratings-page .rate-card-actions__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  width: 100%;
+}
+
+.ratings-page .rate-ballkid-meta {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  /* Always reserve two meta lines so cards stay level */
+  min-height: calc(12px * 1.35 * 2 + 2px);
+}
+
+/* Grid: equal-height cards with actions pinned to the bottom */
+.ratings-page .ballkid-list-grid {
+  align-items: stretch;
+}
+
+.ratings-page .ballkid-list-grid .ballkid-list-card-wrap {
+  height: 100%;
+}
+
+.ratings-page .ballkid-list-grid .MuiCardActionArea-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ratings-page .ballkid-list-grid .MuiCardContent-root {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ratings-page .ballkid-list-grid .ballkid-card-name-row {
+  min-height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.ratings-page .ballkid-list-grid .ballkid-card-meta {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ratings-page .ballkid-list-grid .rate-card-actions {
+  margin-top: 0;
+}
+
+/* List rows: name left, actions flush right (don't let the action block
+   steal full width and squeeze/center the content). */
+.ratings-page .ballkid-list-stack .justify {
+  gap: 12px;
+  align-items: center;
+}
+
+.ratings-page .ballkid-list-stack .justify > .sxs {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ratings-page .ballkid-list-stack .justify > .sxs .MuiTypography-root {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ratings-page .ballkid-list-stack .rate-card-actions {
+  width: auto;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  margin-top: 0;
+}
+
+.ratings-page .ballkid-list-stack .rate-card-actions__btn {
+  width: auto;
+  justify-content: flex-end;
+}
+
+.ratings-page .ballkid-list-stack .rate-ballkid-meta {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ratings-page .rate-ballkid-meta__line {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tp-text2, #64748b);
+  line-height: 1.35;
+}
+
+.ratings-page .rate-empty {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--tp-text2, #64748b);
+  background: var(--tp-bg0, #f8fafc);
+  border-radius: 12px;
+  border: 0.5px solid var(--tp-border, #e2e8f0);
+}
+
+.ratings-page .rate-past-section {
+  margin-top: 8px;
+}
+
+.ratings-page .rate-past-section + .rate-past-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 0.5px solid var(--tp-border, #e2e8f0);
+}
+
+.ratings-page .rate-past-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ratings-page .rate-past-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tp-text1, #0d1b3e);
+  letter-spacing: -0.01em;
+}
+
+.ratings-page .rate-team-member-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.ratings-page .rate-team-member-row .ballkid-and-icon {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ratings-page .rate-team-member-row .ballkid-profile-hero-rating-row,
+.ratings-page .rate-photo-tile .ballkid-profile-hero-rating-row {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* Photo tiles need wider columns than teams page (rating buttons). */
+.ratings-page.rate-by-current-team-page .team-photo-grid {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 14px 12px;
+  align-items: start;
+}
+
+.ratings-page .rate-photo-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.ratings-page .rate-photo-tile .team-photo-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.ratings-page .rate-photo-tile-action {
+  margin-top: 2px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 32px;
+}
+
+.ratings-page .rate-photo-tile-action .rating-btn,
+.ratings-page .rate-team-member-row .rating-btn {
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.ratings-page .rate-photo-tile-action .rating-btn {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  font-size: 0.75rem !important;
+}
+
+

@@ -162,7 +162,7 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
   );
 }
 
-export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
+export function RatingButton({ ballkid, setUpdated, date = null }) {
   const [open, setOpen] = useState(false);
   const hasRated = ballkid.num_my_ratings > 0;
 
@@ -178,9 +178,8 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
 
       <Button
         className={`rating-btn ${hasRated ? "rating-btn--rated" : "rating-btn--unrated"}`}
-        variant={hasRated ? "outlined" : "contained"}
+        variant="outlined"
         disableElevation
-        color="primary"
         size="small"
         endIcon={hasRated ? <Check /> : undefined}
         onMouseDown={(e) => e.stopPropagation()}
@@ -189,9 +188,8 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
           e.preventDefault();
           setOpen(true);
         }}
-        sx={{ my: isMobile ? 1 : 0.2 }}
       >
-        GIVE RATING
+        Give Rating
       </Button>
     </div>
   );
@@ -201,7 +199,6 @@ export function DraftRatingButton({ ballkid, setUpdated }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState();
   const pk = getLocalStorage("ballkid_id");
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetch(`/api/get-draft-rating/${pk}/${ballkid.id}`, {
@@ -212,33 +209,32 @@ export function DraftRatingButton({ ballkid, setUpdated }) {
       .catch(() => setDraft(null));
   }, [pk, ballkid.id]);
 
-  if (draft === null || draft === undefined) {
-    return "";
-  }
+  const draftReady = draft !== null && draft !== undefined;
 
   return (
     <div className="ballkid-profile-hero-rating-row">
-      <RatingDialog
-        open={open}
-        setOpen={setOpen}
-        ballkid={ballkid}
-        setUpdated={setUpdated}
-        draft={draft}
-      />
+      {draftReady ? (
+        <RatingDialog
+          open={open}
+          setOpen={setOpen}
+          ballkid={ballkid}
+          setUpdated={setUpdated}
+          draft={draft}
+        />
+      ) : null}
       <Button
-        className="rating-btn rating-btn--unrated"
-        color="secondary"
-        variant="contained"
+        className="rating-btn rating-btn--draft"
+        variant="outlined"
         disableElevation
         size="small"
         endIcon={<Edit />}
+        disabled={!draftReady}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          setOpen(true);
+          if (draftReady) setOpen(true);
         }}
-        sx={{ my: isMobile ? 1 : 0.2 }}
       >
         View Draft
       </Button>
