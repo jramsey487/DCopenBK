@@ -1,0 +1,225 @@
+/*
+ * Shared page chrome used by teams, cut, ratings, leaderboards, schedule.
+ * Import once via teams-page.css (or directly if not loading teams-page).
+ */
+
+.cut-page-top-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+}
+
+.cut-page-top-bar__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cut-page-top-bar__title--with-end {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cut-page-top-bar__title-end {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cut-page-top-bar__end {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px 28px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.cut-page-top-bar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cut-page-top-bar__toolbar-pills,
+.teams-page-top-bar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.teams-chairperson-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 14px;
+  background: var(--bg1);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.teams-chairperson-pill-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.teams-chairperson-pill .MuiSwitch-root {
+  margin: 0 -4px 0 0;
+}
+
+.teams-chairperson-pill .sxs {
+  gap: 4px;
+  align-items: center;
+}
+
+.teams-chairperson-pill .MuiTypography-root {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text2) !important;
+}
+
+.teams-page-photo-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  background: var(--bg0);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+}
+
+.teams-page-photo-toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.teams-page-photo-toggle-switch {
+  width: 38px;
+  height: 22px;
+  border-radius: 20px;
+  border: none;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.teams-page-photo-toggle-switch.on {
+  background: var(--nav);
+}
+
+.teams-page-photo-toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+.teams-page-photo-toggle-switch.on::after {
+  transform: translateX(16px);
+}
+
+.year-pill-control,
+.past-finals-year-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--bg0);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+}
+
+.year-pill-label,
+.past-finals-year-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.year-pill-input,
+.past-finals-year-input {
+  width: 72px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text1);
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.year-pill-input::-webkit-outer-spin-button,
+.year-pill-input::-webkit-inner-spin-button,
+.past-finals-year-input::-webkit-outer-spin-button,
+.past-finals-year-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.year-pill-input:focus,
+.past-finals-year-input:focus {
+  outline: none;
+}
+
+@media (max-width: 899.98px) {
+  .cut-page-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .cut-page-top-bar__title--with-end {
+    width: 100%;
+  }
+
+  .cut-page-top-bar__end {
+    margin-left: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .cut-page-top-bar__actions,
+  .teams-page-top-bar__controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .teams-page-photo-toggle,
+  .year-pill-control,
+  .past-finals-year-control,
+  .teams-chairperson-pill {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+}

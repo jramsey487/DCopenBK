@@ -27,11 +27,8 @@ import {
 import { CHECKOUT_OPTIONS, LAST_DAY_OPTIONS } from "../Consts";
 import { checkin } from "../HelpMessages";
 import { IconButton, TextField } from "@mui/material";
-import "./ballkid-list-by-name.css";
-import "./cut-page-desktop.css";
 import "./checkin-page.css";
 import "../teams/teams-page.css";
-import "../ballkid-badges.css";
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
   const checkinString = isCheckedIn ? "Check Out" : "Check In";

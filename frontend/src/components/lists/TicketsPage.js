@@ -234,8 +234,12 @@ function Session({ session, tickets, ballkidsList, setUpdated }) {
                 </Typography>
                 <BallkidLink id={ticket.ballkid} name={ticket.ballkid_name} />
                 <Typography
+                  className={
+                    ticket.num_tickets < TICKET_LIMIT
+                      ? undefined
+                      : "ticket-count--hot"
+                  }
                   sx={{ mx: 1, px: 0.5, my: 0.1 }}
-                  bgcolor={ticket.num_tickets < TICKET_LIMIT ? "" : "pink"}
                   variant="body2"
                 >
                   {ticket.num_tickets}

@@ -1,0 +1,80 @@
+/* Team number chips — shared by schedule grid + captain profile */
+
+.chip-wrap {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  border: none;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.chip:hover {
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px rgba(13, 27, 62, 0.15);
+}
+
+.chip.dimmed {
+  opacity: 0.15;
+}
+
+.chip.mine {
+  outline: 3px solid var(--nav);
+  outline-offset: 2px;
+}
+
+.chip.t1 {
+  background: #0d1b3e;
+  color: #fff;
+}
+.chip.t2 {
+  background: #c8102e;
+  color: #fff;
+}
+.chip.t3 {
+  background: #0077b6;
+  color: #fff;
+}
+.chip.t4 {
+  background: #e9c46a;
+  color: #1a1a1a;
+}
+.chip.t5 {
+  background: #2d6a4f;
+  color: #fff;
+}
+.chip.t6 {
+  background: #e76f51;
+  color: #fff;
+}
+.chip.t7 {
+  background: #7209b7;
+  color: #fff;
+}
+.chip.t8 {
+  background: #4cc9f0;
+  color: #0d1b3e;
+}
+.chip.t9 {
+  background: #f72585;
+  color: #fff;
+}
+.chip.t10 {
+  background: #606c38;
+  color: #fff;
+}

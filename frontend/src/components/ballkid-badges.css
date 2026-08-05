@@ -52,7 +52,7 @@
 
 .ballkid-pill--rank {
   /* Match old MUI bgcolor="pink" (CSS keyword #ffc0cb) so >5 ratings reads clearly */
-  background: #ffc0cb;
+  background: var(--rank-hot);
   color: #1a1a1a;
   border-color: #f9a8d4;
 }

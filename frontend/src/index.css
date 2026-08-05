@@ -8,6 +8,158 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Canonical brand tokens — shells alias prefixes to these */
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --nav: #0d1b3e;
+  --red: #c8102e;
+  --bg0: #f8fafc;
+  --bg1: #fff;
+  --bg2: #f1f5f9;
+  --text1: #0d1b3e;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --border: #e2e8f0;
+
+  --green: #2d6a4f;
+  --green-bg: #ecfdf5;
+  --green-text: #166534;
+  --green-border: #a7f3d0;
+  --green-bg-hover: #d1fae5;
+  --green-border-hover: #6ee7b7;
+
+  --blue-text: #1d4ed8;
+  --blue-bg: #eff6ff;
+  --blue-border: #bfdbfe;
+  --blue-bg-hover: #dbeafe;
+  --blue-border-hover: #93c5fd;
+
+  --red-text: #b91c1c;
+  --red-bg: #fef2f2;
+  --red-border: #fecaca;
+  --red-bg-hover: #fee2e2;
+  --red-border-hover: #fca5a5;
+
+  --purple-text: #5b21b6;
+  --purple-bg: #f5f3ff;
+  --purple-bg-hover: #ede9fe;
+  --purple-border-hover: #c4b5fd;
+
+  --success: #15803d;
+  --danger: #dc2626;
+  --rank-hot: #ffc0cb;
+
+  /* Prefix aliases — prefer --nav / --bg0 in new CSS */
+  --tp-nav: var(--nav);
+  --tp-red: var(--red);
+  --tp-bg0: var(--bg0);
+  --tp-bg1: var(--bg1);
+  --tp-bg2: var(--bg2);
+  --tp-text1: var(--text1);
+  --tp-text2: var(--text2);
+  --tp-text3: var(--text3);
+  --tp-border: var(--border);
+  --tp-green: var(--green);
+  --tp-green-bg: var(--green-bg);
+  --tp-green-text: var(--green-text);
+  --tp-green-border: var(--green-border);
+  --tp-green-bg-hover: var(--green-bg-hover);
+  --tp-green-border-hover: var(--green-border-hover);
+  --tp-blue-text: var(--blue-text);
+  --tp-blue-bg: var(--blue-bg);
+  --tp-blue-border: var(--blue-border);
+  --tp-blue-bg-hover: var(--blue-bg-hover);
+  --tp-blue-border-hover: var(--blue-border-hover);
+  --tp-red-text: var(--red-text);
+  --tp-red-bg: var(--red-bg);
+  --tp-red-border: var(--red-border);
+  --tp-red-bg-hover: var(--red-bg-hover);
+  --tp-red-border-hover: var(--red-border-hover);
+  --tp-purple-text: var(--purple-text);
+  --tp-purple-bg: var(--purple-bg);
+  --tp-purple-bg-hover: var(--purple-bg-hover);
+  --tp-purple-border-hover: var(--purple-border-hover);
+
+  --bl-nav: var(--nav);
+  --bl-red: var(--red);
+  --bl-bg0: var(--bg0);
+  --bl-text1: var(--text1);
+  --bl-text2: var(--text2);
+  --bl-border: var(--border);
+
+  --sched-nav: var(--nav);
+  --sched-red: var(--red);
+  --sched-bg0: var(--bg0);
+  --sched-bg1: var(--bg1);
+  --sched-bg2: var(--bg2);
+  --sched-text1: var(--text1);
+  --sched-text2: var(--text2);
+  --sched-text3: var(--text3);
+  --sched-border: var(--border);
+
+  --bp-nav: var(--nav);
+  --bp-red: var(--red);
+  --bp-bg0: var(--bg0);
+  --bp-bg1: var(--bg1);
+  --bp-bg2: var(--bg2);
+  --bp-text1: var(--text1);
+  --bp-text2: var(--text2);
+  --bp-text3: var(--text3);
+  --bp-border: var(--border);
+  --bp-success: var(--success);
+  --bp-danger: var(--danger);
+
+  --rd-nav: var(--nav);
+  --rd-red: var(--red);
+  --rd-bg0: var(--bg0);
+  --rd-bg1: var(--bg1);
+  --rd-bg2: var(--bg2);
+  --rd-text1: var(--text1);
+  --rd-text2: var(--text2);
+  --rd-border: var(--border);
+
+  --sp-nav: var(--nav);
+  --sp-red: var(--red);
+  --sp-bg0: var(--bg0);
+  --sp-bg1: var(--bg1);
+  --sp-text1: var(--text1);
+  --sp-text2: var(--text2);
+  --sp-border: var(--border);
+
+  --ts-nav: var(--nav);
+  --ts-red: var(--red);
+  --ts-bg0: var(--bg0);
+  --ts-bg1: var(--bg1);
+  --ts-text1: var(--text1);
+  --ts-text2: var(--text2);
+  --ts-border: var(--border);
+
+  --acct-nav: var(--nav);
+  --acct-red: var(--red);
+  --acct-bg0: var(--bg0);
+  --acct-bg1: var(--bg1);
+  --acct-text1: var(--text1);
+  --acct-text2: var(--text2);
+  --acct-border: var(--border);
+
+  --login-nav: var(--nav);
+  --login-red: var(--red);
+  --login-bg0: var(--bg0);
+  --login-bg1: var(--bg1);
+  --login-text1: var(--text1);
+  --login-text2: var(--text2);
+  --login-border: var(--border);
+  --login-input-bg: var(--bg2);
+  --login-input-border: #e8edf2;
+  --login-btn: #8b9aab;
+  --login-btn-hover: #7a8c9e;
+
+  --brand-nav: var(--nav);
+  --brand-red: var(--red);
+}
+
 #app {
   width: 100%;
   height: 100%;
@@ -19,10 +171,8 @@ body {
 
 .content {
   margin: auto;
-  /* max-width: 1000px; */
 }
 
-/* Center of page (e.g. login screen) */
 .center {
   margin: 15px;
   position: absolute;
@@ -31,7 +181,6 @@ body {
   transform: translate(-50%, -50%);
 }
 
-/* Center within div e.g. loading spinner */
 .center-div {
   margin: 15px;
   position: relative;
@@ -40,14 +189,12 @@ body {
   transform: translate(-50%, -50%);
 }
 
-/* Put elements side by side horizontally and vertically center align*/
 .sxs {
   display: flex;
   align-items: center;
   direction: column;
 }
 
-/* Justify elements horizontally and vertically center align */
 .justify {
   display: flex;
   justify-content: space-between;
@@ -56,7 +203,6 @@ body {
   width: 100%;
 }
 
-/* Justify elements horizontally and keep elements aligned to the top */
 .justify-top {
   display: flex;
   justify-content: space-between;
@@ -68,4 +214,8 @@ body {
 }
 .hover-parent:hover .hovercard {
   display: flex;
+}
+
+.ticket-count--hot {
+  background-color: var(--rank-hot);
 }

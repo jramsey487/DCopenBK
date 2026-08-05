@@ -28,9 +28,7 @@ import {
 import { cut } from "../HelpMessages";
 import { DraggableBallkidRow, DraggableBallkidRowTwoColumns } from "../BallkidChip";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
-import "./cut-page-desktop.css";
 import "../teams/teams-page.css";
-import "../ballkid-badges.css";
 import "../ballkid-row.css";
 
 /** Shared decision / Self-Cut card chrome matching teams chairperson cards. */

@@ -15,8 +15,6 @@ import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { schedule, scheduleNonchairperson } from "../HelpMessages";
 import "./schedule-mobile.css";
 import "../teams/teams-page.css";
-import "../lists/ballkid-list-by-name.css";
-import "../lists/cut-page-desktop.css";
 
 function parseSlashDate(dateStr) {
   const [mm, dd, yyyy] = dateStr.split("/");

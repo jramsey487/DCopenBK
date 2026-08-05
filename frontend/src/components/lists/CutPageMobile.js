@@ -21,8 +21,6 @@ import {
   CutStatusSectionMobile,
   SelfCutCardMobile,
 } from "./CutPageMobileAssign";
-import "./ballkid-list-by-name.css";
-import "./cut-page-desktop.css";
 import "../teams/teams-page.css";
 
 function ActiveSectionMobile({ active, sections, patchCutBallkid }) {

@@ -6,8 +6,6 @@ import { Banners } from "../Utils";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { TeamsLabeledToggle } from "../teams/TeamsShared";
 import "../teams/teams-page.css";
-import "../lists/ballkid-list-by-name.css";
-import "../lists/cut-page-desktop.css";
 import "../ratings/ratings-page.css";
 import "./leaderboards.css";
 

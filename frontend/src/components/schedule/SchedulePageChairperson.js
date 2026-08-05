@@ -21,8 +21,6 @@ import { schedule } from "../HelpMessages";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "./schedule-mobile.css";
 import "../teams/teams-page.css";
-import "../lists/ballkid-list-by-name.css";
-import "../lists/cut-page-desktop.css";
 
 function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);

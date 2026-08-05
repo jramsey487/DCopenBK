@@ -19,7 +19,7 @@ import {
   ProfileInfoRow,
   ProfilePositionPills,
 } from "./BallkidProfileLayout";
-import "../schedule/schedule-mobile.css";
+import "../team-chips.css";
 
 export default function BallkidPageCaptain(props) {
   const [ballkid, setBallkid] = useState(null);

@@ -1,19 +1,5 @@
-/* Shared rating UI tokens — used by dialog and trigger button */
-.rating-dialog-paper,
-.rating-btn {
-  --rd-nav: #0d1b3e;
-  --rd-red: #c8102e;
-  --rd-bg0: #f8fafc;
-  --rd-bg1: #fff;
-  --rd-bg2: #f1f5f9;
-  --rd-text1: #0d1b3e;
-  --rd-text2: #64748b;
-  --rd-border: #e2e8f0;
-}
-
 .rating-dialog-paper {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.01em;
   border-radius: 16px !important;
   max-width: 560px;
