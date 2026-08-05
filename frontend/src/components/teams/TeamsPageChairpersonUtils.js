@@ -151,7 +151,10 @@ function renderBallkidRowActions(
 export function renderBallkidsOnTeam(
   ballkids,
   setUpdated,
-  { showHovercard, hoverCommentTypes, isFinalsPage = false } = {}
+  commentTypes,
+  showHovercard,
+  hoverCommentTypes,
+  isFinalsPage = false
 ) {
   return (
     <div className="team-member-list">
@@ -160,6 +163,7 @@ export function renderBallkidsOnTeam(
           <div className="teams-chairperson-ballkid-chip-wrap">
             <DraggableBallkidChip
               ballkid={ballkid}
+              commentTypes={commentTypes}
               showHovercard={showHovercard}
               hoverCommentTypes={hoverCommentTypes}
             />
@@ -332,13 +336,14 @@ function Team({
                           No {position.toLowerCase()}s assigned yet.
                         </div>
                       ) : (
-                        renderBallkidsOnTeam(positionBallkids, setUpdated, {
+                        renderBallkidsOnTeam(
+                          positionBallkids,
+                          setUpdated,
+                          isFinalsPage ? ["rank", "experience"] : undefined,
                           showHovercard,
-                          hoverCommentTypes: isFinalsPage
-                            ? ["experience", "rank", "calibrated_avg"]
-                            : undefined,
-                          isFinalsPage,
-                        })
+                          isFinalsPage ? ["experience", "rank", "calibrated_avg"] : undefined,
+                          isFinalsPage
+                        )
                       )}
                     </div>
                   );
