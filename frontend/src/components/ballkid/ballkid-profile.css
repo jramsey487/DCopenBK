@@ -139,6 +139,11 @@
   align-self: center;
 }
 
+.ballkid-profile-hero-actions-bar--inline .ballkid-profile-hero-mobile-actions {
+  margin: 0;
+  padding: 0;
+}
+
 .ballkid-profile-hero-actions-bar--dock {
   display: none;
 }

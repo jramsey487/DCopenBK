@@ -84,6 +84,18 @@ export function ProfileRolePills({ ballkid }) {
   );
 }
 
+export function ballkidHasHeroRolePills(ballkid) {
+  const group = getLocalStorage("group");
+  const showRookie =
+    group !== "ballkid" &&
+    ballkid?.num_years_experience === 0 &&
+    !ballkid?.is_captain &&
+    !ballkid?.is_chairperson;
+  return Boolean(
+    ballkid?.is_chairperson || ballkid?.is_captain || showRookie
+  );
+}
+
 export function ProfileAvatar({ firstName, lastName, image }) {
   const src = ballkidImageSrc(image);
   const initials = profileInitials(firstName, lastName);
@@ -150,6 +162,8 @@ export function ProfileBrandedHero({
 }) {
   const name = `${ballkid.first_name} ${ballkid.last_name}`;
   const isMobile = useIsMobile();
+  const hasRolePills = ballkidHasHeroRolePills(ballkid);
+  const hasAccent = hasRolePills || Boolean(status);
 
   return (
     <div className="ballkid-profile-hero-band">
@@ -173,21 +187,27 @@ export function ProfileBrandedHero({
               </div>
             </div>
           </div>
-          <div className="ballkid-profile-hero-meta-line">
-            <div className="ballkid-profile-hero-meta-row ballkid-profile-hero-meta-row--accent">
-              <div className="ballkid-profile-hero-accent-line">
-                <ProfileRolePills ballkid={ballkid} />
-              </div>
-              {status ? (
-                <div className="ballkid-profile-hero-status">{status}</div>
+          {hasAccent || (actions && !isMobile) ? (
+            <div className="ballkid-profile-hero-meta-line">
+              {hasAccent ? (
+                <div className="ballkid-profile-hero-meta-row ballkid-profile-hero-meta-row--accent">
+                  {hasRolePills ? (
+                    <div className="ballkid-profile-hero-accent-line">
+                      <ProfileRolePills ballkid={ballkid} />
+                    </div>
+                  ) : null}
+                  {status ? (
+                    <div className="ballkid-profile-hero-status">{status}</div>
+                  ) : null}
+                </div>
+              ) : null}
+              {actions && !isMobile ? (
+                <div className="ballkid-profile-hero-actions-bar ballkid-profile-hero-actions-bar--inline">
+                  {actions}
+                </div>
               ) : null}
             </div>
-            {actions && !isMobile ? (
-              <div className="ballkid-profile-hero-actions-bar ballkid-profile-hero-actions-bar--inline">
-                {actions}
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
         {actions && isMobile ? (
           <div className="ballkid-profile-hero-actions-bar ballkid-profile-hero-actions-bar--dock">
