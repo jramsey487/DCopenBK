@@ -435,11 +435,6 @@
     pointer-events: none;
   }
 
-  .team-card.teams-chairperson-card .teams-chairperson-ballkid-row {
-    align-items: center;
-    min-height: 30px;
-  }
-
   .team-card.teams-chairperson-card .teams-chairperson-ballkid-chip-wrap {
     display: flex;
     align-items: stretch;
@@ -793,20 +788,6 @@
     min-width: 0;
   }
 
-  .teams-chairperson-ballkid-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px 4px;
-    border-radius: 8px;
-    transition: background 0.12s ease;
-  }
-
-  .teams-chairperson-ballkid-row:hover {
-    background: var(--tp-bg0);
-  }
-
   .teams-chairperson-position-block {
     margin-top: 16px;
   }
@@ -1059,22 +1040,10 @@
       padding: 4px 12px 12px;
     }
 
-    .teams-chairperson-page .teams-chairperson-ballkid-row {
-      flex-direction: row;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 0;
-    }
-
     .teams-chairperson-page .teams-chairperson-ballkid-chip-wrap {
       flex: 1;
       min-width: 0;
       width: auto;
-    }
-
-    .teams-chairperson-page .teams-chairperson-ballkid-row .ballkid-chip {
-      width: 100%;
-      max-width: 100%;
     }
 
     .teams-chairperson-page .teams-chairperson-ballkid-actions {

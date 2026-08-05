@@ -5,7 +5,7 @@ import Grid from "@mui/material/Grid";
 import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
-import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
+import { Header, renderTeams } from "./TeamsPageChairpersonUtils";
 
 export default function FinalsTeamsPageChairpersonDesktop(props) {
   const [assigned, setAssigned] = useState([]);
@@ -41,6 +41,7 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
       <Header
         showHovercard={showHovercard}
         setShowHovercard={setShowHovercard}
+        isFinalsPage={true}
       />
 
       <Grid container className="justify-top teams-chairperson-split" spacing={2}>

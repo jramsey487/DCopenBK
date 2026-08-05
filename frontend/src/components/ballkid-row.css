@@ -1,0 +1,39 @@
+.ballkid-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    padding: 6px 4px;
+    border-radius: 8px;
+    transition: background 0.12s ease;
+  }
+  
+  .ballkid-row:hover {
+    background: #f8fafc;
+  }
+  
+  .ballkid-row--dense {
+    gap: 4px;
+  }
+  
+  .ballkid-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  
+  .ballkid-row--dense .ballkid-row__actions {
+    padding-right: 0;
+  }
+  
+  .ballkid-row--dense .ballkid-row__actions .MuiIconButton-root {
+    padding: 4px;
+  }
+
+  .ballkid-row .ballkid-chip {
+    width: 100%;
+    max-width: 100%;
+  }

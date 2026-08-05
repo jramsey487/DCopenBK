@@ -1,6 +1,5 @@
-import "./teams-page.css";
-
 import React, { useState, useEffect } from "react";
+import "./teams-page.css";
 import { useDrop } from "react-dnd";
 
 import Box from "@mui/material/Box";
@@ -29,6 +28,7 @@ import {
   CourtAssignment,
   useIsMobile,
   ConfirmDialog,
+  HovercardToggle,
 } from "../Utils";
 import {
   POSITIONS,
@@ -37,23 +37,25 @@ import {
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
 import { DraggableBallkidChip } from "../BallkidChip";
-import { teams } from "../HelpMessages.js";
+import { teams, finalsTeams } from "../HelpMessages.js";
+import "../ballkid-row.css";
 
-function renderSwitchButton(ballkid, setUpdated) {
+export function renderSwitchButton(ballkid, setUpdated, isFinalsPage = false) {
+  const field = isFinalsPage ? "finals_position" : "position";
+
   return (
     <Tooltip title="Switch">
       <IconButton
-        // variant="outlined"
         size="small"
         sx={{ p: 0.5 }}
-        onClick={(e) =>
+        onClick={() =>
           fetch("/api/update-ballkid", {
             method: "PATCH",
             headers: getAuthHeader(),
             body: JSON.stringify({
               first_name: ballkid.first_name,
               last_name: ballkid.last_name,
-              position: ballkid.position === "Back" ? "Net" : "Back",
+              [field]: ballkid[field] === "Back" ? "Net" : "Back",
             }),
           })
             .then((response) => response.json())
@@ -66,20 +68,22 @@ function renderSwitchButton(ballkid, setUpdated) {
   );
 }
 
-function renderUnassignButton(ballkid, setUpdated) {
+function renderUnassignButton(ballkid, setUpdated, isFinalsPage = false) {
+  const patch = isFinalsPage ? { finals_team: "" } : { current_team: 0 };
+
   return (
     <Tooltip title="Unassign">
       <IconButton
         size="small"
         sx={{ p: 0.5 }}
-        onClick={(e) => {
+        onClick={() => {
           fetch("/api/update-ballkid", {
             method: "PATCH",
             headers: getAuthHeader(),
             body: JSON.stringify({
               first_name: ballkid.first_name,
               last_name: ballkid.last_name,
-              current_team: 0,
+              ...patch,
             }),
           })
             .then((response) => response.json())
@@ -98,7 +102,7 @@ function renderCheckoutButton(ballkid, setUpdated) {
       <IconButton
         size="small"
         sx={{ p: 0.5 }}
-        onClick={(e) => {
+        onClick={() => {
           fetch("/api/update-ballkid", {
             method: "PATCH",
             headers: getAuthHeader(),
@@ -119,14 +123,15 @@ function renderCheckoutButton(ballkid, setUpdated) {
 }
 
 function ballkidCanSwitchPosition(ballkid) {
-  return (
-    ballkid.preferred_position &&
-    String(ballkid.preferred_position).includes("/")
-  );
+  return ballkid.preferred_position && String(ballkid.preferred_position).includes("/");
 }
 
-function renderBallkidRowActions(ballkid, setUpdated, { showCheckout = true } = {}) {
-  const showSwitch = ballkidCanSwitchPosition(ballkid);
+function renderBallkidRowActions(
+  ballkid,
+  setUpdated,
+  { showCheckout = true, isFinalsPage = false } = {}
+) {
+  const showSwitch = ballkidCanSwitchPosition(ballkid, isFinalsPage);
 
   return (
     <div className="teams-chairperson-ballkid-actions">
@@ -135,38 +140,54 @@ function renderBallkidRowActions(ballkid, setUpdated, { showCheckout = true } = 
           showSwitch ? "" : " is-empty"
         }`}
       >
-        {showSwitch ? renderSwitchButton(ballkid, setUpdated) : null}
+        {showSwitch ? renderSwitchButton(ballkid, setUpdated, isFinalsPage) : null}
       </div>
-      {renderUnassignButton(ballkid, setUpdated)}
-      {showCheckout ? renderCheckoutButton(ballkid, setUpdated) : null}
+      {renderUnassignButton(ballkid, setUpdated, isFinalsPage)}
+      {showCheckout && !isFinalsPage ? renderCheckoutButton(ballkid, setUpdated) : null}
     </div>
   );
 }
 
-function renderBallkidsOnTeam(ballkids, setUpdated) {
+export function renderBallkidsOnTeam(
+  ballkids,
+  setUpdated,
+  { showHovercard, hoverCommentTypes, isFinalsPage = false } = {}
+) {
   return (
     <div className="team-member-list">
       {ballkids.map((ballkid) => (
-        <div
-          key={`ballkid${ballkid.id}`}
-          className="teams-chairperson-ballkid-row"
-        >
+        <div key={`ballkid${ballkid.id}`} className="ballkid-row">
           <div className="teams-chairperson-ballkid-chip-wrap">
-            <DraggableBallkidChip ballkid={ballkid} />
+            <DraggableBallkidChip
+              ballkid={ballkid}
+              showHovercard={showHovercard}
+              hoverCommentTypes={hoverCommentTypes}
+            />
           </div>
-          {renderBallkidRowActions(ballkid, setUpdated)}
+          {renderBallkidRowActions(ballkid, setUpdated, { isFinalsPage })}
         </div>
       ))}
     </div>
   );
 }
 
-function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
+function Team({
+  team,
+  assigned,
+  nextShifts = [],
+  showHovercard,
+  setUpdated,
+  isNewTeam = false,
+  isFinalsPage = false,
+}) {
   const isCurrentlyOn =
-    nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
+    !isFinalsPage && nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+
+  const teamField = isFinalsPage ? "finals_team" : "current_team";
+  const positionField = isFinalsPage ? "finals_position" : "position";
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -177,7 +198,7 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
         body: JSON.stringify({
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
-          current_team: team,
+          [teamField]: team,
         }),
       })
         .then((response) => response.json())
@@ -195,31 +216,37 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
     .filter(Boolean)
     .join(" ");
 
+  const teamLabel = isFinalsPage ? team : `Team ${team}`;
+
   return (
     <div ref={dropRef} className={cardClass}>
-      <ConfirmDialog
-        message={`You are about to check out all ${assigned.length} ballkid${
-          assigned.length > 1 ? "s" : ""
-        } on Team ${team} and delete all future shifts for Team ${team} from the schedule.`}
-        url={"/api/checkout-all"}
-        body={{
-          checkout_group: team,
-        }}
-        open={checkoutOpen}
-        setOpen={setCheckoutOpen}
-        setUpdated={setUpdated}
-      />
+      {!isFinalsPage && (
+        <ConfirmDialog
+          message={`You are about to check out all ${assigned.length} ballkid${
+            assigned.length > 1 ? "s" : ""
+          } on Team ${team} and delete all future shifts for Team ${team} from the schedule.`}
+          url={"/api/checkout-all"}
+          body={{ checkout_group: team }}
+          open={checkoutOpen}
+          setOpen={setCheckoutOpen}
+          setUpdated={setUpdated}
+        />
+      )}
 
       <ConfirmDialog
-        message={`You are about to clear Team ${team}, unassign all ${
-          assigned.length
-        } ballkid${
-          assigned.length > 1 ? "s" : ""
-        }, and delete all future shifts for Team ${team} from the schedule.`}
+        message={
+          isFinalsPage
+            ? `You are about to clear Team ${team} and unassign all ${
+                assigned.length
+              } ballkid${assigned.length > 1 ? "s" : ""}.`
+            : `You are about to clear Team ${team}, unassign all ${
+                assigned.length
+              } ballkid${
+                assigned.length > 1 ? "s" : ""
+              }, and delete all future shifts for Team ${team} from the schedule.`
+        }
         url={"/api/clear-team"}
-        body={{
-          current_team: team,
-        }}
+        body={{ [teamField]: team }}
         open={clearOpen}
         setOpen={setClearOpen}
         setUpdated={setUpdated}
@@ -235,17 +262,27 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
         <>
           <div className="team-card-head">
             <div className="team-card-title-group">
-              <span className="team-card-title">Team {team}</span>
+              <span className="team-card-title">{teamLabel}</span>
               <span className="team-card-count">({assigned.length})</span>
               {isCurrentlyOn ? (
                 <span className="team-card-oncourt-badge">On court</span>
               ) : null}
             </div>
+            {isFinalsPage && assigned.length > 0 ? (
+              <div className="teams-chairperson-head-actions">
+                <Button
+                  size="small"
+                  variant="outlined"
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--end"
+                  onClick={() => setClearOpen(true)}
+                >
+                  Unassign team
+                </Button>
+              </div>
+            ) : null}
           </div>
 
-          {assigned.length === 0 ? (
-            ""
-          ) : (
+          {!isFinalsPage && assigned.length > 0 ? (
             <div className="teams-chairperson-head-secondary">
               <div className="teams-chairperson-head-secondary__assignment">
                 <CourtAssignment nextShifts={nextShifts} showIcon />
@@ -272,14 +309,14 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
                 </Button>
               </div>
             </div>
-          )}
+          ) : null}
 
           <div className="team-card-body">
             {assigned.length === 0
               ? ""
               : POSITIONS.map((position) => {
                   const positionBallkids = assigned.filter(
-                    (ballkid) => ballkid.position === position
+                    (ballkid) => ballkid[positionField] === position
                   );
 
                   return (
@@ -295,7 +332,13 @@ function Team({ team, assigned, nextShifts, setUpdated, isNewTeam = false }) {
                           No {position.toLowerCase()}s assigned yet.
                         </div>
                       ) : (
-                        renderBallkidsOnTeam(positionBallkids, setUpdated)
+                        renderBallkidsOnTeam(positionBallkids, setUpdated, {
+                          showHovercard,
+                          hoverCommentTypes: isFinalsPage
+                            ? ["experience", "rank", "calibrated_avg"]
+                            : undefined,
+                          isFinalsPage,
+                        })
                       )}
                     </div>
                   );
@@ -374,48 +417,55 @@ export function Teams({ assigned, teams, nextShifts, setUpdated }) {
   );
 }
 
-export function Header({ topBarActions }) {
-  const [tournament, setTournament] = useState();
+// Finals page calls this as a plain function (not a JSX component),
+// matching its existing call convention.
+export function renderTeams(assigned, teams, showHovercard, setUpdated) {
+  return (
+    <div className="teams-page-grid teams-chairperson-teams-grid">
+      {teams.map((team) => (
+        <Team
+          key={team}
+          team={team}
+          assigned={assigned.filter((ballkid) => ballkid.finals_team === team)}
+          showHovercard={showHovercard}
+          setUpdated={setUpdated}
+          isFinalsPage
+        />
+      ))}
+    </div>
+  );
+}
 
+export function Header({ topBarActions, showHovercard, setShowHovercard, isFinalsPage = false }) {
+  const [tournament, setTournament] = useState();
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
+    fetch("/api/get-tournament", { method: "GET", headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setTournament(data));
   }, []);
 
-  return tournament === null || tournament === undefined ? (
-    ""
-  ) : (
+  return tournament === null || tournament === undefined ? "" : (
     <TeamsChairpersonPageHeader
-      title="Current Teams"
-      helpPage="Teams"
-      helpMessage={teams}
-      alerts={
-        <Alerts
-          successMsg={successMsg}
-          errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
-          setErrorMsg={setErrorMsg}
-        />
-      }
+      title={isFinalsPage ? "Finals Teams" : "Current Teams"}
+      helpPage={isFinalsPage ? "Finals Teams" : "Teams"}
+      helpMessage={isFinalsPage ? finalsTeams : teams}
+      alerts={<Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />}
       toolbar={
-        <div className="teams-chairperson-pill">
-          <span className="teams-chairperson-pill-label">
-            Visible to ballkids
-          </span>
-          <HideShowToggle
-            teamType=""
-            defaultShow={tournament["show_teams"]}
-            setSuccessMsg={setSuccessMsg}
-            setErrorMsg={setErrorMsg}
-          />
-        </div>
+        <>
+          <div className="teams-chairperson-pill">
+            <span className="teams-chairperson-pill-label">Visible to ballkids</span>
+            <HideShowToggle
+              teamType={isFinalsPage ? "finals" : ""}
+              defaultShow={isFinalsPage ? tournament["show_finals_teams"] : tournament["show_teams"]}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+          </div>
+          {isFinalsPage ? <HovercardToggle enabled={showHovercard} setEnabled={setShowHovercard} /> : null}
+        </>
       }
       actions={topBarActions}
     />
@@ -424,9 +474,7 @@ export function Header({ topBarActions }) {
 
 function CreateTeamsDialog({ open, setOpen, setUpdated }) {
   const [numTeams, setNumTeams] = useState(10);
-
   const [loading, setLoading] = useState(false);
-
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -470,17 +518,13 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
             required
             type="number"
             InputProps={{
-              inputProps: {
-                style: { textAlign: "center" },
-              },
+              inputProps: { style: { textAlign: "center" } },
             }}
             style={{ width: 50 }}
             sx={{ mx: 1 }}
             onChange={(e) => setNumTeams(e.target.value)}
           />
         </Box>
-
-        {/* {renderRecreateToggle(shouldRecreate, setShouldRecreate)} */}
       </DialogContent>
 
       <DialogActions>
@@ -493,9 +537,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
             fetch("/api/create-teams", {
               method: "PATCH",
               headers: getAuthHeader(),
-              body: JSON.stringify({
-                numTeams: numTeams,
-              }),
+              body: JSON.stringify({ numTeams: numTeams }),
             })
               .then((response) => {
                 if (response.ok) {
@@ -527,18 +569,12 @@ export function ActionsButtons({ numAssigned, setUpdated }) {
 
   return (
     <div>
-      <CreateTeamsDialog
-        open={teamsOpen}
-        setOpen={setTeamsOpen}
-        setUpdated={setUpdated}
-      />
+      <CreateTeamsDialog open={teamsOpen} setOpen={setTeamsOpen} setUpdated={setUpdated} />
 
       <ConfirmDialog
         message={`You are about to unassign all currently assigned teams.`}
         url={"/api/clear-team"}
-        body={{
-          current_team: 0,
-        }}
+        body={{ current_team: 0 }}
         open={unassignOpen}
         setOpen={setUnassignOpen}
         setUpdated={setUpdated}
@@ -547,9 +583,7 @@ export function ActionsButtons({ numAssigned, setUpdated }) {
       <ConfirmDialog
         message={`You are about to check out all currently assigned ballkids.`}
         url={"/api/checkout-all"}
-        body={{
-          checkout_group: "assigned",
-        }}
+        body={{ checkout_group: "assigned" }}
         open={checkoutOpen}
         setOpen={setCheckoutOpen}
         setUpdated={setUpdated}

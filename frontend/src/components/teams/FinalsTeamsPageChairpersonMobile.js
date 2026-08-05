@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
-import { Header, renderTeams } from "./FinalsTeamsPageChairpersonUtils";
+import { Header, renderTeams } from "./TeamsPageChairpersonUtils";
 
 export default function FinalsTeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
@@ -38,6 +38,7 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
       <Header
         showHovercard={showHovercard}
         setShowHovercard={setShowHovercard}
+        isFinalsPage={true}
       />
       {renderTeams(assigned, teams, showHovercard, setUpdated)}
 
