@@ -578,6 +578,7 @@ export function BallkidPopover({
   hoverCommentTypes,
   anchorEl,
   setAnchorEl,
+  showChart = false,
 }) {
   return (
     <Popover
@@ -585,23 +586,23 @@ export function BallkidPopover({
       anchorEl={anchorEl}
       anchorOrigin={{
         vertical: "bottom",
-        horizontal: "right",
+        horizontal: "left",
+      }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "left",
       }}
       sx={{
         pointerEvents: "none",
       }}
-      // onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
-      // onMouseLeave={() => setAnchorEl(null)}
-      // transformOrigin={{
-      //   vertical: "top",
-      //   horizontal: "left",
-      // }}
-      // PaperProps={{
-      //   onMouseEnter: (e) => setAnchorEl(e.currentTarget),
-      //   onMouseLeave: () => setAnchorEl(null),
-      // }}
+      PaperProps={{
+        className: showChart
+          ? "ballkid-hover-popover ballkid-hover-popover--chart"
+          : "ballkid-hover-popover",
+        elevation: 3,
+      }}
     >
-      <Card>
+      <Card elevation={0} className="ballkid-hover-popover__card">
         <CardActionArea
           component={RouterLink}
           to={
@@ -610,12 +611,18 @@ export function BallkidPopover({
               : `/ballkid/${ballkid.id}`
           }
         >
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>
+          <CardContent className="ballkid-hover-popover__content">
+            <Typography
+              variant="subtitle1"
+              className="ballkid-hover-popover__name"
+            >
               {ballkid.first_name} {ballkid.last_name}
             </Typography>
             {hoverCommentTypes.map((hoverCommentType) => (
-              <Box className="sxs" key={`${ballkid.id}_${hoverCommentType}`}>
+              <Box
+                className="sxs ballkid-hover-popover__stat"
+                key={`${ballkid.id}_${hoverCommentType}`}
+              >
                 <CommentsText
                   ballkid={ballkid}
                   commentType={hoverCommentType}
@@ -624,9 +631,11 @@ export function BallkidPopover({
               </Box>
             ))}
 
-            <Box style={{ maxWidth: 500 }}>
-              <CheckinHistoryChart pk={ballkid.id} />
-            </Box>
+            {showChart ? (
+              <Box className="ballkid-hover-popover__chart">
+                <CheckinHistoryChart pk={ballkid.id} />
+              </Box>
+            ) : null}
           </CardContent>
         </CardActionArea>
       </Card>

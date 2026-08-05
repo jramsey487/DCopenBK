@@ -12,7 +12,7 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
   const [unassigned, setUnassigned] = useState([]);
   const [updated, setUpdated] = useState(false);
 
-  const [showHovercard, setShowHovercard] = useState(false);
+  const [showHovercard, setShowHovercard] = useState(true);
 
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 

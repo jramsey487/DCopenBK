@@ -56,3 +56,47 @@
   color: #64748b;
   border-color: #e2e8f0;
 }
+
+/* Compact hover preview (name + labeled stats; chart is opt-in) */
+.ballkid-hover-popover {
+  border-radius: 10px !important;
+  overflow: hidden;
+  max-width: 260px;
+}
+
+.ballkid-hover-popover--chart {
+  max-width: 520px;
+}
+
+.ballkid-hover-popover__card {
+  background: transparent;
+}
+
+.ballkid-hover-popover__content {
+  padding: 10px 12px !important;
+}
+
+.ballkid-hover-popover__name {
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  line-height: 1.25 !important;
+  margin-bottom: 6px !important;
+  color: #0d1b3e;
+}
+
+.ballkid-hover-popover__stat {
+  margin-top: 2px;
+}
+
+.ballkid-hover-popover__stat .MuiTypography-subtitle2 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.ballkid-hover-popover__chart {
+  max-width: 500px;
+  margin-top: 8px;
+}
+
