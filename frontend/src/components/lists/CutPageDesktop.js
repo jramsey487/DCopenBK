@@ -37,6 +37,7 @@ import { cut } from "../HelpMessages";
 import { renderBallkidChipDragSurface } from "../BallkidChip";
 import "./cut-page-desktop.css";
 import "../ballkid-badges.css";
+import "../ballkid-row.css";
 
 export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch) {
   setActive((prev) => {
@@ -234,11 +235,7 @@ export function CutBallkidRow({
   coreMetaOnly = false,
 }) {
   return (
-    <div
-      className={`teams-chairperson-ballkid-row cut-ballkid-row${
-        dense ? " cut-ballkid-row--dense" : ""
-      }`}
-    >
+    <div className={`ballkid-row${dense ? " ballkid-row--dense" : ""}`}>
       <div className="teams-chairperson-ballkid-chip-wrap">
         <DraggableBallkidAndIcon
           ballkid={ballkid}
@@ -262,7 +259,7 @@ export function CutBallkidRow({
         />
       </div>
       {actions ? (
-        <div className="teams-chairperson-ballkid-actions cut-ballkid-row__actions">
+        <div className="teams-chairperson-ballkid-actions ballkid-row__actions">
           {actions}
         </div>
       ) : null}

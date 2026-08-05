@@ -6,13 +6,6 @@
   letter-spacing: 0.04em;
 }
 
-.cut-ballkid-row {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
-  min-width: 0;
-}
-
 .cut-chip-icon-group {
   display: inline-flex;
   align-items: center;
@@ -72,39 +65,6 @@
   background: #fff7ed;
   color: #c2410c;
   border-color: #fed7aa;
-}
-
-.cut-ballkid-row__actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  align-self: center;
-}
-
-.cut-page-chip-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
-  gap: 10px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.cut-page-chip-grid > .teams-chairperson-ballkid-row,
-.cut-page-chip-list .teams-chairperson-ballkid-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0;
-}
-
-.cut-page-chip-grid > .teams-chairperson-ballkid-row {
-  display: block;
-}
-
-.cut-page-chip-grid .teams-chairperson-ballkid-chip-wrap {
-  width: 100%;
 }
 
 .cut-page-chip-list .teams-chairperson-ballkid-chip-wrap {
@@ -530,10 +490,6 @@
     gap: 6px;
   }
 
-  .cut-page-mobile .teams-chairperson-ballkid-row {
-    min-width: 0;
-  }
-
   .cut-page-mobile .cut-mobile-assign-table:not(.cut-mobile-assign-table--decision) {
     min-width: 480px;
     width: max(100%, 480px);
@@ -618,16 +574,4 @@
   flex-direction: column;
   gap: 5px;
   min-width: 0;
-}
-
-.cut-ballkid-row--dense {
-  gap: 4px;
-}
-
-.cut-ballkid-row--dense .cut-ballkid-row__actions {
-  padding-right: 0;
-}
-
-.cut-ballkid-row--dense .cut-ballkid-row__actions .MuiIconButton-root {
-  padding: 4px;
 }
