@@ -40,7 +40,6 @@ export function renderBallkidChipDragSurface({
 }
 
 export function DraggableBallkidChip({
-  teamsChairpersonMinimal = true,
   commentTypes = [],
   ...props
 }) {
@@ -48,7 +47,6 @@ export function DraggableBallkidChip({
     <DraggableBallkidAndIcon
       layout="cut-chip"
       renderCustom={renderBallkidChipDragSurface}
-      teamsChairpersonMinimal={teamsChairpersonMinimal}
       commentTypes={commentTypes}
       {...props}
     />

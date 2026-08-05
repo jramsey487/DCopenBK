@@ -209,7 +209,6 @@ export function UnassignedPanel({
                     <DraggableBallkidChip
                       key={ballkid.id}
                       ballkid={ballkid}
-                      teamsChairpersonMinimal
                       commentTypes={
                         isFinalsPage ? [] : ["checkout_teams"]
                       }

@@ -153,7 +153,7 @@ function Team({ team, assigned, nextShifts, setUpdated, showPhotos, isMyTeam }) 
                 <div className="rbt-member-list">
                   {positionAssigned.map((ballkid) => (
                     <div className="rbt-member-row" key={ballkid.id}>
-                      <BallkidAndIcon ballkid={ballkid} isTeamsPage />
+                      <BallkidAndIcon ballkid={ballkid} />
                       <RatingActionButton
                         ballkid={ballkid}
                         setUpdated={setUpdated}

@@ -73,7 +73,6 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos, showYoe }) {
                     <BallkidAndIcon
                       key={ballkid.id}
                       ballkid={ballkid}
-                      isTeamsPage
                       showYoe={showYoe}
                     />
                   ))}

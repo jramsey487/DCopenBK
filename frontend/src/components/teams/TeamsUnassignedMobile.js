@@ -158,7 +158,7 @@ export function UnassignedMobilePanel({
               className="teams-mobile-unassigned-table__row"
             >
               <div className="teams-mobile-unassigned-table__name">
-                <BallkidAndIcon ballkid={ballkid} isTeamsPage />
+                <BallkidAndIcon ballkid={ballkid} />
                 {isFinalsPage ? (
                   ""
                 ) : (

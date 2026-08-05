@@ -220,9 +220,7 @@ function ChairpersonHeroMobileActions({
         <RatingButton
           ballkid={ballkid}
           setUpdated={setUpdated}
-          fullWidth={isMobile}
-          className="ballkid-profile-hero-rating-btn"
-          label="GIVE RATING"
+          isMobile={isMobile}
         />
       ) : null}
     </div>

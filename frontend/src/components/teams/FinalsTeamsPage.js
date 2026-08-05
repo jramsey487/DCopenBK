@@ -53,7 +53,6 @@ function Team({ team, assigned, isMyTeam, showPhotos }) {
                     <BallkidAndIcon
                       key={ballkid.id}
                       ballkid={ballkid}
-                      isTeamsPage
                     />
                   ))}
                 </div>

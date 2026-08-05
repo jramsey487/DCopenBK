@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useDrag } from "react-dnd";
 import { Link as RouterLink } from "react-router-dom";
-import debounce from "lodash.debounce";
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -59,37 +58,17 @@ import {
 import { Popover } from "@mui/material";
 import { YoePill } from "./teams/TeamsShared";
 import "./ballkid-badges.css";
+
 export function Icons({
   ballkid,
   margin,
   isTeamsPage = false,
-  teamsChairpersonMinimal = false,
 }) {
   const group = getLocalStorage("group");
 
-  if (ballkid.is_chairperson) {
-    return (
-      <Icon sx={{ mb: margin }}>
-        {ICON_DICT["chairperson"]}
-      </Icon>
-    );
-  }
-
-  if (teamsChairpersonMinimal) {
-    return (
-      <Icon sx={{ mb: margin }}>
-        {ballkid.is_captain && ICON_DICT["captain"]}
-        {ballkid.num_years_experience === 0 && (
-          <Tooltip title={TOOLTIP_DICT["rookie"]}>
-            <span>{ICON_DICT["rookie"]}</span>
-          </Tooltip>
-        )}
-      </Icon>
-    );
-  }
-
   return (
     <Icon sx={{ mb: margin }}>
+      {ballkid.is_chairperson && ICON_DICT["chairperson"]}
       {ballkid.is_captain && ICON_DICT["captain"]}
       {group !== "ballkid" &&
         ballkid.num_years_experience === 0 &&
@@ -104,6 +83,9 @@ export function Icons({
       {group !== "ballkid" &&
         ballkid.num_years_experience === 0 &&
         ICON_DICT["rookie"]}
+      {ballkid.num_years_experience > SUPERVET_THRESHOLD &&
+        isTeamsPage &&
+        ICON_DICT["supervet"]}
     </Icon>
   );
 }
@@ -164,29 +146,12 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
 }
 
 // Date is the default date filled in in the RatingDialog when giving a rating
-export function RatingButton({
-  ballkid,
-  setUpdated,
-  isMobile,
-  date = null,
-  fullWidth = false,
-  className,
-  label = "GIVE RATING",
-}) {
+export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
   const [open, setOpen] = useState(false);
-
   const hasRated = ballkid.num_my_ratings > 0;
-  const isProfileHero =
-    className && String(className).includes("ballkid-profile-hero-rating-btn");
 
   return (
-    <div
-      className={
-        fullWidth || isProfileHero
-          ? "ballkid-profile-hero-rating-row"
-          : undefined
-      }
-    >
+    <div className={"ballkid-profile-hero-rating-row"}>
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -196,26 +161,23 @@ export function RatingButton({
       />
 
       <Button
-        variant={
-          isProfileHero ? "contained" : hasRated ? "outlined" : "contained"
-        }
+        variant="contained"
         disableElevation
         color="primary"
         size="small"
-        fullWidth={fullWidth}
-        className={className}
+        fullWidth={isMobile}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={isProfileHero ? undefined : hasRated ? <Check /> : ""}
+        endIcon={isMobile ? undefined : hasRated ? <Check /> : ""}
         sx={
-          isProfileHero
+          isMobile
             ? { my: 0 }
             : {
-                my: isMobile ? 1 : 0.2,
+                my: 0.2,
                 fontFamily:
                   'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
                 fontWeight: 600,
@@ -248,7 +210,7 @@ export function RatingButton({
               }
         }
       >
-        {label}
+        GIVE RATING
       </Button>
     </div>
   );
@@ -675,7 +637,6 @@ export function DraggableBallkidAndIcon({
   layout = "inline",
   renderCustom = null,
   metaSlot = null,
-  teamsChairpersonMinimal = false,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -699,12 +660,7 @@ export function DraggableBallkidAndIcon({
   const metaBlockInner = (
     <>
       <span className="badge-item cut-chip-meta-icons">
-        <Icons
-          ballkid={ballkid}
-          margin={0}
-          isTeamsPage={true}
-          teamsChairpersonMinimal={teamsChairpersonMinimal}
-        />
+        <Icons ballkid={ballkid} margin={0} />
       </span>
       {commentTypes.map((commentType) => (
         <Box key={commentType} component="span" className="badge-item">
@@ -853,9 +809,7 @@ export function BallkidPopover({
 
 export function BallkidAndIcon({
   ballkid,
-  isTeamsPage = false,
   plainName = false,
-  showIcons = !plainName,
   showYoe = false,
 }) {
   const displayName = `${ballkid.first_name} ${ballkid.last_name}`;
@@ -891,13 +845,7 @@ export function BallkidAndIcon({
         <BallkidLink id={ballkid.id} name={displayName} />
       )}
       {showYoe ? <YoePill ballkid={ballkid} /> : null}
-      {showIcons ? (
-        <Icons
-          ballkid={ballkid}
-          margin={0}
-          isTeamsPage={isTeamsPage}
-        />
-      ) : null}
+      <Icons ballkid={ballkid} margin={0} />
     </Box>
   );
 }
