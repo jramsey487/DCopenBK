@@ -115,9 +115,11 @@
 .ballkid-profile-hero-meta-line {
   margin-top: 8px;
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  justify-content: flex-start;
+  gap: 8px 12px;
 }
 
 .ballkid-profile-hero-meta-row {
@@ -132,6 +134,9 @@
 .ballkid-profile-hero-actions-bar {
   flex: 0 0 auto;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  align-self: center;
 }
 
 .ballkid-profile-hero-actions-bar--dock {
@@ -281,6 +286,8 @@
   gap: 8px;
   width: 100%;
   max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .ballkid-profile-hero-rating-row {
@@ -298,7 +305,9 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-start;
     width: auto;
+    max-width: none;
   }
 
   .ballkid-profile-hero-rating-row {
@@ -309,6 +318,12 @@
   .ballkid-profile-hero-rating-row .ballkid-profile-hero-rating-btn,
   .ballkid-profile-hero-rating-row .rating-btn {
     width: auto;
+  }
+
+  .ballkid-profile-hero-actions-bar--inline,
+  .ballkid-profile-hero-mobile-actions,
+  .ballkid-profile-hero-rating-row {
+    align-self: flex-start;
   }
 }
 

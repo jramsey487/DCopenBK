@@ -1,0 +1,195 @@
+/* Leaderboards — shared chrome (shell reuses ratings-page grid styles) */
+
+.leaderboard-page .leaderboard-page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.leaderboard-page .leaderboard-page-footer {
+  margin-top: 4px;
+}
+
+.leaderboard-page .ratings-grid-frame {
+  width: 100%;
+  height: min(75vh, 720px);
+  min-height: 320px;
+}
+
+.leaderboard-page .ratings-grid-frame .MuiDataGrid-root {
+  height: 100%;
+}
+
+.leaderboard-avg-panel {
+  background: var(--tp-bg1, #fff);
+  border: 0.5px solid var(--tp-border, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.leaderboard-avg-panel .MuiTableContainer-root {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.leaderboard-avg-panel .MuiTable-root {
+  font-family: inherit;
+}
+
+.leaderboard-avg-panel .MuiTableHead-root .MuiTableCell-root {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tp-text2, #64748b);
+  background: var(--tp-bg0, #f8fafc);
+  border-bottom: 0.5px solid var(--tp-border, #e2e8f0);
+  white-space: nowrap;
+  padding: 10px 12px;
+}
+
+.leaderboard-avg-panel .MuiTableBody-root .MuiTableCell-root {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tp-text1, #0d1b3e);
+  border-bottom: none;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.leaderboard-avg-panel .leaderboard-avg-label {
+  font-weight: 600;
+  color: var(--tp-text1, #0d1b3e);
+}
+
+.leaderboard-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--tp-text2, #64748b);
+}
+
+.leaderboard-note + .leaderboard-note {
+  margin-top: 6px;
+}
+
+.leaderboard-chart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--tp-bg1, #fff);
+  border: 0.5px solid var(--tp-border, #e2e8f0);
+  border-radius: 10px;
+}
+
+.leaderboard-chart-section__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tp-text1, #0d1b3e);
+  letter-spacing: -0.01em;
+}
+
+.leaderboard-chart-section .MuiAutocomplete-root {
+  max-width: 480px;
+}
+
+.leaderboard-name-cell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+.leaderboard-name-cell .ballkid-and-icon {
+  line-height: 1.2;
+}
+
+.leaderboard-page .MuiDataGrid-cell[data-field="name"] {
+  display: flex;
+  align-items: center;
+}
+
+/* Index hub */
+.leaderboard-hub {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.leaderboard-hub-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--tp-bg1, #fff);
+  border: 0.5px solid var(--tp-border, #e2e8f0);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.leaderboard-hub-card:hover {
+  border-color: var(--tp-blue-border, #bfdbfe);
+  background: var(--tp-blue-bg, #eff6ff);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.08);
+}
+
+.leaderboard-hub-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--tp-bg0, #f8fafc);
+  color: var(--tp-blue-text, #1d4ed8);
+  flex-shrink: 0;
+}
+
+.leaderboard-hub-card:hover .leaderboard-hub-card__icon {
+  background: #fff;
+}
+
+.leaderboard-hub-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leaderboard-hub-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tp-text1, #0d1b3e);
+  letter-spacing: -0.01em;
+}
+
+.leaderboard-hub-card__desc {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tp-text2, #64748b);
+  line-height: 1.35;
+}
+
+@media (max-width: 899.98px) {
+  .leaderboard-page .ratings-grid-frame {
+    height: min(70vh, 560px);
+    min-height: 280px;
+  }
+
+  .leaderboard-hub {
+    grid-template-columns: 1fr;
+  }
+}

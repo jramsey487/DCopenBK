@@ -1,51 +1,61 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 
-import Typography from "@mui/material/Typography";
-import Link from "@mui/material/Link";
-
 import Beenhere from "@mui/icons-material/Beenhere";
 import Place from "@mui/icons-material/Place";
 import RateReview from "@mui/icons-material/RateReview";
 import ThumbsUpDown from "@mui/icons-material/ThumbsUpDown";
-import { Banners } from "../Utils";
 
-export default function Leaderboards(props) {
+import { LeaderboardShell } from "./LeaderboardsShared";
+
+const LINKS = [
+  {
+    to: "/leaderboards/checkin",
+    title: "Check-in",
+    desc: "Time checked in, days worked, and average check-in/out",
+    Icon: Beenhere,
+  },
+  {
+    to: "/leaderboards/court",
+    title: "Court Time",
+    desc: "Time on court overall and by venue",
+    Icon: Place,
+  },
+  {
+    to: "/leaderboards/ballkid",
+    title: "Ratings — Ballkid",
+    desc: "Raw and calibrated averages for ballkids",
+    Icon: ThumbsUpDown,
+  },
+  {
+    to: "/leaderboards/captain",
+    title: "Ratings — Captain",
+    desc: "Rater stats, calibration scale, and distance to ideal",
+    Icon: RateReview,
+  },
+];
+
+export default function Leaderboards() {
   return (
-    <div className="page">
-      <Banners />
-
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        Leaderboards
-      </Typography>
-
-      <div className="sxs">
-        <Beenhere color="primary" /> &emsp;
-        <Link variant="h6" component={RouterLink} to="/leaderboards/checkin">
-          Check-in
-        </Link>
+    <LeaderboardShell
+      title="Leaderboards"
+      helpPage="Leaderboards"
+      helpMessage="Pick a leaderboard to view check-in, court time, or ratings standings."
+      className="leaderboard-hub-page"
+    >
+      <div className="leaderboard-hub">
+        {LINKS.map(({ to, title, desc, Icon }) => (
+          <RouterLink key={to} to={to} className="leaderboard-hub-card">
+            <span className="leaderboard-hub-card__icon" aria-hidden="true">
+              <Icon fontSize="small" />
+            </span>
+            <span className="leaderboard-hub-card__text">
+              <span className="leaderboard-hub-card__title">{title}</span>
+              <span className="leaderboard-hub-card__desc">{desc}</span>
+            </span>
+          </RouterLink>
+        ))}
       </div>
-
-      <div className="sxs">
-        <Place color="primary" /> &emsp;
-        <Link variant="h6" component={RouterLink} to="/leaderboards/court">
-          Court Time
-        </Link>
-      </div>
-
-      <div className="sxs">
-        <ThumbsUpDown color="primary" /> &emsp;
-        <Link variant="h6" component={RouterLink} to="/leaderboards/ballkid">
-          Ratings - Ballkid
-        </Link>
-      </div>
-
-      <div className="sxs">
-        <RateReview color="primary" /> &emsp;
-        <Link variant="h6" component={RouterLink} to="/leaderboards/captain">
-          Ratings - Captain
-        </Link>
-      </div>
-    </div>
+    </LeaderboardShell>
   );
 }

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
-import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 
 import { DataGrid } from "@mui/x-data-grid";
 
-import { BallkidAndIcon, HelpIcon, Banners, getAuthHeader } from "../Utils";
+import { BallkidAndIcon, getAuthHeader } from "../Utils";
 import { ratingsCaptainLeaderboard } from "../HelpMessages";
-import { CHART_COLORS, DATA_GRID_HEIGHT, MARGINS } from "../Consts";
+import { CHART_COLORS } from "../Consts";
 import { RaterParamsChart } from "../ballkid/RaterParamsChart";
+import {
+  LeaderboardShell,
+  LeaderboardGridPanel,
+  LeaderboardNote,
+} from "./LeaderboardsShared";
 
 function RaterParamsSection() {
   const [params, setParams] = useState();
@@ -24,13 +27,15 @@ function RaterParamsSection() {
       .then((data) => setParams(data));
   }, []);
 
-  return params === undefined || params === null ? (
-    ""
-  ) : (
-    <div>
-      <Typography variant="h6" sx={MARGINS}>
-        Rater Parameters Comparison Chart
-      </Typography>
+  if (params === undefined || params === null) {
+    return null;
+  }
+
+  return (
+    <div className="leaderboard-chart-section">
+      <h2 className="leaderboard-chart-section__title">
+        Rater Parameters Comparison
+      </h2>
 
       <Autocomplete
         multiple
@@ -38,11 +43,12 @@ function RaterParamsSection() {
         options={params.map((param) => ({ id: param.id, name: param.name }))}
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(option, value) => option.name === value.name}
-        renderInput={(params) => (
+        renderInput={(inputParams) => (
           <TextField
-            label="Select Raters to Compare..."
-            variant="standard"
-            {...params}
+            label="Select raters to compare"
+            variant="outlined"
+            size="small"
+            {...inputParams}
           />
         )}
         onChange={(e, val) => setSelected(val.map((obj) => obj.name))}
@@ -69,7 +75,7 @@ function RaterParamsSection() {
   );
 }
 
-export default function CaptainLeaderboard(props) {
+export default function CaptainLeaderboard() {
   const [ballkids, setBallkids] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,47 +90,52 @@ export default function CaptainLeaderboard(props) {
     {
       field: "rank",
       headerName: "",
-      width: 30,
+      width: 48,
       sortable: true,
       renderCell: (index) => index.api.getRowIndex(index.row.id) + 1,
     },
     {
       field: "name",
       headerName: "Captain / Chairperson",
-      width: 200,
-      renderCell: (rowData) => <BallkidAndIcon ballkid={rowData.row.ballkid} />,
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (rowData) => (
+        <Box className="leaderboard-name-cell">
+          <BallkidAndIcon ballkid={rowData.row.ballkid} />
+        </Box>
+      ),
     },
     {
       field: "numRatings",
       headerName: "# of Ratings",
-      width: 100,
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.num_ratings,
     },
     {
       field: "avgRating",
       headerName: "Average",
-      width: 140,
+      width: 100,
       valueGetter: (rowData) => rowData.row.ballkid.raw_avg,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "stdevRating",
-      headerName: "Standard Deviation",
-      width: 140,
+      headerName: "Std. Dev.",
+      width: 100,
       valueGetter: (rowData) => rowData.row.ballkid.raw_stdev,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "scale",
-      headerName: "Calibration Scale",
-      width: 140,
+      headerName: "Cal. Scale",
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.scale,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "offset",
-      headerName: "Calibration Offset",
-      width: 140,
+      headerName: "Cal. Offset",
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.offset,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
@@ -143,44 +154,40 @@ export default function CaptainLeaderboard(props) {
   }));
 
   return (
-    <div className="page">
-      <Banners />
-
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Ratings Leaderboard - Captain</Typography>
-        &thinsp;
-        <HelpIcon
-          page="Ratings Leaderboard - Captain"
-          message={ratingsCaptainLeaderboard}
-        />
-      </Box>
-
-      {loading ? (
-        <CircularProgress className="center" size={30} />
-      ) : (
-        <div>
-          <div style={{ height: DATA_GRID_HEIGHT }}>
-            <DataGrid columns={columns} rows={rows} density="compact" />
+    <LeaderboardShell
+      title="Ratings — Captain"
+      helpPage="Ratings Leaderboard - Captain"
+      helpMessage={ratingsCaptainLeaderboard}
+      footer={
+        <LeaderboardNote>
+          Average and standard deviation are for ratings submitted (not
+          received) by this captain/chairperson. Calibration scale and offset
+          use the method described{" "}
+          <Link
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
+          >
+            here
+          </Link>
+          .
+        </LeaderboardNote>
+      }
+    >
+      <LeaderboardGridPanel loading={loading}>
+        {!loading ? (
+          <div className="ratings-grid-frame">
+            <DataGrid
+              columns={columns}
+              rows={rows}
+              density="compact"
+              disableSelectionOnClick
+            />
           </div>
+        ) : null}
+      </LeaderboardGridPanel>
 
-          <Typography variant="body1" mt={2}>
-            Note: Average is the average of all the ratings submitted (NOT
-            received) by this captain/chairperson. Likewise for standard
-            deviation. Calibration scale and offset are calculated for each
-            rater based on their ratings submitted in 2022, 2023, and 2024 by
-            the calibration method described{" "}
-            <Link
-              target="_blank"
-              href="https://github.com/jtiosue/rcal/blob/master/report/review_calibration.pdf"
-            >
-              here
-            </Link>
-            .
-          </Typography>
-
-          <RaterParamsSection />
-        </div>
-      )}
-    </div>
+      {!loading ? <RaterParamsSection /> : null}
+    </LeaderboardShell>
   );
 }

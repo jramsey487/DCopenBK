@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 
 import { DataGrid } from "@mui/x-data-grid";
 
-import { BallkidAndIcon, HelpIcon, Banners, getAuthHeader } from "../Utils";
+import { BallkidAndIcon, getAuthHeader } from "../Utils";
 import { ratingsBallkidLeaderboard } from "../HelpMessages";
-import { DATA_GRID_HEIGHT } from "../Consts";
+import {
+  LeaderboardShell,
+  LeaderboardGridPanel,
+  LeaderboardNote,
+} from "./LeaderboardsShared";
 
-export default function BallkidLeaderboard(props) {
+export default function BallkidLeaderboard() {
   const [ballkids, setBallkids] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,47 +27,51 @@ export default function BallkidLeaderboard(props) {
     {
       field: "rank",
       headerName: "",
-      width: 30,
+      width: 48,
       sortable: true,
       renderCell: (index) => index.api.getRowIndex(index.row.id) + 1,
     },
     {
       field: "name",
       headerName: "Ballkid",
-      width: 200,
-      renderCell: (rowData) => <BallkidAndIcon ballkid={rowData.row.ballkid} />,
+      flex: 1.2,
+      minWidth: 160,
+      renderCell: (rowData) => (
+        <Box className="leaderboard-name-cell">
+          <BallkidAndIcon ballkid={rowData.row.ballkid} />
+        </Box>
+      ),
     },
     {
       field: "numRatings",
       headerName: "# of Ratings",
-      width: 100,
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.num_ratings,
     },
-
     {
       field: "avgRating",
       headerName: "Average",
-      width: 150,
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.raw_avg,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "stdevRating",
-      headerName: "Standard Deviation",
-      width: 150,
+      headerName: "Std. Dev.",
+      width: 110,
       valueGetter: (rowData) => rowData.row.ballkid.raw_stdev,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "offset",
-      headerName: "Calibrated Average",
-      width: 150,
+      headerName: "Calibrated Avg",
+      width: 130,
       valueGetter: (rowData) => rowData.row.ballkid.calibrated_avg,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
     },
     {
       field: "improvement",
-      headerName: "Calibrated St. Dev.",
+      headerName: "Calibrated Std. Dev.",
       width: 150,
       valueGetter: (rowData) => rowData.row.ballkid.calibrated_stdev,
       valueFormatter: (obj) => (!obj.value ? "" : Number(obj.value.toFixed(3))),
@@ -78,35 +84,30 @@ export default function BallkidLeaderboard(props) {
   }));
 
   return (
-    <div className="page">
-      <Banners />
-
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Ratings Leaderboard - Ballkid</Typography>
-        &thinsp;
-        <HelpIcon
-          page="Ratings Leaderboard - Ballkid"
-          message={ratingsBallkidLeaderboard}
-        />
-      </Box>
-      {loading ? (
-        <CircularProgress className="center" size={30} />
-      ) : (
-        <div>
-          <div style={{ height: DATA_GRID_HEIGHT }}>
-            <DataGrid columns={columns} rows={rows} density="compact" />
+    <LeaderboardShell
+      title="Ratings — Ballkid"
+      helpPage="Ratings Leaderboard - Ballkid"
+      helpMessage={ratingsBallkidLeaderboard}
+      footer={
+        <LeaderboardNote>
+          Calibrated average and calibrated standard deviation only include
+          ratings from raters within the tournament distance-to-ideal threshold.
+          Average and standard deviation are raw values from all raters.
+        </LeaderboardNote>
+      }
+    >
+      <LeaderboardGridPanel loading={loading}>
+        {!loading ? (
+          <div className="ratings-grid-frame">
+            <DataGrid
+              columns={columns}
+              rows={rows}
+              density="compact"
+              disableSelectionOnClick
+            />
           </div>
-          <Typography variant="body1" mt={2}>
-            Note: Calibrated average and calibrated standard deviation now ONLY
-            include ratings provided by raters who have a reasonable distance to
-            ideal. The threshold for distance to ideal (and therefore the
-            threshold for which raters to include vs. exclude) can be set in
-            Tournament Settings. Average and standard deviation are the raw
-            average and raw standard deviation including all ratings received
-            from all raters.
-          </Typography>
-        </div>
-      )}
-    </div>
+        ) : null}
+      </LeaderboardGridPanel>
+    </LeaderboardShell>
   );
 }

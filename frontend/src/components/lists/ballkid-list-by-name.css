@@ -279,6 +279,18 @@
     border-width: 1px !important;
   }
 
+  .ballkid-list-page
+    .ballkid-list-action-btn.teams-chairperson-team-btn--keep.MuiButton-outlined {
+    background: transparent;
+  }
+
+  .ballkid-list-page
+    .ballkid-list-action-btn.teams-chairperson-team-btn--keep.MuiButton-outlined:hover:not(
+      .Mui-disabled
+    ) {
+    background: var(--tp-green-bg, #ecfdf5);
+  }
+
   .ballkid-list-grid .ballkid-list-action-btn.MuiButton-root {
     width: 100%;
   }

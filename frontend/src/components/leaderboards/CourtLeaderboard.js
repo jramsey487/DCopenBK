@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
-import Switch from "@mui/material/Switch";
 import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
-import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
 import { DataGrid } from "@mui/x-data-grid";
@@ -19,85 +16,70 @@ import {
   getTimeFloat,
   BallkidAndIcon,
   toPercent,
-  HelpIcon,
-  Banners,
 } from "../Utils";
 import { courtLeaderboard } from "../HelpMessages";
-import { DATA_GRID_HEIGHT } from "../Consts";
+import {
+  LeaderboardShell,
+  LeaderboardGridPanel,
+  LeaderboardAvgPanel,
+  LeaderboardModePill,
+  LeaderboardNote,
+} from "./LeaderboardsShared";
 
-function renderAverages(averages, showPercent) {
-  const courtTimes = {
-    "On Court": {
-      raw: averages["court_avg"],
-      percent: averages["court_avg"] / averages["checkin_avg"],
-    },
-    Stadium: {
-      raw: averages["stadium_avg"],
-      percent: averages["stadium_avg"] / averages["court_avg"],
-    },
-    Harris: {
-      raw: averages["harris_avg"],
-      percent: averages["harris_avg"] / averages["court_avg"],
-    },
-    Grandstand: {
-      raw: averages["grandstand_avg"],
-      percent: averages["grandstand_avg"] / averages["court_avg"],
-    },
-    "Court 4": {
-      raw: averages["four_avg"],
-      percent: averages["four_avg"] / averages["court_avg"],
-    },
-    "Court 5": {
-      raw: averages["five_avg"],
-      percent: averages["five_avg"] / averages["court_avg"],
-    },
-  };
+const COURT_KEYS = [
+  { key: "On Court", raw: "court_avg", denom: "checkin_avg" },
+  { key: "Stadium", raw: "stadium_avg", denom: "court_avg" },
+  { key: "Harris", raw: "harris_avg", denom: "court_avg" },
+  { key: "Grandstand", raw: "grandstand_avg", denom: "court_avg" },
+  { key: "Court 4", raw: "four_avg", denom: "court_avg" },
+  { key: "Court 5", raw: "five_avg", denom: "court_avg" },
+];
 
+function AveragesTable({ averages, showPercent }) {
   return (
-    <TableContainer sx={{ mt: 1, mb: 3 }}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell align="center"></TableCell>
-            {Object.keys(courtTimes).map((court) => (
-              <TableCell key={court} align="center">
-                {court}
+    <LeaderboardAvgPanel>
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell align="center" />
+              {COURT_KEYS.map(({ key }) => (
+                <TableCell key={key} align="center">
+                  {key}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell align="center" className="leaderboard-avg-label">
+                {showPercent ? "Average Percent" : "Average Time"}
               </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          <TableRow>
-            <TableCell align="center" width="22%">
-              {showPercent ? "Average Percent" : "Average Time"}
-            </TableCell>
-            {Object.keys(courtTimes).map((court) => (
-              <TableCell key={court} align="center" width="13%">
-                {showPercent
-                  ? `${Number(
-                      (courtTimes[court]["percent"] * 100).toFixed(1)
-                    )}%`
-                  : getDurationStr(
-                      parseFloat(courtTimes[court]["raw"]) / 3600,
-                      false
-                    )}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableBody>
-      </Table>
-    </TableContainer>
+              {COURT_KEYS.map(({ key, raw, denom }) => {
+                const rawVal = averages[raw];
+                const denomVal = averages[denom];
+                const percent = denomVal ? rawVal / denomVal : 0;
+                return (
+                  <TableCell key={key} align="center">
+                    {showPercent
+                      ? `${Number((percent * 100).toFixed(1))}%`
+                      : getDurationStr(parseFloat(rawVal) / 3600, false)}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </LeaderboardAvgPanel>
   );
 }
 
-export default function CourtLeaderboard(props) {
+export default function CourtLeaderboard() {
   const [ballkids, setBallkids] = useState([]);
   const [averages, setAverages] = useState();
   const [loading, setLoading] = useState(true);
-
-  // const [showAdjusted, setShowAdjusted] = useState(false);
   const [showPercent, setShowPercent] = useState(false);
-
   const timeColWidth = 100;
 
   useEffect(() => {
@@ -115,15 +97,20 @@ export default function CourtLeaderboard(props) {
     {
       field: "rank",
       headerName: "",
-      width: 30,
+      width: 48,
       sortable: true,
       renderCell: (index) => index.api.getRowIndex(index.row.id) + 1,
     },
     {
       field: "name",
       headerName: "Ballkid",
-      width: 200,
-      renderCell: (rowData) => <BallkidAndIcon ballkid={rowData.row.ballkid} />,
+      flex: 1.2,
+      minWidth: 160,
+      renderCell: (rowData) => (
+        <Box className="leaderboard-name-cell">
+          <BallkidAndIcon ballkid={rowData.row.ballkid} />
+        </Box>
+      ),
     },
     {
       field: "time",
@@ -176,7 +163,7 @@ export default function CourtLeaderboard(props) {
     {
       field: "grandstand",
       headerName: (showPercent ? "% " : "") + "Grandstand",
-      width: timeColWidth,
+      width: timeColWidth + 16,
       valueGetter: (rowData) =>
         showPercent
           ? getTimeFloat(rowData.row.grandstand) /
@@ -234,58 +221,46 @@ export default function CourtLeaderboard(props) {
   }));
 
   return (
-    <div className="page">
-      <Banners />
-
-      <Box className="sxs" sx={{ mb: 1 }}>
-        <Typography variant="h4">Court Time Leaderboard</Typography>
-        &thinsp;
-        <HelpIcon page="Court Time Leaderboard" message={courtLeaderboard} />
-      </Box>
-
-      {/* <div className="sxs">
-        <Typography variant="body1">Raw Court Time</Typography>
-        <Switch
-          checked={showAdjusted}
-          onClick={(e) => setShowAdjusted(e.target.checked)}
-        />
-        <Typography variant="body1">Adjusted Court Time</Typography>
-      </div> */}
-
-      <div className="sxs">
-        <Typography variant="body1">Show as Time</Typography>
-        <Switch
+    <LeaderboardShell
+      title="Court Time Leaderboard"
+      helpPage="Court Time Leaderboard"
+      helpMessage={courtLeaderboard}
+      toolbar={
+        <LeaderboardModePill
           checked={showPercent}
-          onClick={(e) => setShowPercent(e.target.checked)}
+          onChange={setShowPercent}
+          offLabel="Time"
+          onLabel="Percent"
         />
-        <Typography variant="body1">Show as Percent</Typography>
-      </div>
+      }
+      footer={
+        <>
+          <LeaderboardNote>
+            % On Court = (Total time on any court) / (Total time checked in)
+          </LeaderboardNote>
+          <LeaderboardNote>
+            % [Court Name] = (Total time on that court) / (Total time on any
+            court)
+          </LeaderboardNote>
+        </>
+      }
+    >
+      {averages !== undefined ? (
+        <AveragesTable averages={averages} showPercent={showPercent} />
+      ) : null}
 
-      {loading ? (
-        <CircularProgress className="center" size={30} />
-      ) : (
-        <div>
-          {averages !== undefined ? renderAverages(averages, showPercent) : ""}
-
-          <div style={{ height: DATA_GRID_HEIGHT }}>
-            <DataGrid columns={columns} rows={rows} density="compact" />
+      <LeaderboardGridPanel loading={loading}>
+        {!loading ? (
+          <div className="ratings-grid-frame">
+            <DataGrid
+              columns={columns}
+              rows={rows}
+              density="compact"
+              disableSelectionOnClick
+            />
           </div>
-
-          <Typography variant="body1" mt={2}>
-            Note: % On Court = (Total time on any court) / (Total time checked
-            in)
-          </Typography>
-          <Typography variant="body1">
-            Note: % [<em>Court Name </em>] = (Total time on [
-            <em>Court Name </em>]) / (Total time on any court)
-          </Typography>
-          {/* <Typography variant="body1">
-        Note: Raw court time takes into account rain delays and courts ending
-        early. Adjusted court time additionally takes into account number of
-        ballkids per team.
-      </Typography> */}
-        </div>
-      )}
-    </div>
+        ) : null}
+      </LeaderboardGridPanel>
+    </LeaderboardShell>
   );
 }
