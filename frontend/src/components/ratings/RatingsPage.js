@@ -20,24 +20,41 @@ export default function RatingsPage() {
   const [year, setYear] = useState(getCurrentYear());
 
   const [calibrated, setCalibrated] = useState([]);
+  const [calibratedForYear, setCalibratedForYear] = useState(null);
   const [showCalibrated, setShowCalibrated] = useState(false);
   const [calibrationWarning, setCalibrationWarning] = useState("");
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
 
-  const [loading, setLoading] = useState(true);
+  const [calibratedLoading, setCalibratedLoading] = useState(false);
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
     fetch(`/api/ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setRatings(data))
-      .then(() => setUpdated(false));
+      .then((data) => {
+        setRatings(data);
+        if (updated) {
+          // Rating mutated — force calibrated to reload if/when shown.
+          setCalibratedForYear(null);
+          setUpdated(false);
+        }
+      });
   }, [year, updated]);
 
+  // Only run the expensive calibration when viewing calibrated ratings.
   useEffect(() => {
-    setLoading(true);
+    if (!showCalibrated || calibratedForYear === year) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    setCalibratedLoading(true);
+
     fetch(`/api/calibrated-ratings/${year}`, { headers: getAuthHeader() })
       .then((response) => {
+        if (cancelled) {
+          return null;
+        }
         if (response.status === 203) {
           setCalibrationWarning(
             "Warning: Insufficient data for effective overall calibration."
@@ -51,9 +68,29 @@ export default function RatingsPage() {
         }
         return response.json();
       })
-      .then((data) => setCalibrated(data))
-      .finally(() => setLoading(false));
-  }, [year]);
+      .then((data) => {
+        if (!cancelled) {
+          setCalibrated(Array.isArray(data) ? data : []);
+          setCalibratedForYear(year);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCalibrated([]);
+          setCalibratedForYear(year);
+          setCalibrationWarning("");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCalibratedLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [year, showCalibrated, calibratedForYear]);
 
   const handleModeChange = (checked) => {
     setShowCalibrated(checked);
@@ -103,7 +140,7 @@ export default function RatingsPage() {
         </Alert>
       </Collapse>
 
-      {showCalibrated && loading ? (
+      {showCalibrated && calibratedLoading ? (
         <RatingsGridPanel loading>
           <CircularProgress size={28} />
         </RatingsGridPanel>
