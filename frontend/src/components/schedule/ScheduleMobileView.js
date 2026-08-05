@@ -8,6 +8,7 @@ import {
   isCurrentHour,
   ConfirmDialog,
 } from "../Utils";
+import { ICON_DICT } from "../Consts";
 import ScheduleCalendar from "./ScheduleCalendar";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { schedule, scheduleNonchairperson } from "../HelpMessages";
@@ -100,7 +101,9 @@ function TeamSheetMember({ member }) {
       </span>
       <span className="sheet-member-name">{member.name}</span>
       {member.isCaptain ? (
-        <span className="sheet-cap-badge">Captain</span>
+        <span className="sheet-member-captain" title="Captain" aria-label="Captain">
+          {ICON_DICT.captain}
+        </span>
       ) : null}
     </li>
   );

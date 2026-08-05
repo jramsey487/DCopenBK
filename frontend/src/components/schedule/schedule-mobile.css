@@ -243,22 +243,22 @@
 .schedule-page .date-group {
   display: flex;
   align-items: center;
-  height: 34px;
+  height: 40px;
   border: 0.5px solid var(--sched-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--sched-bg1);
   flex: 1;
-  min-width: 0;
-  max-width: 360px;
+  min-width: 220px;
+  max-width: 420px;
 }
 
 .schedule-page .date-arrow {
-  width: 32px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: transparent;
   color: var(--sched-text2);
-  font-size: 15px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,19 +269,19 @@
 }
 
 .schedule-page .date-arrow:first-child {
-  border-radius: 8px 0 0 8px;
+  border-radius: 10px 0 0 10px;
   border-right: 0.5px solid var(--sched-border);
 }
 
 .schedule-page .date-arrow:last-child {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 10px 10px 0;
   border-left: 0.5px solid var(--sched-border);
 }
 
 .schedule-page .date-center {
   flex: 1;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--sched-text1);
   text-align: center;
   white-space: nowrap;
@@ -289,7 +289,9 @@
   text-overflow: ellipsis;
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 0 14px;
+  min-width: 140px;
+  letter-spacing: -0.01em;
   cursor: pointer;
   font-family: var(--font-sans);
 }
@@ -1094,16 +1096,15 @@
   line-height: 1.3;
 }
 
-.schedule-sheet .sheet-cap-badge {
+.schedule-sheet .sheet-member-captain {
   flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 3px 7px;
-  border-radius: 6px;
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.schedule-sheet .sheet-member-captain .MuiSvgIcon-root {
+  font-size: 1.1rem;
 }
 
 /* Wider screens: larger chips, centered team dialog */
@@ -1185,9 +1186,19 @@
 }
 .schedule-edit-date-toolbar {
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .schedule-edit-date-toolbar .MuiTextField-root {
-  min-width: 160px;
+  min-width: 200px;
+}
+
+.schedule-edit-date-toolbar .MuiOutlinedInput-root {
+  min-height: 40px;
+}
+
+.schedule-edit-date-toolbar .MuiOutlinedInput-input {
+  padding-left: 14px;
+  padding-right: 8px;
+  letter-spacing: -0.01em;
 }

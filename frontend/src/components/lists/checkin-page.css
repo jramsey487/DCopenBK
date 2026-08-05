@@ -82,6 +82,33 @@
   text-overflow: ellipsis;
 }
 
+/* Photo/grid cards: center name, icons, and time on one line */
+.checkin-page .ballkid-list-grid .ballkid-card-name-row {
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  text-align: center;
+}
+
+.checkin-page .ballkid-list-grid .ballkid-card-name {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.checkin-page .ballkid-list-grid .ballkid-card-name-icons {
+  justify-content: center;
+}
+
+.checkin-page .ballkid-list-grid .ballkid-card-name-trailing {
+  max-width: none;
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.checkin-page .ballkid-list-grid .ballkid-card-name-trailing:empty {
+  display: none;
+}
+
 .checkin-page .checkin-card-field {
   display: flex;
   flex-direction: column;

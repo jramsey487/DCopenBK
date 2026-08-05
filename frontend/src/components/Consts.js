@@ -45,13 +45,13 @@ export const CUT_STATUSES = {
 };
 
 export const ICON_DICT = {
-  captain: <Star sx={{ color: "orange" }} />,
+  captain: <Star fontSize="small" sx={{ color: "orange" }} />,
   rookie: <Circle fontSize="small" sx={{ color: "green" }} />,
-  chairperson: <EventSeat sx={{ color: "purple" }} />,
+  chairperson: <EventSeat fontSize="small" sx={{ color: "purple" }} />,
   supervet: <Square fontSize="small" sx={{ color: "info.main" }} />,
   outOfTownBallkid: <Square fontSize="small" sx={{ color: "error.main" }} />,
   outOfTownRookie: <Circle fontSize="small" sx={{ color: "error.main" }} />,
-  back: <EmojiPeople sx={{ color: "primary.main" }} />,
+  back: <EmojiPeople fontSize="small" sx={{ color: "primary.main" }} />,
   net: <Grid4x4 fontSize="small" sx={{ color: "gray" }} />,
 };
 

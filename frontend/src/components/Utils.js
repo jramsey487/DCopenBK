@@ -7,7 +7,6 @@ import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import CardActionArea from "@mui/material/CardActionArea";
 import Link from "@mui/material/Link";
-import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import Alert from "@mui/material/Alert";
 import Collapse from "@mui/material/Collapse";
@@ -85,16 +84,13 @@ export function ballkidIconNodes(ballkid, { isTeamsPage = false } = {}) {
   if (group !== "ballkid" && ballkid.num_years_experience === 0) {
     icons.push(ICON_DICT.rookie);
   }
-  if (ballkid.num_years_experience > SUPERVET_THRESHOLD && isTeamsPage) {
-    icons.push(ICON_DICT.supervet);
-  }
 
   return icons;
 }
 
 export function Icons({
   ballkid,
-  margin,
+  margin = 0,
   isTeamsPage = false,
 }) {
   const icons = ballkidIconNodes(ballkid, { isTeamsPage });
@@ -103,9 +99,16 @@ export function Icons({
   }
 
   return (
-    <Icon sx={{ mb: margin }}>
+    <span
+      className="ballkid-meta-icons"
+      style={
+        margin
+          ? { marginBottom: typeof margin === "number" ? margin * 8 : margin }
+          : undefined
+      }
+    >
       {icons}
-    </Icon>
+    </span>
   );
 }
 
@@ -980,11 +983,16 @@ export function CommentsText({
       );
     }
 
-    case "checkout":
+    case "checkout": {
+      const value = ballkid?.checkout_comments ?? "End";
+      if (!showLabel && value === "End") {
+        return null;
+      }
       return labeled(
         "Today's Checkout Time: ",
-        <CheckoutTimePill ballkid={ballkid} />
+        <CheckoutTimePill ballkid={ballkid} hideWhenEnd={!showLabel} />
       );
+    }
 
     case "experience": {
       if (!showLabel && !ballkid.num_years_experience) {

@@ -381,6 +381,23 @@
   text-align: right;
 }
 
+/* Rate by Past Team photo cards: center name + icons */
+.ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name-row {
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  text-align: center;
+}
+
+.ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name-icons {
+  justify-content: center;
+}
+
 .ratings-page .rate-ballkid-meta__line {
   font-size: 12px;
   font-weight: 500;

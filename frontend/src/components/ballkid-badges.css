@@ -18,6 +18,18 @@
   display: none;
 }
 
+.ballkid-meta-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.ballkid-meta-icons .MuiSvgIcon-root {
+  display: block;
+}
+
 .ballkid-pill {
   display: inline-flex;
   align-items: center;
