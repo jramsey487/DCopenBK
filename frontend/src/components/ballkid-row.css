@@ -1,41 +1,57 @@
-.ballkid-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    min-width: 0;
-    padding: 6px 4px;
-    border-radius: 8px;
-    transition: background 0.12s ease;
-  }
-  
-  .ballkid-row:hover {
-    background: #f8fafc;
-  }
-  
-  .ballkid-row--dense {
-    gap: 4px;
-  }
-  
-  .ballkid-row__actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-    align-self: center;
-  }
-  
-  .ballkid-row--dense .ballkid-row__actions {
-    padding-right: 0;
-  }
-  
-  .ballkid-row--dense .ballkid-row__actions .MuiIconButton-root {
-    padding: 4px;
-  }
+/* Shared ballkid row chrome + stack spacing.
+ * Vertical rhythm between rows comes from .ballkid-row padding only —
+ * parent lists/grids should use .ballkid-row-list / .ballkid-row-grid (gap: 0). */
 
-  .ballkid-row .ballkid-chip {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-  }
+.ballkid-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ballkid-row-grid {
+  gap: 0;
+}
+
+.ballkid-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 4px;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+
+.ballkid-row:hover {
+  background: #f8fafc;
+}
+
+.ballkid-row--dense {
+  gap: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.ballkid-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.ballkid-row--dense .ballkid-row__actions {
+  padding-right: 0;
+}
+
+.ballkid-row--dense .ballkid-row__actions .MuiIconButton-root {
+  padding: 4px;
+}
+
+.ballkid-row .ballkid-chip {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}

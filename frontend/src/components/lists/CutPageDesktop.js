@@ -97,7 +97,7 @@ function CutBallkidGrid({ ballkids, ...rowProps }) {
 
   return (
     <div className="cut-page-two-columns">
-      <div className="cut-page-two-columns__col">
+      <div className="cut-page-two-columns__col ballkid-row-list">
         {leftColumn.map((ballkid) => (
           <DraggableBallkidRow
             key={ballkid.id}
@@ -107,7 +107,7 @@ function CutBallkidGrid({ ballkids, ...rowProps }) {
           />
         ))}
       </div>
-      <div className="cut-page-two-columns__col">
+      <div className="cut-page-two-columns__col ballkid-row-list">
         {rightColumn.map((ballkid) => (
           <DraggableBallkidRow
             key={ballkid.id}
@@ -123,7 +123,7 @@ function CutBallkidGrid({ ballkids, ...rowProps }) {
 
 function CutBallkidStack({ ballkids, actionsForBallkid, ...rowProps }) {
   return (
-    <div className="cut-page-chip-list">
+    <div className="cut-page-chip-list ballkid-row-list">
       {ballkids.map((ballkid) => (
         <DraggableBallkidRow
           key={ballkid.id}

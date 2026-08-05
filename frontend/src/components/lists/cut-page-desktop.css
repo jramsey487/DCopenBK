@@ -13,9 +13,6 @@
 }
 
 .cut-page-chip-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-top: 8px;
 }
 
@@ -402,10 +399,6 @@
     margin-bottom: 4px;
   }
 
-  .cut-page-mobile .cut-page-chip-list {
-    gap: 6px;
-  }
-
   .cut-page-mobile .cut-mobile-assign-table:not(.cut-mobile-assign-table--decision) {
     min-width: 480px;
     width: max(100%, 480px);
@@ -486,8 +479,5 @@
 }
 
 .cut-page-two-columns__col {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
   min-width: 0;
 }

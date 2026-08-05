@@ -216,7 +216,7 @@
   .team-member-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
   }
 
   .team-member-list .ballkid-and-icon {
@@ -774,7 +774,6 @@
   .teams-chairperson-unassigned-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
-    gap: 10px;
     margin-top: 10px;
     margin-bottom: 8px;
   }

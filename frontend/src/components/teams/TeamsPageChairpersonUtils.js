@@ -157,7 +157,7 @@ export function renderBallkidsOnTeam(
   isFinalsPage = false
 ) {
   return (
-    <div className="team-member-list">
+    <div className="team-member-list ballkid-row-list">
       {ballkids.map((ballkid) => (
         <DraggableBallkidRow
           key={`ballkid${ballkid.id}`}

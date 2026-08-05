@@ -204,7 +204,7 @@ export function UnassignedPanel({
                   No {position.toLowerCase()}s in this pool.
                 </div>
               ) : (
-                <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel">
+                <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel ballkid-row-grid">
                   {ballkids.map((ballkid) => (
                     <DraggableBallkidRow
                       key={ballkid.id}
