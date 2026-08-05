@@ -389,12 +389,39 @@
 }
 
 .ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name {
-  flex: 0 1 auto;
+  flex: 0 1 auto !important;
   text-align: center;
 }
 
 .ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name-icons {
   justify-content: center;
+}
+
+/* Beat ballkid-list mobile left-align rules (captains often on phone) */
+@media (max-width: 900px) {
+  .ratings-page.rate-by-name-page .ballkid-list-grid .MuiCardContent-root,
+  .ratings-page.rate-by-past-team-page .ballkid-list-grid .MuiCardContent-root {
+    text-align: center;
+  }
+
+  .ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name-row,
+  .ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name-row {
+    justify-content: center;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+
+  .ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name,
+  .ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name {
+    flex: 0 1 auto !important;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name-icons,
+  .ratings-page.rate-by-past-team-page .ballkid-list-grid .ballkid-card-name-icons {
+    justify-content: center;
+  }
 }
 
 .ratings-page .rate-ballkid-meta__line {
