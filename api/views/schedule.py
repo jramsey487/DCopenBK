@@ -350,44 +350,45 @@ class ShiftSchedule(APIView):
         hour = request.data["hour"]
         start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
         direction = request.data["direction"]
+        step = timedelta(minutes=30)
 
-        logger.info(f"[ShiftSchedule] shifting schedule {direction} at {start}")
+        logger.info(f"[ShiftSchedule] shifting schedule {direction} by 30m at {start}")
 
         remaining_days_shifts = Schedule.objects.filter(
             start__gte=start, start__lt=start + timedelta(hours=12)
         )
 
-        # Shift back schedule by 1 hour
+        # Shift schedule later by 30 minutes (insert empty gap at pivot)
         if direction == "down":
             courts = list(
                 Schedule.objects.filter(start=start).values_list("court", flat=True)
             )
 
-            # Shift all shifts back by 1 hour
             for shift in remaining_days_shifts:
-                logger.info(f"[ShiftSchedule] shifting shift {shift} back by 1 hour")
-                shift.start = shift.start + timedelta(hours=1)
+                logger.info(
+                    f"[ShiftSchedule] shifting shift {shift} later by 30 minutes"
+                )
+                shift.start = shift.start + step
                 shift.save()
 
-            # Create empty shifts for the current hour
             for court in courts:
                 shift = Schedule.objects.create(court=court, start=start, team=0)
                 logger.info(f"[ShiftSchedule] created shift {shift}")
 
-        # Shift schedule up by 1 hour
+        # Shift schedule earlier by 30 minutes
         elif direction == "up":
-            # Delete previous hour's shifts
-            for shift in Schedule.objects.filter(start=start - timedelta(hours=1)):
+            for shift in Schedule.objects.filter(start=start - step):
                 logger.info(f"[ShiftSchedule] deleting shift {shift}")
                 shift.delete()
 
-            # Shift all remaining day's shifts up one hour
             for shift in remaining_days_shifts:
-                logger.info(f"[ShiftSchedule] shifting shift {shift} up by 1 hour")
-                shift.start = shift.start - timedelta(hours=1)
+                logger.info(
+                    f"[ShiftSchedule] shifting shift {shift} earlier by 30 minutes"
+                )
+                shift.start = shift.start - step
                 shift.save()
 
         return Response(
-            {"Success": f"Shifted schedule {direction} at {start}"},
+            {"Success": f"Shifted schedule {direction} by 30m at {start}"},
             status=status.HTTP_200_OK,
         )

@@ -1,0 +1,4 @@
+/* Desktop schedule table — half-hour rain-delay rows */
+.schedule-row--half > td {
+  border-top: 1px dotted rgba(13, 27, 62, 0.35) !important;
+}

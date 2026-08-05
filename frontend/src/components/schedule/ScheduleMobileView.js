@@ -5,7 +5,8 @@ import {
   getLocalStorage,
   getToday,
   dayHourToStr,
-  isCurrentHour,
+  isCurrentScheduleSlot,
+  isHalfHourSlot,
   ConfirmDialog,
 } from "../Utils";
 import { ICON_DICT } from "../Consts";
@@ -51,7 +52,7 @@ function shiftSlashDate(dateStr, days) {
 }
 
 function formatTimeLabel(hour) {
-  const label = dayHourToStr(hour);
+  const label = dayHourToStr(hour, isHalfHourSlot(hour));
   if (!label) {
     return "";
   }
@@ -254,7 +255,7 @@ function ShiftHourButtons({ hour, setUpdated }) {
       <button
         type="button"
         className="mobile-shift-btn"
-        aria-label="Shift schedule up"
+        aria-label="Shift schedule up by 30 minutes"
         onClick={() => shift("up")}
       >
         <svg viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -270,7 +271,7 @@ function ShiftHourButtons({ hour, setUpdated }) {
       <button
         type="button"
         className="mobile-shift-btn"
-        aria-label="Shift schedule down"
+        aria-label="Shift schedule down by 30 minutes"
         onClick={() => shift("down")}
       >
         <svg viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -532,12 +533,16 @@ export default function ScheduleMobileView({
                   </thead>
                   <tbody>
                     {hours.map((hour) => {
-                      const isNow = isCurrentHour(hour);
+                      const isNow = isCurrentScheduleSlot(hour);
+                      const isHalf = isHalfHourSlot(hour);
+                      const rowClass = [
+                        isNow ? "now-row" : "",
+                        isHalf ? "schedule-row--half" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ");
                       return (
-                        <tr
-                          key={hour}
-                          className={isNow ? "now-row" : undefined}
-                        >
+                        <tr key={hour} className={rowClass || undefined}>
                           <td className={`time-cell${isNow ? " now" : ""}`}>
                             {isNow ? (
                               <span className="now-label">

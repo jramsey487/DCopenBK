@@ -1190,15 +1190,54 @@ export function toPercent(val) {
 
 // Checks if the shift start time string in the format
 // [year]-[month]-[day]T[24hour]:[minute]:[seconds]
-// is occurring right now
+// is occurring right now (same clock hour — used for court assignment / teams)
 export function isCurrentHour(hour) {
+  if (!hour || hour.length < 13) {
+    return false;
+  }
+
   const shiftDate = hour.substring(0, 10);
-  const shiftHour = parseInt(hour.substring(11, 14));
+  const shiftHour = parseInt(hour.substring(11, 13), 10);
+  if (Number.isNaN(shiftHour)) {
+    return false;
+  }
 
   const nowDate = getToday("hyphen");
   const nowHours = new Date().getHours();
 
   return shiftHour === nowHours && shiftDate === nowDate;
+}
+
+/** Schedule row highlight: match the current 30-minute window. */
+export function isCurrentScheduleSlot(hour) {
+  if (!hour || hour.length < 16) {
+    return false;
+  }
+
+  const shiftDate = hour.substring(0, 10);
+  const shiftHour = parseInt(hour.substring(11, 13), 10);
+  const shiftMinute = parseInt(hour.substring(14, 16), 10);
+  if (Number.isNaN(shiftHour) || Number.isNaN(shiftMinute)) {
+    return false;
+  }
+
+  const now = new Date();
+  const nowDate = getToday("hyphen");
+  if (shiftDate !== nowDate) {
+    return false;
+  }
+
+  const shiftSlot = shiftHour * 60 + (shiftMinute >= 30 ? 30 : 0);
+  const nowSlot = now.getHours() * 60 + (now.getMinutes() >= 30 ? 30 : 0);
+  return shiftSlot === nowSlot;
+}
+
+/** True when a schedule start timestamp is on the half hour (:30). */
+export function isHalfHourSlot(hour) {
+  if (!hour || hour.length < 16) {
+    return false;
+  }
+  return hour.substring(14, 16) === "30";
 }
 
 // Returns today as a string of the format:

@@ -18,16 +18,18 @@ import EventBusy from "@mui/icons-material/EventBusy";
 
 import {
   getAuthHeader,
-  isCurrentHour,
+  isCurrentScheduleSlot,
+  isHalfHourSlot,
   dayHourToStr,
   ConfirmDialog,
 } from "../Utils";
 import { Tooltip } from "@mui/material";
+import "./schedule-table.css";
 
 function ShiftScheduleButtons({ hour, setUpdated }) {
   return (
     <div>
-      <Tooltip title="Shift Schedule Up">
+      <Tooltip title="Shift schedule up by 30 minutes">
         <IconButton
           color="primary"
           sx={{ m: 0, p: 0 }}
@@ -48,7 +50,7 @@ function ShiftScheduleButtons({ hour, setUpdated }) {
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="Shift Schedule Down">
+      <Tooltip title="Shift schedule down by 30 minutes">
         <IconButton
           color="primary"
           sx={{ m: 0, p: 0 }}
@@ -290,8 +292,13 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                 {hours.map((hour) => (
                   <TableRow
                     key={hour}
+                    className={
+                      isHalfHourSlot(hour) ? "schedule-row--half" : undefined
+                    }
                     sx={{
-                      backgroundColor: isCurrentHour(hour) ? "lightblue" : "",
+                      backgroundColor: isCurrentScheduleSlot(hour)
+                        ? "lightblue"
+                        : "",
                     }}
                   >
                     {readOnly ? (
@@ -309,7 +316,9 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                       </TableCell>
                     )}
 
-                    <TableCell align="center">{dayHourToStr(hour)}</TableCell>
+                    <TableCell align="center">
+                      {dayHourToStr(hour, isHalfHourSlot(hour))}
+                    </TableCell>
                     {courts.map((court) => {
                       const teamStr =
                         hourCourtToTeam[hour + "-" + court] > 0

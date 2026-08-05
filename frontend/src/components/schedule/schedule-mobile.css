@@ -614,6 +614,10 @@
   border-bottom: none;
 }
 
+.schedule-page .grid-table tr.schedule-row--half td {
+  border-top: 1px dotted rgba(13, 27, 62, 0.35);
+}
+
 .schedule-page .time-cell {
   padding: 11px 12px;
   font-size: 12px;
