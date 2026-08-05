@@ -104,8 +104,7 @@ export default function CourtLeaderboard() {
     {
       field: "name",
       headerName: "Ballkid",
-      flex: 1.2,
-      minWidth: 160,
+      width: 180,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

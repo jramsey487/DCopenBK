@@ -7,18 +7,6 @@
   min-width: 0;
 }
 
-.ratings-page .ratings-mode-pill__switch {
-  align-items: center;
-  gap: 6px;
-}
-
-.ratings-page .ratings-mode-pill__side {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--tp-text2, #64748b);
-  white-space: nowrap;
-}
-
 .ratings-page .ratings-grid-panel {
   background: var(--tp-bg1, #fff);
   border: 0.5px solid var(--tp-border, #e2e8f0);
@@ -242,17 +230,11 @@
   }
 
   .ratings-page .year-pill-control,
-  .ratings-page .ratings-mode-pill,
   .ratings-page .teams-chairperson-pill,
   .ratings-page .teams-page-photo-toggle {
     width: 100%;
     justify-content: space-between;
     box-sizing: border-box;
-  }
-
-  .ratings-page .ratings-mode-pill .ratings-mode-pill__switch {
-    width: 100%;
-    justify-content: space-between;
   }
 
   .ratings-page .cut-page-top-bar__actions .MuiToggleButtonGroup-root,
@@ -398,6 +380,23 @@
   justify-content: center;
 }
 
+/* Rate by Name grid: center name + icons */
+.ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name-row {
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  text-align: center;
+}
+
+.ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.ratings-page.rate-by-name-page .ballkid-list-grid .ballkid-card-name-icons {
+  justify-content: center;
+}
+
 .ratings-page .rate-ballkid-meta__line {
   font-size: 12px;
   font-weight: 500;
@@ -465,6 +464,18 @@
   grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
   gap: 14px 12px;
   align-items: start;
+}
+
+/* Always put "Currently on: …" / "On at …" under the team title */
+.ratings-page.rate-by-current-team-page .team-card-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.ratings-page.rate-by-current-team-page .team-card-assignment {
+  flex: 1 0 100%;
+  width: 100%;
+  margin-top: 2px;
 }
 
 .ratings-page .rate-photo-tile {

@@ -424,14 +424,14 @@ def annotate_durations(ballkids):
 def annotate_rank(ballkids):
     year = get_current_year()
 
+    # num_ratings: count of complete ratings this year (matches cut help text /
+    # pink threshold). Do not use CalibrationParams.num_ratee_ratings — that can
+    # lag actual ratings until recalibration runs.
     return ballkids.annotate(
-        num_ratings=Coalesce(
-            Avg(
-                "calibrationparams__num_ratee_ratings",
-                filter=Q(calibrationparams__year=year),
-                output_field=IntegerField(),
-            ),
-            0,
+        num_ratings=Count(
+            "ratee",
+            filter=Q(ratee__date__year=year)
+            & Q(ratee__status=RATING_STATUS.COMPLETE),
         ),
         calibrated_avg=Coalesce(
             Avg(

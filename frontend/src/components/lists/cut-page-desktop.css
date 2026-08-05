@@ -198,6 +198,18 @@
   flex-shrink: 0;
 }
 
+.cut-page-top-bar__title--with-end {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cut-page-top-bar__title-end {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
 .cut-page-top-bar__end {
   display: flex;
   align-items: center;

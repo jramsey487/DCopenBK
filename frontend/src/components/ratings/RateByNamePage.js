@@ -153,6 +153,7 @@ export default function RateByNamePage() {
       }
       helpPage="Rate by Name"
       helpMessage={isChairperson ? rateByName : rateByNameNonchairperson}
+      titleEnd={<LayoutButtons layout={layout} setLayout={setLayout} />}
       toolbar={
         <>
           <FilterTogglePill
@@ -173,7 +174,6 @@ export default function RateByNamePage() {
             offLabel="All"
             onLabel="Drafts only"
           />
-          <LayoutButtons layout={layout} setLayout={setLayout} />
         </>
       }
     >

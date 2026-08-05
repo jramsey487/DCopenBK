@@ -110,8 +110,7 @@ export default function CheckinLeaderboard() {
     {
       field: "name",
       headerName: "Ballkid",
-      flex: 1.4,
-      minWidth: 160,
+      width: 180,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

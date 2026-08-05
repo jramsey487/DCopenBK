@@ -1,11 +1,10 @@
 import React from "react";
 
-import Box from "@mui/material/Box";
-import Switch from "@mui/material/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { Banners } from "../Utils";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
+import { TeamsLabeledToggle } from "../teams/TeamsShared";
 import "../teams/teams-page.css";
 import "../lists/ballkid-list-by-name.css";
 import "../lists/cut-page-desktop.css";
@@ -20,21 +19,14 @@ export function LeaderboardModePill({
   label,
 }) {
   return (
-    <div className="teams-chairperson-pill ratings-mode-pill">
-      {label ? (
-        <span className="teams-chairperson-pill-label">{label}</span>
-      ) : null}
-      <Box className="sxs ratings-mode-pill__switch">
-        <span className="ratings-mode-pill__side">{offLabel}</span>
-        <Switch
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          inputProps={{ "aria-label": `${offLabel} / ${onLabel}` }}
-          size="small"
-        />
-        <span className="ratings-mode-pill__side">{onLabel}</span>
-      </Box>
-    </div>
+    <TeamsLabeledToggle
+      label={label ?? onLabel}
+      checked={checked}
+      onChange={onChange}
+      ariaLabel={
+        offLabel && onLabel ? `${offLabel} / ${onLabel}` : label ?? onLabel
+      }
+    />
   );
 }
 

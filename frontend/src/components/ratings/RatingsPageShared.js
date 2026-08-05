@@ -1,8 +1,6 @@
 import React from "react";
 
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Switch from "@mui/material/Switch";
 
 import {
   Banners,
@@ -11,6 +9,7 @@ import {
   RatingButton,
 } from "../Utils";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
+import { TeamsLabeledToggle } from "../teams/TeamsShared";
 import "../teams/teams-page.css";
 import "../lists/ballkid-list-by-name.css";
 import "../lists/cut-page-desktop.css";
@@ -48,21 +47,14 @@ export function FilterTogglePill({
   onLabel,
 }) {
   return (
-    <div className="teams-chairperson-pill ratings-mode-pill">
-      {label ? (
-        <span className="teams-chairperson-pill-label">{label}</span>
-      ) : null}
-      <Box className="sxs ratings-mode-pill__switch">
-        <span className="ratings-mode-pill__side">{offLabel}</span>
-        <Switch
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          inputProps={{ "aria-label": `${offLabel} / ${onLabel}` }}
-          size="small"
-        />
-        <span className="ratings-mode-pill__side">{onLabel}</span>
-      </Box>
-    </div>
+    <TeamsLabeledToggle
+      label={label ?? onLabel}
+      checked={checked}
+      onChange={onChange}
+      ariaLabel={
+        offLabel && onLabel ? `${offLabel} / ${onLabel}` : label ?? onLabel
+      }
+    />
   );
 }
 
@@ -74,7 +66,7 @@ export function RatingsModeToggle({
 }) {
   return (
     <FilterTogglePill
-      label="Ratings"
+      label={onLabel}
       checked={showCalibrated}
       onChange={onChange}
       offLabel={offLabel}
@@ -108,6 +100,7 @@ export function RateActionButton({ ballkid, setUpdated, date = null }) {
 export function RatingsPageShell({
   title,
   titleExtra = null,
+  titleEnd = null,
   helpPage,
   helpMessage,
   toolbar = null,
@@ -134,6 +127,7 @@ export function RatingsPageShell({
       <TeamsChairpersonPageHeader
         title={title}
         titleExtra={titleExtra}
+        titleEnd={titleEnd}
         helpPage={helpPage}
         helpMessage={helpMessage}
         alerts={alerts}

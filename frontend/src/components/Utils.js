@@ -883,11 +883,17 @@ function ExperiencePill({ ballkid, dense = true }) {
   );
 }
 
+function hasLowRatingCount(ballkid) {
+  const count = Number(ballkid.num_ratings);
+  return Number.isFinite(count) && count <= NUM_RATINGS_WARNING_THRESHOLD;
+}
+
 function CalibratedRankPill({ ballkid }) {
   if (ballkid.rank === null || ballkid.rank === undefined || ballkid.rank === "") {
     return null;
   }
-  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+  // Pink when more than 5 ratings; gray when 5 or fewer (same as old app).
+  const muted = hasLowRatingCount(ballkid);
   return (
     <Tooltip title="Calibrated rank" arrow>
       <span
@@ -930,7 +936,7 @@ function LastDayPill({ ballkid, showFull = false }) {
 }
 
 function CalibratedAvgPill({ ballkid }) {
-  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+  const muted = hasLowRatingCount(ballkid);
   return (
     <Tooltip title="Calibrated average" arrow>
       <span

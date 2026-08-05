@@ -51,9 +51,10 @@
 }
 
 .ballkid-pill--rank {
-  background: #fce7f3;
-  color: #9d174d;
-  border-color: #fbcfe8;
+  /* Match old MUI bgcolor="pink" (CSS keyword #ffc0cb) so >5 ratings reads clearly */
+  background: #ffc0cb;
+  color: #1a1a1a;
+  border-color: #f9a8d4;
 }
 
 .ballkid-pill--rank.ballkid-pill--muted {

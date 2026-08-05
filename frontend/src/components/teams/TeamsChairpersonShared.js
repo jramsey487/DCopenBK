@@ -28,6 +28,7 @@ export function TeamsChairpersonPageHeader({
   helpPage,
   helpMessage,
   titleExtra = null,
+  titleEnd = null,
   alerts = null,
   toolbar = null,
   actions = null,
@@ -38,12 +39,19 @@ export function TeamsChairpersonPageHeader({
     <header className="teams-chairperson-page-header">
       {alerts}
       <Box className="cut-page-top-bar" sx={{ mb: 2 }}>
-        <Box className="cut-page-top-bar__title">
+        <Box
+          className={`cut-page-top-bar__title${
+            titleEnd ? " cut-page-top-bar__title--with-end" : ""
+          }`}
+        >
           <Typography className="ballkid-list-title" variant="h4" component="h1">
             {title}
           </Typography>
           {titleExtra}
           <HelpIcon page={helpPage} message={helpMessage} />
+          {titleEnd ? (
+            <Box className="cut-page-top-bar__title-end">{titleEnd}</Box>
+          ) : null}
         </Box>
         {hasEnd ? (
           <Box className="cut-page-top-bar__end">

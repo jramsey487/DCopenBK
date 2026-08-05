@@ -97,8 +97,7 @@ export default function CaptainLeaderboard() {
     {
       field: "name",
       headerName: "Captain / Chairperson",
-      flex: 1.2,
-      minWidth: 180,
+      width: 200,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

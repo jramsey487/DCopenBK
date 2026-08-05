@@ -2,33 +2,45 @@ import React, { useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import { ballkidImageSrc, Icons } from "../Utils";
 
-export function TeamsPhotoToggle({ showPhotos, onToggle }) {
+/** Label + custom switch — shared chrome for teams / ratings / leaderboards. */
+export function TeamsLabeledToggle({
+  label,
+  checked,
+  onChange,
+  ariaLabel,
+}) {
   return (
     <div className="teams-page-photo-toggle">
-      <span className="teams-page-photo-toggle-label">Show photos</span>
+      <span className="teams-page-photo-toggle-label">{label}</span>
       <button
         type="button"
-        className={`teams-page-photo-toggle-switch${showPhotos ? " on" : ""}`}
+        className={`teams-page-photo-toggle-switch${checked ? " on" : ""}`}
         role="switch"
-        aria-checked={showPhotos}
-        onClick={onToggle}
+        aria-checked={checked}
+        aria-label={ariaLabel ?? label}
+        onClick={() => onChange(!checked)}
       />
     </div>
   );
 }
 
+export function TeamsPhotoToggle({ showPhotos, onToggle }) {
+  return (
+    <TeamsLabeledToggle
+      label="Show photos"
+      checked={showPhotos}
+      onChange={() => onToggle()}
+    />
+  );
+}
+
 export function TeamsYoeToggle({ showYoe, onToggle }) {
   return (
-    <div className="teams-page-photo-toggle">
-      <span className="teams-page-photo-toggle-label">Show YOE</span>
-      <button
-        type="button"
-        className={`teams-page-photo-toggle-switch${showYoe ? " on" : ""}`}
-        role="switch"
-        aria-checked={showYoe}
-        onClick={onToggle}
-      />
-    </div>
+    <TeamsLabeledToggle
+      label="Show YOE"
+      checked={showYoe}
+      onChange={() => onToggle()}
+    />
   );
 }
 

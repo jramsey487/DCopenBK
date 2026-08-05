@@ -890,6 +890,10 @@
       line-height: 1.2;
     }
 
+    .teams-chairperson-page .cut-page-top-bar__title--with-end {
+      width: 100%;
+    }
+
     .teams-chairperson-page .cut-page-top-bar__end {
       margin-left: 0;
       width: 100%;

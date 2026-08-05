@@ -83,19 +83,17 @@ export default function RateByPastTeamPage() {
       title="Rate by Past Team"
       helpPage="Rate by Past Team"
       helpMessage={rateByPastTeam}
+      titleEnd={<LayoutButtons layout={layout} setLayout={setLayout} />}
       toolbar={
-        <>
-          <FilterTogglePill
-            checked={showUnrated}
-            onChange={(checked) => {
-              setShowUnrated(checked);
-              setLocalStorage("showUnrated", checked);
-            }}
-            offLabel="All ballkids"
-            onLabel="To rate"
-          />
-          <LayoutButtons layout={layout} setLayout={setLayout} />
-        </>
+        <FilterTogglePill
+          checked={showUnrated}
+          onChange={(checked) => {
+            setShowUnrated(checked);
+            setLocalStorage("showUnrated", checked);
+          }}
+          offLabel="All ballkids"
+          onLabel="To rate"
+        />
       }
     >
       {dates.length === 0 ? (
