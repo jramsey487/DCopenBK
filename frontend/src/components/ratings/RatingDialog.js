@@ -118,13 +118,19 @@ export default function RatingDialog({
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [shouldRefresh, setShouldRefresh] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
   const handleClose = (e) => {
+    if (shouldRefresh) {
+      setUpdated(true);
+      setShouldRefresh(false);
+    }
     setOpen(false);
+    setSuccessMsg("");
     setErrorMsg("");
-    e.stopPropagation();
+    e?.stopPropagation?.();
   };
 
   return (
@@ -216,11 +222,18 @@ export default function RatingDialog({
       </DialogContent>
 
       <DialogActions className="rating-dialog-actions">
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>
+          {successMsg ? "Close" : "Cancel"}
+        </Button>
         <Button
           variant="outlined"
           color="secondary"
-          onClick={() =>
+          disabled={Boolean(successMsg)}
+          onClick={() => {
+            if (rating == null) {
+              setErrorMsg("Overall rating is required to save a draft.");
+              return;
+            }
             fetch("/api/save-draft-rating", {
               method: "PATCH",
               headers: getAuthHeader(),
@@ -238,17 +251,13 @@ export default function RatingDialog({
               }),
             }).then((response) => {
               if (response.ok) {
-                setUpdated(true);
                 setSuccessMsg("Draft rating saved!");
-                setTimeout(() => {
-                  setOpen(false);
-                  setSuccessMsg("");
-                }, 2500);
+                setShouldRefresh(true);
               } else {
                 setErrorMsg("Error saving draft rating.");
               }
-            })
-          }
+            });
+          }}
         >
           Save Draft
         </Button>
@@ -256,6 +265,7 @@ export default function RatingDialog({
           loading={loading}
           variant="contained"
           color="primary"
+          disabled={Boolean(successMsg)}
           onClick={(e) => {
             setLoading(true);
             fetch("/api/create-rating", {
@@ -276,19 +286,8 @@ export default function RatingDialog({
               }),
             }).then((response) => {
               if (response.ok) {
-                setUpdated(true);
                 setSuccessMsg("Rating submitted!");
-                setTimeout(() => {
-                  setOpen(false);
-                  setComments("");
-                  setRating(null);
-                  setAthleticismRating(null);
-                  setRollingRating(null);
-                  setAwarenessRating(null);
-                  setDecisionRating(null);
-                  setEffortRating(null);
-                  setSuccessMsg("");
-                }, 2500);
+                setShouldRefresh(true);
               } else {
                 setErrorMsg("Error submitting rating.");
               }

@@ -116,14 +116,12 @@ export function LayoutButtons({ layout, setLayout }) {
 }
 
 export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
+  const showSuccess = Boolean(successMsg);
+  const showError = Boolean(errorMsg);
+
   return (
-    <Collapse
-      in={
-        (errorMsg !== null && errorMsg !== "" && errorMsg !== undefined) ||
-        (successMsg !== null && successMsg !== "" && successMsg !== undefined)
-      }
-    >
-      {successMsg !== "" ? (
+    <Collapse in={showSuccess || showError}>
+      {showSuccess ? (
         <Alert
           severity="success"
           onClose={() => {
@@ -132,7 +130,7 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
         >
           {successMsg}
         </Alert>
-      ) : (
+      ) : showError ? (
         <Alert
           severity="error"
           onClose={() => {
@@ -141,17 +139,17 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
         >
           {errorMsg}
         </Alert>
-      )}
+      ) : null}
     </Collapse>
   );
 }
 
-// Date is the default date filled in in the RatingDialog when giving a rating
 export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
   const [open, setOpen] = useState(false);
+  const hasRated = ballkid.num_my_ratings > 0;
 
   return (
-    <div className={"ballkid-profile-hero-rating-row"}>
+    <div className="ballkid-profile-hero-rating-row">
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -162,17 +160,17 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
 
       <Button
         className={`rating-btn ${hasRated ? "rating-btn--rated" : "rating-btn--unrated"}`}
-        variant={ballkid.num_my_ratings > 0 ? "outlined" : "contained"}
+        variant={hasRated ? "outlined" : "contained"}
         disableElevation
         color="primary"
         size="small"
+        endIcon={hasRated ? <Check /> : undefined}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={ballkid.num_my_ratings > 0 ? <Check /> : ""}
         sx={{ my: isMobile ? 1 : 0.2 }}
       >
         GIVE RATING
@@ -181,41 +179,27 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
   );
 }
 
-export function DraftRatingButton({
-  ballkid,
-  setUpdated,
-  fullWidth = false,
-  className,
-  label = "View Draft",
-}) {
+export function DraftRatingButton({ ballkid, setUpdated }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState();
-
   const pk = getLocalStorage("ballkid_id");
   const isMobile = useIsMobile();
-  const isProfileHero =
-    className && String(className).includes("ballkid-profile-hero-rating-btn");
 
   useEffect(() => {
     fetch(`/api/get-draft-rating/${pk}/${ballkid.id}`, {
       headers: getAuthHeader(),
     })
-      .then((response) => response.json())
-      .then((data) => {
-        setDraft(data);
-      });
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setDraft(data && data.id ? data : null))
+      .catch(() => setDraft(null));
   }, [pk, ballkid.id]);
 
-  return draft === null || draft === undefined ? (
-    ""
-  ) : (
-    <div
-      className={
-        fullWidth || isProfileHero
-          ? "ballkid-profile-hero-rating-row"
-          : undefined
-      }
-    >
+  if (draft === null || draft === undefined) {
+    return "";
+  }
+
+  return (
+    <div className="ballkid-profile-hero-rating-row">
       <RatingDialog
         open={open}
         setOpen={setOpen}
@@ -224,22 +208,21 @@ export function DraftRatingButton({
         draft={draft}
       />
       <Button
-        color={isProfileHero ? "primary" : "secondary"}
+        className="rating-btn rating-btn--unrated"
+        color="secondary"
         variant="contained"
+        disableElevation
         size="small"
-        fullWidth={fullWidth}
-        className={className}
-        endIcon={isProfileHero ? undefined : <Edit />}
-        disableElevation={isProfileHero}
+        endIcon={<Edit />}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        sx={isProfileHero ? { my: 0 } : { my: isMobile ? 1 : 0.2 }}
+        sx={{ my: isMobile ? 1 : 0.2 }}
       >
-        {label}
+        View Draft
       </Button>
     </div>
   );

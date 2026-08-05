@@ -476,11 +476,17 @@ class SaveDraftRating(APIView):
     permission_classes = [IsChairpersonOrCaptain]
 
     def patch(self, request, format=None):
+        if request.data.get("rating") is None:
+            return Response(
+                {"Invalid": "Overall rating is required to save a draft."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         rater_id = request.data["rater"]
         ratee_id = request.data["ratee"]
         date = datetime.strptime(request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR)
 
-        rating = Rating.objects.update_or_create(
+        rating_obj, _created = Rating.objects.update_or_create(
             date__year=get_current_year(),
             status=RATING_STATUS.DRAFT,
             rater_id=rater_id,
@@ -498,10 +504,8 @@ class SaveDraftRating(APIView):
             },
         )
 
-        logger.info(f"[SaveDraftRating] Saving draft rating {rating}")
-        return Response(
-            {"Success": f"Saved draft rating {rating}"}, status=status.HTTP_200_OK
-        )
+        logger.info(f"[SaveDraftRating] Saving draft rating {rating_obj}")
+        return Response(RatingSerializer(rating_obj).data, status=status.HTTP_200_OK)
 
 
 class CalibratedRatings(APIView):

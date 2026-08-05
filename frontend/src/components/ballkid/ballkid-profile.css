@@ -299,7 +299,8 @@
   display: block;
 }
 
-.ballkid-profile-hero-rating-row .ballkid-profile-hero-rating-btn {
+.ballkid-profile-hero-rating-row .ballkid-profile-hero-rating-btn,
+.ballkid-profile-hero-rating-row .rating-btn {
   width: 100%;
 }
 
@@ -316,7 +317,8 @@
     display: inline-flex;
   }
 
-  .ballkid-profile-hero-rating-row .ballkid-profile-hero-rating-btn {
+  .ballkid-profile-hero-rating-row .ballkid-profile-hero-rating-btn,
+  .ballkid-profile-hero-rating-row .rating-btn {
     width: auto;
   }
 }
@@ -339,7 +341,10 @@
   .ballkid-profile-checkin-btn,
 .ballkid-profile-shell
   .ballkid-profile-hero-mobile-actions
-  .ballkid-profile-hero-rating-btn {
+  .ballkid-profile-hero-rating-btn,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn {
   margin: 0 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
@@ -358,7 +363,13 @@
   .ballkid-profile-hero-rating-btn,
 .ballkid-profile-shell
   .ballkid-profile-hero-mobile-actions
-  .ballkid-profile-hero-rating-btn:hover {
+  .ballkid-profile-hero-rating-btn:hover,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--unrated,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--unrated:hover {
   background-color: var(--bp-nav) !important;
   color: #fff !important;
   border: none !important;
@@ -366,8 +377,29 @@
 
 .ballkid-profile-shell
   .ballkid-profile-hero-mobile-actions
-  .ballkid-profile-hero-rating-btn:hover {
+  .ballkid-profile-hero-rating-btn:hover,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--unrated:hover {
   background-color: #152a5c !important;
+}
+
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--rated,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--rated:hover {
+  background-color: #fff !important;
+  color: var(--bp-nav) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--rated:hover {
+  border-color: var(--bp-nav) !important;
+  background-color: #f8fafc !important;
 }
 
 @media (min-width: 768px) {
@@ -376,7 +408,10 @@
     .ballkid-profile-checkin-btn,
   .ballkid-profile-shell
     .ballkid-profile-hero-mobile-actions
-    .ballkid-profile-hero-rating-btn {
+    .ballkid-profile-hero-rating-btn,
+  .ballkid-profile-shell
+    .ballkid-profile-hero-mobile-actions
+    .rating-btn {
     width: auto !important;
     flex: 0 0 auto;
     min-height: 0 !important;
@@ -396,7 +431,10 @@
     .ballkid-profile-checkin-btn,
   .ballkid-profile-shell
     .ballkid-profile-hero-mobile-actions
-    .ballkid-profile-hero-rating-btn {
+    .ballkid-profile-hero-rating-btn,
+  .ballkid-profile-shell
+    .ballkid-profile-hero-mobile-actions
+    .rating-btn {
     width: 100% !important;
     max-width: 100% !important;
     flex: 1 1 auto;
@@ -410,8 +448,17 @@
 
 .ballkid-profile-shell
   .ballkid-profile-hero-mobile-actions
-  .ballkid-profile-hero-rating-btn .MuiButton-endIcon {
+  .ballkid-profile-hero-rating-btn .MuiButton-endIcon,
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--unrated .MuiButton-endIcon {
   display: none;
+}
+
+.ballkid-profile-shell
+  .ballkid-profile-hero-mobile-actions
+  .rating-btn.rating-btn--rated .MuiButton-endIcon {
+  display: inherit !important;
 }
 
 .ballkid-profile-shell .ballkid-profile-checkin-btn--in {

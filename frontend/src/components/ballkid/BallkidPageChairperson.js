@@ -53,6 +53,7 @@ import {
   getDurationStr,
   Alerts,
   RatingButton,
+  DraftRatingButton,
   toPercent,
   getTimeStr,
 } from "../Utils";
@@ -217,11 +218,15 @@ function ChairpersonHeroMobileActions({
         fullWidth={isMobile}
       />
       {showRating ? (
-        <RatingButton
-          ballkid={ballkid}
-          setUpdated={setUpdated}
-          isMobile={isMobile}
-        />
+        ballkid.have_draft ? (
+          <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
+        ) : (
+          <RatingButton
+            ballkid={ballkid}
+            setUpdated={setUpdated}
+            isMobile={isMobile}
+          />
+        )
       ) : null}
     </div>
   );
@@ -1284,17 +1289,22 @@ export default function BallkidPageChairperson(props) {
     : myBallkidId;
 
   const loadAttempt = useRef(0);
+  const loadedPkRef = useRef(null);
 
   useEffect(() => {
     if (myBallkidId === null || !Number.isFinite(pk)) {
       setLoadState("no_link");
       setBallkid(null);
+      loadedPkRef.current = null;
       return;
     }
 
     const attempt = ++loadAttempt.current;
-    setLoadState("loading");
-    setBallkid(null);
+    const isNewProfile = loadedPkRef.current !== pk;
+    if (isNewProfile) {
+      setLoadState("loading");
+      setBallkid(null);
+    }
 
     fetch(`/api/get-ballkid/${pk}/${myBallkidId}`, {
       headers: getAuthHeader(),
@@ -1310,14 +1320,17 @@ export default function BallkidPageChairperson(props) {
           return;
         }
         setBallkid(data);
+        loadedPkRef.current = pk;
         setLoadState("ready");
       })
       .catch(() => {
         if (attempt !== loadAttempt.current) {
           return;
         }
-        setBallkid(null);
-        setLoadState("error");
+        if (isNewProfile) {
+          setBallkid(null);
+          setLoadState("error");
+        }
       });
 
     fetch("/api/calc-num-teams", { headers: getAuthHeader() })

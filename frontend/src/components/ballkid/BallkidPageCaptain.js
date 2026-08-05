@@ -60,13 +60,7 @@ export default function BallkidPageCaptain(props) {
   const ratingButton = isOwnProfile ? null : (
     <div className="ballkid-profile-hero-mobile-actions">
       {ballkid.have_draft ? (
-        <DraftRatingButton
-          ballkid={ballkid}
-          setUpdated={setUpdated}
-          fullWidth={isMobile}
-          className="ballkid-profile-hero-rating-btn"
-          label="VIEW DRAFT"
-        />
+        <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
       ) : (
         <RatingButton
           ballkid={ballkid}
