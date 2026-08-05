@@ -149,7 +149,6 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
 // Date is the default date filled in in the RatingDialog when giving a rating
 export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
   const [open, setOpen] = useState(false);
-  const hasRated = ballkid.num_my_ratings > 0;
 
   return (
     <div className={"ballkid-profile-hero-rating-row"}>
@@ -163,18 +162,18 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
 
       <Button
         className={`rating-btn ${hasRated ? "rating-btn--rated" : "rating-btn--unrated"}`}
-        variant="contained"
+        variant={ballkid.num_my_ratings > 0 ? "outlined" : "contained"}
         disableElevation
         color="primary"
         size="small"
-        fullWidth={isMobile}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
           setOpen(true);
         }}
-        endIcon={isMobile ? undefined : hasRated ? <Check /> : ""}
+        endIcon={ballkid.num_my_ratings > 0 ? <Check /> : ""}
+        sx={{ my: isMobile ? 1 : 0.2 }}
       >
         GIVE RATING
       </Button>
