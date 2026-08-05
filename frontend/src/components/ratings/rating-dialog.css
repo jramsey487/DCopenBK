@@ -1,18 +1,23 @@
+/* Shared rating UI tokens — used by dialog and trigger button */
+.rating-dialog-paper,
+.rating-btn {
+  --rd-nav: #0d1b3e;
+  --rd-red: #c8102e;
+  --rd-bg0: #f8fafc;
+  --rd-bg1: #fff;
+  --rd-bg2: #f1f5f9;
+  --rd-text1: #0d1b3e;
+  --rd-text2: #64748b;
+  --rd-border: #e2e8f0;
+}
+
 .rating-dialog-paper {
-    --rd-nav: #0d1b3e;
-    --rd-red: #c8102e;
-    --rd-bg0: #f8fafc;
-    --rd-bg1: #fff;
-    --rd-bg2: #f1f5f9;
-    --rd-text1: #0d1b3e;
-    --rd-text2: #64748b;
-    --rd-border: #e2e8f0;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-      BlinkMacSystemFont, "Segoe UI", sans-serif;
-    letter-spacing: -0.01em;
-    border-radius: 16px !important;
-    max-width: 560px;
-  }
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.01em;
+  border-radius: 16px !important;
+  max-width: 560px;
+}
   
   .rating-dialog-content {
     padding: 28px 28px 8px !important;
@@ -225,3 +230,48 @@
   .rating-dialog-actions .MuiLoadingButton-containedPrimary:hover {
     background-color: #152a5c;
   }
+
+/* RatingButton trigger — fancy look matches prior desktop-only sx (!isMobile) */
+.rating-btn {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+@media (min-width: 751px) {
+  .rating-btn {
+    margin-top: 1.6px;
+    margin-bottom: 1.6px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.03em;
+    border-radius: 8px !important;
+    padding: 6px 18px !important;
+    transition: all 0.15s ease;
+    text-transform: none;
+  }
+
+  .rating-btn--unrated {
+    background-color: var(--rd-nav) !important;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.15) !important;
+  }
+
+  .rating-btn--unrated:hover {
+    background-color: #152a5c !important;
+    box-shadow: 0 4px 10px rgba(13, 27, 62, 0.25) !important;
+    transform: translateY(-1px);
+  }
+
+  .rating-btn--rated {
+    color: var(--rd-nav) !important;
+    border-color: var(--rd-border) !important;
+    background-color: var(--rd-bg1) !important;
+    box-shadow: none !important;
+  }
+
+  .rating-btn--rated:hover {
+    border-color: var(--rd-nav) !important;
+    background-color: var(--rd-bg0) !important;
+  }
+}

@@ -32,6 +32,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import "./search-and-filter.css";
+import "./ratings/rating-dialog.css";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -161,6 +162,7 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
       />
 
       <Button
+        className={`rating-btn ${hasRated ? "rating-btn--rated" : "rating-btn--unrated"}`}
         variant="contained"
         disableElevation
         color="primary"
@@ -173,42 +175,6 @@ export function RatingButton({ ballkid, setUpdated, isMobile, date = null }) {
           setOpen(true);
         }}
         endIcon={isMobile ? undefined : hasRated ? <Check /> : ""}
-        sx={
-          isMobile
-            ? { my: 0 }
-            : {
-                my: 0.2,
-                fontFamily:
-                  'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                fontWeight: 600,
-                fontSize: 13,
-                letterSpacing: "0.03em",
-                borderRadius: "8px",
-                px: 2.25,
-                py: 0.75,
-                transition: "all 0.15s ease",
-                ...(hasRated
-                  ? {
-                      color: "#0d1b3e",
-                      borderColor: "#e2e8f0",
-                      backgroundColor: "#fff",
-                      boxShadow: "none",
-                      "&:hover": {
-                        borderColor: "#0d1b3e",
-                        backgroundColor: "#f8fafc",
-                      },
-                    }
-                  : {
-                      backgroundColor: "#0d1b3e",
-                      boxShadow: "0 1px 2px rgba(13, 27, 62, 0.15)",
-                      "&:hover": {
-                        backgroundColor: "#152a5c",
-                        boxShadow: "0 4px 10px rgba(13, 27, 62, 0.25)",
-                        transform: "translateY(-1px)",
-                      },
-                    }),
-              }
-        }
       >
         GIVE RATING
       </Button>
