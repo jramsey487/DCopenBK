@@ -6,73 +6,7 @@
   letter-spacing: 0.04em;
 }
 
-.cut-chip-icon-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 4px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.cut-chip-icon-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  line-height: 0;
-}
-
-.cut-chip-icon-badge svg {
-  font-size: 1rem !important;
-}
-
-.cut-chip-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: 0.01em;
-  border: 1px solid rgba(13, 27, 62, 0.08);
-  white-space: nowrap;
-}
-
-.cut-chip-pill--yrs {
-  background: #dcfce7;
-  color: #14532d;
-  border-color: rgba(21, 128, 61, 0.25);
-}
-
-.cut-chip-pill--rank {
-  background: #fce7f3;
-  color: #9d174d;
-  border-color: #fbcfe8;
-}
-
-.cut-chip-pill--rank.cut-chip-pill--muted {
-  background: #f1f5f9;
-  color: #64748b;
-  border-color: #e2e8f0;
-}
-
-.cut-chip-pill--last {
-  background: #fff7ed;
-  color: #c2410c;
-  border-color: #fed7aa;
-}
-
-.cut-page-chip-list .teams-chairperson-ballkid-chip-wrap {
-  flex: 1;
-  min-width: 0;
-}
-
-.cut-page-chip-list .teams-chairperson-ballkid-actions {
+.cut-page-chip-list .ballkid-row__actions {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -102,12 +36,6 @@
   flex-wrap: wrap;
   gap: 6px;
   padding-left: 4px;
-}
-
-.cut-chip-pill--last.cut-chip-pill--muted {
-  background: #f1f5f9;
-  color: #64748b;
-  border-color: #e2e8f0;
 }
 
 .cut-page-active-panel {
@@ -389,18 +317,6 @@
 
 .cut-mobile-assign-table__head-cut {
   width: 40px;
-}
-
-.cut-mobile-assign-table--decision .cut-chip-icon-badge {
-  width: 20px;
-  height: 20px;
-}
-
-.cut-mobile-assign-table--decision .cut-chip-icon-badge svg,
-.cut-mobile-assign-table--decision .cut-chip-icon-badge .MuiIcon-root {
-  font-size: 1rem !important;
-  width: 1rem;
-  height: 1rem;
 }
 
 .cut-mobile-assign-btn__x {

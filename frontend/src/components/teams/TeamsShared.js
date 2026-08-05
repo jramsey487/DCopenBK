@@ -44,7 +44,7 @@ export function YoePill({ ballkid }) {
   }
   return (
     <Tooltip title="Years at Citi Open" arrow>
-      <span className="cut-chip-pill cut-chip-pill--yrs">
+      <span className="ballkid-pill ballkid-pill--yrs">
         {ballkid.num_years_experience} yr
       </span>
     </Tooltip>

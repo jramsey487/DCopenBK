@@ -36,7 +36,7 @@ import {
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
-import { DraggableBallkidChip } from "../BallkidChip";
+import { DraggableBallkidRow } from "../BallkidChip";
 import { teams, finalsTeams } from "../HelpMessages.js";
 import "../ballkid-row.css";
 
@@ -159,17 +159,14 @@ export function renderBallkidsOnTeam(
   return (
     <div className="team-member-list">
       {ballkids.map((ballkid) => (
-        <div key={`ballkid${ballkid.id}`} className="ballkid-row">
-          <div className="teams-chairperson-ballkid-chip-wrap">
-            <DraggableBallkidChip
-              ballkid={ballkid}
-              commentTypes={commentTypes}
-              showHovercard={showHovercard}
-              hoverCommentTypes={hoverCommentTypes}
-            />
-          </div>
-          {renderBallkidRowActions(ballkid, setUpdated, { isFinalsPage })}
-        </div>
+        <DraggableBallkidRow
+          key={`ballkid${ballkid.id}`}
+          ballkid={ballkid}
+          commentTypes={commentTypes}
+          showHovercard={showHovercard}
+          hoverCommentTypes={hoverCommentTypes}
+          actions={renderBallkidRowActions(ballkid, setUpdated, { isFinalsPage })}
+        />
       ))}
     </div>
   );
@@ -339,9 +336,9 @@ function Team({
                         renderBallkidsOnTeam(
                           positionBallkids,
                           setUpdated,
-                          isFinalsPage ? ["rank", "experience"] : undefined,
+                          isFinalsPage ? ["rank", "experience"] : ["checkout_teams"],
                           showHovercard,
-                          isFinalsPage ? ["experience", "rank", "calibrated_avg"] : undefined,
+                          isFinalsPage ? ["experience", "rank", "calibrated_avg"] : [],
                           isFinalsPage
                         )
                       )}

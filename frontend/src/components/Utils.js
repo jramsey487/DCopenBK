@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useDrag } from "react-dnd";
 import { Link as RouterLink } from "react-router-dom";
 
 import Card from "@mui/material/Card";
@@ -14,7 +13,6 @@ import Alert from "@mui/material/Alert";
 import Collapse from "@mui/material/Collapse";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Switch from "@mui/material/Switch";
 import Dialog from "@mui/material/Dialog";
@@ -53,7 +51,6 @@ import {
   ICON_DICT,
   TOOLTIP_DICT,
   NUM_RATINGS_WARNING_THRESHOLD,
-  ON_COURT_GREEN,
   SUPERVET_THRESHOLD,
 } from "./Consts";
 import { Popover } from "@mui/material";
@@ -576,124 +573,6 @@ export function ConfirmDialog({
   );
 }
 
-export function DraggableBallkidAndIcon({
-  ballkid,
-  commentTypes = [],
-  showHovercard = false,
-  hoverCommentTypes = [],
-  leftAdornment = null,
-  layout = "inline",
-  renderCustom = null,
-  metaSlot = null,
-}) {
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "ballkid",
-    item: { ...ballkid },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }));
-
-  const hoverHandlers = {
-    onMouseEnter: (e) => setAnchorEl(e.currentTarget),
-    onMouseLeave: () => setAnchorEl(null),
-  };
-
-  useEffect(() => {
-    if (!showHovercard) {
-      setAnchorEl(null);
-    }
-  }, [showHovercard]);
-
-  const metaBlockInner = (
-    <>
-      <span className="badge-item cut-chip-meta-icons">
-        <Icons ballkid={ballkid} margin={0} />
-      </span>
-      {commentTypes.map((commentType) => (
-        <Box key={commentType} component="span" className="badge-item">
-          <CommentsText ballkid={ballkid} commentType={commentType} />
-        </Box>
-      ))}
-    </>
-  );
-
-  const metaBlock = <div className="badge-row">{metaBlockInner}</div>;
-
-  const hovercardNode = showHovercard ? (
-    <BallkidPopover
-      ballkid={ballkid}
-      hoverCommentTypes={hoverCommentTypes}
-      anchorEl={anchorEl}
-      setAnchorEl={setAnchorEl}
-    />
-  ) : null;
-
-  const innerContent =
-    layout === "cut-chip" ? (
-      <Box
-        className="ballkid-chip__content"
-        sx={{ flex: 1, minWidth: 0 }}
-        {...(renderCustom ? {} : hoverHandlers)}
-      >
-        <Box className="ballkid-chip__name">
-          <BallkidLink
-            id={ballkid.id}
-            name={`${ballkid.first_name} ${ballkid.last_name}`}
-          />
-        </Box>
-        <Box className="ballkid-chip__meta">
-          {metaSlot ?? metaBlock}
-        </Box>
-      </Box>
-    ) : (
-      <Box
-        className="sxs"
-        sx={{ alignItems: "center", py: 0.75, px: 1.25, minWidth: 0 }}
-        {...hoverHandlers}
-      >
-        <BallkidLink
-          id={ballkid.id}
-          name={`${ballkid.first_name} ${ballkid.last_name}`}
-        />
-        &thinsp;
-        {metaBlock}
-      </Box>
-    );
-
-  if (renderCustom) {
-    return (
-      <>
-        {renderCustom({
-          ref: drag,
-          isDragging,
-          children: innerContent,
-          hoverHandlers: showHovercard ? hoverHandlers : null,
-        })}
-        {hovercardNode}
-      </>
-    );
-  }
-
-  return (
-    <Box
-      ref={drag}
-      sx={{
-        display: "flex",
-        alignItems: "stretch",
-        width: "100%",
-        opacity: isDragging ? 0.5 : 1,
-        cursor: "grab",
-        "&:active": { cursor: "grabbing" },
-      }}
-    >
-      {leftAdornment}
-      {innerContent}
-      {hovercardNode}
-    </Box>
-  );
-}
-
 export function BallkidPopover({
   ballkid,
   hoverCommentTypes,
@@ -934,11 +813,87 @@ function CheckoutTimePill({ ballkid, hideWhenEnd = false }) {
   return (
     <Tooltip title="Today's checkout time" arrow>
       <span
-        className={`cut-chip-pill cut-chip-pill--last${
-          isEnd ? " cut-chip-pill--muted" : ""
+        className={`ballkid-pill ballkid-pill--last${
+          isEnd ? " ballkid-pill--muted" : ""
         }`}
       >
         {value}
+      </span>
+    </Tooltip>
+  );
+}
+
+function ExperiencePill({ ballkid, dense = true }) {
+  if (!ballkid.num_years_experience) {
+    return null;
+  }
+  return (
+    <Tooltip title="Years at Citi Open" arrow>
+      <span className="ballkid-pill ballkid-pill--yrs">
+        {dense
+          ? ballkid.num_years_experience
+          : `${ballkid.num_years_experience} yr`}
+      </span>
+    </Tooltip>
+  );
+}
+
+function CalibratedRankPill({ ballkid }) {
+  if (ballkid.rank === null || ballkid.rank === undefined || ballkid.rank === "") {
+    return null;
+  }
+  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+  return (
+    <Tooltip title="Calibrated rank" arrow>
+      <span
+        className={`ballkid-pill ballkid-pill--rank${
+          muted ? " ballkid-pill--muted" : ""
+        }`}
+      >
+        {String(ballkid.rank)}
+      </span>
+    </Tooltip>
+  );
+}
+
+function LastDayPill({ ballkid, showFull = false }) {
+  if (
+    ballkid.last_day === null ||
+    ballkid.last_day === "" ||
+    ballkid.last_day === "End"
+  ) {
+    if (showFull) {
+      return (
+        <span className="ballkid-pill ballkid-pill--last ballkid-pill--muted">
+          End
+        </span>
+      );
+    }
+    return null;
+  }
+
+  const label =
+    showFull || ballkid.last_day.length <= 3
+      ? ballkid.last_day
+      : ballkid.last_day.substring(0, 3);
+
+  return (
+    <Tooltip title="Last day" arrow>
+      <span className="ballkid-pill ballkid-pill--last">{label}</span>
+    </Tooltip>
+  );
+}
+
+function CalibratedAvgPill({ ballkid }) {
+  const muted = ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD;
+  return (
+    <Tooltip title="Calibrated average" arrow>
+      <span
+        className={`ballkid-pill ballkid-pill--rank${
+          muted ? " ballkid-pill--muted" : ""
+        }`}
+      >
+        {Number(ballkid.calibrated_avg).toFixed(3)}
       </span>
     </Tooltip>
   );
@@ -950,155 +905,87 @@ export function CommentsText({
   showLabel = false,
   layout = "list",
 }) {
+  const labeled = (label, pill) => {
+    if (!showLabel && pill == null) {
+      return null;
+    }
+    return (
+      <Box
+        component="span"
+        className={showLabel ? "sxs" : "badge-item"}
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.5,
+          my: layout === "grid" ? 1 : 0,
+        }}
+      >
+        {showLabel ? <Typography variant="subtitle2">{label}</Typography> : null}
+        {pill}
+      </Box>
+    );
+  };
+
   switch (commentType) {
-    case "checkout_teams":
-      return (
-        <Box
-          className="sxs"
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 0.5,
-            my: layout === "grid" ? 1 : 0,
-          }}
-        >
-          {showLabel ? (
-            <Typography variant="subtitle2">Today's Checkout Time: </Typography>
-          ) : null}
-          <CheckoutTimePill ballkid={ballkid} hideWhenEnd />
-        </Box>
+    case "checkout_teams": {
+      const value = ballkid?.checkout_comments ?? "End";
+      if (!showLabel && value === "End") {
+        return null;
+      }
+      return labeled(
+        "Today's Checkout Time: ",
+        <CheckoutTimePill ballkid={ballkid} hideWhenEnd />
       );
+    }
 
     case "checkout":
-      return (
-        <Box
-          className="sxs"
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 0.5,
-            my: layout === "grid" ? 1 : 0,
-          }}
-        >
-          {showLabel ? (
-            <Typography variant="subtitle2">Today's Checkout Time: </Typography>
-          ) : null}
-          <CheckoutTimePill ballkid={ballkid} />
-        </Box>
+      return labeled(
+        "Today's Checkout Time: ",
+        <CheckoutTimePill ballkid={ballkid} />
       );
 
-    case "experience":
-      return (
-        <Box className="sxs">
-          {showLabel ? (
-            <Typography variant="subtitle2">Years Experience: </Typography>
-          ) : (
-            ""
-          )}
-          {ballkid.num_years_experience === 0 ? (
-            ""
-          ) : (
-            <Typography
-              sx={{ mx: 0.5, px: 0.5, my: 0.1 }}
-              bgcolor={ON_COURT_GREEN}
-              variant="body2"
-            >
-              {ballkid.num_years_experience}
-            </Typography>
-          )}
-        </Box>
+    case "experience": {
+      if (!showLabel && !ballkid.num_years_experience) {
+        return null;
+      }
+      return labeled(
+        "Years Experience: ",
+        <ExperiencePill ballkid={ballkid} dense={!showLabel} />
       );
+    }
 
-    case "rank":
-      return (
-        <Box className="sxs">
-          {showLabel ? (
-            <Typography variant="subtitle2">Calibrated Rank: </Typography>
-          ) : (
-            ""
-          )}
+    case "rank": {
+      if (
+        !showLabel &&
+        (ballkid.rank === null || ballkid.rank === undefined || ballkid.rank === "")
+      ) {
+        return null;
+      }
+      return labeled("Calibrated Rank: ", <CalibratedRankPill ballkid={ballkid} />);
+    }
 
-          <Typography
-            sx={{ mx: 0.5, px: 0.5, my: 0.1 }}
-            bgcolor={
-              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD ? "" : "pink"
-            }
-            color={
-              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD
-                ? "gray"
-                : "black"
-            }
-            variant="body2"
-          >
-            {ballkid.rank}
-          </Typography>
-        </Box>
+    case "last_day": {
+      const isEnd =
+        ballkid.last_day === null ||
+        ballkid.last_day === "" ||
+        ballkid.last_day === "End";
+      if (!showLabel && isEnd) {
+        return null;
+      }
+      return labeled(
+        "Last Day: ",
+        <LastDayPill ballkid={ballkid} showFull={showLabel} />
       );
-
-    case "last_day":
-      return (
-        <Box className="sxs">
-          {showLabel ? (
-            <Typography variant="subtitle2">Last Day: </Typography>
-          ) : (
-            ""
-          )}
-          {showLabel ? (
-            <Typography
-              sx={{ mx: 0.5, px: 0.5, my: layout === "grid" ? 1 : 0 }}
-              bgcolor={
-                ballkid.last_day === "End" || ballkid.last_day === null
-                  ? ""
-                  : "orange"
-              }
-              variant="body2"
-            >
-              {ballkid.last_day === null ? "End" : ballkid.last_day}
-            </Typography>
-          ) : ballkid.last_day === "End" ? (
-            ""
-          ) : (
-            <Typography
-              sx={{ mx: 0.5, px: 0.5, my: layout === "grid" ? 1 : 0 }}
-              bgcolor="orange"
-              variant="body2"
-            >
-              {ballkid.last_day === null
-                ? ""
-                : ballkid.last_day.substring(0, 3)}
-            </Typography>
-          )}
-        </Box>
-      );
+    }
 
     case "calibrated_avg":
-      return (
-        <Box className="sxs">
-          {showLabel ? (
-            <Typography variant="subtitle2">Calibrated Average: </Typography>
-          ) : (
-            ""
-          )}
-
-          <Typography
-            sx={{ mx: 0.5, px: 0.5, my: 0.1 }}
-            bgcolor={
-              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD ? "" : "pink"
-            }
-            color={
-              ballkid.num_ratings <= NUM_RATINGS_WARNING_THRESHOLD
-                ? "gray"
-                : "black"
-            }
-            variant="body2"
-          >
-            {Number(ballkid.calibrated_avg).toFixed(3)}
-          </Typography>
-        </Box>
+      return labeled(
+        "Calibrated Average: ",
+        <CalibratedAvgPill ballkid={ballkid} />
       );
 
     default:
-      break;
+      return null;
   }
 }
 

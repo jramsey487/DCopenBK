@@ -20,7 +20,7 @@ import {
   renderCheckoutUnassignedButton,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
-import { DraggableBallkidChip } from "../BallkidChip";
+import { DraggableBallkidRow } from "../BallkidChip";
 
 export function UnassignedPanel({
   unassigned,
@@ -206,11 +206,11 @@ export function UnassignedPanel({
               ) : (
                 <div className="teams-chairperson-unassigned-grid teams-chairperson-unassigned-grid--in-panel">
                   {ballkids.map((ballkid) => (
-                    <DraggableBallkidChip
+                    <DraggableBallkidRow
                       key={ballkid.id}
                       ballkid={ballkid}
                       commentTypes={
-                        isFinalsPage ? [] : ["checkout_teams"]
+                        isFinalsPage ? ["rank", "experience"] : ["checkout_teams"]
                       }
                       showHovercard={showHovercard}
                       hoverCommentTypes={

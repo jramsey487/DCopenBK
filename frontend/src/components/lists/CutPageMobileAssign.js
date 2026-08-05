@@ -7,8 +7,8 @@ import CardContent from "@mui/material/CardContent";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
-import { BallkidAndIcon, ConfirmDialog, getAuthHeader } from "../Utils";
-import { CutBallkidMeta, CutDecisionSectionList, compareCutPageBallkids } from "./CutPageDesktop";
+import { BallkidAndIcon, CommentsText, ConfirmDialog, getAuthHeader } from "../Utils";
+import { CutDecisionSectionList, compareCutPageBallkids } from "./CutPageDesktop";
 
 export const CUT_ASSIGN_LABELS = {
   "Definitely Keep": "Def. keep",
@@ -79,7 +79,7 @@ export function CutMobileAssignTable({
   assignOptions,
   onAssign,
   assignColumnTitle = "Assign",
-  compactMeta = false,
+  commentTypes = ["experience", "rank"],
 }) {
   const [assigningId, setAssigningId] = useState(null);
 
@@ -109,11 +109,15 @@ export function CutMobileAssignTable({
           <div key={ballkid.id} className="teams-mobile-unassigned-table__row">
             <div className="teams-mobile-unassigned-table__name cut-mobile-assign-table__name">
               <BallkidAndIcon ballkid={ballkid} />
-              <CutBallkidMeta
-                ballkid={ballkid}
-                dense
-                compact={compactMeta}
-              />
+              <div className="badge-row">
+                {commentTypes.map((commentType) => (
+                  <CommentsText
+                    key={commentType}
+                    ballkid={ballkid}
+                    commentType={commentType}
+                  />
+                ))}
+              </div>
             </div>
             <div className="teams-mobile-unassigned-table__position">
               {preferredPositionLabel(ballkid)}

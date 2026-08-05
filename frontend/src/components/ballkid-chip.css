@@ -169,23 +169,7 @@
     padding: 0 3px !important;
   }
   
-  .ballkid-chip--dense .cut-chip-icon-group {
-    padding: 0 2px;
-    gap: 0;
-    border: none;
-    background: transparent;
-  }
-  
-  .ballkid-chip--dense .cut-chip-icon-badge {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .ballkid-chip--dense .cut-chip-icon-badge svg {
-    font-size: 0.85rem !important;
-  }
-  
-  .ballkid-chip--dense .cut-chip-pill {
+  .ballkid-chip--dense .ballkid-pill {
     padding: 0 5px;
     font-size: 10px;
     font-weight: 600;

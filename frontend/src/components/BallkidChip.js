@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useDrag } from "react-dnd";
+import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 
-import { DraggableBallkidAndIcon } from "./Utils";
+import {
+  BallkidLink,
+  BallkidPopover,
+  CommentsText,
+  Icons,
+} from "./Utils";
 import "./ballkid-chip.css";
+import "./ballkid-row.css";
 
 export function BallkidChipHandle() {
   return (
@@ -18,37 +26,84 @@ export function BallkidChipHandle() {
   );
 }
 
-export function renderBallkidChipDragSurface({
-  ref,
-  isDragging,
-  children,
-  hoverHandlers,
+/**
+ * Shared draggable ballkid row for teams / finals / cut.
+ * Configure per-view metadata with commentTypes / hoverCommentTypes;
+ * pass optional trailing actions (unassign, cut, etc.).
+ */
+export function DraggableBallkidRow({
+  ballkid,
+  commentTypes = [],
+  showHovercard = false,
+  hoverCommentTypes = [],
+  actions = null,
   dense = true,
 }) {
-  return (
-    <div
-      ref={ref}
-      className={`ballkid-chip${dense ? " ballkid-chip--dense" : ""}${
-        isDragging ? " is-dragging" : ""
-      }`}
-      {...(hoverHandlers || {})}
-    >
-      <BallkidChipHandle />
-      {children}
-    </div>
-  );
-}
+  const [anchorEl, setAnchorEl] = useState(null);
 
-export function DraggableBallkidChip({
-  commentTypes = [],
-  ...props
-}) {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "ballkid",
+    item: { ...ballkid },
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  }));
+
+  const hoverHandlers = showHovercard
+    ? {
+        onMouseEnter: (e) => setAnchorEl(e.currentTarget),
+        onMouseLeave: () => setAnchorEl(null),
+      }
+    : null;
+
+  useEffect(() => {
+    if (!showHovercard) {
+      setAnchorEl(null);
+    }
+  }, [showHovercard]);
+
   return (
-    <DraggableBallkidAndIcon
-      layout="cut-chip"
-      renderCustom={renderBallkidChipDragSurface}
-      commentTypes={commentTypes}
-      {...props}
-    />
+    <div className={`ballkid-row${dense ? " ballkid-row--dense" : ""}`}>
+      <div
+        ref={drag}
+        className={`ballkid-chip${dense ? " ballkid-chip--dense" : ""}${
+          isDragging ? " is-dragging" : ""
+        }`}
+        {...(hoverHandlers || {})}
+      >
+        <BallkidChipHandle />
+        <Box className="ballkid-chip__content" sx={{ flex: 1, minWidth: 0 }}>
+          <Box className="ballkid-chip__name">
+            <BallkidLink
+              id={ballkid.id}
+              name={`${ballkid.first_name} ${ballkid.last_name}`}
+            />
+          </Box>
+          <Box className="ballkid-chip__meta">
+            <div className="badge-row">
+              <span className="badge-item ballkid-meta-icons">
+                <Icons ballkid={ballkid} margin={0} />
+              </span>
+              {commentTypes.map((commentType) => (
+                <CommentsText
+                  key={commentType}
+                  ballkid={ballkid}
+                  commentType={commentType}
+                />
+              ))}
+            </div>
+          </Box>
+        </Box>
+      </div>
+      {actions ? (
+        <div className="ballkid-row__actions">{actions}</div>
+      ) : null}
+      {showHovercard ? (
+        <BallkidPopover
+          ballkid={ballkid}
+          hoverCommentTypes={hoverCommentTypes}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
+        />
+      ) : null}
+    </div>
   );
 }

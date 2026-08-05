@@ -1,5 +1,6 @@
 @import "../lists/ballkid-list-by-name.css";
 @import "../lists/cut-page-desktop.css";
+@import "../ballkid-badges.css";
 
 .teams-page-shell {
     --tp-nav: #0d1b3e;
@@ -435,11 +436,6 @@
     pointer-events: none;
   }
 
-  .team-card.teams-chairperson-card .teams-chairperson-ballkid-chip-wrap {
-    display: flex;
-    align-items: stretch;
-  }
-
   .teams-chairperson-unassigned {
     background: var(--tp-bg1) !important;
     border: 0.5px solid var(--tp-border) !important;
@@ -783,11 +779,6 @@
     margin-bottom: 8px;
   }
 
-  .teams-chairperson-ballkid-chip-wrap {
-    flex: 1;
-    min-width: 0;
-  }
-
   .teams-chairperson-position-block {
     margin-top: 16px;
   }
@@ -1040,12 +1031,6 @@
       padding: 4px 12px 12px;
     }
 
-    .teams-chairperson-page .teams-chairperson-ballkid-chip-wrap {
-      flex: 1;
-      min-width: 0;
-      width: auto;
-    }
-
     .teams-chairperson-page .teams-chairperson-ballkid-actions {
       width: auto;
       flex-shrink: 0;
@@ -1108,7 +1093,7 @@
     }
   }
 
-  .teams-chairperson-page .cut-chip-meta-icons .MuiIcon-root:empty {
+  .teams-chairperson-page .ballkid-meta-icons .MuiIcon-root:empty {
     display: none;
     width: 0;
     min-width: 0;

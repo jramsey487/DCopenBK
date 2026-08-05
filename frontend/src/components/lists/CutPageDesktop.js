@@ -7,7 +7,6 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
@@ -17,10 +16,8 @@ import Dangerous from "@mui/icons-material/Dangerous";
 import {
   filterBallkids,
   getAuthHeader,
-  getLocalStorage,
   SearchAndFilter,
   ConfirmDialog,
-  DraggableBallkidAndIcon,
   HelpIcon,
   Banners,
   Alerts,
@@ -29,12 +26,9 @@ import {
 import {
   CUT_STATUSES,
   POSITIONS,
-  ICON_DICT,
-  TOOLTIP_DICT,
-  NUM_RATINGS_WARNING_THRESHOLD,
 } from "../Consts";
 import { cut } from "../HelpMessages";
-import { renderBallkidChipDragSurface } from "../BallkidChip";
+import { DraggableBallkidRow } from "../BallkidChip";
 import "./cut-page-desktop.css";
 import "../ballkid-badges.css";
 import "../ballkid-row.css";
@@ -83,188 +77,17 @@ export function compareCutPageBallkids(a, b) {
   );
 }
 
-function hasCalibratedAverage(ballkid) {
-  const avg = ballkid.calibrated_avg;
-  if (avg === null || avg === undefined || avg === "") {
-    return false;
-  }
-  const numericAvg = Number(avg);
-  if (Number.isNaN(numericAvg)) {
-    return false;
-  }
-  const numRatings = ballkid.num_ratings;
-  if (
-    numRatings !== null &&
-    numRatings !== undefined &&
-    numRatings !== ""
-  ) {
-    return Number(numRatings) > 0;
-  }
-  return numericAvg !== 0;
-}
+const CUT_HOVER_COMMENT_TYPES = [
+  "experience",
+  "rank",
+  "calibrated_avg",
+  "last_day",
+];
 
-function cutCalibratedRankDisplay(ballkid) {
-  if (ballkid.rank !== null && ballkid.rank !== undefined && ballkid.rank !== "") {
-    return {
-      label: "Calibrated rank",
-      value: String(ballkid.rank),
-    };
-  }
-  return null;
-}
-
-function CalibratedRankPill({ ballkid }) {
-  const display = cutCalibratedRankDisplay(ballkid);
-  if (display == null) {
-    return null;
-  }
-
-  return (
-    <Tooltip title={display.label} arrow>
-      <span className="cut-chip-pill cut-chip-pill--rank">
-        {display.value}
-      </span>
-    </Tooltip>
-  );
-}
-
-function LastDayPill({ ballkid }) {
-  if (
-    ballkid.last_day === null ||
-    ballkid.last_day === "" ||
-    ballkid.last_day === "End"
-  ) {
-    return null;
-  }
-
-  const label =
-    ballkid.last_day.length > 3
-      ? ballkid.last_day.substring(0, 3)
-      : ballkid.last_day;
-
-  return (
-    <Tooltip title="Last day" arrow>
-      <span className="cut-chip-pill cut-chip-pill--last">{label}</span>
-    </Tooltip>
-  );
-}
-
-export function CutBallkidMeta({
-  ballkid,
-  compact = false,
-  dense = false,
-  coreMetaOnly = false,
-}) {
-  const group = getLocalStorage("group");
-  const iconBadges = [];
-  const addIcon = (key, icon, title) => {
-    iconBadges.push(
-      <Tooltip key={key} title={title} arrow>
-        <span className="cut-chip-icon-badge">{icon}</span>
-      </Tooltip>
-    );
-  };
-
-  if (ballkid.is_chairperson) {
-    addIcon("chair", ICON_DICT.chairperson, TOOLTIP_DICT.chairperson);
-  }
-  if (ballkid.is_captain) {
-    addIcon("captain", ICON_DICT.captain, TOOLTIP_DICT.captain);
-  }
-
-  if (coreMetaOnly) {
-    if (group !== "ballkid" && ballkid.num_years_experience === 0) {
-      addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
-    }
-    return (
-      <div className="badge-row">
-        {iconBadges.length > 0 ? (
-          <div className="cut-chip-icon-group">{iconBadges}</div>
-        ) : null}
-        <LastDayPill ballkid={ballkid} />
-      </div>
-    );
-  }
-
-  if (
-    group !== "ballkid" &&
-    ballkid.num_years_experience === 0 &&
-    ballkid.is_out_of_town
-  ) {
-    addIcon("oot-rookie", ICON_DICT.outOfTownRookie, TOOLTIP_DICT.outOfTownRookie);
-  } else if (group !== "ballkid" && ballkid.is_out_of_town) {
-    addIcon("oot", ICON_DICT.outOfTownBallkid, TOOLTIP_DICT.outOfTownBallkid);
-  }
-  if (group !== "ballkid" && ballkid.num_years_experience === 0) {
-    addIcon("rookie", ICON_DICT.rookie, TOOLTIP_DICT.rookie);
-  }
-
-  if (compact) {
-    return (
-      <div className="badge-row">
-        <CalibratedRankPill ballkid={ballkid} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="badge-row">
-      {iconBadges.length > 0 ? (
-        <div className="cut-chip-icon-group">{iconBadges}</div>
-      ) : null}
-      {ballkid.num_years_experience > 0 ? (
-        <Tooltip title="Years at Citi Open" arrow>
-          <span className="cut-chip-pill cut-chip-pill--yrs">
-            {dense
-              ? ballkid.num_years_experience
-              : `${ballkid.num_years_experience} yr`}
-          </span>
-        </Tooltip>
-      ) : null}
-      <CalibratedRankPill ballkid={ballkid} />
-    </div>
-  );
-}
-
-export function CutBallkidRow({
-  ballkid,
-  showHovercard,
-  hoverCommentTypes,
-  actions,
-  dense = true,
-  coreMetaOnly = false,
-}) {
-  return (
-    <div className={`ballkid-row${dense ? " ballkid-row--dense" : ""}`}>
-      <div className="teams-chairperson-ballkid-chip-wrap">
-        <DraggableBallkidAndIcon
-          ballkid={ballkid}
-          layout="cut-chip"
-          showHovercard={showHovercard}
-          hoverCommentTypes={hoverCommentTypes}
-          metaSlot={
-            <CutBallkidMeta
-              ballkid={ballkid}
-              dense={dense}
-              coreMetaOnly={coreMetaOnly}
-            />
-          }
-          renderCustom={(props) =>
-            renderBallkidChipDragSurface({
-              ...props,
-              dense: true,
-              hoverHandlers: showHovercard ? props.hoverHandlers : null,
-            })
-          }
-        />
-      </div>
-      {actions ? (
-        <div className="teams-chairperson-ballkid-actions ballkid-row__actions">
-          {actions}
-        </div>
-      ) : null}
-    </div>
-  );
+function cutCommentTypesForSection(section) {
+  return section === "Self-Cut"
+    ? ["last_day"]
+    : ["experience", "rank", "last_day"];
 }
 
 function CutBallkidGrid({ ballkids, ...rowProps }) {
@@ -276,12 +99,22 @@ function CutBallkidGrid({ ballkids, ...rowProps }) {
     <div className="cut-page-two-columns">
       <div className="cut-page-two-columns__col">
         {leftColumn.map((ballkid) => (
-          <CutBallkidRow key={ballkid.id} ballkid={ballkid} dense {...rowProps} />
+          <DraggableBallkidRow
+            key={ballkid.id}
+            ballkid={ballkid}
+            dense
+            {...rowProps}
+          />
         ))}
       </div>
       <div className="cut-page-two-columns__col">
         {rightColumn.map((ballkid) => (
-          <CutBallkidRow key={ballkid.id} ballkid={ballkid} dense {...rowProps} />
+          <DraggableBallkidRow
+            key={ballkid.id}
+            ballkid={ballkid}
+            dense
+            {...rowProps}
+          />
         ))}
       </div>
     </div>
@@ -292,7 +125,7 @@ function CutBallkidStack({ ballkids, actionsForBallkid, ...rowProps }) {
   return (
     <div className="cut-page-chip-list">
       {ballkids.map((ballkid) => (
-        <CutBallkidRow
+        <DraggableBallkidRow
           key={ballkid.id}
           ballkid={ballkid}
           dense
@@ -445,14 +278,9 @@ export function CutDecisionSectionList({
   return (
     <CutBallkidStack
       ballkids={sorted}
-      coreMetaOnly
+      commentTypes={cutCommentTypesForSection(section)}
       showHovercard={showHovercard}
-      hoverCommentTypes={[
-        "experience",
-        "rank",
-        "calibrated_avg",
-        "last_day",
-      ]}
+      hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
       actionsForBallkid={(ballkid) =>
         !section.includes("Cut") ? null : (
           <Tooltip title="Cut">
@@ -580,13 +408,9 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
             ) : (
               <CutBallkidGrid
                 ballkids={[...filtered].sort(compareCutPageBallkids)}
+                commentTypes={["experience", "rank", "last_day"]}
                 showHovercard={showHovercard}
-                hoverCommentTypes={[
-                  "experience",
-                  "rank",
-                  "calibrated_avg",
-                  "last_day",
-                ]}
+                hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
               />
             )}
           </div>
