@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -10,6 +10,7 @@ import Rating from "@mui/material/Rating";
 import Slider from "@mui/material/Slider";
 import Link from "@mui/material/Link";
 import LoadingButton from "@mui/lab/LoadingButton";
+import Check from "@mui/icons-material/Check";
 
 import ScheduleCalendar from "../schedule/ScheduleCalendar";
 import {
@@ -161,27 +162,58 @@ export default function RatingDialog({
   );
   const [effortRating, setEffortRating] = useState(draft.effort_rating ?? null);
 
-  const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [shouldRefresh, setShouldRefresh] = useState(false);
-
   const [loading, setLoading] = useState(false);
+  const [draftLoading, setDraftLoading] = useState(false);
+  // 'draft' | 'submit' | null — drives the success animation on the tapped button
+  const [successAction, setSuccessAction] = useState(null);
+  const closeTimeoutRef = useRef(null);
+  const pendingRefreshRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleClose = (e) => {
-    if (shouldRefresh) {
-      setUpdated(true);
-      setShouldRefresh(false);
-    }
+    if (successAction) return;
     setOpen(false);
-    setSuccessMsg("");
     setErrorMsg("");
     e?.stopPropagation?.();
   };
+
+  const handleExited = () => {
+    // Refresh the page only after the dialog has fully left, so the parent
+    // doesn't swap Give Rating ↔ View Draft while the modal is still visible.
+    if (pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      setUpdated?.(true);
+    }
+    setSuccessAction(null);
+    setErrorMsg("");
+  };
+
+  const finishSuccess = (action) => {
+    setDraftLoading(false);
+    setLoading(false);
+    setErrorMsg("");
+    setSuccessAction(action);
+    closeTimeoutRef.current = setTimeout(() => {
+      pendingRefreshRef.current = true;
+      setOpen(false);
+    }, 900);
+  };
+
+  const busy = Boolean(successAction) || loading || draftLoading;
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
+      TransitionProps={{ onExited: handleExited }}
       PaperProps={{
         onClick: (e) => e.stopPropagation(),
         className: "rating-dialog-paper",
@@ -189,9 +221,9 @@ export default function RatingDialog({
     >
       <DialogContent className="rating-dialog-content">
         <Alerts
-          successMsg={successMsg}
+          successMsg=""
           errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
+          setSuccessMsg={() => {}}
           setErrorMsg={setErrorMsg}
         />
 
@@ -267,18 +299,27 @@ export default function RatingDialog({
       </DialogContent>
 
       <DialogActions className="rating-dialog-actions">
-        <Button onClick={handleClose}>
-          {successMsg ? "Close" : "Cancel"}
+        <Button onClick={handleClose} disabled={Boolean(successAction)}>
+          Cancel
         </Button>
-        <Button
+        <LoadingButton
+          className={
+            successAction === "draft"
+              ? "rating-dialog-action-btn rating-dialog-action-btn--success"
+              : "rating-dialog-action-btn"
+          }
+          loading={draftLoading}
           variant="outlined"
           color="secondary"
-          disabled={Boolean(successMsg)}
+          disabled={Boolean(successAction) || loading}
+          startIcon={successAction === "draft" ? <Check /> : undefined}
           onClick={() => {
             if (rating == null) {
               setErrorMsg("Overall rating is required to save a draft.");
               return;
             }
+            if (busy) return;
+            setDraftLoading(true);
             fetch("/api/save-draft-rating", {
               method: "PATCH",
               headers: getAuthHeader(),
@@ -294,24 +335,36 @@ export default function RatingDialog({
                 effort_rating: effortRating,
                 comments: comments,
               }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Draft rating saved!");
-                setShouldRefresh(true);
-              } else {
+            })
+              .then((response) => {
+                if (response.ok) {
+                  finishSuccess("draft");
+                } else {
+                  setErrorMsg("Error saving draft rating.");
+                  setDraftLoading(false);
+                }
+              })
+              .catch(() => {
                 setErrorMsg("Error saving draft rating.");
-              }
-            });
+                setDraftLoading(false);
+              });
           }}
         >
-          Save Draft
-        </Button>
+          {successAction === "draft" ? "Saved" : "Save Draft"}
+        </LoadingButton>
         <LoadingButton
+          className={
+            successAction === "submit"
+              ? "rating-dialog-action-btn rating-dialog-action-btn--success"
+              : "rating-dialog-action-btn"
+          }
           loading={loading}
           variant="contained"
           color="primary"
-          disabled={Boolean(successMsg)}
-          onClick={(e) => {
+          disabled={Boolean(successAction) || draftLoading}
+          startIcon={successAction === "submit" ? <Check /> : undefined}
+          onClick={() => {
+            if (busy) return;
             setLoading(true);
             fetch("/api/create-rating", {
               method: "POST",
@@ -329,18 +382,22 @@ export default function RatingDialog({
                 effort_rating: effortRating,
                 comments: comments,
               }),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Rating submitted!");
-                setShouldRefresh(true);
-              } else {
+            })
+              .then((response) => {
+                if (response.ok) {
+                  finishSuccess("submit");
+                } else {
+                  setErrorMsg("Error submitting rating.");
+                  setLoading(false);
+                }
+              })
+              .catch(() => {
                 setErrorMsg("Error submitting rating.");
-              }
-              setLoading(false);
-            });
+                setLoading(false);
+              });
           }}
         >
-          Submit
+          {successAction === "submit" ? "Submitted" : "Submit"}
         </LoadingButton>
       </DialogActions>
     </Dialog>

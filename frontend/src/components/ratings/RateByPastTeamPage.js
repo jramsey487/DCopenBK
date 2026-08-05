@@ -5,13 +5,11 @@ import {
   getAuthHeader,
   getLocalStorage,
   BallkidCard,
-  setLocalStorage,
   getDay,
 } from "../Utils";
 import { rateByPastTeam } from "../HelpMessages";
 import {
   RatingsPageShell,
-  FilterTogglePill,
   RateBallkidMeta,
   RateActionButton,
 } from "./RatingsPageShared";
@@ -46,27 +44,16 @@ function BallkidTile({ ballkid, setUpdated, date = null }) {
 
 export default function RateByPastTeamPage() {
   const [ballkids, setBallkids] = useState([]);
-  const [unratedBallkids, setUnratedBallkids] = useState([]);
   const [pastTeams, setPastTeams] = useState({});
   const [updated, setUpdated] = useState(false);
 
-  const [showUnrated, setShowUnrated] = useState(
-    getLocalStorage("showUnrated") ?? false
-  );
   const [layout, setLayout] = useState(getLocalStorage("layout") ?? "list");
   const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
     fetch("/api/list/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => {
-        setBallkids(data);
-        setUnratedBallkids(
-          data.filter(
-            (ballkid) => ballkid.num_my_ratings === 0 && ballkid.id !== pk
-          )
-        );
-      });
+      .then((data) => setBallkids(data));
 
     fetch("/api/get-past-teams/" + pk, { headers: getAuthHeader() })
       .then((response) => response.json())
@@ -74,7 +61,6 @@ export default function RateByPastTeamPage() {
       .then(() => setUpdated(false));
   }, [pk, updated]);
 
-  const pool = showUnrated ? unratedBallkids : ballkids;
   const dates = Object.keys(pastTeams);
 
   return (
@@ -84,24 +70,15 @@ export default function RateByPastTeamPage() {
       helpPage="Rate by Past Team"
       helpMessage={rateByPastTeam}
       titleEnd={<LayoutButtons layout={layout} setLayout={setLayout} />}
-      toolbar={
-        <FilterTogglePill
-          checked={showUnrated}
-          onChange={(checked) => {
-            setShowUnrated(checked);
-            setLocalStorage("showUnrated", checked);
-          }}
-          offLabel="All ballkids"
-          onLabel="To rate"
-        />
-      }
     >
       {dates.length === 0 ? (
         <div className="rate-empty">There are no past teams to show.</div>
       ) : (
         dates.map((date) => {
           const members = pastTeams[date]
-            .map((ballkidId) => pool.find((ballkid) => ballkid.id === ballkidId))
+            .map((ballkidId) =>
+              ballkids.find((ballkid) => ballkid.id === ballkidId)
+            )
             .filter(Boolean);
 
           return (
@@ -112,7 +89,7 @@ export default function RateByPastTeamPage() {
               </div>
               {members.length === 0 ? (
                 <div className="rate-empty">
-                  No ballkids match the current filter for this day.
+                  No ballkids to show for this day.
                 </div>
               ) : (
                 <div

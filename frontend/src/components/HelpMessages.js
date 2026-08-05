@@ -363,9 +363,7 @@ export const rateByPastTeam = (
     Ratings can be submitted for any ballkid, but ballkids whom you have already
     rated will be indicated by a checkmark and an outlined (as opposed to filled
     in) "Give Rating" button. The number of ratings you have personally
-    submitted for each ballkid is also listed. In order to only show ballkids
-    whom you have not yet rated, toggle the "Show All Ballkids / Show Ballkids
-    to Rate" toggle at the top of the page.
+    submitted for each ballkid is also listed.
   </DialogContentText>
 );
 

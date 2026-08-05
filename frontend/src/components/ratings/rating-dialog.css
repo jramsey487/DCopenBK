@@ -276,6 +276,48 @@
     background-color: #152a5c;
   }
 
+  .rating-dialog-action-btn.rating-dialog-action-btn--success.MuiButton-root,
+  .rating-dialog-action-btn.rating-dialog-action-btn--success.MuiButton-root:hover,
+  .rating-dialog-action-btn.rating-dialog-action-btn--success.Mui-disabled {
+    background-color: var(--success, #15803d) !important;
+    border-color: var(--success, #15803d) !important;
+    color: #fff !important;
+    opacity: 1 !important;
+    animation: rating-dialog-btn-success 0.55s ease-out;
+  }
+
+  .rating-dialog-action-btn.rating-dialog-action-btn--success .MuiButton-startIcon {
+    margin-right: 6px;
+    animation: rating-dialog-check-pop 0.45s ease-out;
+  }
+
+@keyframes rating-dialog-btn-success {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rating-dialog-check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Give Rating / View Draft — match teams/check-in outlined action buttons */
 .rating-btn.MuiButton-root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system,
