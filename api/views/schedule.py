@@ -208,11 +208,103 @@ class UpdateCourtName(APIView):
                 shift.court = new_name
                 shift.save()
 
+        note_date = (
+            datetime.now().date()
+            if request.data["date"] == ""
+            else datetime.strptime(
+                request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR
+            ).date()
+        )
+        notes = CourtNote.objects.filter(court=old_name, date=note_date)
+        if new_name == "":
+            deleted, _ = notes.delete()
+            if deleted:
+                logger.info(
+                    f"[UpdateCourtName] deleted {deleted} court note(s) for {old_name} on {note_date}"
+                )
+        else:
+            target_exists = CourtNote.objects.filter(
+                court=new_name, date=note_date
+            ).exists()
+            if target_exists:
+                deleted, _ = notes.delete()
+                if deleted:
+                    logger.info(
+                        f"[UpdateCourtName] dropped {deleted} note(s) for {old_name}; {new_name} already had a note on {note_date}"
+                    )
+            else:
+                updated = notes.update(court=new_name)
+                if updated:
+                    logger.info(
+                        f"[UpdateCourtName] renamed {updated} court note(s) from {old_name} to {new_name} on {note_date}"
+                    )
+
         return Response(
             {
                 "Success": f"Updated court name {old_name} to {new_name} for {len(court_shifts)} shifts"
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class CourtNotes(APIView):
+    def get_permissions(self):
+        if self.request.method in ("GET", "HEAD", "OPTIONS"):
+            return [IsAuthenticated()]
+        return [IsChairpersonOrCaptain()]
+
+    def get(self, request, format=None):
+        param = request.query_params.get("date", "")
+        if param == "":
+            note_date = datetime.now().date()
+        else:
+            note_date = datetime.strptime(
+                param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
+            ).date()
+
+        notes = CourtNote.objects.filter(date=note_date).order_by("court")
+        return Response(CourtNoteSerializer(notes, many=True).data)
+
+    def put(self, request, format=None):
+        court = (request.data.get("court") or "").strip()
+        message = (request.data.get("message") or "").strip()
+        param = request.data.get("date", "")
+
+        if not court:
+            return Response(
+                {"Error": "court is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if param == "":
+            note_date = datetime.now().date()
+        else:
+            note_date = datetime.strptime(
+                param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
+            ).date()
+
+        if message == "":
+            deleted, _ = CourtNote.objects.filter(
+                court=court, date=note_date
+            ).delete()
+            logger.info(
+                f"[CourtNotes] cleared note for {court} on {note_date} (deleted={deleted})"
+            )
+            return Response(
+                {"court": court, "date": note_date.isoformat(), "message": ""},
+                status=status.HTTP_200_OK,
+            )
+
+        note, created = CourtNote.objects.update_or_create(
+            court=court,
+            date=note_date,
+            defaults={"message": message},
+        )
+        logger.info(
+            f"[CourtNotes] {'created' if created else 'updated'} note for {court} on {note_date}"
+        )
+        return Response(
+            CourtNoteSerializer(note).data, status=status.HTTP_200_OK
         )
 
 

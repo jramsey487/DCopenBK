@@ -113,6 +113,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CourtNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourtNote
+        fields = ("id", "court", "date", "message", "updated_at")
+
+
 class TournamentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tournament

@@ -29,6 +29,7 @@ import {
   useIsMobile,
   ConfirmDialog,
   HovercardToggle,
+  getToday,
 } from "../Utils";
 import {
   POSITIONS,
@@ -38,6 +39,7 @@ import {
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
 import { DraggableBallkidRow } from "../BallkidChip";
 import { teams, finalsTeams } from "../HelpMessages.js";
+import { CourtNoteBlock } from "./CourtNote";
 import "../ballkid-row.css";
 
 export function renderSwitchButton(ballkid, setUpdated, isFinalsPage = false) {
@@ -180,9 +182,13 @@ function Team({
   setUpdated,
   isNewTeam = false,
   isFinalsPage = false,
+  courtNotes = {},
+  setCourtNotes,
 }) {
   const isCurrentlyOn =
     !isFinalsPage && nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
+  const court =
+    !isFinalsPage && nextShifts.length > 0 ? nextShifts[0].court : "";
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
@@ -312,6 +318,15 @@ function Team({
             </div>
           ) : null}
 
+          {!isFinalsPage && court && setCourtNotes ? (
+            <CourtNoteBlock
+              court={court}
+              note={courtNotes[court]}
+              date={getToday()}
+              onNotesChange={setCourtNotes}
+            />
+          ) : null}
+
           <div className="team-card-body">
             {assigned.length === 0
               ? ""
@@ -382,7 +397,14 @@ export function renderCheckoutUnassignedButton(setOpen) {
   );
 }
 
-export function Teams({ assigned, teams, nextShifts, setUpdated }) {
+export function Teams({
+  assigned,
+  teams,
+  nextShifts,
+  setUpdated,
+  courtNotes = {},
+  setCourtNotes,
+}) {
   const isMobile = useIsMobile();
 
   const sortedTeams = [...teams].sort((a, b) => {
@@ -401,6 +423,8 @@ export function Teams({ assigned, teams, nextShifts, setUpdated }) {
           assigned={assigned.filter((ballkid) => ballkid.current_team === team)}
           nextShifts={nextShifts.filter((shift) => shift.team === team)}
           setUpdated={setUpdated}
+          courtNotes={courtNotes}
+          setCourtNotes={setCourtNotes}
         />
       ))}
 

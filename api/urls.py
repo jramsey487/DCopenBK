@@ -54,6 +54,7 @@ schedule_urls = [
     path("end-court", EndCourt.as_view(), name="end-court"),
     path("update-shift", UpdateShift.as_view(), name="update-shift"),
     path("get-next-shifts", GetNextShifts.as_view(), name="get-next-shifts"),
+    path("court-notes", CourtNotes.as_view(), name="court-notes"),
 ]
 
 # Analytics URLs

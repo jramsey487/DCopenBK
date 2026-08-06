@@ -15,6 +15,23 @@ class Schedule(models.Model):
         return f"Team {self.team} on {self.court} at {self.start}"
 
 
+class CourtNote(models.Model):
+    court = models.CharField(max_length=50)
+    date = models.DateField()
+    message = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["court", "date"], name="unique_court_note_per_day"
+            )
+        ]
+
+    def __str__(self):
+        return f"Note for {self.court} on {self.date}: {self.message[:40]}"
+
+
 class Tournament(models.Model):
     year = models.IntegerField(default=0)
     start_date = models.DateField(null=True)

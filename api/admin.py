@@ -68,6 +68,11 @@ class ScheduleResource(resources.ModelResource):
         model = Schedule
 
 
+class CourtNoteResource(resources.ModelResource):
+    class Meta:
+        model = CourtNote
+
+
 class TeamHistoryResource(resources.ModelResource):
     class Meta:
         model = TeamHistory
@@ -127,6 +132,11 @@ class ScheduleAdmin(ExportMixin, admin.ModelAdmin):
     resource_classes = [ScheduleResource]
 
 
+class CourtNoteAdmin(ExportMixin, admin.ModelAdmin):
+    resource_classes = [CourtNoteResource]
+    list_display = ("court", "date", "updated_at", "message")
+
+
 class TeamHistoryAdmin(ExportMixin, admin.ModelAdmin):
     resource_classes = [TeamHistoryResource]
 
@@ -146,5 +156,6 @@ admin.site.register(CutHistory, CutHistoryAdmin)
 admin.site.register(FinalsHistory, FinalsHistoryAdmin)
 admin.site.register(Rating, RatingAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
+admin.site.register(CourtNote, CourtNoteAdmin)
 admin.site.register(TeamHistory, TeamHistoryAdmin)
 admin.site.register(Tournament, TournamentAdmin)

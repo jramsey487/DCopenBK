@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 
-import { getAuthHeader, Banners } from "../Utils";
+import { getAuthHeader, Banners, getToday } from "../Utils";
 import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import {
   Teams,
   Header,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
+import { courtNotesToMap, fetchCourtNotes } from "./CourtNote";
 
 export default function TeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
@@ -14,6 +15,7 @@ export default function TeamsPageChairpersonMobile(props) {
   const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);
   const [updated, setUpdated] = useState(false);
+  const [courtNotes, setCourtNotes] = useState({});
 
   useEffect(() => {
     fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
@@ -41,6 +43,10 @@ export default function TeamsPageChairpersonMobile(props) {
       .then((response) => response.json())
       .then((data) => setNextShifts(data))
       .then(() => setUpdated(false));
+
+    fetchCourtNotes(getToday())
+      .then((data) => setCourtNotes(courtNotesToMap(data)))
+      .catch(() => setCourtNotes({}));
   }, [updated]);
 
   return (
@@ -60,6 +66,8 @@ export default function TeamsPageChairpersonMobile(props) {
         teams={teams}
         nextShifts={nextShifts}
         setUpdated={setUpdated}
+        courtNotes={courtNotes}
+        setCourtNotes={setCourtNotes}
       />
       <UnassignedMobilePanel
         unassigned={unassigned}

@@ -56,7 +56,99 @@
   .team-card.is-on-court .team-card-head {
     background: var(--tp-green-bg);
   }
-  
+
+  .court-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 14px;
+    border-top: 0.5px solid var(--tp-border);
+    background: #fffbeb;
+  }
+
+  .court-note--empty {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 14px;
+    border: none;
+    border-top: 0.5px solid var(--tp-border);
+    border-bottom: none;
+    background: transparent;
+    color: var(--tp-text2);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .court-note--empty:hover {
+    background: var(--tp-bg2);
+    color: var(--tp-nav);
+  }
+
+  .court-note--editing {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: #fff;
+  }
+
+  .court-note__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tp-text2);
+  }
+
+  .court-note__message {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #92400e;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+
+  .court-note__input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--tp-border);
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--tp-text1);
+    resize: vertical;
+    min-height: 52px;
+  }
+
+  .court-note__input:focus {
+    outline: none;
+    border-color: var(--tp-nav);
+  }
+
+  .court-note__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    justify-content: flex-end;
+  }
+
+  .court-note__edit.MuiIconButton-root {
+    flex-shrink: 0;
+    color: #b45309;
+    margin: -4px -4px 0 0;
+  }
+
   .team-card-title-group {
     display: flex;
     align-items: center;

@@ -7,16 +7,33 @@ import {
   BallkidAndIcon,
   Banners,
   getLocalStorage,
+  getToday,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
 import { PersonPhotoTile, TeamsPhotoToggle, TeamsYoeToggle } from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
+import {
+  CourtNoteBlock,
+  courtNotesToMap,
+  fetchCourtNotes,
+} from "./CourtNote";
 import "./teams-page.css";
 
-function Team({ team, assigned, nextShifts, isMyTeam, showPhotos, showYoe }) {
+function Team({
+  team,
+  assigned,
+  nextShifts,
+  isMyTeam,
+  showPhotos,
+  showYoe,
+  canEditNotes,
+  courtNotes,
+  setCourtNotes,
+}) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
+  const court = nextShifts.length > 0 ? nextShifts[0].court : "";
 
   return (
     <div
@@ -36,6 +53,16 @@ function Team({ team, assigned, nextShifts, isMyTeam, showPhotos, showYoe }) {
           <CourtAssignment nextShifts={nextShifts} />
         </span>
       </div>
+
+      {court ? (
+        <CourtNoteBlock
+          court={court}
+          note={courtNotes[court]}
+          date={getToday()}
+          onNotesChange={setCourtNotes}
+          readOnly={!canEditNotes}
+        />
+      ) : null}
 
       <div className="team-card-body">
         {POSITIONS.map((position) => {
@@ -93,8 +120,11 @@ export default function TeamsPage(props) {
   const [showTeams, setShowTeams] = useState(false);
   const [showPhotos, setShowPhotos] = useState(false);
   const [showYoe, setShowYoe] = useState(false);
+  const [courtNotes, setCourtNotes] = useState({});
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
+  const group = getLocalStorage("group");
+  const canEditNotes = group === "captain" || group === "chairperson";
 
   useEffect(() => {
     fetch("/api/sorted-list", { headers: getAuthHeader() })
@@ -122,6 +152,10 @@ export default function TeamsPage(props) {
     fetch("/api/get-next-shifts", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setNextShifts(data));
+
+    fetchCourtNotes(getToday())
+      .then((data) => setCourtNotes(courtNotesToMap(data)))
+      .catch(() => setCourtNotes({}));
   }, []);
 
   const myTeam = assigned.find((b) => b.id === myBallkidId)?.current_team;
@@ -167,6 +201,9 @@ export default function TeamsPage(props) {
               isMyTeam={team === myTeam}
               showPhotos={showPhotos}
               showYoe={showYoe}
+              canEditNotes={canEditNotes}
+              courtNotes={courtNotes}
+              setCourtNotes={setCourtNotes}
             />
           ))}
         </div>

@@ -12,6 +12,7 @@ import {
   filterBallkids,
   ConfirmDialog,
   Banners,
+  getToday,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import {
@@ -21,6 +22,7 @@ import {
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
 import { DraggableBallkidRowTwoColumns } from "../BallkidChip";
+import { courtNotesToMap, fetchCourtNotes } from "./CourtNote";
 
 export function UnassignedPanel({
   unassigned,
@@ -223,6 +225,7 @@ export default function TeamsPageChairpersonDesktop(props) {
   const [nextShifts, setNextShifts] = useState([]);
   const [teams, setTeams] = useState([]);
   const [updated, setUpdated] = useState(false);
+  const [courtNotes, setCourtNotes] = useState({});
 
   useEffect(() => {
     fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
@@ -250,6 +253,10 @@ export default function TeamsPageChairpersonDesktop(props) {
       .then((response) => response.json())
       .then((data) => setNextShifts(data))
       .then(() => setUpdated(false));
+
+    fetchCourtNotes(getToday())
+      .then((data) => setCourtNotes(courtNotesToMap(data)))
+      .catch(() => setCourtNotes({}));
   }, [updated]);
 
   return (
@@ -279,6 +286,8 @@ export default function TeamsPageChairpersonDesktop(props) {
             teams={teams}
             nextShifts={nextShifts}
             setUpdated={setUpdated}
+            courtNotes={courtNotes}
+            setCourtNotes={setCourtNotes}
           />
         </Grid>
 
