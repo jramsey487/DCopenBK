@@ -301,10 +301,8 @@
   }
 
   .team-card.teams-chairperson-card.is-drop-over {
-    /* Outline draws on top of children (unlike inset shadow, which gets
-       covered by the head/body backgrounds and looks like only the bottom). */
-    outline: 2px solid var(--tp-nav);
-    outline-offset: -2px;
+    /* Outer ring follows border-radius and stays above head/body fills */
+    box-shadow: 0 0 0 2px var(--tp-nav);
     border-color: var(--tp-nav);
   }
 
@@ -318,8 +316,7 @@
   .team-card.teams-chairperson-card.is-new-team.is-drop-over {
     border-style: solid;
     border-color: var(--tp-nav);
-    outline: 2px solid var(--tp-nav);
-    outline-offset: -2px;
+    box-shadow: 0 0 0 2px var(--tp-nav);
   }
 
   .teams-chairperson-head-actions {
@@ -497,8 +494,12 @@
   .teams-chairperson-page .team-card.teams-chairperson-card {
     min-width: 0;
     max-width: 100%;
-    /* Don't clip the head action buttons when the card is tight */
-    overflow: visible;
+    /* Keep overflow:hidden (from .team-card) so head bg follows border-radius */
+  }
+
+  .teams-chairperson-page .team-card.teams-chairperson-card > .team-card-head {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
   }
 
   .teams-chairperson-page-header {
