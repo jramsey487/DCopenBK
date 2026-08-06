@@ -7,6 +7,7 @@ import {
   getAuthHeader,
   RatingButton,
   DraftRatingButton,
+  getBallkidId,
   getLocalStorage,
   useIsMobile,
 } from "../Utils";
@@ -49,11 +50,12 @@ export default function BallkidPageCaptain(props) {
     return <ProfileLoadingState />;
   }
 
-  const isOwnProfile = ballkid.id === getLocalStorage("ballkid_id");
+  const myId = getBallkidId();
+  const isOwnProfile = myId != null && Number(ballkid.id) === myId;
 
-  const ratingButton = isOwnProfile ? null : (
+  const ratingButton = (
     <div className="ballkid-profile-hero-mobile-actions">
-      {ballkid.have_draft ? (
+      {ballkid.have_draft && !isOwnProfile ? (
         <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
       ) : (
         <RatingButton

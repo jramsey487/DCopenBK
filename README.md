@@ -27,6 +27,9 @@ A full-stack web application for managing ball kids at the **Mubadala DC Open** 
   - [Data Export & Debug Tools](#data-export--debug-tools)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
+  - [Prerequisites](#prerequisites)
+  - [One-shot setup](#one-shot-setup)
+  - [Running the app](#running-the-app)
   - [Dev users (management commands)](#dev-users-management-commands)
 - [Deployment](#deployment)
 
@@ -92,6 +95,10 @@ DCopenBK/
 ├── Dockerfile
 ├── fly.toml            # Fly.io deployment config (app: dcopenbk)
 ├── deploy.sh
+├── scripts/
+│   ├── setup.sh        # One-shot local setup (macOS / Linux)
+│   └── setup.ps1       # One-shot local setup (Windows PowerShell)
+├── .env.example
 └── manage.py
 ```
 
@@ -404,117 +411,167 @@ Body: { "username": "first.last", "password": "..." }
 
 ## Local Development
 
-### Backend
+You need **two terminals** once setup is done: Django on `:8000` and the React app on `:3000` (it proxies API calls to `http://localhost:8000` via `frontend/package.json`).
 
-Make sure you have postgres installed and are using Python 3.10
+### Prerequisites
+
+| Tool | Notes |
+|------|--------|
+| **Python 3.10** | See `.python-version` |
+| **Node.js 18+** | https://nodejs.org/ |
+| **Git** | Required to install the `rcal` dependency from GitHub |
+| **PostgreSQL** | Local DB used when `DEBUG=True` |
+
+Create a Postgres database that matches `DATABASE_URL` in your `.env` (see [`.env.example`](.env.example)). The settings default (if unset) is:
+
+```text
+postgres://iosue:password@localhost/citiopen
+```
+
+Override that in `.env` if your local Postgres user/password differ, for example:
 
 ```bash
-# (Windows Only) Ensure you have these Visual Studio packages installed (install everything, all checkboxes)
-https://visualstudio.microsoft.com/visual-cpp-build-tools/
+DATABASE_URL=postgres://postgres:password@localhost:5432/citiopen
+```
 
-# Set environment variables (see citiopen/settings.py for required vars) (is this needed?)
-cp .env.example .env
+On Windows, if `pip install` fails building native wheels, install [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (C++ workload).
 
-# Create your virtual environment folder
-python -m venv .venv
+### One-shot setup
 
-# (Optional, if you get a permissions error when running activate script)
+Prefer the setup script for your OS — it creates `.env`, the Python venv, installs backend + frontend deps, runs migrations, and bootstraps a local chairperson.
+
+<details open>
+<summary><strong>macOS / Linux</strong></summary>
+
+```bash
+# From the repo root
+chmod +x scripts/setup.sh
+./scripts/setup.sh
+```
+
+Manual equivalent (if you prefer typing it out):
+
+```bash
+cp .env.example .env          # sets DEBUG=True; edit DATABASE_URL if needed
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py bootstrap_dev
+cd frontend && npm install
+```
+
+</details>
+
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
+
+```powershell
+# From the repo root (once, if scripts are blocked)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-# Activate the virtual environment
-# Linux/macOS:
-source .venv/bin/activate
-# Windows (cmd):      .venv\Scripts\activate.bat
-# Windows (PowerShell): .venv\Scripts\Activate.ps1
+.\scripts\setup.ps1
+```
 
-# Install django in the virtual environment
-pip install django
+Manual equivalent:
 
-# You may need to run this
-pip install --upgrade setuptools wheel
-
-# Install dependencies
+```powershell
+Copy-Item .env.example .env   # sets DEBUG=True; edit DATABASE_URL if needed
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
-
-# Run migrations
 python manage.py migrate
+python manage.py bootstrap_dev
+cd frontend; npm install
+```
 
-# Start dev server
+</details>
+
+`bootstrap_dev` creates **`local.chair` / `password`**. Log in and open `/debug` to seed more data, or use `create_dev_user` below.
+
+### Running the app
+
+<details open>
+<summary><strong>macOS / Linux</strong></summary>
+
+**Terminal 1 — API**
+
+```bash
+source .venv/bin/activate
 python manage.py runserver
 ```
 
-### Frontend
+**Terminal 2 — frontend**
 
 ```bash
-cd <your project directory locally>
 cd frontend
-
-# (Optional) Install node.js
-https://nodejs.org/en/download
-
-# Install dependencies
-npm install
-
-# Start dev server (proxies API calls to localhost:8000)
 npm start
 ```
 
-The frontend proxy is configured in `package.json` to forward API requests to `http://localhost:8000`.
+</details>
 
-(may not be needed) To build the frontend for production and move it to the Django static directory:
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
+
+**Terminal 1 — API**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python manage.py runserver
+```
+
+**Terminal 2 — frontend**
+
+```powershell
+cd frontend
+npm start
+```
+
+</details>
+
+Production-style frontend build into Django static (usually not needed for day-to-day local work):
+
 ```bash
-npm run relocate
+cd frontend && npm run relocate
 ```
 
 ### Dev users (management commands)
 
 Dev management commands (`bootstrap_dev`, `create_dev_user`) only run when Django **`DEBUG` is `True`**. Settings load from a **`.env` file in the project root** (`citiopen/settings.py` uses `environs`).
-**1. Install postgres: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
 
-**2. Activate the virtual environment** (from the project root):
-
-```bash
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows (Command Prompt)
-.venv\Scripts\activate.bat
-
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
-```
-
-**3. Enable debug mode** — add or edit `.env`:
+Ensure `.env` contains:
 
 ```bash
 DEBUG=True
 ```
 
-If you do not use a `.env` file, set `DEBUG` for the current shell only:
+Or set it for the current shell only:
+
+<details open>
+<summary><strong>macOS / Linux</strong></summary>
 
 ```bash
-# macOS / Linux
 export DEBUG=True
+```
 
-# Windows (Command Prompt)
-set DEBUG=True
+</details>
 
-# Windows (PowerShell)
+<details>
+<summary><strong>Windows (PowerShell)</strong></summary>
+
+```powershell
 $env:DEBUG="True"
 ```
 
-**4. Apply migrations** (if you have not already, or after pulling new model changes):
+</details>
+
+Then (with the venv activated):
 
 ```bash
-python manage.py migrate
-```
-
-**5. Create users**
-
-First-time setup — default chairperson (log in and open `/debug` as **`local.chair`** / **`password`**):
-
-```bash
-python manage.py bootstrap_dev
+python manage.py migrate          # if needed after pulling model changes
+python manage.py bootstrap_dev    # default chairperson: local.chair / password
 ```
 
 Add ballkids, captains, or chairpersons:
@@ -527,7 +584,7 @@ python manage.py create_dev_user --first Sam --last Kim --role chairperson --dob
 
 `DEBUG` defaults to `False` if unset, so dev user commands will error until you turn it on.
 
-These commands create Django auth groups, ballkid profiles, login users (`firstname.lastname`), and API tokens—the same linking behavior as the Debug page and `POST /accounts/register`.
+These commands create Django auth groups, ballkid profiles, login users (`firstname.lastname`), and API tokens — the same linking behavior as the Debug page and `POST /accounts/register`.
 
 | Flag | Purpose |
 |------|---------|
@@ -545,19 +602,65 @@ Re-running the same name updates the profile and role; the password is only set 
 
 ## Deployment
 
-The app is deployed to **Fly.io** as `dcopenbk` (region: `iad`).
+The app is deployed to **Fly.io** as [`dcopenbk`](https://fly.io/apps/dcopenbk) (region: `iad`).
+
+### One-time CLI setup
+
+1. Install the [Fly CLI](https://fly.io/docs/hands-on/install-flyctl/).
+2. Log in:
 
 ```bash
-# Deploy
-./deploy.sh
+fly auth login
 ```
 
-The Dockerfile:
-1. Builds a Python 3.10 image
-2. Installs all Python dependencies (including `rcal` from GitHub)
-3. Runs `collectstatic`
-4. Serves with Gunicorn on port 8000 (2 workers)
+3. Confirm you can see the app (you need access to the Fly org that owns it):
 
-On each deploy, `python manage.py migrate` runs as a Fly.io release command.
+```bash
+fly apps list
+fly status -a dcopenbk
+```
+
+Secrets (Django `SECRET_KEY`, `DATABASE_URL`, etc.) are already configured on the Fly app. List them with:
+
+```bash
+fly secrets list -a dcopenbk
+```
+
+### Deploy from your machine
+
+From the **repo root**:
+
+```bash
+# 1. Build the React app and stage files for WhiteNoise / Django templates
+./deploy.sh
+
+# 2. Build the Docker image and ship it to Fly
+fly deploy -a dcopenbk
+```
+
+`./deploy.sh` builds `frontend/`, then moves non-`index.html` / non-`static` build artifacts into `frontend/build/root/` so the Django image can serve them. `fly deploy` builds the [`Dockerfile`](Dockerfile) (Python deps including `rcal`, `collectstatic`, Gunicorn) and rolls out a new release.
+
+On each deploy, Fly runs:
+
+```text
+python manage.py migrate
+```
+
+as the release command (`fly.toml` → `[deploy].release_command`).
+
+Useful checks after deploy:
+
+```bash
+fly status -a dcopenbk
+fly logs -a dcopenbk
+fly open -a dcopenbk
+```
+
+### What the Docker image does
+
+1. Builds a Python 3.10 image  
+2. Installs all Python dependencies (including `rcal` from GitHub)  
+3. Runs `collectstatic`  
+4. Serves with Gunicorn on port 8000 (2 workers)
 
 Static files are served by WhiteNoise directly from Django.

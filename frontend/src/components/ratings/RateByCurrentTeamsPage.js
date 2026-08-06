@@ -124,7 +124,7 @@ export default function RateByCurrentTeamsPage() {
   const [teams, setTeams] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
   const [updated, setUpdated] = useState(false);
-  const [showPhotos, setShowPhotos] = useState(true);
+  const [showPhotos, setShowPhotos] = useState(false);
 
   const pk = getLocalStorage("ballkid_id");
   const group = getLocalStorage("group");

@@ -353,6 +353,20 @@
   border-color: var(--tp-blue-border-hover, #93c5fd) !important;
 }
 
+/* Rate by Name / Current Team: unrated = filled navy, matching profile Give Rating */
+.ratings-page.rate-by-name-page .rating-btn--unrated.MuiButton-root,
+.ratings-page.rate-by-current-team-page .rating-btn--unrated.MuiButton-root {
+  color: #fff !important;
+  border: none !important;
+  background: var(--tp-nav, #0d1b3e) !important;
+}
+
+.ratings-page.rate-by-name-page .rating-btn--unrated.MuiButton-root:hover,
+.ratings-page.rate-by-current-team-page .rating-btn--unrated.MuiButton-root:hover {
+  background: #152a5c !important;
+  color: #fff !important;
+}
+
 .rating-btn--draft.MuiButton-root {
   color: var(--tp-purple-text, #5b21b6) !important;
   border: 1px solid #ddd6fe !important;
@@ -381,6 +395,15 @@
   border-color: var(--tp-border, #e2e8f0) !important;
   background: transparent !important;
   opacity: 1;
+}
+
+.rating-btn--self.MuiButton-root,
+.rating-btn--self.MuiButton-root.Mui-disabled {
+  color: var(--tp-text3, #94a3b8) !important;
+  border: 1px solid var(--tp-border, #e2e8f0) !important;
+  background: var(--tp-bg0, #f8fafc) !important;
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 /* Rate By cards — keep buttons content-sized (profile hero may force full width) */

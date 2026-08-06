@@ -1,11 +1,9 @@
 import React from "react";
 
-import Button from "@mui/material/Button";
-
 import {
   Banners,
   DraftRatingButton,
-  getLocalStorage,
+  getBallkidId,
   RatingButton,
 } from "../Utils";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
@@ -74,18 +72,9 @@ export function RatingsModeToggle({
 }
 
 export function RateActionButton({ ballkid, setUpdated, date = null }) {
-  if (ballkid.id === getLocalStorage("ballkid_id")) {
-    return (
-      <Button
-        className="rating-btn rating-btn--rated"
-        variant="outlined"
-        disableElevation
-        disabled
-        size="small"
-      >
-        Give Rating
-      </Button>
-    );
+  const myId = getBallkidId();
+  if (myId != null && Number(ballkid.id) === myId) {
+    return <RatingButton ballkid={ballkid} setUpdated={setUpdated} date={date} />;
   }
 
   return ballkid.have_draft ? (

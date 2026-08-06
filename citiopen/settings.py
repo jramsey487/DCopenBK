@@ -110,14 +110,10 @@ WSGI_APPLICATION = "citiopen.wsgi.application"
 # DEBUG should be set to False in production and True locally
 if DEBUG:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "citiopen",
-            "USER": "iosue",
-            "PASSWORD": "password",
-            "HOST": "localhost",
-            "PORT": "",
-        }
+        "default": env.dj_db_url(
+            "DATABASE_URL",
+            default="postgres://iosue:password@localhost/citiopen",
+        )
     }
 else:
     DATABASES = {

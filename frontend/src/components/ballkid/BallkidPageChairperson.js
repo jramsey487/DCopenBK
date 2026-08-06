@@ -207,7 +207,8 @@ function ChairpersonHeroMobileActions({
     setErrorMsg,
     setSuccessMsg
   );
-  const showRating = ballkid.id !== getLocalStorage("ballkid_id");
+  const myId = getBallkidId();
+  const isOwnProfile = myId != null && Number(ballkid.id) === myId;
 
   return (
     <div className="ballkid-profile-hero-mobile-actions">
@@ -217,17 +218,15 @@ function ChairpersonHeroMobileActions({
         toggleCheckin={toggleCheckin}
         fullWidth={isMobile}
       />
-      {showRating ? (
-        ballkid.have_draft ? (
-          <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
-        ) : (
-          <RatingButton
-            ballkid={ballkid}
-            setUpdated={setUpdated}
-            isMobile={isMobile}
-          />
-        )
-      ) : null}
+      {ballkid.have_draft && !isOwnProfile ? (
+        <DraftRatingButton ballkid={ballkid} setUpdated={setUpdated} />
+      ) : (
+        <RatingButton
+          ballkid={ballkid}
+          setUpdated={setUpdated}
+          isMobile={isMobile}
+        />
+      )}
     </div>
   );
 }

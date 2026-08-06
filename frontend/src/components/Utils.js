@@ -168,7 +168,25 @@ export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
 
 export function RatingButton({ ballkid, setUpdated, date = null }) {
   const [open, setOpen] = useState(false);
+  const myId = getBallkidId();
+  const isSelf = myId != null && Number(ballkid.id) === myId;
   const hasRated = ballkid.num_my_ratings > 0;
+
+  if (isSelf) {
+    return (
+      <div className="ballkid-profile-hero-rating-row">
+        <Button
+          className="rating-btn rating-btn--self"
+          variant="outlined"
+          disableElevation
+          disabled
+          size="small"
+        >
+          Give Rating
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="ballkid-profile-hero-rating-row">
