@@ -350,9 +350,10 @@
   .teams-chairperson-head-secondary__buttons {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
     flex-shrink: 0;
     padding-top: 8px;
@@ -361,6 +362,7 @@
 
   .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn {
     width: auto;
+    max-width: 100%;
   }
 
   .teams-chairperson-team-btn.MuiButton-root {
@@ -488,13 +490,15 @@
   .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
     width: 100%;
     min-width: 0;
-    /* Fill the main column; don't leave unused strip beside capped tracks */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Content-sized cards — wide enough for both action buttons, not half-viewport */
+    grid-template-columns: repeat(auto-fill, minmax(340px, 360px));
   }
 
   .teams-chairperson-page .team-card.teams-chairperson-card {
     min-width: 0;
     max-width: 100%;
+    /* Don't clip the head action buttons when the card is tight */
+    overflow: visible;
   }
 
   .teams-chairperson-page-header {
@@ -628,13 +632,21 @@
     .teams-chairperson-page .teams-chairperson-split {
       flex: 1 1 0;
       min-height: 0;
-      width: 100%;
+      /* Neutralize MUI spacing={2} negative margin (clips under overflow:hidden) */
+      width: 100% !important;
+      max-width: 100%;
+      margin-left: 0 !important;
+      margin-top: 0 !important;
       overflow: hidden;
+      flex-wrap: nowrap !important;
+      justify-content: flex-start !important;
       align-items: stretch !important;
       align-content: stretch;
+      column-gap: 16px;
+      row-gap: 16px;
     }
 
-    /* Preserve MUI md/lg/xl column widths — do not set flex-basis here */
+    /* Height/scroll only — override MUI md/lg/xl fractions so sidebar hugs content */
     .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item {
       box-sizing: border-box;
       height: 100%;
@@ -645,6 +657,15 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      /* Spacing moved to container gap */
+      padding-left: 0 !important;
+      padding-top: 0 !important;
+    }
+
+    .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item.teams-chairperson-main {
+      flex: 1 1 0% !important;
+      max-width: none !important;
+      width: auto !important;
     }
 
     /* Teams + cut: scroll the decision/teams column (must beat Grid-item overflow) */
@@ -658,13 +679,19 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    .teams-chairperson-page .teams-chairperson-sidebar,
-    .teams-chairperson-page .ballkid-pool-panel-slot {
+    .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item.teams-chairperson-sidebar,
+    .teams-chairperson-page
+      .teams-chairperson-split
+      > .MuiGrid-item.ballkid-pool-panel-slot {
+      flex: 0 1 auto !important;
+      width: max-content !important;
+      max-width: min(520px, 42%) !important;
+      min-width: 0;
       position: static;
       top: auto;
       min-height: 0;
       overflow: hidden;
-      align-items: flex-end;
+      align-items: stretch;
     }
 
     .teams-chairperson-page .teams-chairperson-sidebar .ballkid-pool-panel,
@@ -674,10 +701,12 @@
     .teams-chairperson-page .ballkid-pool-panel-slot .ballkid-pool-panel {
       flex: 1 1 auto;
       min-height: 0;
+      min-width: 0;
       max-height: 100%;
       height: auto;
       width: max-content;
       max-width: 100%;
+      margin-left: 0;
       overflow: auto;
       overflow-x: auto;
       overscroll-behavior: contain;
