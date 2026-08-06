@@ -72,13 +72,19 @@
   box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
   /* Keep panel on the right of the sidebar column */
   margin-left: auto;
-  /* Keep long lists inside the viewport */
-  max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 24px);
-  max-height: calc(100vh - var(--navbar-inner-height, 56px) - 24px);
   overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 899.98px) {
+  .ballkid-pool-panel,
+  .teams-chairperson-unassigned-panel {
+    /* Mobile still uses page scroll; cap panel so long lists are usable */
+    max-height: calc(100vh - var(--navbar-inner-height, 60px) - 24px);
+    max-height: calc(100dvh - var(--navbar-inner-height, 60px) - 24px);
+  }
 }
 
 .ballkid-pool-panel-slot,

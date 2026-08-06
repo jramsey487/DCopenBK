@@ -601,32 +601,86 @@
     max-width: 100%;
   }
 
-  .teams-chairperson-main {
-    max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 16px);
-    max-height: calc(100vh - var(--navbar-inner-height, 56px) - 16px);
-    overflow: auto;
-    overflow-x: hidden;
-    min-height: 0;
-  }
-
-  /* Sticky Unassigned / Active column: scroll inside the panel, not off-screen */
-  .teams-chairperson-sidebar,
-  .ballkid-pool-panel-slot {
-    max-height: none;
-    overflow: visible;
-    min-height: 0;
-  }
-
   .teams-chairperson-sidebar .teams-chairperson-drop-hint {
     font-size: 11px;
     line-height: 1.35;
     margin-bottom: 6px;
   }
 
+  /* Desktop: lock page to viewport — only main + unassigned/active scroll */
+  @media (min-width: 900px) {
+    .teams-chairperson-page.page {
+      height: calc(100vh - var(--navbar-inner-height, 60px));
+      height: calc(100dvh - var(--navbar-inner-height, 60px));
+      max-height: calc(100vh - var(--navbar-inner-height, 60px));
+      max-height: calc(100dvh - var(--navbar-inner-height, 60px));
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
 
+    .teams-chairperson-page .teams-chairperson-page-header {
+      flex-shrink: 0;
+    }
 
+    .teams-chairperson-page .teams-chairperson-split {
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      align-items: stretch !important;
+      align-content: stretch;
+    }
 
+    /* MUI spacing padding is inside height via border-box */
+    .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item {
+      box-sizing: border-box;
+      max-height: 100%;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
 
+    .teams-chairperson-page .teams-chairperson-main {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: none;
+      overflow: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .teams-chairperson-page .teams-chairperson-sidebar,
+    .teams-chairperson-page .ballkid-pool-panel-slot {
+      position: static;
+      top: auto;
+      flex: 1 1 auto;
+      max-height: none;
+      min-height: 0;
+      overflow: hidden;
+      align-items: flex-end;
+    }
+
+    .teams-chairperson-page .teams-chairperson-sidebar .ballkid-pool-panel,
+    .teams-chairperson-page
+      .teams-chairperson-sidebar
+      .teams-chairperson-unassigned-panel,
+    .teams-chairperson-page .ballkid-pool-panel-slot .ballkid-pool-panel {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: 100%;
+      height: auto;
+      width: max-content;
+      max-width: 100%;
+      overflow: auto;
+      overflow-x: auto;
+      overscroll-behavior: contain;
+    }
+  }
 
   .teams-chairperson-position-block {
     margin-top: 16px;
@@ -753,19 +807,11 @@
   }
 
   @media (min-width: 900px) {
-    .teams-chairperson-sidebar,
-    .ballkid-pool-panel-slot {
-      position: sticky;
-      /* Page content is already below the navbar; keep a small inset only */
-      top: 8px;
-      align-self: flex-start;
-    }
-
     .teams-chairperson-sidebar .ballkid-pool-panel,
     .teams-chairperson-sidebar .teams-chairperson-unassigned-panel,
     .ballkid-pool-panel-slot .ballkid-pool-panel {
-      max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 24px);
-      max-height: calc(100vh - var(--navbar-inner-height, 56px) - 24px);
+      /* Height capped by flex parent in locked layout; keep a fallback */
+      max-height: 100%;
     }
   }
 
