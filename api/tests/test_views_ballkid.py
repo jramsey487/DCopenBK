@@ -8,7 +8,7 @@ from api.models.ballkid import Ballkid, MATCH_TYPE, POSITION, CUT_STATUS
 from api.models.schedule import Tournament
 from api.models.rating import Rating
 from api.views.rating import run_calibration_and_save_params
-from api.serializers import BallkidSerializer
+from api.serializers import BallkidSerializer, BallkidListSerializer
 from api.utils.utils import *
 from api.utils.consts import MATCHES_START_HOUR
 
@@ -53,15 +53,19 @@ class TestBallkidListView(APITestCase):
             self.ballkid1,
             self.ballkid2,
         ]
-        serializer = BallkidSerializer(ballkids, many=True)
+        serializer = BallkidListSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer.data, response.data)
+        # List payload should omit profile-only fields
+        self.assertNotIn("comments", response.data[0])
+        self.assertNotIn("phone", response.data[0])
+        self.assertNotIn("emergency_name", response.data[0])
 
     def test_sorted_list(self):
         response = self.client.get(reverse("sorted-list"))
         ballkids = [self.ballkid2, self.ballkid1, self.ballkid3]
-        serializer = BallkidSerializer(ballkids, many=True)
+        serializer = BallkidListSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
@@ -73,6 +77,14 @@ class TestBallkidListView(APITestCase):
         self.assertEqual(
             serializer.data[2]["first_name"], response.data[2]["first_name"]
         )
+        # Chairperson sorted-list includes rank by default
+        self.assertIn("rank", response.data[0])
+
+    def test_sorted_list_skips_rank(self):
+        response = self.client.get(reverse("sorted-list"), {"rank": "0"})
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertNotIn("rank", response.data[0])
+        self.assertNotIn("calibrated_avg", response.data[0])
 
     def test_self_cut_list(self):
         response = self.client.get(reverse("self-cut-list"))
@@ -85,7 +97,7 @@ class TestBallkidListView(APITestCase):
     def test_inactive_list(self):
         response = self.client.get(reverse("inactive-list"))
         ballkids = [self.ballkid6, self.ballkid4]
-        serializer = BallkidSerializer(ballkids, many=True)
+        serializer = BallkidListSerializer(ballkids, many=True)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer.data, response.data)

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-
-import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import { ScheduleTable } from "./ScheduleTable";
 import ScheduleMobileView from "./ScheduleMobileView";
+import ScheduleDateControls from "./ScheduleDateControls";
 import {
   getAuthHeader,
   getToday,
@@ -281,26 +277,7 @@ export default function SchedulePageChairperson(props) {
             }
             toolbar={
               <div className="schedule-header-controls">
-                <LocalizationProvider dateAdapter={AdapterLuxon}>
-                  <DatePicker
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        id="schedule-edit-date"
-                        size="small"
-                        variant="outlined"
-                        className="schedule-edit-date-field"
-                      />
-                    )}
-                    value={date}
-                    mask={"__/__/____"}
-                    onChange={(newValue) => {
-                      if (newValue) {
-                        setDate(newValue.toLocaleString());
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
+                <ScheduleDateControls date={date} setDate={setDate} />
               </div>
             }
           />

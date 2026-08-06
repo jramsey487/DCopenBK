@@ -822,7 +822,12 @@ export function BallkidCard({ ballkid, renderAdditional, renderNameTrailing }) {
           ""
         ) : (
           <AspectRatio ratio="1/1">
-            <CardMedia component="img" image={ballkid.image} />
+            <CardMedia
+              component="img"
+              image={ballkid.image}
+              loading="lazy"
+              decoding="async"
+            />
           </AspectRatio>
         )}
         <CardContent>

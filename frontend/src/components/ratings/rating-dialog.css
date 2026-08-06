@@ -176,8 +176,18 @@
 
   .rating-dialog-grade-slider.MuiSlider-root {
     color: var(--rd-nav);
-    padding: 12px 0 18px !important;
+    padding: 10px 0 16px !important;
     width: 100%;
+  }
+
+  @media (min-width: 751px) {
+    .rating-dialog-grade-row--slider {
+      padding: 10px 12px 4px;
+    }
+
+    .rating-dialog-grade-slider.MuiSlider-root {
+      padding: 8px 0 14px !important;
+    }
   }
 
   .rating-dialog-grade-slider .MuiSlider-thumb {

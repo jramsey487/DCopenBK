@@ -27,15 +27,41 @@ function firstWeekdayOffset(year, month) {
   return (jsDay + 6) % 7;
 }
 
-function parseSlashDate(dateStr) {
+export function parseSlashDate(dateStr) {
   const [mm, dd, yyyy] = dateStr.split("/");
   return new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
 }
 
-function formatSlashDate(year, month, day) {
+export function formatSlashDate(year, month, day) {
   const mm = String(month + 1).padStart(2, "0");
   const dd = String(day).padStart(2, "0");
   return `${mm}/${dd}/${year}`;
+}
+
+export function formatShortDate(dateStr) {
+  const d = parseSlashDate(dateStr);
+  const dy = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const mo = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${dy[d.getDay()]} ${mo[d.getMonth()]} ${d.getDate()}`;
+}
+
+export function shiftSlashDate(dateStr, days) {
+  const d = parseSlashDate(dateStr);
+  d.setDate(d.getDate() + days);
+  return formatSlashDate(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 export default function ScheduleCalendar({ date, today, onSelect, onClose }) {
@@ -94,11 +120,7 @@ export default function ScheduleCalendar({ date, today, onSelect, onClose }) {
 
   return (
     <>
-      <div
-        className="cal-backdrop"
-        onClick={onClose}
-        role="presentation"
-      />
+      <div className="cal-backdrop" onClick={onClose} role="presentation" />
       <div className="mini-calendar" role="dialog" aria-label="Choose date">
         <div className="cal-header">
           <span className="cal-month-label">

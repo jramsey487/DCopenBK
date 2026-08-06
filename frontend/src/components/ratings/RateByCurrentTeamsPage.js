@@ -130,7 +130,7 @@ export default function RateByCurrentTeamsPage() {
   const group = getLocalStorage("group");
 
   useEffect(() => {
-    fetch("/api/sorted-list/" + pk, { headers: getAuthHeader() })
+    fetch("/api/sorted-list/" + pk + "?rank=0", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
         setAssigned(

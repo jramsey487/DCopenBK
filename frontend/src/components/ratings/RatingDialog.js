@@ -6,7 +6,6 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
-import Rating from "@mui/material/Rating";
 import Slider from "@mui/material/Slider";
 import Link from "@mui/material/Link";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -19,7 +18,6 @@ import {
   getToday,
   getLocalStorage,
   getDayFromHyphenated,
-  useIsMobile,
 } from "../Utils";
 import "./rating-dialog.css";
 
@@ -42,62 +40,48 @@ function formatSliderRating(value) {
 /**
  * MUI Slider on touch devices fires a synthetic mouse event after touchend
  * that can snap the thumb back to the pre-drag value (mui/material-ui#31869).
- * Sliders are mobile-only here, so ignore those mouse events entirely.
+ * Ignore those touch-derived mouse events; keep real desktop mouse input.
  */
 function shouldIgnoreSliderEvent(event) {
-  const type = event?.type;
-  return type === "mousedown" || type === "mouseup";
+  const native = event?.nativeEvent ?? event;
+  if (native?.sourceCapabilities?.firesTouchEvents) return true;
+  if (native?.pointerType === "touch") return true;
+  return false;
 }
 
 export function RatingAndLabel({ label, rating, setRating }) {
-  const isMobile = useIsMobile();
   const [sliderValue, setSliderValue] = useState(rating ?? 0);
 
   useEffect(() => {
     setSliderValue(rating ?? 0);
   }, [rating]);
 
-  if (isMobile) {
-    return (
-      <div className="rating-dialog-grade-row rating-dialog-grade-row--slider">
-        <div className="rating-dialog-grade-slider-head">
-          <span className="rating-dialog-grade-label">{label}</span>
-          <span className="rating-dialog-grade-value">
-            {formatSliderRating(
-              sliderValue === 0 ? null : sliderValue
-            )}
-          </span>
-        </div>
-        <Slider
-          className="rating-dialog-grade-slider"
-          aria-label={label}
-          value={sliderValue}
-          min={0}
-          max={5}
-          step={0.5}
-          marks={RATING_SLIDER_MARKS}
-          valueLabelDisplay="off"
-          onChange={(event, newVal) => {
-            if (shouldIgnoreSliderEvent(event)) return;
-            setSliderValue(newVal);
-          }}
-          onChangeCommitted={(event, newVal) => {
-            if (shouldIgnoreSliderEvent(event)) return;
-            setSliderValue(newVal);
-            setRating(newVal === 0 ? null : newVal);
-          }}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="rating-dialog-grade-row">
-      <span className="rating-dialog-grade-label">{label}</span>
-      <Rating
-        precision={0.5}
-        value={rating}
-        onChange={(e, newVal) => setRating(newVal)}
+    <div className="rating-dialog-grade-row rating-dialog-grade-row--slider">
+      <div className="rating-dialog-grade-slider-head">
+        <span className="rating-dialog-grade-label">{label}</span>
+        <span className="rating-dialog-grade-value">
+          {formatSliderRating(sliderValue === 0 ? null : sliderValue)}
+        </span>
+      </div>
+      <Slider
+        className="rating-dialog-grade-slider"
+        aria-label={label}
+        value={sliderValue}
+        min={0}
+        max={5}
+        step={0.5}
+        marks={RATING_SLIDER_MARKS}
+        valueLabelDisplay="off"
+        onChange={(event, newVal) => {
+          if (shouldIgnoreSliderEvent(event)) return;
+          setSliderValue(newVal);
+        }}
+        onChangeCommitted={(event, newVal) => {
+          if (shouldIgnoreSliderEvent(event)) return;
+          setSliderValue(newVal);
+          setRating(newVal === 0 ? null : newVal);
+        }}
       />
     </div>
   );

@@ -16,6 +16,8 @@ from django.db.models import (
     Exists,
     Subquery,
     IntegerField,
+    FloatField,
+    Window,
 )
 from django.db.models.functions import TruncDay, Coalesce, DenseRank, Concat
 from django.shortcuts import get_object_or_404
@@ -35,6 +37,29 @@ from datetime import timedelta
 import logging
 
 logger = logging.getLogger("api.ballkid")
+
+
+def _list_ballkids_queryset(queryset):
+    """Defer profile-only columns that list serializers never read."""
+    return queryset.defer(*BALLKID_LIST_DEFER_FIELDS)
+
+
+def _rating_count_subquery(extra_filters=None):
+    """Per-ballkid complete rating count for the current year (no JOIN fan-out)."""
+    filters = {
+        "ratee_id": OuterRef("pk"),
+        "date__year": get_current_year(),
+        "status": RATING_STATUS.COMPLETE,
+    }
+    if extra_filters:
+        filters.update(extra_filters)
+    return (
+        Rating.objects.filter(**filters)
+        .order_by()
+        .values("ratee_id")
+        .annotate(c=Count("id"))
+        .values("c")
+    )
 
 
 def recalc_checkin_analytics(ballkid=None, now=None, year=None):
@@ -335,16 +360,16 @@ def annotate_ratings(ballkids, pk):
     current_year = get_current_year()
 
     return ballkids.annotate(
-        num_ratings=Count(
-            "ratee",
-            filter=Q(ratee__date__year=current_year)
-            & Q(ratee__status=RATING_STATUS.COMPLETE),
+        num_ratings=Coalesce(
+            Subquery(_rating_count_subquery(), output_field=IntegerField()),
+            Value(0),
         ),
-        num_my_ratings=Count(
-            "ratee",
-            filter=Q(ratee__date__year=current_year)
-            & Q(ratee__rater__id=pk)
-            & Q(ratee__status=RATING_STATUS.COMPLETE),
+        num_my_ratings=Coalesce(
+            Subquery(
+                _rating_count_subquery({"rater_id": pk}),
+                output_field=IntegerField(),
+            ),
+            Value(0),
         ),
         have_draft=Exists(
             Rating.objects.filter(
@@ -354,13 +379,6 @@ def annotate_ratings(ballkids, pk):
                 status=RATING_STATUS.DRAFT,
             )
         ),
-        # have_rated=Exists(
-        #     Rating.objects.filter(
-        #         rater_id=pk,
-        #         ratee_id=OuterRef("id"),
-        #         date__year=current_year,
-        #     )
-        # ),
     )
 
 
@@ -421,34 +439,34 @@ def annotate_durations(ballkids):
     )
 
 
-def annotate_rank(ballkids):
+def annotate_rank(ballkids, include_num_ratings=True):
     year = get_current_year()
 
+    # Prefer Subqueries over JOINed aggregates so rating Counts do not fan out
+    # against CalibrationParams (and so we can safely chain after annotate_ratings).
     # num_ratings: count of complete ratings this year (matches cut help text /
     # pink threshold). Do not use CalibrationParams.num_ratee_ratings — that can
     # lag actual ratings until recalibration runs.
-    return ballkids.annotate(
-        num_ratings=Count(
-            "ratee",
-            filter=Q(ratee__date__year=year)
-            & Q(ratee__status=RATING_STATUS.COMPLETE),
+    cal_avg_sq = CalibrationParams.objects.filter(
+        ballkid_id=OuterRef("pk"), year=year
+    ).values("ratee_calibrated_avg")[:1]
+
+    annotations = {
+        "calibrated_avg": Coalesce(
+            Subquery(cal_avg_sq, output_field=FloatField()),
+            Value(0.0),
         ),
-        calibrated_avg=Coalesce(
-            Avg(
-                "calibrationparams__ratee_calibrated_avg",
-                filter=Q(calibrationparams__year=year),
-            ),
-            0.0,
-        ),
-        rank=models.Window(
+    }
+    if include_num_ratings:
+        annotations["num_ratings"] = Coalesce(
+            Subquery(_rating_count_subquery(), output_field=IntegerField()),
+            Value(0),
+        )
+
+    return ballkids.annotate(**annotations).annotate(
+        rank=Window(
             expression=DenseRank(),
-            order_by=Coalesce(
-                Avg(
-                    "calibrationparams__ratee_calibrated_avg",
-                    filter=Q(calibrationparams__year=year),
-                ),
-                0.0,
-            ).desc(),
+            order_by=F("calibrated_avg").desc(),
         ),
     )
 
@@ -479,17 +497,19 @@ def unassign_future_shifts(team, now=None):
 
 
 class BallkidsList(generics.ListAPIView):
-    serializer_class = BallkidSerializer
+    serializer_class = BallkidListSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
-        ballkids = Ballkid.objects.filter(is_active=True).order_by(
-            "last_name", "first_name"
+        ballkids = _list_ballkids_queryset(
+            Ballkid.objects.filter(is_active=True).order_by(
+                "last_name", "first_name"
+            )
         )
 
         queryset = ballkids if not pk else annotate_ratings(ballkids, pk)
-        logger.info(f"[BallkidsList] pk: {pk}; ballkids: {queryset}")
+        logger.info("[BallkidsList] pk=%s", pk)
         return queryset
 
 
@@ -497,14 +517,18 @@ class EmailsList(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        emails = Ballkid.objects.filter(
-            is_active=True, is_chairperson=False, is_cut=False
-        ).values_list("user__email", flat=True)
-        return Response({"emails": emails}, status=status.HTTP_200_OK)
+        emails = (
+            Ballkid.objects.filter(
+                is_active=True, is_chairperson=False, is_cut=False, user__isnull=False
+            )
+            .exclude(user__email="")
+            .values_list("user__email", flat=True)
+        )
+        return Response({"emails": list(emails)}, status=status.HTTP_200_OK)
 
 
 class SelfCutList(generics.ListAPIView):
-    serializer_class = BallkidSerializer
+    serializer_class = BallkidListSerializer
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
@@ -513,67 +537,92 @@ class SelfCutList(generics.ListAPIView):
         current_day = datetime.strftime(
             (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
         )
-        today_self_cuts = Ballkid.objects.filter(
+        updated = Ballkid.objects.filter(
             is_active=True, is_cut=False, last_day=current_day
-        )
-        for ballkid in today_self_cuts:
-            ballkid.cut_status = "Self-Cut"
-            ballkid.save()
+        ).update(cut_status=CUT_STATUS.SELF_CUT)
+        if updated:
+            logger.info(
+                "[SelfCutList] marked %s ballkid(s) Self-Cut for %s",
+                updated,
+                current_day,
+            )
 
         # Return all self-cuts including automatically categorized
         # and manually indicated
-        self_cuts = Ballkid.objects.filter(
-            is_active=True, is_cut=False, cut_status=CUT_STATUS.SELF_CUT
-        ).order_by(
-            "-is_captain",
-            "last_name",
-            "first_name",
+        self_cuts = _list_ballkids_queryset(
+            Ballkid.objects.filter(
+                is_active=True, is_cut=False, cut_status=CUT_STATUS.SELF_CUT
+            ).order_by(
+                "-is_captain",
+                "last_name",
+                "first_name",
+            )
         )
 
         logger.info(
-            f"[SelfCutList] for current_day {current_day}, self cut list is {self_cuts}"
+            "[SelfCutList] current_day=%s marked_today=%s",
+            current_day,
+            updated,
         )
         return self_cuts
 
 
 class BallkidsSortedList(generics.ListAPIView):
-    serializer_class = BallkidSerializer
+    serializer_class = BallkidListSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
-        group = self.request.user.groups.first().name
+        group_obj = self.request.user.groups.first()
+        group = group_obj.name if group_obj else ""
 
-        ballkids = Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
-            "-is_chairperson",
-            "-is_captain",
-            "-num_years_experience",
-            "last_name",
-            "first_name",
+        # Rank annotations are expensive; skip when the client does not need them
+        # (regular teams / schedule). Cut and finals pass rank=1.
+        rank_param = self.request.query_params.get("rank", "1")
+        include_rank = group == "chairperson" and rank_param not in (
+            "0",
+            "false",
+            "False",
+        )
+
+        ballkids = _list_ballkids_queryset(
+            Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
+                "-is_chairperson",
+                "-is_captain",
+                "-num_years_experience",
+                "last_name",
+                "first_name",
+            )
         )
 
         # If pk is provided, then annotate ballkids with num ratings and whether or not
         # pk user has given a rating
-        if group == "captain" or group == "chairperson":
-            ballkids = ballkids if not pk else annotate_ratings(ballkids, pk)
+        rated = False
+        if (group == "captain" or group == "chairperson") and pk:
+            ballkids = annotate_ratings(ballkids, pk)
+            rated = True
 
-        # Rank annotations are used on the cut and finals teams page
-        if group == "chairperson":
-            ballkids = annotate_rank(ballkids)
+        if include_rank:
+            ballkids = annotate_rank(ballkids, include_num_ratings=not rated)
 
         logger.info(
-            f"[BallkidsSortedList] group: {group} with pk: {pk}, returning ballkids: {ballkids}"
+            "[BallkidsSortedList] group=%s pk=%s include_rank=%s",
+            group,
+            pk,
+            include_rank,
         )
         return ballkids
 
 
 class BallkidsInactiveList(generics.ListAPIView):
-    serializer_class = BallkidSerializer
+    serializer_class = BallkidListSerializer
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        return Ballkid.objects.filter(Q(is_active=False) | Q(is_cut=True)).order_by(
-            "last_name", "first_name"
+        return _list_ballkids_queryset(
+            Ballkid.objects.filter(Q(is_active=False) | Q(is_cut=True)).order_by(
+                "last_name", "first_name"
+            )
         )
 
 

@@ -10,44 +10,11 @@ import {
   ConfirmDialog,
 } from "../Utils";
 import { ICON_DICT } from "../Consts";
-import ScheduleCalendar from "./ScheduleCalendar";
+import ScheduleDateControls from "./ScheduleDateControls";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { schedule, scheduleNonchairperson } from "../HelpMessages";
 import "./schedule-mobile.css";
 import "../teams/teams-page.css";
-
-function parseSlashDate(dateStr) {
-  const [mm, dd, yyyy] = dateStr.split("/");
-  return new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
-}
-
-function formatShortDate(dateStr) {
-  const d = parseSlashDate(dateStr);
-  const dy = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const mo = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${dy[d.getDay()]} ${mo[d.getMonth()]} ${d.getDate()}`;
-}
-
-function shiftSlashDate(dateStr, days) {
-  const d = parseSlashDate(dateStr);
-  d.setDate(d.getDate() + days);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${mm}/${dd}/${d.getFullYear()}`;
-}
 
 function formatTimeLabel(hour) {
   const label = dayHourToStr(hour, isHalfHourSlot(hour));
@@ -299,12 +266,11 @@ export default function ScheduleMobileView({
   const [teamRoster, setTeamRoster] = useState({});
   const [myName, setMyName] = useState("");
   const [sheetTeam, setSheetTeam] = useState(null);
-  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const isToday = date === getToday();
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
+    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) =>
         setTeamRoster(
@@ -373,70 +339,7 @@ export default function ScheduleMobileView({
 
   const scheduleToolbar = (
     <div className="schedule-header-controls">
-      <div className="date-picker-wrap">
-        <div className="date-group">
-          <button
-            type="button"
-            className="date-arrow"
-            aria-label="Previous day"
-            onClick={() => setDate(shiftSlashDate(date, -1))}
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            className="date-center"
-            onClick={() => setCalendarOpen(true)}
-          >
-            {formatShortDate(date)}
-          </button>
-          <button
-            type="button"
-            className="date-arrow"
-            aria-label="Next day"
-            onClick={() => setDate(shiftSlashDate(date, 1))}
-          >
-            ›
-          </button>
-        </div>
-        <button
-          type="button"
-          className={`cal-toggle-btn${calendarOpen ? " on" : ""}`}
-          aria-label="Open calendar"
-          onClick={() => setCalendarOpen(true)}
-        >
-          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <rect
-              x="1.5"
-              y="2.5"
-              width="11"
-              height="10"
-              rx="1.5"
-              stroke="currentColor"
-              strokeWidth="1.1"
-            />
-            <path
-              d="M1.5 5.5h11"
-              stroke="currentColor"
-              strokeWidth="1.1"
-            />
-            <path
-              d="M4 1.2v2.6M10 1.2v2.6"
-              stroke="currentColor"
-              strokeWidth="1.1"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        {calendarOpen ? (
-          <ScheduleCalendar
-            date={date}
-            today={getToday()}
-            onSelect={setDate}
-            onClose={() => setCalendarOpen(false)}
-          />
-        ) : null}
-      </div>
+      <ScheduleDateControls date={date} setDate={setDate} />
       <button
         type="button"
         className={`my-shifts-btn${myShiftsOn ? " on" : ""}`}

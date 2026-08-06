@@ -513,7 +513,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
+    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) =>
         setNumTeams(

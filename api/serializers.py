@@ -5,6 +5,43 @@ from api.models.rating import *
 from api.utils.utils import calculate_ballkid_age
 
 
+# Fields needed on list screens (check-in, rate-by-name, cut, teams, etc.).
+# Omits private/profile-only data to shrink list payloads.
+BALLKID_LIST_MODEL_FIELDS = (
+    "id",
+    "first_name",
+    "last_name",
+    "age",
+    "image",
+    "num_years_experience",
+    "is_out_of_town",
+    "is_captain",
+    "is_chairperson",
+    "preferred_position",
+    "is_cut",
+    "cut_status",
+    "is_active",
+    "is_checked_in",
+    "current_team",
+    "finals_team",
+    "position",
+    "finals_position",
+    "num_tickets",
+    "last_day",
+    "checkout_comments",
+)
+
+# Heavy / profile-only columns deferred at the DB for list querysets.
+BALLKID_LIST_DEFER_FIELDS = (
+    "user",
+    "date_of_birth",
+    "phone",
+    "emergency_name",
+    "emergency_phone",
+    "comments",
+)
+
+
 class BallkidSerializer(serializers.ModelSerializer):
     # Checkin leaderboard fields
     checkin_duration = serializers.DurationField(required=False)
@@ -46,6 +83,28 @@ class BallkidSerializer(serializers.ModelSerializer):
         if date_of_birth:
             data["age"] = calculate_ballkid_age(date_of_birth)
         return data
+
+
+class BallkidListSerializer(serializers.ModelSerializer):
+    """Lean serializer for list endpoints — skips profile-only fields."""
+
+    num_ratings = serializers.IntegerField(required=False)
+    calibrated_avg = serializers.FloatField(required=False)
+    num_my_ratings = serializers.IntegerField(required=False)
+    have_draft = serializers.BooleanField(required=False)
+    self_cut = serializers.BooleanField(required=False)
+    rank = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = Ballkid
+        fields = BALLKID_LIST_MODEL_FIELDS + (
+            "num_ratings",
+            "calibrated_avg",
+            "num_my_ratings",
+            "have_draft",
+            "self_cut",
+            "rank",
+        )
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
