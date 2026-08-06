@@ -240,88 +240,92 @@ export default function SchedulePageChairperson(props) {
   }
 
   return (
-    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page schedule-page schedule-page--editing">
+    <>
       <Banners />
       {deleteDialog}
-
-      <TeamsChairpersonPageHeader
-        title="Schedule"
-        helpPage="Schedule"
-        helpMessage={schedule}
-        titleExtra={
-          <span className="schedule-edit-mode-pill" aria-live="polite">
-            Editing
-          </span>
-        }
-        actions={
-          shifts.length === 0 ? null : (
-            <div className="teams-chairperson-actions">
-              <Button
-                variant="outlined"
-                size="small"
-                className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
-                onClick={() => setEditing(false)}
+      <div className="schedule-page-shell teams-page-shell">
+        <div className="page schedule-page ballkid-list-page teams-chairperson-page schedule-page--editing">
+          <TeamsChairpersonPageHeader
+            title="Schedule"
+            helpPage="Schedule"
+            helpMessage={schedule}
+            titleExtra={
+              <span
+                className="today-badge schedule-editing-badge"
+                aria-live="polite"
               >
-                Save Schedule
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                className="teams-chairperson-action-btn teams-chairperson-action-btn--checkout"
-                onClick={() => setOpen(true)}
-              >
-                Delete Schedule
-              </Button>
-            </div>
-          )
-        }
-        toolbar={
-          <div className="schedule-edit-date-toolbar">
-            <label className="schedule-edit-date-label" htmlFor="schedule-edit-date">
-              Date
-            </label>
-            <LocalizationProvider dateAdapter={AdapterLuxon}>
-              <DatePicker
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    id="schedule-edit-date"
-                    size="small"
+                Editing
+              </span>
+            }
+            actions={
+              shifts.length === 0 ? null : (
+                <div className="teams-chairperson-actions">
+                  <Button
                     variant="outlined"
-                    className="schedule-edit-date-field"
+                    size="small"
+                    className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
+                    onClick={() => setEditing(false)}
+                  >
+                    Save Schedule
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    className="teams-chairperson-action-btn teams-chairperson-action-btn--checkout"
+                    onClick={() => setOpen(true)}
+                  >
+                    Delete Schedule
+                  </Button>
+                </div>
+              )
+            }
+            toolbar={
+              <div className="schedule-header-controls">
+                <LocalizationProvider dateAdapter={AdapterLuxon}>
+                  <DatePicker
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        id="schedule-edit-date"
+                        size="small"
+                        variant="outlined"
+                        className="schedule-edit-date-field"
+                      />
+                    )}
+                    value={date}
+                    mask={"__/__/____"}
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setDate(newValue.toLocaleString());
+                      }
+                    }}
                   />
-                )}
-                value={date}
-                mask={"__/__/____"}
-                onChange={(newValue) => {
-                  if (newValue) {
-                    setDate(newValue.toLocaleString());
-                  }
-                }}
-              />
-            </LocalizationProvider>
-          </div>
-        }
-      />
-
-      <p className="schedule-edit-hint">
-        Tap a cell to change the team number. Use the side controls to add
-        courts or hours.
-      </p>
-
-      {shifts.length === 0 ? (
-        <CreateSchedule date={date} setUpdated={setUpdated} />
-      ) : (
-        <div className="schedule-edit-table-wrap">
-          <ScheduleTable
-            shifts={shifts}
-            date={date}
-            readOnly={false}
-            editing={editing}
-            setUpdated={setUpdated}
+                </LocalizationProvider>
+              </div>
+            }
           />
+
+          <div className="schedule-body schedule-edit-body">
+            <p className="schedule-edit-hint">
+              Edit team numbers in each cell. Rename a court in the header, or
+              delete it with the trash button. Use Add court next to the court
+              names.
+            </p>
+
+            {shifts.length === 0 ? (
+              <CreateSchedule date={date} setUpdated={setUpdated} />
+            ) : (
+              <div className="schedule-edit-table-wrap">
+                <ScheduleTable
+                  shifts={shifts}
+                  date={date}
+                  setUpdated={setUpdated}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,0 +1,107 @@
+/* Shared confirm dialog — matches rating dialog chrome */
+
+.confirm-dialog-paper {
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  border-radius: 16px !important;
+  max-width: 440px;
+  width: calc(100% - 32px);
+}
+
+.confirm-dialog-paper .MuiTypography-root,
+.confirm-dialog-paper .MuiButton-root {
+  font-family: inherit !important;
+}
+
+.confirm-dialog-content {
+  padding: 28px 28px 8px !important;
+}
+
+.confirm-dialog-title {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: var(--nav, #0d1b3e) !important;
+  text-align: center;
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+}
+
+.confirm-dialog-message {
+  margin: 0 !important;
+  font-size: 14.5px !important;
+  line-height: 1.55 !important;
+  color: var(--text2, #64748b) !important;
+  text-align: center;
+}
+
+.confirm-dialog-actions {
+  padding: 16px 24px 22px !important;
+  gap: 8px;
+  justify-content: center !important;
+}
+
+.confirm-dialog-actions .MuiButton-root {
+  font-family: inherit;
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: none !important;
+  min-width: 96px;
+}
+
+.confirm-dialog-actions .MuiButton-text {
+  color: var(--text2, #64748b);
+}
+
+.confirm-dialog-actions .MuiButton-containedError,
+.confirm-dialog-actions .MuiLoadingButton-containedError {
+  background-color: var(--danger, #dc2626);
+}
+
+.confirm-dialog-actions .MuiButton-containedError:hover,
+.confirm-dialog-actions .MuiLoadingButton-containedError:hover {
+  background-color: #b91c1c;
+}
+
+.confirm-dialog-action-btn.confirm-dialog-action-btn--success.MuiButton-root,
+.confirm-dialog-action-btn.confirm-dialog-action-btn--success.MuiButton-root:hover,
+.confirm-dialog-action-btn.confirm-dialog-action-btn--success.Mui-disabled {
+  background-color: var(--success, #15803d) !important;
+  border-color: var(--success, #15803d) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  animation: confirm-dialog-btn-success 0.55s ease-out;
+}
+
+.confirm-dialog-action-btn.confirm-dialog-action-btn--success
+  .MuiButton-startIcon {
+  margin-right: 6px;
+  animation: confirm-dialog-check-pop 0.45s ease-out;
+}
+
+@keyframes confirm-dialog-btn-success {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confirm-dialog-check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

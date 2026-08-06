@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -30,6 +30,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import "./search-and-filter.css";
 import "./ratings/rating-dialog.css";
+import "./confirm-dialog.css";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -538,55 +539,118 @@ export function ConfirmDialog({
   setUpdated,
   method = "PATCH",
 }) {
-  const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-
   const [loading, setLoading] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+  const closeTimeoutRef = useRef(null);
+  const pendingRefreshRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setErrorMsg("");
+    setLoading(false);
+    setSucceeded(false);
+    pendingRefreshRef.current = false;
+  }, [open]);
+
+  const handleClose = () => {
+    if (succeeded || loading) return;
+    setOpen(false);
+    setErrorMsg("");
+  };
+
+  const handleExited = () => {
+    if (pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      setUpdated?.(true);
+    }
+    setSucceeded(false);
+    setErrorMsg("");
+    setLoading(false);
+  };
+
+  const finishSuccess = () => {
+    setLoading(false);
+    setErrorMsg("");
+    setSucceeded(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      pendingRefreshRef.current = true;
+      setOpen(false);
+    }, 900);
+  };
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle>Confirm</DialogTitle>
-      <DialogContent>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      TransitionProps={{ onExited: handleExited }}
+      PaperProps={{
+        className: "confirm-dialog-paper",
+      }}
+    >
+      <DialogContent className="confirm-dialog-content">
         <Alerts
-          successMsg={successMsg}
+          successMsg=""
           errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
+          setSuccessMsg={() => {}}
           setErrorMsg={setErrorMsg}
         />
 
-        <DialogContentText>{message} Do you wish to proceed?</DialogContentText>
+        <Typography className="confirm-dialog-title">Confirm</Typography>
+        <DialogContentText className="confirm-dialog-message">
+          {message} Do you wish to proceed?
+        </DialogContentText>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
+      <DialogActions className="confirm-dialog-actions">
+        <Button onClick={handleClose} disabled={succeeded || loading}>
+          Cancel
+        </Button>
         <LoadingButton
+          className={
+            succeeded
+              ? "confirm-dialog-action-btn confirm-dialog-action-btn--success"
+              : "confirm-dialog-action-btn"
+          }
           loading={loading}
           variant="contained"
           color="error"
+          disabled={succeeded}
+          startIcon={succeeded ? <Check /> : undefined}
           onClick={() => {
+            if (succeeded || loading) return;
             setLoading(true);
+            setErrorMsg("");
             fetch(url, {
               method: method,
               headers: getAuthHeader(),
               body: JSON.stringify(body),
-            }).then((response) => {
-              if (response.ok) {
-                setSuccessMsg("Success!");
-                setTimeout(() => {
-                  setOpen(false);
-                  setSuccessMsg("");
-                  if (setUpdated) {
-                    setUpdated(true);
-                  }
-                }, 2000);
-              } else {
-                setErrorMsg("Error.");
-              }
-              setLoading(false);
-            });
+            })
+              .then((response) => {
+                if (response.ok) {
+                  finishSuccess();
+                } else {
+                  setErrorMsg("Something went wrong. Please try again.");
+                  setLoading(false);
+                }
+              })
+              .catch(() => {
+                setErrorMsg("Something went wrong. Please try again.");
+                setLoading(false);
+              });
           }}
         >
-          Confirm
+          {succeeded ? "Done" : "Confirm"}
         </LoadingButton>
       </DialogActions>
     </Dialog>

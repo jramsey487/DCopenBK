@@ -1,20 +1,4 @@
-import React, { useState } from "react";
-
-import IconButton from "@mui/material/IconButton";
-import Table from "@mui/material/Table";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
-
-import AddCircle from "@mui/icons-material/AddCircle";
-import RemoveCircle from "@mui/icons-material/RemoveCircle";
-import KeyboardDoubleArrowDown from "@mui/icons-material/KeyboardDoubleArrowDown";
-import KeyboardDoubleArrowUp from "@mui/icons-material/KeyboardDoubleArrowUp";
-import EventBusy from "@mui/icons-material/EventBusy";
+import React, { useEffect, useState } from "react";
 
 import {
   getAuthHeader,
@@ -23,362 +7,273 @@ import {
   dayHourToStr,
   ConfirmDialog,
 } from "../Utils";
-import { Tooltip } from "@mui/material";
 import "./schedule-table.css";
 
-function ShiftScheduleButtons({ hour, setUpdated }) {
-  return (
-    <div>
-      <Tooltip title="Shift schedule up by 30 minutes">
-        <IconButton
-          color="primary"
-          sx={{ m: 0, p: 0 }}
-          onClick={() =>
-            fetch("/api/shift-schedule", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                direction: "up",
-                hour: hour,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true))
-          }
-        >
-          <KeyboardDoubleArrowUp />
-        </IconButton>
-      </Tooltip>
+function TeamCell({ teamStr, hour, court, setUpdated }) {
+  const [team, setTeam] = useState(teamStr ?? "");
 
-      <Tooltip title="Shift schedule down by 30 minutes">
-        <IconButton
-          color="primary"
-          sx={{ m: 0, p: 0 }}
-          onClick={() => {
-            fetch("/api/shift-schedule", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                direction: "down",
-                hour: hour,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
-          }}
-        >
-          <KeyboardDoubleArrowDown />
-        </IconButton>
-      </Tooltip>
-    </div>
-  );
-}
-
-function TeamTextField({ teamStr, hour, court, setUpdated }) {
-  const [team, setTeam] = useState(teamStr);
+  useEffect(() => {
+    setTeam(teamStr ?? "");
+  }, [teamStr, hour, court]);
 
   return (
-    <TextField
-      className="schedule-table-team-input"
-      variant="outlined"
-      size="small"
+    <input
+      className="sched-edit-team-input"
+      type="text"
+      inputMode="numeric"
+      aria-label={`Team for ${court || "court"} at this time`}
       value={team}
-      inputProps={{
-        inputMode: "numeric",
-        "aria-label": `Team for ${court} at this time`,
-      }}
       onChange={(e) => {
-        setTeam(e.target.value);
+        const next = e.target.value.replace(/[^\d]/g, "");
+        setTeam(next);
         fetch("/api/update-schedule", {
           method: "PATCH",
           headers: getAuthHeader(),
           body: JSON.stringify({
-            hour: hour,
-            court: court,
-            team: e.target.value,
+            hour,
+            court,
+            team: next,
           }),
         })
           .then((response) => response.json())
-          .then((data) => setUpdated(true));
+          .then(() => setUpdated(true));
       }}
     />
   );
 }
 
-function CourtTextField({ court, date, setUpdated }) {
+function CourtHeader({ court, date, setUpdated, canDelete }) {
+  const [name, setName] = useState(court);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    setName(court);
+  }, [court]);
+
+  const commitName = (newName) => {
+    const trimmed = newName.trim();
+    if (trimmed === court) {
+      return;
+    }
+    fetch("/api/update-court-name", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        date,
+        oldName: court,
+        newName: trimmed,
+      }),
+    })
+      .then((response) => response.json())
+      .then(() => setUpdated(true));
+  };
+
   return (
-    <TextField
-      className="schedule-table-court-input"
-      variant="outlined"
-      size="small"
-      defaultValue={court}
-      inputProps={{
-        "aria-label": "Court name",
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          fetch("/api/update-court-name", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              date: date,
-              oldName: court,
-              newName: e.target.value,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => setUpdated(true));
-        }
-      }}
-    />
+    <div className="sched-edit-court-head">
+      <ConfirmDialog
+        message={`You are about to delete court “${
+          court || "Untitled"
+        }” and remove all of its shifts for this day.`}
+        url="/api/update-court-name"
+        body={{ date, oldName: court, newName: "" }}
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        setUpdated={setUpdated}
+      />
+      <input
+        className="sched-edit-court-input"
+        type="text"
+        aria-label="Court name"
+        value={name}
+        placeholder="Court"
+        onChange={(e) => setName(e.target.value)}
+        onBlur={() => commitName(name)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.target.blur();
+          }
+        }}
+      />
+      {canDelete ? (
+        <button
+          type="button"
+          className="sched-edit-court-delete"
+          aria-label={`Delete ${court || "court"}`}
+          title="Delete court"
+          onClick={() => setDeleteOpen(true)}
+        >
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path
+              d="M3 3.5h8M5.5 3.5V2.5h3v1M5 6v4.5M7 6v4.5M9 6v4.5M4 3.5l.5 8h5l.5-8"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function EditToolbar({ date, courts, setUpdated }) {
+  const addHour = () => {
+    fetch("/api/add-hour", {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        date,
+        num_courts: courts.length,
+      }),
+    })
+      .then((response) => response.json())
+      .then(() => setUpdated(true));
+  };
+
+  const deleteHour = () => {
+    fetch("/api/delete-hour", {
+      method: "DELETE",
+      headers: getAuthHeader(),
+      body: JSON.stringify({ date }),
+    })
+      .then((response) => response.json())
+      .then(() => setUpdated(true));
+  };
+
+  return (
+    <div className="sched-edit-toolbar">
+      <button type="button" className="sched-edit-tool-btn" onClick={addHour}>
+        <span className="sched-edit-tool-icon" aria-hidden>
+          +
+        </span>
+        Add hour
+      </button>
+      <button
+        type="button"
+        className="sched-edit-tool-btn sched-edit-tool-btn--danger"
+        onClick={deleteHour}
+      >
+        <span className="sched-edit-tool-icon" aria-hidden>
+          −
+        </span>
+        Remove last hour
+      </button>
+    </div>
   );
 }
 
 function AddCourtButton({ date, setUpdated }) {
   return (
-    <Tooltip title="Add Court">
-      <IconButton
-        sx={{ mt: 1 }}
-        color="primary"
-        onClick={() => {
-          fetch("/api/add-court", {
-            method: "POST",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              date: date,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => setUpdated(true));
-        }}
-      >
-        <AddCircle />
-      </IconButton>
-    </Tooltip>
+    <button
+      type="button"
+      className="sched-edit-add-court"
+      onClick={() => {
+        fetch("/api/add-court", {
+          method: "POST",
+          headers: getAuthHeader(),
+          body: JSON.stringify({ date }),
+        })
+          .then((response) => response.json())
+          .then(() => setUpdated(true));
+      }}
+    >
+      <span className="sched-edit-tool-icon" aria-hidden>
+        +
+      </span>
+      Add court
+    </button>
   );
 }
 
-function HourButtons({ date, courts, setUpdated }) {
-  return (
-    <div className="sxs">
-      <Tooltip title="Add Hour">
-        <IconButton
-          sx={{ pl: 2, pr: 1, mt: 1 }}
-          color="primary"
-          onClick={(e) => {
-            fetch("/api/add-hour", {
-              method: "POST",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                date: date,
-                num_courts: courts.length,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
-          }}
-        >
-          <AddCircle />
-        </IconButton>
-      </Tooltip>
-
-      <Tooltip title="Delete Last Hour">
-        <IconButton
-          sx={{ p: 0, mt: 1 }}
-          color="primary"
-          onClick={(e) => {
-            fetch("/api/delete-hour", {
-              method: "DELETE",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                date: date,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
-          }}
-        >
-          <RemoveCircle />
-        </IconButton>
-      </Tooltip>
-    </div>
-  );
-}
-
-function CourtHeading({ court, setUpdated }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <TableCell align="center" width="50px">
-      <ConfirmDialog
-        message={`You are about to end ${court} and unassign all teams from this court for future shifts.`}
-        url="/api/end-court"
-        body={{
-          court: court,
-        }}
-        open={open}
-        setOpen={setOpen}
-        setUpdated={setUpdated}
-      />
-      {court}
-      <Tooltip title="End Court">
-        <IconButton onClick={() => setOpen(true)}>
-          <EventBusy fontSize="small" color="warning" />
-        </IconButton>
-      </Tooltip>
-    </TableCell>
-  );
-}
-
-export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
+export function ScheduleTable({ shifts, date, setUpdated }) {
   const hourCourtToTeam = Object.assign(
     {},
     ...shifts.map((shift) => ({
-      [shift["start"] + "-" + shift["court"]]: shift["team"],
+      [shift.start + "-" + shift.court]: shift.team,
     }))
   );
   const hours = shifts
-    .map((shift) => shift["start"])
+    .map((shift) => shift.start)
     .filter((v, i, a) => a.indexOf(v) === i);
   const courts = shifts
-    .map((shift) => shift["court"])
+    .map((shift) => shift.court)
     .filter((v, i, a) => a.indexOf(v) === i);
 
   return (
-    <div
-      className={`schedule-table${editing ? " schedule-table--editing" : ""}${
-        readOnly ? " schedule-table--readonly" : ""
-      }`}
-    >
-      <Grid container className="schedule-table-grid">
-        <Grid item xs={11.5} className="schedule-table-main">
-          <TableContainer className="schedule-table-container">
-            <Table className="schedule-table-grid-inner" style={{ tableLayout: "fixed" }}>
-              <TableHead>
-                <TableRow>
-                  {readOnly ? (
-                    ""
-                  ) : (
-                    <TableCell align="center" className="schedule-table-col-shift" />
-                  )}
-                  <TableCell align="center" className="schedule-table-col-time">
-                    Time
-                  </TableCell>
-                  {courts.map((court) =>
-                    readOnly ? (
-                      <TableCell
-                        key={court}
-                        align="center"
-                        className="schedule-table-col-court"
-                      >
-                        {court}
-                      </TableCell>
-                    ) : editing ? (
-                      <TableCell
-                        key={court}
-                        align="center"
-                        className="schedule-table-col-court"
-                      >
-                        <CourtTextField
-                          court={court}
-                          date={date}
-                          setUpdated={setUpdated}
-                        />
-                      </TableCell>
-                    ) : (
-                      <CourtHeading
-                        key={court}
+    <div className="sched-edit-board">
+      <div className="sched-edit-board-scroll">
+        <div
+          className="sched-edit-grid"
+          style={{
+            gridTemplateColumns: `108px repeat(${Math.max(
+              courts.length,
+              1
+            )}, minmax(88px, 1fr)) 120px`,
+          }}
+        >
+          <div className="sched-edit-corner">Time</div>
+          {courts.map((court, index) => (
+            <div
+              key={`head-${court || "new"}-${index}`}
+              className="sched-edit-head-cell"
+            >
+              <CourtHeader
+                court={court}
+                date={date}
+                setUpdated={setUpdated}
+                canDelete={courts.length > 1}
+              />
+            </div>
+          ))}
+          <div className="sched-edit-head-cell sched-edit-head-cell--add">
+            <AddCourtButton date={date} setUpdated={setUpdated} />
+          </div>
+
+          {hours.map((hour) => {
+            const isHalf = isHalfHourSlot(hour);
+            const isCurrent = isCurrentScheduleSlot(hour);
+            const rowClass = [
+              "sched-edit-row",
+              isHalf ? "is-half" : "",
+              isCurrent ? "is-current" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return (
+              <React.Fragment key={hour}>
+                <div className={`sched-edit-time ${rowClass}`}>
+                  {dayHourToStr(hour, isHalf)}
+                </div>
+                {courts.map((court, index) => {
+                  const teamVal = hourCourtToTeam[hour + "-" + court];
+                  const teamStr = teamVal > 0 ? String(teamVal) : "";
+                  return (
+                    <div
+                      key={`${hour}-${court}-${index}`}
+                      className={`sched-edit-cell ${rowClass}`}
+                    >
+                      <TeamCell
+                        teamStr={teamStr}
+                        hour={hour}
                         court={court}
                         setUpdated={setUpdated}
                       />
-                    )
-                  )}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {hours.map((hour) => (
-                  <TableRow
-                    key={hour}
-                    className={[
-                      isHalfHourSlot(hour) ? "schedule-row--half" : "",
-                      isCurrentScheduleSlot(hour) ? "schedule-row--current" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    {readOnly ? (
-                      ""
-                    ) : (
-                      <TableCell align="center" className="schedule-table-col-shift">
-                        {editing ? (
-                          ""
-                        ) : (
-                          <ShiftScheduleButtons
-                            hour={hour}
-                            setUpdated={setUpdated}
-                          />
-                        )}
-                      </TableCell>
-                    )}
-
-                    <TableCell align="center" className="schedule-table-col-time">
-                      {dayHourToStr(hour, isHalfHourSlot(hour))}
-                    </TableCell>
-                    {courts.map((court) => {
-                      const teamStr =
-                        hourCourtToTeam[hour + "-" + court] > 0
-                          ? hourCourtToTeam[hour + "-" + court]
-                          : "";
-
-                      return (
-                        <TableCell
-                          key={court}
-                          align="center"
-                          className="schedule-table-col-court"
-                        >
-                          {readOnly || !editing ? (
-                            teamStr ? (
-                              <span className={`chip t${teamStr} schedule-table-team-chip`}>
-                                {teamStr}
-                              </span>
-                            ) : (
-                              <span className="schedule-table-empty-cell">—</span>
-                            )
-                          ) : (
-                            <TeamTextField
-                              teamStr={teamStr}
-                              hour={hour}
-                              court={court}
-                              setUpdated={setUpdated}
-                            />
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid>
-
-        <Grid item xs={0.5} className="schedule-table-side">
-          {readOnly || !editing ? (
-            ""
-          ) : (
-            <AddCourtButton date={date} setUpdated={setUpdated} />
-          )}
-        </Grid>
-      </Grid>
-
-      {readOnly || !editing ? (
-        ""
-      ) : (
-        <div className="schedule-table-hour-actions">
-          <HourButtons date={date} courts={courts} setUpdated={setUpdated} />
+                    </div>
+                  );
+                })}
+                <div
+                  className={`sched-edit-cell sched-edit-cell--spacer ${rowClass}`}
+                  aria-hidden
+                />
+              </React.Fragment>
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      <EditToolbar date={date} courts={courts} setUpdated={setUpdated} />
     </div>
   );
 }
