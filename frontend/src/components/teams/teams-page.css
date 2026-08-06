@@ -756,7 +756,8 @@
     .teams-chairperson-sidebar,
     .ballkid-pool-panel-slot {
       position: sticky;
-      top: calc(var(--navbar-inner-height, 56px) + 8px);
+      /* Page content is already below the navbar; keep a small inset only */
+      top: 8px;
       align-self: flex-start;
     }
 

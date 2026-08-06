@@ -49,8 +49,8 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
           item
           xs={12}
           md={7}
-          lg={8}
-          xl={9}
+          lg={7}
+          xl={8}
           className="teams-chairperson-main"
         >
           {renderTeams(assigned, teams, showHovercard, setUpdated)}
@@ -60,8 +60,8 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
           item
           xs={12}
           md={5}
-          lg={4}
-          xl={3}
+          lg={5}
+          xl={4}
           className="teams-chairperson-sidebar"
         >
           <UnassignedPanel

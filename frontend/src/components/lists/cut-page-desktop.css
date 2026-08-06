@@ -61,12 +61,7 @@
 /* Shared pool panel chrome (cut Active + teams Unassigned) */
 .ballkid-pool-panel,
 .teams-chairperson-unassigned-panel {
-  --ballkid-pool-chip-name: 26ch;
-  --ballkid-pool-chip-min: calc(var(--ballkid-pool-chip-name) + 5.5rem);
-
-  container-type: inline-size;
-  container-name: ballkid-pool;
-  width: 100%;
+  width: max-content;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -75,7 +70,9 @@
   border: 0.5px solid var(--tp-border, #e2e8f0);
   background: var(--tp-bg1, #fff);
   box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
-  /* Keep long Unassigned / Active lists inside the viewport */
+  /* Keep panel on the right of the sidebar column */
+  margin-left: auto;
+  /* Keep long lists inside the viewport */
   max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 24px);
   max-height: calc(100vh - var(--navbar-inner-height, 56px) - 24px);
   overflow-x: auto;
@@ -88,69 +85,70 @@
 .teams-chairperson-sidebar {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-end;
   min-width: 0;
   min-height: 0;
 }
 
-/* Two-col lists: size for ~26-char names; drop to 1 col when too narrow */
+/* Content-sized two-col chips; name + icons stay packed (not stretched) */
 .ballkid-pool-panel .ballkid-row-two-columns,
 .teams-chairperson-unassigned-panel .ballkid-row-two-columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(var(--ballkid-pool-chip-min), 1fr));
-  column-gap: 12px;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
+  grid-template-columns: repeat(2, max-content);
+  column-gap: 16px;
+  width: max-content;
+  max-width: 100%;
+  align-items: start;
+  justify-content: start;
 }
 
 .ballkid-pool-panel .ballkid-row-two-columns__col,
 .teams-chairperson-unassigned-panel .ballkid-row-two-columns__col {
-  min-width: 0;
+  width: max-content;
   max-width: 100%;
-  overflow: hidden;
+  min-width: 0;
+  overflow: visible;
 }
 
 .ballkid-pool-panel .ballkid-row,
 .teams-chairperson-unassigned-panel .ballkid-row,
 .ballkid-pool-panel .ballkid-row--fit,
 .teams-chairperson-unassigned-panel .ballkid-row--fit {
-  width: 100%;
+  width: max-content;
   max-width: 100%;
 }
 
 .ballkid-pool-panel .ballkid-chip,
 .teams-chairperson-unassigned-panel .ballkid-chip,
+.ballkid-pool-panel .ballkid-row .ballkid-chip,
+.teams-chairperson-unassigned-panel .ballkid-row .ballkid-chip,
 .ballkid-pool-panel .ballkid-row--fit .ballkid-chip,
 .teams-chairperson-unassigned-panel .ballkid-row--fit .ballkid-chip {
-  flex: 1 1 auto;
-  width: 100%;
-  min-width: 0;
+  flex: 0 0 auto;
+  width: max-content;
   max-width: 100%;
+  min-width: 0;
+}
+
+.ballkid-pool-panel .ballkid-chip--dense .ballkid-chip__content,
+.teams-chairperson-unassigned-panel .ballkid-chip--dense .ballkid-chip__content {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-start;
 }
 
 .ballkid-pool-panel .ballkid-chip--dense .ballkid-chip__name,
 .teams-chairperson-unassigned-panel .ballkid-chip--dense .ballkid-chip__name {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: var(--ballkid-pool-chip-name);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: max-content;
+  max-width: none;
+  overflow: visible;
 }
 
-.ballkid-pool-panel .ballkid-chip--dense .ballkid-chip__name a,
-.teams-chairperson-unassigned-panel .ballkid-chip--dense .ballkid-chip__name a {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@container ballkid-pool (max-width: 36.5rem) {
-  .ballkid-row-two-columns {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.ballkid-pool-panel .ballkid-chip--dense .ballkid-chip__meta,
+.teams-chairperson-unassigned-panel .ballkid-chip--dense .ballkid-chip__meta {
+  flex: 0 0 auto;
 }
 
 .ballkid-pool-panel__head,

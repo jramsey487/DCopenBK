@@ -587,8 +587,8 @@ export default function CutPageDesktop(props) {
           item
           xs={12}
           md={7}
-          lg={8}
-          xl={9}
+          lg={7}
+          xl={8}
           className="teams-chairperson-main"
         >
           <div className="teams-page-grid teams-chairperson-teams-grid">
@@ -618,8 +618,8 @@ export default function CutPageDesktop(props) {
           item
           xs={12}
           md={5}
-          lg={4}
-          xl={3}
+          lg={5}
+          xl={4}
           className="teams-chairperson-sidebar ballkid-pool-panel-slot"
         >
           <ActiveSection
