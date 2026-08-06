@@ -23,6 +23,7 @@ BALLKID_LIST_MODEL_FIELDS = (
     "is_active",
     "is_checked_in",
     "current_team",
+    "board_order",
     "finals_team",
     "position",
     "finals_position",

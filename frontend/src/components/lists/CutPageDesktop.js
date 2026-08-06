@@ -26,7 +26,7 @@ import {
   POSITIONS,
 } from "../Consts";
 import { cut } from "../HelpMessages";
-import { DraggableBallkidRow, DraggableBallkidRowTwoColumns } from "../BallkidChip";
+import { DraggableBallkidRow, DraggableBallkidRowTwoColumns, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "../teams/teams-page.css";
 import "../ballkid-row.css";
@@ -150,14 +150,25 @@ function cutCommentTypesForSection(section) {
     : ["experience", "rank", "last_day"];
 }
 
-function CutBallkidStack({ ballkids, actionsForBallkid, ...rowProps }) {
+function CutBallkidStack({
+  ballkids,
+  actionsForBallkid,
+  setUpdated = null,
+  dropAssign = null,
+  dropGroupBy = null,
+  ...rowProps
+}) {
+  const ordered = sortBallkidsByBoardOrder(ballkids);
   return (
     <div className="cut-page-chip-list ballkid-row-list">
-      {ballkids.map((ballkid) => (
+      {ordered.map((ballkid) => (
         <DraggableBallkidRow
           key={ballkid.id}
           ballkid={ballkid}
           dense
+          setUpdated={setUpdated}
+          dropAssign={dropAssign}
+          dropGroupBy={dropGroupBy}
           actions={
             actionsForBallkid ? actionsForBallkid(ballkid) : undefined
           }
@@ -182,10 +193,13 @@ export function CutStatusSection({
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) => {
+    drop: (ballkid, monitor) => {
+      if (monitor.didDrop()) {
+        return;
+      }
       patchCutBallkid(ballkid, { cut_status: section });
     },
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
   return (
@@ -240,6 +254,7 @@ export function CutStatusSection({
         section={section}
         showHovercard={showHovercard}
         patchCutBallkid={patchCutBallkid}
+        setUpdated={refetchActive}
       />
     </CutDecisionCard>
   );
@@ -250,16 +265,19 @@ export function CutDecisionSectionList({
   section,
   showHovercard = false,
   patchCutBallkid,
+  setUpdated = null,
 }) {
-  const sorted = [...ballkids].sort(compareCutPageBallkids);
   const canCut = section.includes("Cut");
 
   return (
     <CutBallkidStack
-      ballkids={sorted}
+      ballkids={ballkids}
       commentTypes={cutCommentTypesForSection(section)}
       showHovercard={showHovercard}
       hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
+      setUpdated={setUpdated}
+      dropAssign={{ cut_status: section }}
+      dropGroupBy={["cut_status"]}
       actionsForBallkid={(ballkid) => (
         <div className="teams-chairperson-ballkid-actions">
           <Tooltip title="Unassign">
@@ -299,15 +317,18 @@ export function CutDecisionSectionList({
   );
 }
 
-function ActiveSection({ active, showHovercard, patchCutBallkid }) {
+function ActiveSection({ active, showHovercard, patchCutBallkid, refetchActive }) {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) => {
+    drop: (ballkid, monitor) => {
+      if (monitor.didDrop()) {
+        return;
+      }
       patchCutBallkid(ballkid, { cut_status: "" });
     },
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
   const filteredCount = filterBallkids(active, searchKeyword, filterGroup).length;
@@ -382,10 +403,13 @@ function ActiveSection({ active, showHovercard, patchCutBallkid }) {
                 </div>
               ) : (
                 <DraggableBallkidRowTwoColumns
-                  ballkids={[...ballkids].sort(compareCutPageBallkids)}
+                  ballkids={ballkids}
                   commentTypes={["experience", "rank", "last_day"]}
                   showHovercard={showHovercard}
                   hoverCommentTypes={CUT_HOVER_COMMENT_TYPES}
+                  setUpdated={refetchActive}
+                  dropAssign={{ cut_status: "" }}
+                  dropGroupBy={["cut_status"]}
                 />
               )}
             </div>
@@ -448,10 +472,13 @@ export function SelfCutCard({
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) => {
+    drop: (ballkid, monitor) => {
+      if (monitor.didDrop()) {
+        return;
+      }
       patchCutBallkid(ballkid, { cut_status: "Self-Cut" });
     },
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
   return (
@@ -491,6 +518,7 @@ export function SelfCutCard({
         section="Self-Cut"
         showHovercard={showHovercard}
         patchCutBallkid={patchCutBallkid}
+        setUpdated={refetchActive}
       />
     </CutDecisionCard>
   );
@@ -598,6 +626,7 @@ export default function CutPageDesktop(props) {
             active={active.filter((ballkid) => ballkid.cut_status === "")}
             showHovercard={showHovercard}
             patchCutBallkid={patchCutBallkid}
+            refetchActive={refetchActive}
           />
         </Grid>
       </Grid>

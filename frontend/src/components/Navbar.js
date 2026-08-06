@@ -279,23 +279,17 @@ export default function Navbar({ isLoggedIn, setToken }) {
         </div>
 
         <div className="app-navbar-right">
-          {!isLoggedIn ? (
-            <Button className="app-navbar-login" component={Link} to="/login">
-              Login
-            </Button>
-          ) : (
-            <>
-              {isMobile ? (
-                <MobileNavDrawer group={group} setToken={setToken} />
-              ) : (
-                <DesktopNavbarItem
-                  tab={accountTab}
-                  useIconButton={true}
-                  setToken={setToken}
-                />
-              )}
-            </>
-          )}
+          {isLoggedIn ? (
+            isMobile ? (
+              <MobileNavDrawer group={group} setToken={setToken} />
+            ) : (
+              <DesktopNavbarItem
+                tab={accountTab}
+                useIconButton={true}
+                setToken={setToken}
+              />
+            )
+          ) : null}
         </div>
       </div>
       <div className="app-navbar-accent" aria-hidden="true" />

@@ -15,7 +15,10 @@
 }
 
 .ballkid-pool-panel.is-drop-over {
-  box-shadow: 0 0 0 2px var(--tp-nav, #0d1b3e) !important;
+  outline: 2px solid var(--tp-nav, #0d1b3e);
+  outline-offset: -2px;
+  border-color: var(--tp-nav, #0d1b3e) !important;
+  box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04) !important;
 }
 
 .cut-page-mobile-sections {

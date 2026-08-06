@@ -23,6 +23,7 @@ ballkid_urls = [
         name="get-ballkid-ratings",
     ),
     path("update-ballkid", UpdateBallkid.as_view(), name="update-ballkid"),
+    path("reorder-ballkids", ReorderBallkids.as_view(), name="reorder-ballkids"),
     path("checkout-all", CheckoutAll.as_view(), name="checkout-all"),
     path("cut-all", CutAll.as_view(), name="cut-all"),
     path("archive-all", ArchiveAll.as_view(), name="archive-all"),

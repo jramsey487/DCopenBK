@@ -296,11 +296,16 @@
 
   .team-card.teams-chairperson-card {
     margin-bottom: 0;
-    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease,
+      outline-color 0.15s ease;
   }
 
   .team-card.teams-chairperson-card.is-drop-over {
-    box-shadow: inset 0 0 0 2px var(--tp-nav);
+    /* Outline draws on top of children (unlike inset shadow, which gets
+       covered by the head/body backgrounds and looks like only the bottom). */
+    outline: 2px solid var(--tp-nav);
+    outline-offset: -2px;
+    border-color: var(--tp-nav);
   }
 
   .team-card.teams-chairperson-card.is-new-team {
@@ -313,7 +318,8 @@
   .team-card.teams-chairperson-card.is-new-team.is-drop-over {
     border-style: solid;
     border-color: var(--tp-nav);
-    box-shadow: inset 0 0 0 2px var(--tp-nav);
+    outline: 2px solid var(--tp-nav);
+    outline-offset: -2px;
   }
 
   .teams-chairperson-head-actions {
@@ -441,7 +447,10 @@
   }
 
   .teams-chairperson-unassigned.is-drop-over {
-    box-shadow: 0 0 0 2px var(--tp-nav) !important;
+    outline: 2px solid var(--tp-nav);
+    outline-offset: -2px;
+    border-color: var(--tp-nav) !important;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04) !important;
   }
 
   .teams-chairperson-unassigned-head {

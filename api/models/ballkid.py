@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Max
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 
@@ -47,6 +48,8 @@ class Ballkid(models.Model):
     # Ballkid transient information
     is_checked_in = models.BooleanField(default=False)
     current_team = models.IntegerField(default=0)
+    # Display order within a board group (team + position, cut bucket, etc.)
+    board_order = models.IntegerField(default=0)
     finals_team = models.CharField(
         max_length=20, choices=MATCH_TYPE.choices, blank=True
     )
@@ -448,6 +451,14 @@ class Ballkid(models.Model):
                 )
                 history.delete()
 
+    @classmethod
+    def next_board_order(cls, **filters):
+        """Next board_order value within a filtered board group."""
+        max_order = (
+            cls.objects.filter(**filters).aggregate(m=Max("board_order")).get("m")
+        )
+        return 0 if max_order is None else max_order + 1
+
     def set_field(self, field, value, self_cut=False):
         """
         Sets corresponding field to the value provided. Calls specialty handle
@@ -494,6 +505,8 @@ class Ballkid(models.Model):
         elif field == "current_team":
             self.handle_team_history(value)
             self.handle_captain_history_team(value)
+            if self.current_team != value:
+                self.board_order = Ballkid.next_board_order(current_team=value)
             self.current_team = value
 
         elif field == "finals_team":
@@ -501,6 +514,8 @@ class Ballkid(models.Model):
                 year=get_current_year()
             ).show_finals_teams
             self.handle_finals_history_team(value, show_teams)
+            if self.finals_team != value:
+                self.board_order = Ballkid.next_board_order(finals_team=value)
             self.finals_team = value
 
         elif field == "is_active":
@@ -511,6 +526,8 @@ class Ballkid(models.Model):
             self.is_cut = value
 
         elif field == "cut_status":
+            if self.cut_status != value:
+                self.board_order = Ballkid.next_board_order(cut_status=value)
             self.cut_status = value
 
         elif field == "is_captain":

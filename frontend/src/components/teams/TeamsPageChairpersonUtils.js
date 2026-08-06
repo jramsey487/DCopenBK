@@ -37,7 +37,7 @@ import {
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
-import { DraggableBallkidRow } from "../BallkidChip";
+import { DraggableBallkidRow, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { teams, finalsTeams } from "../HelpMessages.js";
 import { CourtNoteBlock } from "./CourtNote";
 import "../ballkid-row.css";
@@ -156,11 +156,14 @@ export function renderBallkidsOnTeam(
   commentTypes,
   showHovercard,
   hoverCommentTypes,
-  isFinalsPage = false
+  isFinalsPage = false,
+  dropAssign = null,
+  dropGroupBy = null
 ) {
+  const ordered = sortBallkidsByBoardOrder(ballkids);
   return (
     <div className="team-member-list ballkid-row-list">
-      {ballkids.map((ballkid) => (
+      {ordered.map((ballkid) => (
         <DraggableBallkidRow
           key={`ballkid${ballkid.id}`}
           ballkid={ballkid}
@@ -168,6 +171,9 @@ export function renderBallkidsOnTeam(
           showHovercard={showHovercard}
           hoverCommentTypes={hoverCommentTypes}
           actions={renderBallkidRowActions(ballkid, setUpdated, { isFinalsPage })}
+          setUpdated={setUpdated}
+          dropAssign={dropAssign}
+          dropGroupBy={dropGroupBy}
         />
       ))}
     </div>
@@ -198,8 +204,11 @@ function Team({
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) =>
-      fetch("/api/update-ballkid", {
+    drop: (ballkid, monitor) => {
+      if (monitor.didDrop()) {
+        return;
+      }
+      return fetch("/api/update-ballkid", {
         method: "PATCH",
         headers: getAuthHeader(),
         body: JSON.stringify({
@@ -209,8 +218,9 @@ function Team({
         }),
       })
         .then((response) => response.json())
-        .then(() => setUpdated(true)),
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
+        .then(() => setUpdated(true));
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
   const cardClass = [
@@ -354,7 +364,13 @@ function Team({
                           isFinalsPage ? ["rank", "experience"] : ["checkout_teams"],
                           showHovercard,
                           isFinalsPage ? ["experience", "rank", "calibrated_avg"] : [],
+                          isFinalsPage,
                           isFinalsPage
+                            ? { finals_team: team, finals_position: position }
+                            : { current_team: team, position },
+                          isFinalsPage
+                            ? ["finals_team", "finals_position"]
+                            : ["current_team", "position"]
                         )
                       )}
                     </div>

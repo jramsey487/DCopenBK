@@ -587,6 +587,7 @@ class BallkidsSortedList(generics.ListAPIView):
 
         ballkids = _list_ballkids_queryset(
             Ballkid.objects.filter(is_active=True, is_cut=False).order_by(
+                "board_order",
                 "-is_chairperson",
                 "-is_captain",
                 "-num_years_experience",
@@ -725,6 +726,100 @@ class UpdateBallkid(APIView):
         return Response(
             {"Invalid serializer": "Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+ASSIGN_FIELDS = (
+    "current_team",
+    "finals_team",
+    "cut_status",
+    "position",
+    "finals_position",
+)
+
+
+class ReorderBallkids(APIView):
+    """
+    Insert a ballkid before another (or at end) within a board list.
+
+    Body:
+      ballkid_id (int, required)
+      before_id (int|null, optional) — insert before this id; omit/null = append
+      current_team / finals_team / cut_status / position / finals_position
+        — optional assignment fields applied before reordering
+      group_by (list[str], optional) — fields that define the list group
+        (defaults from which assign fields are present)
+    """
+
+    permission_classes = [IsChairperson]
+
+    def patch(self, request, format=None):
+        ballkid_id = request.data.get("ballkid_id")
+        if ballkid_id is None:
+            return Response(
+                {"error": "ballkid_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ballkid = get_object_or_404(Ballkid, id=ballkid_id)
+        before_id = request.data.get("before_id", None)
+
+        for field in ASSIGN_FIELDS:
+            if field in request.data and request.data[field] is not None:
+                ballkid.set_field(field, request.data[field])
+
+        group_by = request.data.get("group_by")
+        if not group_by:
+            group_by = [
+                field
+                for field in (
+                    "current_team",
+                    "finals_team",
+                    "cut_status",
+                    "position",
+                    "finals_position",
+                )
+                if field in request.data
+            ]
+        if not group_by:
+            group_by = ["current_team"]
+
+        filters = {field: getattr(ballkid, field) for field in group_by}
+        siblings = list(
+            Ballkid.objects.filter(**filters)
+            .exclude(id=ballkid.id)
+            .order_by("board_order", "last_name", "first_name", "id")
+        )
+
+        ordered = []
+        inserted = False
+        if before_id is None:
+            ordered = siblings + [ballkid]
+            inserted = True
+        else:
+            for sibling in siblings:
+                if sibling.id == before_id:
+                    ordered.append(ballkid)
+                    inserted = True
+                ordered.append(sibling)
+            if not inserted:
+                ordered.append(ballkid)
+
+        for index, member in enumerate(ordered):
+            if member.board_order != index:
+                member.board_order = index
+                member.save(update_fields=["board_order"])
+
+        logger.info(
+            "[ReorderBallkids] ballkid=%s before_id=%s group=%s order=%s",
+            ballkid_id,
+            before_id,
+            filters,
+            [m.id for m in ordered],
+        )
+        return Response(
+            {"Success": "Reordered", "ordered_ids": [m.id for m in ordered]},
+            status=status.HTTP_200_OK,
         )
 
 

@@ -615,6 +615,7 @@ export function ConfirmDialog({
         className: "confirm-dialog-paper",
       }}
     >
+      <div className="confirm-dialog-accent" aria-hidden="true" />
       <DialogContent className="confirm-dialog-content">
         <Alerts
           successMsg=""
@@ -630,7 +631,12 @@ export function ConfirmDialog({
       </DialogContent>
 
       <DialogActions className="confirm-dialog-actions">
-        <Button onClick={handleClose} disabled={succeeded || loading}>
+        <Button
+          className="confirm-dialog-cancel"
+          variant="outlined"
+          onClick={handleClose}
+          disabled={succeeded || loading}
+        >
           Cancel
         </Button>
         <LoadingButton

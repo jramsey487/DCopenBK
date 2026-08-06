@@ -43,7 +43,10 @@ export function UnassignedPanel({
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
-    drop: (ballkid) => {
+    drop: (ballkid, monitor) => {
+      if (monitor.didDrop()) {
+        return;
+      }
       const teamAssignDict = isFinalsPage
         ? { finals_team: "" }
         : { current_team: 0 };
@@ -60,7 +63,7 @@ export function UnassignedPanel({
         .then((response) => response.json())
         .then(() => setUpdated(true));
     },
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
   return (
@@ -205,6 +208,17 @@ export function UnassignedPanel({
                     isFinalsPage
                       ? ["experience", "rank", "calibrated_avg"]
                       : []
+                  }
+                  setUpdated={setUpdated}
+                  dropAssign={
+                    isFinalsPage
+                      ? { finals_team: "", finals_position: position }
+                      : { current_team: 0, position }
+                  }
+                  dropGroupBy={
+                    isFinalsPage
+                      ? ["finals_team", "finals_position"]
+                      : ["current_team", "position"]
                   }
                 />
               )}
