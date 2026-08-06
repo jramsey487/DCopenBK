@@ -39,8 +39,23 @@ function formatSliderRating(value) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
+/**
+ * MUI Slider on touch devices fires a synthetic mouse event after touchend
+ * that can snap the thumb back to the pre-drag value (mui/material-ui#31869).
+ * Sliders are mobile-only here, so ignore those mouse events entirely.
+ */
+function shouldIgnoreSliderEvent(event) {
+  const type = event?.type;
+  return type === "mousedown" || type === "mouseup";
+}
+
 export function RatingAndLabel({ label, rating, setRating }) {
   const isMobile = useIsMobile();
+  const [sliderValue, setSliderValue] = useState(rating ?? 0);
+
+  useEffect(() => {
+    setSliderValue(rating ?? 0);
+  }, [rating]);
 
   if (isMobile) {
     return (
@@ -48,20 +63,29 @@ export function RatingAndLabel({ label, rating, setRating }) {
         <div className="rating-dialog-grade-slider-head">
           <span className="rating-dialog-grade-label">{label}</span>
           <span className="rating-dialog-grade-value">
-            {formatSliderRating(rating)}
+            {formatSliderRating(
+              sliderValue === 0 ? null : sliderValue
+            )}
           </span>
         </div>
         <Slider
           className="rating-dialog-grade-slider"
           aria-label={label}
-          value={rating ?? 0}
+          value={sliderValue}
           min={0}
           max={5}
           step={0.5}
           marks={RATING_SLIDER_MARKS}
-          valueLabelDisplay="auto"
-          valueLabelFormat={(v) => (v === 0 ? "—" : formatSliderRating(v))}
-          onChange={(_, newVal) => setRating(newVal === 0 ? null : newVal)}
+          valueLabelDisplay="off"
+          onChange={(event, newVal) => {
+            if (shouldIgnoreSliderEvent(event)) return;
+            setSliderValue(newVal);
+          }}
+          onChangeCommitted={(event, newVal) => {
+            if (shouldIgnoreSliderEvent(event)) return;
+            setSliderValue(newVal);
+            setRating(newVal === 0 ? null : newVal);
+          }}
         />
       </div>
     );

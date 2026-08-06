@@ -153,8 +153,9 @@ body {
   --login-border: var(--border);
   --login-input-bg: var(--bg2);
   --login-input-border: #e8edf2;
-  --login-btn: #8b9aab;
-  --login-btn-hover: #7a8c9e;
+  --login-btn: var(--nav);
+  --login-btn-hover: #152a5c;
+  --login-btn-disabled: #c5ced9;
 
   --brand-nav: var(--nav);
   --brand-red: var(--red);

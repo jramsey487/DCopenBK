@@ -155,7 +155,7 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .login-submit:hover:not(:disabled) {
@@ -163,8 +163,10 @@
 }
 
 .login-submit:disabled {
-  opacity: 0.55;
+  background: var(--login-btn-disabled);
+  color: #fff;
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .login-submit:focus-visible {
