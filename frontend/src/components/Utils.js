@@ -28,20 +28,21 @@ import Tooltip from "@mui/material/Tooltip";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
-import "./search-and-filter.css";
-import "./ratings/rating-dialog.css";
-import "./confirm-dialog.css";
-
-import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
-
-import AspectRatio from "@mui/joy/AspectRatio";
-
 import GridView from "@mui/icons-material/GridView";
 import Edit from "@mui/icons-material/Edit";
 import List from "@mui/icons-material/List";
 import Check from "@mui/icons-material/Check";
 import Help from "@mui/icons-material/Help";
 import BedtimeOutlined from "@mui/icons-material/BedtimeOutlined";
+import Close from "@mui/icons-material/Close";
+
+import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
+import AspectRatio from "@mui/joy/AspectRatio";
+
+import "./search-and-filter.css";
+import "./ratings/rating-dialog.css";
+import "./confirm-dialog.css";
+import "./app-banners.css";
 
 import RatingDialog from "./ratings/RatingDialog";
 import { CheckinHistoryChart } from "./ballkid/CheckinHistoryChart";
@@ -341,17 +342,22 @@ function Banner({ banner }) {
 
   const bannerAlert = (
     <Collapse in={open}>
-      <Alert
-        severity="warning"
-        variant="filled"
-        onClose={() => setOpen(false)}
-        sx={{ mt: 0.5 }}
-      >
-        {`${banner.message} [Last Updated: ${dayHourToStr(
-          banner.timestamp,
-          true
-        )}]`}
-      </Alert>
+      <div className="app-banner" role="status">
+        <div className="app-banner__body">
+          <p className="app-banner__message">{banner.message}</p>
+          <span className="app-banner__time">
+            Updated {dayHourToStr(banner.timestamp, true)}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="app-banner__close"
+          aria-label="Dismiss banner"
+          onClick={() => setOpen(false)}
+        >
+          <Close fontSize="small" />
+        </button>
+      </div>
     </Collapse>
   );
 
@@ -373,7 +379,7 @@ function Banner({ banner }) {
     return bannerAlert;
   }
 
-  return "";
+  return null;
 }
 
 export function Banners() {
@@ -388,23 +394,16 @@ export function Banners() {
       .then((data) => setBanners(data));
   }, []);
 
-  return banners === undefined || banners === null ? (
-    ""
-  ) : (
-    <Box
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: "50%",
-        transform: "translate(-50%, 0)",
-        width: "100%",
-        zIndex: 999,
-      }}
-    >
+  if (!banners?.length) {
+    return null;
+  }
+
+  return (
+    <div className="app-banners">
       {banners.map((banner) => (
         <Banner key={banner.id} banner={banner} />
       ))}
-    </Box>
+    </div>
   );
 }
 

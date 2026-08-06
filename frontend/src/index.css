@@ -128,6 +128,13 @@ body {
   --sp-text2: var(--text2);
   --sp-border: var(--border);
 
+  --dbg-nav: var(--nav);
+  --dbg-bg0: var(--bg0);
+  --dbg-bg1: var(--bg1);
+  --dbg-text1: var(--text1);
+  --dbg-text2: var(--text2);
+  --dbg-border: var(--border);
+
   --ts-nav: var(--nav);
   --ts-red: var(--red);
   --ts-bg0: var(--bg0);

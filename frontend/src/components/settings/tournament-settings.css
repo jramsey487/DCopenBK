@@ -112,24 +112,107 @@
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .tournament-settings-banner-row {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
-    padding: 10px 12px;
+    padding: 12px 14px;
     background: var(--ts-bg0);
     border: 0.5px solid var(--ts-border);
-    border-radius: 8px;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.03);
   }
-  
-  .tournament-settings-banner-text {
+
+  .tournament-settings-banner-row.is-editing {
+    background: #fff;
+    border-color: rgba(13, 27, 62, 0.18);
+    box-shadow: 0 2px 8px rgba(13, 27, 62, 0.06);
+  }
+
+  .tournament-settings-banner-main {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tournament-settings-banner-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+
+  .tournament-settings-banner-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(13, 27, 62, 0.08);
+    color: var(--ts-nav);
+  }
+
+  .tournament-settings-banner-chip--captains {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .tournament-settings-banner-chip--ballkid {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .tournament-settings-banner-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ts-text1);
+  }
+
+  .tournament-settings-banner-text {
+    margin: 0;
     font-size: 14px;
-    color: var(--ts-text2);
+    color: var(--ts-text1);
     line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  .tournament-settings-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .tournament-settings-banner-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .tournament-settings-banner-fields-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .tournament-settings-banner-fields-row .MuiAutocomplete-root {
+    flex: 1 1 200px;
+    min-width: 160px;
+  }
+
+  .tournament-settings-banner-fields-row .MuiTextField-root {
+    flex: 2 1 240px;
+    min-width: 180px;
   }
   
   .tournament-settings-row {

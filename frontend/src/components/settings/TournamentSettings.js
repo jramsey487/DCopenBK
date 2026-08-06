@@ -139,6 +139,20 @@ function Banner({
       );
   }, []);
 
+  const chipClass =
+    audience === "captains"
+      ? "tournament-settings-banner-chip tournament-settings-banner-chip--captains"
+      : audience === "ballkid"
+      ? "tournament-settings-banner-chip tournament-settings-banner-chip--ballkid"
+      : "tournament-settings-banner-chip";
+
+  const audienceLabel =
+    audience === "all"
+      ? "Site-wide"
+      : audience === "captains"
+      ? "Captains"
+      : "Ballkid";
+
   return disabled ? (
     newBanner ? (
       <button
@@ -158,144 +172,160 @@ function Banner({
       </button>
     ) : (
       <Box className="tournament-settings-banner-row">
-        <Typography className="tournament-settings-banner-text">
-          {audience !== "ballkid" ? "" : `${banner?.ballkid_name}: `}
-          {banner.message}
-        </Typography>
+        <div className="tournament-settings-banner-main">
+          <div className="tournament-settings-banner-meta">
+            <span className={chipClass}>{audienceLabel}</span>
+            {audience === "ballkid" && banner?.ballkid_name ? (
+              <span className="tournament-settings-banner-name">
+                {banner.ballkid_name}
+              </span>
+            ) : null}
+          </div>
+          <p className="tournament-settings-banner-text">{banner.message}</p>
+        </div>
 
-        <Tooltip title="Edit">
-          <IconButton
-            size="small"
-            onClick={() => {
-              setDisabled(false);
-              setTimeout(() => bannerInput.current.focus(), 100);
-            }}
-          >
-            <Edit />
-          </IconButton>
-        </Tooltip>
+        <div className="tournament-settings-banner-actions">
+          <Tooltip title="Edit">
+            <IconButton
+              size="small"
+              onClick={() => {
+                setDisabled(false);
+                setTimeout(() => bannerInput.current.focus(), 100);
+              }}
+            >
+              <Edit />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title="Delete">
-          <IconButton
-            size="small"
-            onClick={() =>
-              fetch("/api/update-banner", {
-                method: "DELETE",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  id: banner.id,
-                }),
-              }).then((response) => {
-                if (response.ok) {
-                  setUpdated(true);
+          <Tooltip title="Delete">
+            <IconButton
+              size="small"
+              onClick={() =>
+                fetch("/api/update-banner", {
+                  method: "DELETE",
+                  headers: getAuthHeader(),
+                  body: JSON.stringify({
+                    id: banner.id,
+                  }),
+                }).then((response) => {
+                  if (response.ok) {
+                    setUpdated(true);
 
-                  setSuccessMsg(
-                    "Banner deleted for all ballkids and captains! Refresh page to view updated banner(s)."
-                  );
-                } else {
-                  setErrorMsg("Error updating banner.");
-                }
-              })
-            }
-          >
-            <Delete />
-          </IconButton>
-        </Tooltip>
+                    setSuccessMsg(
+                      "Banner deleted for all ballkids and captains! Refresh page to view updated banner(s)."
+                    );
+                  } else {
+                    setErrorMsg("Error updating banner.");
+                  }
+                })
+              }
+            >
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        </div>
       </Box>
     )
   ) : (
-    <Box className="tournament-settings-banner-row">
-      {audience !== "ballkid" ? (
-        ""
-      ) : (
-        <Autocomplete
-          disablePortal
-          openOnFocus
-          sx={{ width: 300, mr: 2 }}
-          options={ballkidsList}
-          value={ballkid}
-          onChange={(e, newVal) => {
-            setBallkid(newVal);
-          }}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Ballkid"
-              required
+    <Box className="tournament-settings-banner-row is-editing">
+      <div className="tournament-settings-banner-fields">
+        <div className="tournament-settings-banner-meta">
+          <span className={chipClass}>
+            {newBanner ? `New · ${audienceLabel}` : `Edit · ${audienceLabel}`}
+          </span>
+        </div>
+        <div className="tournament-settings-banner-fields-row">
+          {audience === "ballkid" ? (
+            <Autocomplete
+              disablePortal
+              openOnFocus
+              options={ballkidsList}
+              value={ballkid}
+              onChange={(e, newVal) => {
+                setBallkid(newVal);
+              }}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  label="Ballkid"
+                  required
+                />
+              )}
             />
-          )}
-        />
-      )}
+          ) : null}
 
-      <TextField
-        variant="standard"
-        value={bannerMessage}
-        label={audience === "ballkid" ? "Banner Message" : ""}
-        style={{ width: "90%" }}
-        disabled={disabled}
-        inputRef={bannerInput}
-        sx={{ mr: 2 }}
-        multiline
-        onChange={(e) => setBannerMessage(e.target.value)}
-      />
+          <TextField
+            variant="standard"
+            value={bannerMessage}
+            label="Banner message"
+            disabled={disabled}
+            inputRef={bannerInput}
+            multiline
+            onChange={(e) => setBannerMessage(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <IconButton
-        size="small"
-        disabled={
-          (banner.message === bannerMessage &&
-            banner.ballkid_name === ballkid?.label) ||
-          bannerMessage === ""
-        }
-        onClick={() =>
-          fetch("/api/update-banner", {
-            method: newBanner ? "POST" : "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              id: newBanner ? 0 : banner.id,
-              time: new Date().toLocaleString(),
-              message: bannerMessage,
-              audience: audience,
-              ballkidId: ballkid?.id,
-            }),
-          }).then((response) => {
-            if (response.ok) {
-              setDisabled(true);
-              setSavedBanner(bannerMessage);
-              setSavedBallkid(ballkid);
-              if (newBanner) {
-                setBannerMessage("");
-                setBallkid(null);
-              }
-              setUpdated(true);
-
-              setSuccessMsg(
-                "Banner updated for all ballkids and captains! Refresh page to view updated banner(s)."
-              );
-            } else {
-              setErrorMsg("Error updating banner.");
-            }
-          })
-        }
-      >
-        <Tooltip title="Save">
-          <Done />
-        </Tooltip>
-      </IconButton>
-
-      <Tooltip title="Cancel">
+      <div className="tournament-settings-banner-actions">
         <IconButton
           size="small"
-          onClick={() => {
-            setDisabled(true);
-            setBannerMessage(savedBanner);
-            setBallkid(savedBallkid);
-          }}
+          color="primary"
+          disabled={
+            (banner.message === bannerMessage &&
+              banner.ballkid_name === ballkid?.label) ||
+            bannerMessage === ""
+          }
+          onClick={() =>
+            fetch("/api/update-banner", {
+              method: newBanner ? "POST" : "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({
+                id: newBanner ? 0 : banner.id,
+                time: new Date().toLocaleString(),
+                message: bannerMessage,
+                audience: audience,
+                ballkidId: ballkid?.id,
+              }),
+            }).then((response) => {
+              if (response.ok) {
+                setDisabled(true);
+                setSavedBanner(bannerMessage);
+                setSavedBallkid(ballkid);
+                if (newBanner) {
+                  setBannerMessage("");
+                  setBallkid(null);
+                }
+                setUpdated(true);
+
+                setSuccessMsg(
+                  "Banner updated for all ballkids and captains! Refresh page to view updated banner(s)."
+                );
+              } else {
+                setErrorMsg("Error updating banner.");
+              }
+            })
+          }
         >
-          <Close />
+          <Tooltip title="Save">
+            <Done />
+          </Tooltip>
         </IconButton>
-      </Tooltip>
+
+        <Tooltip title="Cancel">
+          <IconButton
+            size="small"
+            onClick={() => {
+              setDisabled(true);
+              setBannerMessage(savedBanner);
+              setBallkid(savedBallkid);
+            }}
+          >
+            <Close />
+          </IconButton>
+        </Tooltip>
+      </div>
     </Box>
   );
 }

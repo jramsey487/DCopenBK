@@ -7,9 +7,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -18,7 +16,6 @@ import Alert from "@mui/material/Alert";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 
 import TaskAlt from "@mui/icons-material/TaskAlt";
 import UploadFile from "@mui/icons-material/UploadFile";
@@ -52,80 +49,7 @@ import {
   Banners,
   getToday,
 } from "../Utils";
-
-// Custom Sleek Theme Definition
-const theme = createTheme({
-  typography: {
-    fontFamily: [
-      '"Plus Jakarta Sans"',
-      '"Inter"',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      'sans-serif',
-    ].join(','),
-    h5: {
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 600,
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#2563eb', // Crisp Indigo/Blue
-      light: '#eff6ff',
-      dark: '#1d4ed8',
-    },
-    background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#0f172a',
-      secondary: '#64748b',
-    },
-    divider: '#e2e8f0',
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 10,
-          padding: '10px 24px',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
-          },
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-        },
-      },
-    },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          borderRadius: 10,
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#94a3b8',
-          },
-        },
-      },
-    },
-  },
-});
+import "./debug-page.css";
 
 // Error Boundary Component
 class FormErrorBoundary extends Component {
@@ -145,7 +69,7 @@ class FormErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "error.light" }}>
+        <div className="debug-form-card" style={{ borderColor: "#fecdd3" }}>
           <Alert severity="error" sx={{ mb: 2 }}>
             Something went wrong while rendering this section.
           </Alert>
@@ -160,7 +84,7 @@ class FormErrorBoundary extends Component {
           >
             Reset Form
           </Button>
-        </Paper>
+        </div>
       );
     }
     return this.props.children;
@@ -243,46 +167,19 @@ const getSafeOptionLabel = (option) => {
   return option.label || "";
 };
 
-// Modern Container Form Card Wrapper
 const FormCard = ({ title, children, icon: Icon }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      p: { xs: 2.5, sm: 4 },
-      borderRadius: 4,
-      border: "1px solid",
-      borderColor: "divider",
-      boxShadow: "0px 10px 30px rgba(15, 23, 42, 0.04)",
-      bgcolor: "background.paper",
-      width: "100%",
-      maxWidth: "100%",
-      boxSizing: "border-box",
-      transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    }}
-  >
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-      {Icon && (
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 3,
-            bgcolor: "primary.light",
-            color: "primary.main",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Icon fontSize="medium" />
-        </Box>
-      )}
-      <Typography variant="h5" color="text.primary">
-        {title}
-      </Typography>
-    </Box>
-    <Divider sx={{ mb: 3.5 }} />
+  <div className="debug-form-card">
+    <div className="debug-form-card__head">
+      {Icon ? (
+        <div className="debug-form-card__icon">
+          <Icon fontSize="small" />
+        </div>
+      ) : null}
+      <h2 className="debug-form-card__title">{title}</h2>
+    </div>
+    <hr className="debug-form-card__divider" />
     {children}
-  </Paper>
+  </div>
 );
 
 function CreateBallkid() {
@@ -1057,19 +954,7 @@ function CreateRating({ ballkidsList = [], captainsList = [] }) {
           <Grid container spacing={2}>
             {ratingFields.map((item, index) => (
               <Grid item xs={12} sm={6} key={index}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    borderRadius: 3,
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    boxSizing: "border-box",
-                  }}
-                >
+                <div className="debug-form-card" style={{ padding: 14, boxShadow: "none" }}>
                   <Box sx={{ width: "100%" }}>
                     <RatingAndLabel
                       label={item.label}
@@ -1077,7 +962,7 @@ function CreateRating({ ballkidsList = [], captainsList = [] }) {
                       setRating={item.setter}
                     />
                   </Box>
-                </Paper>
+                </div>
               </Grid>
             ))}
           </Grid>
@@ -1232,35 +1117,18 @@ function BulkCreation({ type }) {
     <FormCard title={`Bulk Create ${titleType}`} icon={CloudUpload}>
       <Alerts successMsg={successMsg} errorMsg={errorMsg} setSuccessMsg={setSuccessMsg} setErrorMsg={setErrorMsg} />
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center", my: 2 }}>
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 4,
-            width: "100%",
-            boxSizing: "border-box",
-            borderStyle: "dashed",
-            borderWidth: 2,
-            borderRadius: 3,
-            borderColor: file ? "primary.main" : "divider",
-            bgcolor: file ? "primary.light" : "background.paper",
-            textAlign: "center",
-            cursor: "pointer",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": { borderColor: "primary.main", bgcolor: "primary.light" },
-          }}
-          component="label"
-        >
+        <label className={`debug-upload-zone${file ? " is-ready" : ""}`}>
           <input type="file" accept=".csv" hidden onChange={(e) => setFile(e.target.files[0])} />
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-            {file ? <TaskAlt color="success" sx={{ fontSize: 52 }} /> : <UploadFile color="action" sx={{ fontSize: 52 }} />}
-            <Typography variant="body1" fontWeight={600}>
-              {file ? file.name : "Click to select or drag a CSV file"}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Only .csv files supported
-            </Typography>
-          </Box>
-        </Paper>
+          {file ? (
+            <TaskAlt sx={{ fontSize: 40, color: "var(--green)" }} />
+          ) : (
+            <UploadFile sx={{ fontSize: 40, color: "var(--text2)" }} />
+          )}
+          <p className="debug-upload-zone__title">
+            {file ? file.name : "Click to select a CSV file"}
+          </p>
+          <p className="debug-upload-zone__hint">Only .csv files supported</p>
+        </label>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button
@@ -1336,8 +1204,7 @@ export default function DebugPage() {
   const [activeSection, setActiveSection] = useState("ballkid");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const muiTheme = useTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const isMobile = useMediaQuery("(max-width:899.95px)");
 
   useEffect(() => {
     fetch("/api/list", { headers: getAuthHeader() })
@@ -1444,27 +1311,20 @@ export default function DebugPage() {
   };
 
   const drawerContent = (
-    <Box sx={{ p: 2.5, pt: 3 }}>
-      {/* Sidebar Header Title */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 1, pb: 2.5 }}>
-        <AdminPanelSettingsIcon color="primary" />
-        <Typography variant="h6" fontWeight="700" color="text.primary" sx={{ fontSize: "1.1rem" }}>
-          Control Panel
-        </Typography>
-      </Box>
-
-      <Divider sx={{ mb: 2.5 }} />
+    <nav className="debug-nav">
+      <div className="debug-nav__head">
+        <div className="debug-nav__head-icon">
+          <AdminPanelSettingsIcon />
+        </div>
+        <div>
+          <h1 className="debug-nav__title">Debug</h1>
+          <p className="debug-nav__subtitle">Seed &amp; manage test data</p>
+        </div>
+      </div>
 
       {menuCategories.map((category, catIdx) => (
-        <Box key={catIdx} sx={{ mb: 3 }}>
-          <Typography
-            variant="caption"
-            fontWeight="700"
-            color="text.secondary"
-            sx={{ px: 1.5, mb: 1, display: "block", textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.75rem" }}
-          >
-            {category.title}
-          </Typography>
+        <div className="debug-nav__category" key={catIdx}>
+          <h2 className="debug-nav__category-title">{category.title}</h2>
           <List disablePadding>
             {category.items.map((item) => {
               const IconComponent = item.icon;
@@ -1472,120 +1332,66 @@ export default function DebugPage() {
               return (
                 <ListItemButton
                   key={item.id}
+                  className="debug-nav__item"
                   selected={isSelected}
                   onClick={() => {
                     setActiveSection(item.id);
                     if (isMobile) setMobileOpen(false);
                   }}
-                  sx={{
-                    borderRadius: 2.5,
-                    mb: 0.5,
-                    py: 1,
-                    px: 1.5,
-                    transition: "all 0.15s ease",
-                    "&.Mui-selected": {
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
-                      "&:hover": {
-                        bgcolor: "primary.dark",
-                      },
-                      "& .MuiListItemIcon-root": {
-                        color: "inherit",
-                      },
-                    },
-                  }}
                 >
-                  <ListItemIcon sx={{ minWidth: 32, color: isSelected ? "inherit" : "action.active" }}>
+                  <ListItemIcon>
                     <IconComponent fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    primaryTypographyProps={{
-                      fontSize: "0.875rem",
-                      fontWeight: isSelected ? 600 : 500,
-                    }}
-                  />
+                  <ListItemText primary={item.label} />
                 </ListItemButton>
               );
             })}
           </List>
-        </Box>
+        </div>
       ))}
-    </Box>
+    </nav>
   );
 
   return (
-    <ThemeProvider theme={theme}>
-      <LocalizationProvider dateAdapter={AdapterLuxon}>
-        <Box sx={{ bgcolor: "background.default", minHeight: "100vh", p: { xs: 2, md: 4 }, overflowX: "hidden" }}>
-          <Box sx={{ maxWidth: 1280, mx: "auto", width: "100%" }}>
-            <Banners />
+    <LocalizationProvider dateAdapter={AdapterLuxon}>
+      <div className="debug-shell">
+        <div className="debug-page">
+          <Banners />
 
-            {/* Mobile Drawer Trigger Header */}
-            {isMobile && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: 2.5,
-                  px: 1,
-                }}
+          {isMobile ? (
+            <div className="debug-mobile-bar">
+              <h1 className="debug-mobile-bar__title">Debug</h1>
+              <IconButton
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
               >
-                <Typography variant="h6" fontWeight="700" color="text.primary">
-                  Control Panel
-                </Typography>
-                <IconButton onClick={() => setMobileOpen(!mobileOpen)} color="primary">
-                  {mobileOpen ? <CloseIcon /> : <MenuIcon />}
-                </IconButton>
-              </Box>
+                {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+              </IconButton>
+            </div>
+          ) : null}
+
+          <div className="debug-layout">
+            {!isMobile ? (
+              <aside className="debug-nav--sticky">{drawerContent}</aside>
+            ) : (
+              <Drawer
+                anchor="left"
+                open={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                PaperProps={{ className: "debug-drawer" }}
+              >
+                {drawerContent}
+              </Drawer>
             )}
 
-            <Grid container spacing={3} sx={{ width: "100%", m: 0 }}>
-              {/* Desktop Left Sidebar Navigation */}
-              {!isMobile && (
-                <Grid item xs={12} md={3.5} lg={3}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 4,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      bgcolor: "background.paper",
-                      position: "sticky",
-                      top: 24,
-                      maxHeight: "calc(100vh - 48px)",
-                      overflowY: "auto",
-                      boxShadow: "0px 10px 30px rgba(15, 23, 42, 0.02)",
-                    }}
-                  >
-                    {drawerContent}
-                  </Paper>
-                </Grid>
-              )}
-
-              {/* Mobile Navigation Drawer */}
-              {isMobile && (
-                <Drawer
-                  anchor="left"
-                  open={mobileOpen}
-                  onClose={() => setMobileOpen(false)}
-                  PaperProps={{ sx: { width: 280, borderRadius: "0px 16px 16px 0px" } }}
-                >
-                  {drawerContent}
-                </Drawer>
-              )}
-
-              {/* Main Dynamic Content Area */}
-              <Grid item xs={12} md={8.5} lg={9} sx={{ pl: { md: 3 } }}>
-                <FormErrorBoundary key={activeSection}>
-                  {renderActiveForm()}
-                </FormErrorBoundary>
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-      </LocalizationProvider>
-    </ThemeProvider>
+            <div className="debug-main">
+              <FormErrorBoundary key={activeSection}>
+                {renderActiveForm()}
+              </FormErrorBoundary>
+            </div>
+          </div>
+        </div>
+      </div>
+    </LocalizationProvider>
   );
 }
