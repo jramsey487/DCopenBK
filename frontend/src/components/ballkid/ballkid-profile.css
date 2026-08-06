@@ -188,9 +188,10 @@
   }
 
   .ballkid-profile-captain-hero .ballkid-profile-hero-meta-line {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
   }
 
   .ballkid-profile-captain-hero
@@ -199,11 +200,11 @@
   .ballkid-profile-captain-hero .ballkid-profile-hero-rating-row {
     width: auto;
     max-width: none;
-    align-self: flex-start;
+    align-self: center;
   }
 
   .ballkid-profile-captain-hero .ballkid-profile-hero-mobile-actions {
-    align-items: flex-start;
+    align-items: center;
   }
 }
 

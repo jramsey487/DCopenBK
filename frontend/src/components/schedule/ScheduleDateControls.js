@@ -23,6 +23,7 @@ export default function ScheduleDateControls({ date, setDate }) {
         <button
           type="button"
           className="date-center"
+          aria-label="Choose date"
           onClick={() => setCalendarOpen(true)}
         >
           {formatShortDate(date)}
@@ -36,31 +37,6 @@ export default function ScheduleDateControls({ date, setDate }) {
           ›
         </button>
       </div>
-      <button
-        type="button"
-        className={`cal-toggle-btn${calendarOpen ? " on" : ""}`}
-        aria-label="Open calendar"
-        onClick={() => setCalendarOpen(true)}
-      >
-        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <rect
-            x="1.5"
-            y="2.5"
-            width="11"
-            height="10"
-            rx="1.5"
-            stroke="currentColor"
-            strokeWidth="1.1"
-          />
-          <path d="M1.5 5.5h11" stroke="currentColor" strokeWidth="1.1" />
-          <path
-            d="M4 1.2v2.6M10 1.2v2.6"
-            stroke="currentColor"
-            strokeWidth="1.1"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
       {calendarOpen ? (
         <ScheduleCalendar
           date={date}

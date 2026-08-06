@@ -209,7 +209,7 @@ export function ScheduleTable({ shifts, date, setUpdated }) {
             gridTemplateColumns: `108px repeat(${Math.max(
               courts.length,
               1
-            )}, minmax(88px, 1fr)) 120px`,
+            )}, minmax(88px, 1fr)) 140px`,
           }}
         >
           <div className="sched-edit-corner">Time</div>

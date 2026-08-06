@@ -291,33 +291,6 @@
   min-width: 0;
 }
 
-.schedule-page .cal-toggle-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 0.5px solid var(--sched-border);
-  background: var(--sched-bg1);
-  color: var(--sched-text2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.schedule-page .cal-toggle-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.schedule-page .cal-toggle-btn.on,
-.schedule-page .cal-toggle-btn:hover {
-  background: var(--sched-nav);
-  color: #fff;
-  border-color: var(--sched-nav);
-}
-
 /* Calendar popover */
 .cal-backdrop {
   position: fixed;

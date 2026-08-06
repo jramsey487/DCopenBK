@@ -10,11 +10,13 @@
 
 .sched-edit-board-scroll {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   border: 0.5px solid var(--sched-border, #e2e8f0);
   border-radius: 14px;
   background: var(--sched-bg1, #fff);
   box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
+  box-sizing: border-box;
 }
 
 .sched-edit-grid {
@@ -58,7 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 120px;
+  min-width: 140px;
+  padding: 10px 14px;
   border-right: none;
 }
 
@@ -168,6 +171,8 @@
 .sched-edit-cell--spacer {
   border-right: none;
   background: var(--sched-bg0, #f8fafc);
+  min-width: 140px;
+  padding: 6px 14px;
 }
 
 .sched-edit-cell--spacer.is-current {
@@ -266,10 +271,22 @@
 .schedule-edit-table-wrap {
   margin-top: 4px;
   width: 100%;
+  min-width: 0;
 }
 
 .schedule-edit-body {
-  padding: 12px 16px 20px;
+  /* Match header horizontal inset (16px mobile / 24px desktop) */
+  padding: 12px 16px 24px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .schedule-edit-body {
+    padding: 16px 24px 28px;
+  }
 }
 
 .schedule-edit-hint {

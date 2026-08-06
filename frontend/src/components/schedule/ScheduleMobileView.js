@@ -262,7 +262,7 @@ export default function ScheduleMobileView({
   isChairperson = false,
   setUpdated,
 }) {
-  const [myShiftsOn, setMyShiftsOn] = useState(false);
+  const [myShiftsOn, setMyShiftsOn] = useState(!isChairperson);
   const [teamRoster, setTeamRoster] = useState({});
   const [myName, setMyName] = useState("");
   const [sheetTeam, setSheetTeam] = useState(null);

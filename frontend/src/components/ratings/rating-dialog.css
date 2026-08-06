@@ -363,16 +363,14 @@
   border-color: var(--tp-blue-border-hover, #93c5fd) !important;
 }
 
-/* Rate by Name / Current Team: unrated = filled navy, matching profile Give Rating */
-.ratings-page.rate-by-name-page .rating-btn--unrated.MuiButton-root,
-.ratings-page.rate-by-current-team-page .rating-btn--unrated.MuiButton-root {
+/* Ratings pages: unrated = filled navy, matching profile Give Rating */
+.ratings-page .rating-btn--unrated.MuiButton-root {
   color: #fff !important;
   border: none !important;
   background: var(--tp-nav, #0d1b3e) !important;
 }
 
-.ratings-page.rate-by-name-page .rating-btn--unrated.MuiButton-root:hover,
-.ratings-page.rate-by-current-team-page .rating-btn--unrated.MuiButton-root:hover {
+.ratings-page .rating-btn--unrated.MuiButton-root:hover {
   background: #152a5c !important;
   color: #fff !important;
 }
