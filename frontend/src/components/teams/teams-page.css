@@ -601,13 +601,21 @@
     max-width: 100%;
   }
 
-  .teams-chairperson-main,
-  .teams-chairperson-sidebar {
-    max-height: calc(85vh - 8px);
+  .teams-chairperson-main {
+    max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 16px);
+    max-height: calc(100vh - var(--navbar-inner-height, 56px) - 16px);
     overflow: auto;
     overflow-x: hidden;
+    min-height: 0;
   }
 
+  /* Sticky Unassigned / Active column: scroll inside the panel, not off-screen */
+  .teams-chairperson-sidebar,
+  .ballkid-pool-panel-slot {
+    max-height: none;
+    overflow: visible;
+    min-height: 0;
+  }
 
   .teams-chairperson-sidebar .teams-chairperson-drop-hint {
     font-size: 11px;
@@ -745,9 +753,18 @@
   }
 
   @media (min-width: 900px) {
-    .teams-chairperson-sidebar {
+    .teams-chairperson-sidebar,
+    .ballkid-pool-panel-slot {
       position: sticky;
-      top: 8px;
+      top: calc(var(--navbar-inner-height, 56px) + 8px);
+      align-self: flex-start;
+    }
+
+    .teams-chairperson-sidebar .ballkid-pool-panel,
+    .teams-chairperson-sidebar .teams-chairperson-unassigned-panel,
+    .ballkid-pool-panel-slot .ballkid-pool-panel {
+      max-height: calc(100dvh - var(--navbar-inner-height, 56px) - 24px);
+      max-height: calc(100vh - var(--navbar-inner-height, 56px) - 24px);
     }
   }
 
