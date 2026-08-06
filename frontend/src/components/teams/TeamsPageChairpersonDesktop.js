@@ -71,15 +71,9 @@ export function UnassignedPanel({
       component={Paper}
       ref={dropRef}
       elevation={0}
-      className="ballkid-pool-panel teams-chairperson-unassigned-panel cut-page-active-panel"
-      sx={{
-        border: isOver ? "2px solid #2563eb" : "1px solid",
-        borderColor: isOver ? "primary.main" : "divider",
-        backgroundColor: "background.paper",
-        boxShadow: isOver
-          ? "0 10px 25px -5px rgba(13, 27, 62, 0.08)"
-          : "0 1px 3px 0 rgba(13, 27, 62, 0.04)",
-      }}
+      className={`ballkid-pool-panel teams-chairperson-unassigned-panel cut-page-active-panel${
+        isOver ? " is-drop-over" : ""
+      }`}
     >
       <ConfirmDialog
         message={`You are about to check out all ${
