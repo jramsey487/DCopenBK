@@ -636,6 +636,7 @@
     /* MUI spacing padding is inside height via border-box */
     .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item {
       box-sizing: border-box;
+      height: 100%;
       max-height: 100%;
       align-self: stretch;
       display: flex;
@@ -644,12 +645,14 @@
       overflow: hidden;
     }
 
-    .teams-chairperson-page .teams-chairperson-main {
+    /* Teams + cut: scroll the decision/teams column (must beat Grid-item overflow) */
+    .teams-chairperson-page:not(.teams-chairperson-page--finals)
+      .teams-chairperson-split
+      > .MuiGrid-item.teams-chairperson-main {
       flex: 1 1 auto;
       min-height: 0;
-      max-height: none;
-      overflow: auto;
       overflow-x: hidden;
+      overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
     }
@@ -818,8 +821,12 @@
   /* Chairperson + public teams — mobile layout */
   @media (max-width: 899.98px) {
     .teams-chairperson-page .teams-chairperson-main,
-    .teams-chairperson-page .teams-chairperson-sidebar {
+    .teams-chairperson-page .teams-chairperson-sidebar,
+    .teams-chairperson-page
+      .teams-chairperson-split
+      > .MuiGrid-item.teams-chairperson-main {
       max-height: none;
+      height: auto;
       overflow: visible;
     }
 

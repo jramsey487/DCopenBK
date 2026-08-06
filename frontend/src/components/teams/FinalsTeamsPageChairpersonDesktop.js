@@ -35,7 +35,7 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
   }, [updated]);
 
   return (
-    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page teams-chairperson-page--finals">
       <Banners />
 
       <Header
