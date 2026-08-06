@@ -107,7 +107,6 @@ function captainRoutes(setToken) {
       <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageCaptain />} />
       <Route path="/feedback" element={<FeedbackPage />} />
-      <Route path="/finals-teams" element={<FinalsTeamsPage />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
       <Route path="/me" element={<MyProfile />} />
       <Route path="/my-ratings" element={<MyRatingsPage />} />
@@ -129,7 +128,6 @@ function ballkidRoutes(setToken) {
       <Route path="/list" element={<BallkidList />} />{" "}
       <Route path="/ballkid/:pk" element={<BallkidPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
-      <Route path="/finals-teams" element={<FinalsTeamsPage />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
       <Route path="/me" element={<MyProfile />} />
       <Route path="/schedule" element={<SchedulePage />} />

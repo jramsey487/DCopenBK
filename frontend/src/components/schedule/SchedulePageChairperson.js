@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
@@ -20,6 +18,7 @@ import {
 import { schedule } from "../HelpMessages";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "./schedule-mobile.css";
+import "./schedule-table.css";
 import "../teams/teams-page.css";
 
 function CreateSchedule({ date, setUpdated }) {
@@ -241,7 +240,7 @@ export default function SchedulePageChairperson(props) {
   }
 
   return (
-    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
+    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page schedule-page schedule-page--editing">
       <Banners />
       {deleteDialog}
 
@@ -249,6 +248,11 @@ export default function SchedulePageChairperson(props) {
         title="Schedule"
         helpPage="Schedule"
         helpMessage={schedule}
+        titleExtra={
+          <span className="schedule-edit-mode-pill" aria-live="polite">
+            Editing
+          </span>
+        }
         actions={
           shifts.length === 0 ? null : (
             <div className="teams-chairperson-actions">
@@ -256,9 +260,9 @@ export default function SchedulePageChairperson(props) {
                 variant="outlined"
                 size="small"
                 className="teams-chairperson-action-btn teams-chairperson-action-btn--unassign"
-                onClick={() => setEditing(!editing)}
+                onClick={() => setEditing(false)}
               >
-                {editing ? "Save Schedule" : "Edit Schedule"}
+                Save Schedule
               </Button>
               <Button
                 variant="outlined"
@@ -272,37 +276,51 @@ export default function SchedulePageChairperson(props) {
           )
         }
         toolbar={
-          <Box className="schedule-edit-date-toolbar sxs">
-            <Typography variant="body2" sx={{ color: "var(--tp-text2)" }}>
-              Showing schedule for
-            </Typography>
+          <div className="schedule-edit-date-toolbar">
+            <label className="schedule-edit-date-label" htmlFor="schedule-edit-date">
+              Date
+            </label>
             <LocalizationProvider dateAdapter={AdapterLuxon}>
               <DatePicker
-                renderInput={(props) => (
-                  <TextField size="small" variant="outlined" {...props} />
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    id="schedule-edit-date"
+                    size="small"
+                    variant="outlined"
+                    className="schedule-edit-date-field"
+                  />
                 )}
-                label="Date"
                 value={date}
                 mask={"__/__/____"}
                 onChange={(newValue) => {
-                  setDate(newValue.toLocaleString());
+                  if (newValue) {
+                    setDate(newValue.toLocaleString());
+                  }
                 }}
               />
             </LocalizationProvider>
-          </Box>
+          </div>
         }
       />
+
+      <p className="schedule-edit-hint">
+        Tap a cell to change the team number. Use the side controls to add
+        courts or hours.
+      </p>
 
       {shifts.length === 0 ? (
         <CreateSchedule date={date} setUpdated={setUpdated} />
       ) : (
-        <ScheduleTable
-          shifts={shifts}
-          date={date}
-          readOnly={false}
-          editing={editing}
-          setUpdated={setUpdated}
-        />
+        <div className="schedule-edit-table-wrap">
+          <ScheduleTable
+            shifts={shifts}
+            date={date}
+            readOnly={false}
+            editing={editing}
+            setUpdated={setUpdated}
+          />
+        </div>
       )}
     </div>
   );

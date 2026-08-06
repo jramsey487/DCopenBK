@@ -13,27 +13,13 @@ import "./navbar.css";
 
 const ballkidTabs = [
   { label: "By Name", url: "/list" },
-  {
-    label: "Teams",
-    url: "/teams",
-    subtabs: [
-      { label: "Teams", url: "/teams" },
-      { label: "Finals Teams", url: "/finals-teams" },
-    ],
-  },
+  { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
 ];
 
 const captainTabs = [
   { label: "By Name", url: "/list" },
-  {
-    label: "Teams",
-    url: "/teams",
-    subtabs: [
-      { label: "Teams", url: "/teams" },
-      { label: "Finals Teams", url: "/finals-teams" },
-    ],
-  },
+  { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
   {
     label: "Ratings",

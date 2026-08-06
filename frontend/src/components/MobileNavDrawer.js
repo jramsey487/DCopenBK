@@ -91,11 +91,13 @@ function getNavSections(group) {
   };
   const teamsBallkidCaptain = {
     label: "Teams",
+    url: "/teams",
     Icon: NavIconTeams,
-    items: [
-      { label: "Teams", url: "/teams" },
-      { label: "Finals Teams", url: "/finals-teams" },
-    ],
+  };
+  const listByName = {
+    label: "By Name",
+    url: "/list",
+    Icon: NavIconRoster,
   };
   const schedule = {
     label: "Schedule",
@@ -138,18 +140,9 @@ function getNavSections(group) {
     case "chairperson":
       return [list, teamsChairperson, schedule, ratingsChairperson, leaderboards];
     case "captain":
-      return [
-        { ...list, items: [{ label: "By Name", url: "/list" }] },
-        teamsBallkidCaptain,
-        schedule,
-        ratingsCaptain,
-      ];
+      return [listByName, teamsBallkidCaptain, schedule, ratingsCaptain];
     default:
-      return [
-        { ...list, items: [{ label: "By Name", url: "/list" }] },
-        teamsBallkidCaptain,
-        schedule,
-      ];
+      return [listByName, teamsBallkidCaptain, schedule];
   }
 }
 

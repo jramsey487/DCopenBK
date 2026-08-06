@@ -1092,21 +1092,3 @@
     padding: 18px 22px 22px;
   }
 }
-.schedule-edit-date-toolbar {
-  align-items: center;
-  gap: 12px;
-}
-
-.schedule-edit-date-toolbar .MuiTextField-root {
-  min-width: 200px;
-}
-
-.schedule-edit-date-toolbar .MuiOutlinedInput-root {
-  min-height: 40px;
-}
-
-.schedule-edit-date-toolbar .MuiOutlinedInput-input {
-  padding-left: 14px;
-  padding-right: 8px;
-  letter-spacing: -0.01em;
-}

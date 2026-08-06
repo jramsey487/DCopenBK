@@ -79,14 +79,14 @@ function TeamTextField({ teamStr, hour, court, setUpdated }) {
 
   return (
     <TextField
-      variant="standard"
+      className="schedule-table-team-input"
+      variant="outlined"
+      size="small"
       value={team}
-      InputProps={{
-        inputProps: {
-          style: { textAlign: "center" },
-        },
+      inputProps={{
+        inputMode: "numeric",
+        "aria-label": `Team for ${court} at this time`,
       }}
-      style={{ width: 25 }}
       onChange={(e) => {
         setTeam(e.target.value);
         fetch("/api/update-schedule", {
@@ -108,16 +108,12 @@ function TeamTextField({ teamStr, hour, court, setUpdated }) {
 function CourtTextField({ court, date, setUpdated }) {
   return (
     <TextField
-      variant="standard"
+      className="schedule-table-court-input"
+      variant="outlined"
+      size="small"
       defaultValue={court}
-      InputProps={{
-        inputProps: {
-          style: {
-            textAlign: "center",
-            fontSize: "14px",
-            fontWeight: "bold",
-          },
-        },
+      inputProps={{
+        "aria-label": "Court name",
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
@@ -249,28 +245,40 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
     .filter((v, i, a) => a.indexOf(v) === i);
 
   return (
-    <div>
-      <Grid container>
-        <Grid item xs={11.5}>
-          <TableContainer>
-            <Table style={{ tableLayout: "fixed" }}>
+    <div
+      className={`schedule-table${editing ? " schedule-table--editing" : ""}${
+        readOnly ? " schedule-table--readonly" : ""
+      }`}
+    >
+      <Grid container className="schedule-table-grid">
+        <Grid item xs={11.5} className="schedule-table-main">
+          <TableContainer className="schedule-table-container">
+            <Table className="schedule-table-grid-inner" style={{ tableLayout: "fixed" }}>
               <TableHead>
                 <TableRow>
                   {readOnly ? (
                     ""
                   ) : (
-                    <TableCell align="center" width="10px"></TableCell>
+                    <TableCell align="center" className="schedule-table-col-shift" />
                   )}
-                  <TableCell align="center" width="20px">
+                  <TableCell align="center" className="schedule-table-col-time">
                     Time
                   </TableCell>
                   {courts.map((court) =>
                     readOnly ? (
-                      <TableCell key={court} align="center" width="50px">
+                      <TableCell
+                        key={court}
+                        align="center"
+                        className="schedule-table-col-court"
+                      >
                         {court}
                       </TableCell>
                     ) : editing ? (
-                      <TableCell key={court} align="center" width="50px">
+                      <TableCell
+                        key={court}
+                        align="center"
+                        className="schedule-table-col-court"
+                      >
                         <CourtTextField
                           court={court}
                           date={date}
@@ -292,19 +300,17 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                 {hours.map((hour) => (
                   <TableRow
                     key={hour}
-                    className={
-                      isHalfHourSlot(hour) ? "schedule-row--half" : undefined
-                    }
-                    sx={{
-                      backgroundColor: isCurrentScheduleSlot(hour)
-                        ? "lightblue"
-                        : "",
-                    }}
+                    className={[
+                      isHalfHourSlot(hour) ? "schedule-row--half" : "",
+                      isCurrentScheduleSlot(hour) ? "schedule-row--current" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
                     {readOnly ? (
                       ""
                     ) : (
-                      <TableCell align="center">
+                      <TableCell align="center" className="schedule-table-col-shift">
                         {editing ? (
                           ""
                         ) : (
@@ -316,7 +322,7 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                       </TableCell>
                     )}
 
-                    <TableCell align="center">
+                    <TableCell align="center" className="schedule-table-col-time">
                       {dayHourToStr(hour, isHalfHourSlot(hour))}
                     </TableCell>
                     {courts.map((court) => {
@@ -326,9 +332,19 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
                           : "";
 
                       return (
-                        <TableCell key={court} align="center">
+                        <TableCell
+                          key={court}
+                          align="center"
+                          className="schedule-table-col-court"
+                        >
                           {readOnly || !editing ? (
-                            teamStr
+                            teamStr ? (
+                              <span className={`chip t${teamStr} schedule-table-team-chip`}>
+                                {teamStr}
+                              </span>
+                            ) : (
+                              <span className="schedule-table-empty-cell">—</span>
+                            )
                           ) : (
                             <TeamTextField
                               teamStr={teamStr}
@@ -347,7 +363,7 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
           </TableContainer>
         </Grid>
 
-        <Grid item xs={0.5}>
+        <Grid item xs={0.5} className="schedule-table-side">
           {readOnly || !editing ? (
             ""
           ) : (
@@ -359,7 +375,9 @@ export function ScheduleTable({ shifts, date, readOnly, editing, setUpdated }) {
       {readOnly || !editing ? (
         ""
       ) : (
-        <HourButtons date={date} courts={courts} setUpdated={setUpdated} />
+        <div className="schedule-table-hour-actions">
+          <HourButtons date={date} courts={courts} setUpdated={setUpdated} />
+        </div>
       )}
     </div>
   );
