@@ -37,7 +37,7 @@ export function TeamsPhotoToggle({ showPhotos, onToggle }) {
 export function TeamsYoeToggle({ showYoe, onToggle }) {
   return (
     <TeamsLabeledToggle
-      label="Years of Experience"
+      label="Show Years of Experience"
       checked={showYoe}
       onChange={() => onToggle()}
     />
