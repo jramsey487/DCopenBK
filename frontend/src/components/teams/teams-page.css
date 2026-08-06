@@ -488,7 +488,8 @@
   .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
     width: 100%;
     min-width: 0;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+    /* Fill the main column; don't leave unused strip beside capped tracks */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 
   .teams-chairperson-page .team-card.teams-chairperson-card {
@@ -633,15 +634,16 @@
       align-content: stretch;
     }
 
-    /* MUI spacing padding is inside height via border-box */
+    /* Preserve MUI md/lg/xl column widths — do not set flex-basis here */
     .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item {
       box-sizing: border-box;
       height: 100%;
       max-height: 100%;
+      min-width: 0;
+      min-height: 0;
       align-self: stretch;
       display: flex;
       flex-direction: column;
-      min-height: 0;
       overflow: hidden;
     }
 
@@ -649,7 +651,6 @@
     .teams-chairperson-page:not(.teams-chairperson-page--finals)
       .teams-chairperson-split
       > .MuiGrid-item.teams-chairperson-main {
-      flex: 1 1 auto;
       min-height: 0;
       overflow-x: hidden;
       overflow-y: auto;
@@ -661,8 +662,6 @@
     .teams-chairperson-page .ballkid-pool-panel-slot {
       position: static;
       top: auto;
-      flex: 1 1 auto;
-      max-height: none;
       min-height: 0;
       overflow: hidden;
       align-items: flex-end;
