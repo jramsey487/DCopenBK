@@ -93,59 +93,6 @@ export function Icons({
   );
 }
 
-export function LayoutButtons({ layout, setLayout }) {
-  return (
-    <ToggleButtonGroup
-      value={layout}
-      size="small"
-      exclusive
-      onChange={(e, newVal) => {
-        if (newVal !== null) {
-          setLayout(newVal);
-          setLocalStorage("layout", newVal);
-        }
-      }}
-    >
-      {["grid", "list"].map((layoutStr) => (
-        <ToggleButton key={layoutStr} value={layoutStr}>
-          <Tooltip title={layoutStr === "grid" ? "Grid View" : "List View"}>
-            {layoutStr === "grid" ? <GridView /> : <List />}
-          </Tooltip>
-        </ToggleButton>
-      ))}
-    </ToggleButtonGroup>
-  );
-}
-
-export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
-  const showSuccess = Boolean(successMsg);
-  const showError = Boolean(errorMsg);
-
-  return (
-    <Collapse in={showSuccess || showError}>
-      {showSuccess ? (
-        <Alert
-          severity="success"
-          onClose={() => {
-            setSuccessMsg("");
-          }}
-        >
-          {successMsg}
-        </Alert>
-      ) : showError ? (
-        <Alert
-          severity="error"
-          onClose={() => {
-            setErrorMsg("");
-          }}
-        >
-          {errorMsg}
-        </Alert>
-      ) : null}
-    </Collapse>
-  );
-}
-
 export function RatingButton({ ballkid, setUpdated, date = null }) {
   const [open, setOpen] = useState(false);
   const myId = getBallkidId();

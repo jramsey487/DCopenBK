@@ -34,15 +34,28 @@ function formatSliderRating(value) {
 }
 
 /**
- * MUI Slider on touch devices fires a synthetic mouse event after touchend
- * that can snap the thumb back to the pre-drag value (mui/material-ui#31869).
- * Ignore those touch-derived mouse events; keep real desktop mouse input.
+ * MUI Slider on touch devices fires a compatibility mouse event after touchend
+ * that can snap the thumb back (mui/material-ui#31869). Ignore only those
+ * ghost mouse events — never ignore real touch / pointer input (needed for
+ * phones and desktop DevTools device mode).
  */
 function shouldIgnoreSliderEvent(event) {
   const native = event?.nativeEvent ?? event;
-  if (native?.sourceCapabilities?.firesTouchEvents) return true;
-  if (native?.pointerType === "touch") return true;
-  return false;
+  if (!native?.sourceCapabilities?.firesTouchEvents) {
+    return false;
+  }
+
+  // Real touch / pen interaction — keep it
+  if (native.pointerType === "touch" || native.pointerType === "pen") {
+    return false;
+  }
+  const type = (native.type || event?.type || "").toLowerCase();
+  if (type.startsWith("touch") || type.startsWith("pointer")) {
+    return false;
+  }
+
+  // Leftover mouse event from a touch-capable device
+  return true;
 }
 
 export function RatingAndLabel({ label, rating, setRating }) {
