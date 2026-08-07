@@ -23,8 +23,10 @@ import {
   ProfileCard,
   ProfileInfoRow,
   ProfilePositionPills,
+  ProfileCurrentTournamentCard,
+  fetchTournament,
+  shouldShowCurrentTournament,
 } from "./BallkidProfileLayout";
-import "../team-chips.css";
 
 function RatingSection({ ballkid }) {
   const [params, setParams] = useState({});
@@ -109,12 +111,7 @@ export default function MyProfile(props) {
       fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() }).then(
         (response) => (response.ok ? response.json() : [])
       ),
-      fetch("/api/get-tournament", {
-        method: "GET",
-        headers: getAuthHeader(),
-      }).then((response) =>
-        response.ok ? response.json() : { show_teams: false }
-      ),
+      fetchTournament(),
     ])
       .then(([ballkidData, cutsData, tournamentData]) => {
         if (cancelled) {
@@ -122,7 +119,7 @@ export default function MyProfile(props) {
         }
         setBallkid(ballkidData);
         setCuts(cutsData);
-        setShowTeams(tournamentData.show_teams);
+        setShowTeams(Boolean(tournamentData.show_teams));
         setLoadState("ready");
         setUpdated(false);
       })
@@ -159,12 +156,6 @@ export default function MyProfile(props) {
       </ProfileErrorState>
     );
   }
-
-  const showCurrent =
-    !ballkid.is_cut &&
-    ballkid.is_cut !== "true" &&
-    ballkid.is_active &&
-    showTeams;
 
   const visibleTabs = (
     ballkid.is_active
@@ -206,25 +197,12 @@ export default function MyProfile(props) {
               value={ballkid.emergency_phone}
             />
             <ProfileInfoRow label="Preferred position">
-              <ProfilePositionPills preferred={ballkid.preferred_position} />
+              <ProfilePositionPills value={ballkid.preferred_position} />
             </ProfileInfoRow>
           </ProfileCard>
 
-          {showCurrent ? (
-            <ProfileCard title="Current tournament">
-              <ProfileInfoRow label="Position">
-                <ProfilePositionPills preferred={ballkid.position} />
-              </ProfileInfoRow>
-              <ProfileInfoRow label="Current team">
-                {ballkid.current_team === 0 ? (
-                  "Unassigned"
-                ) : (
-                  <span className={`chip t${ballkid.current_team}`}>
-                    {ballkid.current_team}
-                  </span>
-                )}
-              </ProfileInfoRow>
-            </ProfileCard>
+          {shouldShowCurrentTournament(ballkid, showTeams) ? (
+            <ProfileCurrentTournamentCard ballkid={ballkid} />
           ) : null}
         </ProfilePanel>
 

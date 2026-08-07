@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { Banners, ballkidImageSrc, Icons, useIsMobile, getLocalStorage } from "../Utils";
+import { Banners, ballkidImageSrc, Icons, useIsMobile, getLocalStorage, getAuthHeader } from "../Utils";
 import "./ballkid-profile.css";
 
 const BackChevron = () => (
@@ -36,8 +36,8 @@ function positionsFromLabel(label) {
   return [s];
 }
 
-export function ProfilePositionPills({ preferred }) {
-  const parts = positionsFromLabel(preferred);
+export function ProfilePositionPills({ value }) {
+  const parts = positionsFromLabel(value);
   if (parts.length === 0) {
     return null;
   }
@@ -65,15 +65,43 @@ export function ProfilePositionPills({ preferred }) {
   );
 }
 
-export function ProfileRolePills({ ballkid }) {
+export function isBallkidCut(ballkid) {
+  return ballkid?.is_cut === true || ballkid?.is_cut === "true";
+}
+
+/** Whether read-only profiles should show current position/team chips. */
+export function shouldShowCurrentTournament(ballkid, showTeams) {
+  return Boolean(showTeams && ballkid?.is_active && !isBallkidCut(ballkid));
+}
+
+export function fetchTournament() {
+  return fetch("/api/get-tournament", {
+    method: "GET",
+    headers: getAuthHeader(),
+  }).then((response) =>
+    response.ok ? response.json() : { show_teams: false }
+  );
+}
+
+export function ProfileTeamChip({ team }) {
+  if (!team) {
+    return "Unassigned";
+  }
+  return <span className={`chip t${team}`}>{team}</span>;
+}
+
+function ballkidShowsHeroRolePills(ballkid) {
   const group = getLocalStorage("group");
   const showRookie =
     group !== "ballkid" &&
     ballkid?.num_years_experience === 0 &&
     !ballkid?.is_captain &&
     !ballkid?.is_chairperson;
+  return Boolean(ballkid?.is_chairperson || ballkid?.is_captain || showRookie);
+}
 
-  if (!ballkid?.is_chairperson && !ballkid?.is_captain && !showRookie) {
+export function ProfileRolePills({ ballkid }) {
+  if (!ballkidShowsHeroRolePills(ballkid)) {
     return null;
   }
 
@@ -85,15 +113,7 @@ export function ProfileRolePills({ ballkid }) {
 }
 
 export function ballkidHasHeroRolePills(ballkid) {
-  const group = getLocalStorage("group");
-  const showRookie =
-    group !== "ballkid" &&
-    ballkid?.num_years_experience === 0 &&
-    !ballkid?.is_captain &&
-    !ballkid?.is_chairperson;
-  return Boolean(
-    ballkid?.is_chairperson || ballkid?.is_captain || showRookie
-  );
+  return ballkidShowsHeroRolePills(ballkid);
 }
 
 export function ProfileAvatar({ firstName, lastName, image }) {
@@ -299,33 +319,15 @@ export function ProfileInfoRow({ label, value, children, stack }) {
   );
 }
 
-/** @deprecated use ProfileCard + ProfileInfoRow */
-export function ProfileSection({ title, children, className = "" }) {
+export function ProfileCurrentTournamentCard({ ballkid }) {
   return (
-    <ProfileCard title={title}>
-      <div className={className}>{children}</div>
+    <ProfileCard title="Current tournament">
+      <ProfileInfoRow label="Position">
+        <ProfilePositionPills value={ballkid.position} />
+      </ProfileInfoRow>
+      <ProfileInfoRow label="Current team">
+        <ProfileTeamChip team={ballkid.current_team} />
+      </ProfileInfoRow>
     </ProfileCard>
   );
-}
-
-/** @deprecated use ProfileInfoRow */
-export function ProfileField({ label, value, children }) {
-  return (
-    <ProfileInfoRow label={label} value={value}>
-      {children}
-    </ProfileInfoRow>
-  );
-}
-
-/** @deprecated hero photo is in ProfileBrandedHero */
-export function ProfileHero() {
-  return null;
-}
-
-export function ProfilePhoto() {
-  return null;
-}
-
-export function ProfileMainLayout({ children }) {
-  return <ProfileContent>{children}</ProfileContent>;
 }

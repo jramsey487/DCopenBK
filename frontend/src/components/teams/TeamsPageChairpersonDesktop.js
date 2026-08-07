@@ -224,10 +224,7 @@ export function UnassignedPanel({
   );
 }
 
-/** @deprecated use UnassignedPanel */
-export const UnassignedDesktop = UnassignedPanel;
-
-export default function TeamsPageChairpersonDesktop(props) {
+export default function TeamsPageChairpersonDesktop() {
   const [assigned, setAssigned] = useState([]);
   const [unassigned, setUnassigned] = useState([]);
   const [nextShifts, setNextShifts] = useState([]);

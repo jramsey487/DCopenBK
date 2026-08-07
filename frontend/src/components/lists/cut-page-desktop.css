@@ -33,25 +33,6 @@
   background: var(--tp-blue-bg);
 }
 
-.cut-page-mobile-assign-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 0.5px solid #e2e8f0;
-}
-
-.cut-page-mobile-assign-row:last-child {
-  border-bottom: none;
-}
-
-.cut-page-mobile-assign-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-left: 4px;
-}
-
 .cut-page-active-panel {
   border-radius: 16px !important;
 }
@@ -248,7 +229,7 @@
 
 .team-position-empty {
   font-size: 13px;
-  color: #64748b;
+  color: var(--tp-text3, #64748b);
   font-style: italic;
   padding: 2px 0 4px;
 }

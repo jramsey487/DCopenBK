@@ -67,6 +67,7 @@ import {
   ProfilePanel,
   ProfileCard,
   ProfileInfoRow,
+  isBallkidCut,
 } from "./BallkidProfileLayout";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
@@ -122,7 +123,7 @@ function profileHeaderActions(
 }
 
 function profileOverflowMenu(ballkid, setUpdated) {
-  const isCut = ballkid.is_cut === true || ballkid.is_cut === "true";
+  const isCut = isBallkidCut(ballkid);
   const isActive = ballkid.is_active === true || ballkid.is_active === "true";
 
   return isCut || !isActive ? (

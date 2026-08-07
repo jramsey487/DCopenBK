@@ -19,10 +19,12 @@ import {
   ProfileCard,
   ProfileInfoRow,
   ProfilePositionPills,
+  ProfileCurrentTournamentCard,
+  fetchTournament,
+  shouldShowCurrentTournament,
 } from "./BallkidProfileLayout";
-import "../team-chips.css";
 
-export default function BallkidPageCaptain(props) {
+export default function BallkidPageCaptain() {
   const [ballkid, setBallkid] = useState(null);
   const [updated, setUpdated] = useState(false);
   const [showTeams, setShowTeams] = useState(false);
@@ -31,19 +33,31 @@ export default function BallkidPageCaptain(props) {
   const { pk } = useParams();
 
   useEffect(() => {
-    fetch(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setBallkid(data))
-      .then(() => setUpdated(false));
+    let cancelled = false;
 
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setShowTeams(data["show_teams"]));
+    Promise.all([
+      fetch(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`, {
+        headers: getAuthHeader(),
+      }).then((response) => response.json()),
+      fetchTournament(),
+    ])
+      .then(([ballkidData, tournamentData]) => {
+        if (cancelled) {
+          return;
+        }
+        setBallkid(ballkidData);
+        setShowTeams(Boolean(tournamentData.show_teams));
+        setUpdated(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBallkid(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [updated, pk]);
 
   if (ballkid == null) {
@@ -67,8 +81,6 @@ export default function BallkidPageCaptain(props) {
     </div>
   );
 
-  const showCurrentInfo = !ballkid.is_cut && ballkid.is_active && showTeams;
-
   return (
     <ProfilePageShell>
       <Box className="ballkid-profile-captain-hero">
@@ -84,26 +96,13 @@ export default function BallkidPageCaptain(props) {
           />
           <ProfileInfoRow label="Phone" value={ballkid.phone} />
           <ProfileInfoRow label="Preferred position">
-            <ProfilePositionPills preferred={ballkid.preferred_position} />
+            <ProfilePositionPills value={ballkid.preferred_position} />
           </ProfileInfoRow>
         </ProfileCard>
 
-        {!showCurrentInfo ? null : (
-          <ProfileCard title="Current tournament">
-            <ProfileInfoRow label="Position">
-              <ProfilePositionPills preferred={ballkid.position} />
-            </ProfileInfoRow>
-            <ProfileInfoRow label="Current team">
-              {ballkid.current_team === 0 ? (
-                "Unassigned"
-              ) : (
-                <span className={`chip t${ballkid.current_team}`}>
-                  {ballkid.current_team}
-                </span>
-              )}
-            </ProfileInfoRow>
-          </ProfileCard>
-        )}
+        {shouldShowCurrentTournament(ballkid, showTeams) ? (
+          <ProfileCurrentTournamentCard ballkid={ballkid} />
+        ) : null}
       </ProfileContent>
     </ProfilePageShell>
   );

@@ -223,13 +223,6 @@
     color: var(--tp-text3);
   }
   
-  .team-position-empty {
-    font-size: 13px;
-    color: var(--tp-text3);
-    font-style: italic;
-    padding: 2px 0 4px;
-  }
-  
   .team-member-list {
     display: flex;
     flex-direction: column;
@@ -434,34 +427,6 @@
     pointer-events: none;
   }
 
-  .teams-chairperson-unassigned {
-    background: var(--tp-bg1) !important;
-    border: 0.5px solid var(--tp-border) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04) !important;
-    transition: box-shadow 0.15s ease;
-    margin-top: 0 !important;
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-  }
-
-  .teams-chairperson-unassigned.is-drop-over {
-    outline: 2px solid var(--tp-nav);
-    outline-offset: -2px;
-    border-color: var(--tp-nav) !important;
-    box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04) !important;
-  }
-
-  .teams-chairperson-unassigned-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px 16px 8px;
-    border-bottom: 0.5px solid var(--tp-border);
-  }
-
   .teams-chairperson-unassigned-title {
     font-size: 18px;
     font-weight: 600;
@@ -472,10 +437,6 @@
     font-size: 15px;
     font-weight: 500;
     color: var(--tp-text2);
-  }
-
-  .teams-chairperson-unassigned-body {
-    padding: 8px 16px 16px;
   }
 
   .teams-chairperson-page {
@@ -618,8 +579,6 @@
     .teams-chairperson-page.page {
       height: calc(100vh - var(--navbar-inner-height, 60px));
       height: calc(100dvh - var(--navbar-inner-height, 60px));
-      max-height: calc(100vh - var(--navbar-inner-height, 60px));
-      max-height: calc(100dvh - var(--navbar-inner-height, 60px));
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -647,7 +606,6 @@
       row-gap: 16px;
     }
 
-    /* Height/scroll only — override MUI md/lg/xl fractions so sidebar hugs content */
     .teams-chairperson-page .teams-chairperson-split > .MuiGrid-item {
       box-sizing: border-box;
       height: 100%;
@@ -658,7 +616,6 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      /* Spacing moved to container gap */
       padding-left: 0 !important;
       padding-top: 0 !important;
     }
@@ -669,11 +626,10 @@
       width: auto !important;
     }
 
-    /* Teams + cut: scroll the decision/teams column (must beat Grid-item overflow) */
+    /* Teams + cut: scroll the decision/teams column */
     .teams-chairperson-page:not(.teams-chairperson-page--finals)
       .teams-chairperson-split
       > .MuiGrid-item.teams-chairperson-main {
-      min-height: 0;
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -688,9 +644,6 @@
       width: max-content !important;
       max-width: min(520px, 42%) !important;
       min-width: 0;
-      position: static;
-      top: auto;
-      min-height: 0;
       overflow: hidden;
       align-items: stretch;
     }
@@ -704,22 +657,12 @@
       min-height: 0;
       min-width: 0;
       max-height: 100%;
-      height: auto;
       width: max-content;
       max-width: 100%;
       margin-left: 0;
       overflow: auto;
-      overflow-x: auto;
       overscroll-behavior: contain;
     }
-  }
-
-  .teams-chairperson-position-block {
-    margin-top: 16px;
-  }
-
-  .teams-chairperson-position-block:first-child {
-    margin-top: 0;
   }
 
   .teams-chairperson-drop-hint {
@@ -836,15 +779,6 @@
     white-space: normal;
     line-height: 1.2;
     text-align: center;
-  }
-
-  @media (min-width: 900px) {
-    .teams-chairperson-sidebar .ballkid-pool-panel,
-    .teams-chairperson-sidebar .teams-chairperson-unassigned-panel,
-    .ballkid-pool-panel-slot .ballkid-pool-panel {
-      /* Height capped by flex parent in locked layout; keep a fallback */
-      max-height: 100%;
-    }
   }
 
   /* Chairperson + public teams — mobile layout */

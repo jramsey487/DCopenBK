@@ -1,3 +1,5 @@
+@import "../team-chips.css";
+
 .ballkid-profile-shell {
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
@@ -582,12 +584,6 @@
   background: #fef2f2;
   color: var(--bp-danger);
   border-color: #fecaca;
-}
-
-.ballkid-profile-status--in {
-  background: #ecfdf5;
-  color: var(--bp-success);
-  border-color: #a7f3d0;
 }
 
 

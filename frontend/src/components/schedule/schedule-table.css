@@ -281,12 +281,17 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  /* Page is viewport-locked via teams-chairperson-page; scroll the edit body */
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+}
+
+@media (min-width: 900px) {
+  .schedule-page--editing .schedule-edit-body {
+    /* Page is viewport-locked via teams-chairperson-page; scroll the edit body */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
 
 @media (min-width: 640px) {
