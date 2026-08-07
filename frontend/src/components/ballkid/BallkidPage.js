@@ -12,6 +12,7 @@ import {
   ProfileInfoRow,
   ProfilePositionPills,
 } from "./BallkidProfileLayout";
+import "../team-chips.css";
 
 export default function BallkidPage(props) {
   const [ballkid, setBallkid] = useState(null);
@@ -95,15 +96,18 @@ export default function BallkidPage(props) {
 
         {showCurrent ? (
           <ProfileCard title="Current tournament">
-            <ProfileInfoRow label="Position" value={ballkid.position} />
-            <ProfileInfoRow
-              label="Current team"
-              value={
-                ballkid.current_team === 0
-                  ? "Unassigned"
-                  : ballkid.current_team
-              }
-            />
+            <ProfileInfoRow label="Position">
+              <ProfilePositionPills preferred={ballkid.position} />
+            </ProfileInfoRow>
+            <ProfileInfoRow label="Current team">
+              {ballkid.current_team === 0 ? (
+                "Unassigned"
+              ) : (
+                <span className={`chip t${ballkid.current_team}`}>
+                  {ballkid.current_team}
+                </span>
+              )}
+            </ProfileInfoRow>
           </ProfileCard>
         ) : null}
       </ProfileContent>

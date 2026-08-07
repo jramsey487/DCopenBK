@@ -24,6 +24,7 @@ import {
   ProfileInfoRow,
   ProfilePositionPills,
 } from "./BallkidProfileLayout";
+import "../team-chips.css";
 
 function RatingSection({ ballkid }) {
   const [params, setParams] = useState({});
@@ -160,11 +161,18 @@ export default function MyProfile(props) {
   }
 
   const showCurrent =
-    ballkid.is_cut !== "true" && ballkid.is_active && showTeams;
+    !ballkid.is_cut &&
+    ballkid.is_cut !== "true" &&
+    ballkid.is_active &&
+    showTeams;
 
-  const visibleTabs = ballkid.is_active
-    ? TABS
-    : TABS.filter((t) => t.id === "info" || t.id === "cuts");
+  const visibleTabs = (
+    ballkid.is_active
+      ? TABS
+      : TABS.filter((t) => t.id === "info" || t.id === "cuts")
+  ).filter((t) => t.id !== "ratings" || ballkid.is_captain);
+
+  const activeTab = visibleTabs.some((t) => t.id === tab) ? tab : "info";
 
   return (
     <ProfilePageShell>
@@ -176,12 +184,12 @@ export default function MyProfile(props) {
 
       <ProfileTabs
         tabs={visibleTabs}
-        active={tab}
+        active={activeTab}
         onChange={setTab}
       />
 
       <ProfileContent>
-        <ProfilePanel id="info" active={tab}>
+        <ProfilePanel id="info" active={activeTab}>
           <ProfileCard title="Personal info">
             <ProfileInfoRow label="Age" value={ballkid.age} />
             <ProfileInfoRow
@@ -204,26 +212,31 @@ export default function MyProfile(props) {
 
           {showCurrent ? (
             <ProfileCard title="Current tournament">
-              <ProfileInfoRow label="Position" value={ballkid.position} />
-              <ProfileInfoRow
-                label="Current team"
-                value={
-                  ballkid.current_team === 0
-                    ? "Unassigned"
-                    : ballkid.current_team
-                }
-              />
+              <ProfileInfoRow label="Position">
+                <ProfilePositionPills preferred={ballkid.position} />
+              </ProfileInfoRow>
+              <ProfileInfoRow label="Current team">
+                {ballkid.current_team === 0 ? (
+                  "Unassigned"
+                ) : (
+                  <span className={`chip t${ballkid.current_team}`}>
+                    {ballkid.current_team}
+                  </span>
+                )}
+              </ProfileInfoRow>
             </ProfileCard>
           ) : null}
         </ProfilePanel>
 
         {ballkid.is_active ? (
           <>
-            <ProfilePanel id="ratings" active={tab}>
-              <RatingSection ballkid={ballkid} />
-            </ProfilePanel>
+            {ballkid.is_captain ? (
+              <ProfilePanel id="ratings" active={activeTab}>
+                <RatingSection ballkid={ballkid} />
+              </ProfilePanel>
+            ) : null}
 
-            <ProfilePanel id="analytics" active={tab}>
+            <ProfilePanel id="analytics" active={activeTab}>
               <ProfileCard title="Season stats">
                 <div className="ballkid-profile-card-body--padded ballkid-profile-season-stats">
                   <AggregateMetrics pk={pk} />
@@ -241,7 +254,7 @@ export default function MyProfile(props) {
               </ProfileCard>
             </ProfilePanel>
 
-            <ProfilePanel id="history" active={tab}>
+            <ProfilePanel id="history" active={activeTab}>
               <ProfileCard title="Finals history" padded>
                 <FinalsHistoryTable pk={pk} />
               </ProfileCard>
@@ -249,7 +262,7 @@ export default function MyProfile(props) {
           </>
         ) : null}
 
-        <ProfilePanel id="cuts" active={tab}>
+        <ProfilePanel id="cuts" active={activeTab}>
           <ProfileCard title="Previous years' cuts">
             {cuts?.length ? (
               renderBallkidCutHistory(cuts)
