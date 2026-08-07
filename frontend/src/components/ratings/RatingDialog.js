@@ -12,13 +12,9 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Check from "@mui/icons-material/Check";
 
 import ScheduleCalendar from "../schedule/ScheduleCalendar";
-import {
-  Alerts,
-  getAuthHeader,
-  getToday,
-  getLocalStorage,
-  getDayFromHyphenated,
-} from "../Utils";
+import { Alerts } from "../dialogs";
+import { getAuthHeader, getLocalStorage } from "../authStorage";
+import { getToday, getDayFromHyphenated } from "../dateTime";
 import "./rating-dialog.css";
 
 const RATING_SLIDER_MARKS = [

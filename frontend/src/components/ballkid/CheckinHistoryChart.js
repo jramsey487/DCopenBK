@@ -9,7 +9,8 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat, getDays, getAuthHeader } from "../Utils";
+import { getAuthHeader } from "../authStorage";
+import { getTimeFloat, getDays } from "../dateTime";
 import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);

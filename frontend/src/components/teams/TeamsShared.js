@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
-import { ballkidImageSrc, Icons } from "../Utils";
+import { ballkidImageSrc } from "../authStorage";
+import { Icons } from "../ballkidUi";
 
 /** Label + custom switch — shared chrome for teams / ratings / leaderboards. */
 export function TeamsLabeledToggle({
