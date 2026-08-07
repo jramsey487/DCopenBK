@@ -10,7 +10,11 @@ import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { finalsTeamsNonchairperson } from "../HelpMessages";
 import { PersonPhotoTile, TeamsPhotoToggle } from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
+import { cacheGet, cacheSet } from "../apiCache";
 import "./teams-page.css";
+
+const ASSIGNED_CACHE = "finals-teams:assigned";
+const SHOW_CACHE = "finals-teams:show";
 
 function Team({ team, assigned, isMyTeam, showPhotos }) {
   return (
@@ -65,9 +69,13 @@ function Team({ team, assigned, isMyTeam, showPhotos }) {
   );
 }
 
-export default function FinalsTeamsPage(props) {
-  const [assigned, setAssigned] = useState([]);
-  const [showFinalsTeams, setShowFinalsTeams] = useState(false);
+export default function FinalsTeamsPage() {
+  const hadCache = cacheGet(ASSIGNED_CACHE) != null;
+  const [assigned, setAssigned] = useState(() => cacheGet(ASSIGNED_CACHE) ?? []);
+  const [showFinalsTeams, setShowFinalsTeams] = useState(
+    () => cacheGet(SHOW_CACHE) ?? false
+  );
+  const [loading, setLoading] = useState(!hadCache);
   const [showPhotos, setShowPhotos] = useState(false);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
@@ -75,19 +83,44 @@ export default function FinalsTeamsPage(props) {
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) =>
-        setAssigned(data.filter((ballkid) => ballkid.finals_team))
-      );
+    let cancelled = false;
 
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setShowFinalsTeams(data["show_finals_teams"]));
-  }, []);
+    Promise.all([
+      fetch("/api/sorted-list", { headers: getAuthHeader() }).then((response) =>
+        response.json()
+      ),
+      fetch("/api/get-tournament", {
+        method: "GET",
+        headers: getAuthHeader(),
+      }).then((response) => response.json()),
+    ])
+      .then(([listData, tournamentData]) => {
+        if (cancelled) {
+          return;
+        }
+        const nextAssigned = listData.filter((ballkid) => ballkid.finals_team);
+        const nextShow = Boolean(tournamentData["show_finals_teams"]);
+        cacheSet(ASSIGNED_CACHE, nextAssigned);
+        cacheSet(SHOW_CACHE, nextShow);
+        setAssigned(nextAssigned);
+        setShowFinalsTeams(nextShow);
+      })
+      .catch(() => {
+        if (!cancelled && !hadCache) {
+          setAssigned([]);
+          setShowFinalsTeams(false);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hadCache]);
 
   const myFinalsTeam = assigned.find((b) => b.id === myBallkidId)?.finals_team;
 
@@ -96,6 +129,33 @@ export default function FinalsTeamsPage(props) {
     if (b === myFinalsTeam) return 1;
     return 0;
   });
+
+  let body;
+  if (loading) {
+    body = <div className="teams-page-empty">Loading finals teams…</div>;
+  } else if (assigned.length > 0 && showFinalsTeams) {
+    body = (
+      <div className="teams-page-grid">
+        {orderedTeams.map((team) => (
+          <Team
+            key={team}
+            team={team}
+            assigned={assigned.filter(
+              (ballkid) => ballkid.finals_team === team
+            )}
+            isMyTeam={team === myFinalsTeam}
+            showPhotos={showPhotos}
+          />
+        ))}
+      </div>
+    );
+  } else {
+    body = (
+      <div className="teams-page-empty">
+        There are currently no finals teams assigned.
+      </div>
+    );
+  }
 
   return (
     <div className="page ballkid-list-page teams-page-shell">
@@ -113,25 +173,7 @@ export default function FinalsTeamsPage(props) {
         }
       />
 
-      {assigned.length > 0 && showFinalsTeams ? (
-        <div className="teams-page-grid">
-          {orderedTeams.map((team) => (
-            <Team
-              key={team}
-              team={team}
-              assigned={assigned.filter(
-                (ballkid) => ballkid.finals_team === team
-              )}
-              isMyTeam={team === myFinalsTeam}
-              showPhotos={showPhotos}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="teams-page-empty">
-          There are currently no finals teams assigned.
-        </div>
-      )}
+      {body}
     </div>
   );
 }

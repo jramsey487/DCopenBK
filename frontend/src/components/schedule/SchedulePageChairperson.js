@@ -13,9 +13,14 @@ import {
 } from "../Utils";
 import { schedule } from "../HelpMessages";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
+import { cacheGet, cacheSet } from "../apiCache";
 import "./schedule-mobile.css";
 import "./schedule-table.css";
 import "../teams/teams-page.css";
+
+function scheduleCacheKey(date) {
+  return `schedule:${date}`;
+}
 
 function CreateSchedule({ date, setUpdated }) {
   const [numCourts, setNumCourts] = useState(5);
@@ -165,23 +170,53 @@ function CreateSchedule({ date, setUpdated }) {
   );
 }
 
-export default function SchedulePageChairperson(props) {
-  const [shifts, setShifts] = useState([]);
-  const [updated, setUpdated] = useState(false);
+export default function SchedulePageChairperson() {
   const [date, setDate] = useState(getToday());
+  const [shifts, setShifts] = useState(() => {
+    const cached = cacheGet(scheduleCacheKey(getToday()));
+    return cached != null ? cached : null;
+  });
+  const [updated, setUpdated] = useState(false);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    const cached = cacheGet(scheduleCacheKey(date));
+    if (cached != null) {
+      setShifts(cached);
+    } else {
+      setShifts(null);
+    }
+
     fetch(`/api/get-schedule?date=${date}`, { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setShifts(data))
-      .then(() => setUpdated(false));
+      .then((data) => {
+        const next = Array.isArray(data) ? data : [];
+        cacheSet(scheduleCacheKey(date), next);
+        if (!cancelled) {
+          setShifts(next);
+          setUpdated(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setShifts((prev) => (prev == null ? [] : prev));
+          setUpdated(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [date, updated]);
 
+  const loading = shifts == null;
+  const shiftList = shifts ?? [];
+
   const chairpersonActions =
-    shifts.length === 0 ? null : (
+    loading || shiftList.length === 0 ? null : (
       <>
         <Button
           variant="outlined"
@@ -223,13 +258,14 @@ export default function SchedulePageChairperson(props) {
         <Banners />
         {deleteDialog}
         <ScheduleMobileView
-          shifts={shifts}
+          shifts={shiftList}
           date={date}
           setDate={setDate}
           chairpersonActions={chairpersonActions}
           emptyContent={<CreateSchedule date={date} setUpdated={setUpdated} />}
           isChairperson={true}
           setUpdated={setUpdated}
+          loading={loading}
         />
       </>
     );
@@ -254,7 +290,7 @@ export default function SchedulePageChairperson(props) {
               </span>
             }
             actions={
-              shifts.length === 0 ? null : (
+              loading || shiftList.length === 0 ? null : (
                 <div className="teams-chairperson-actions">
                   <Button
                     variant="outlined"
@@ -289,12 +325,14 @@ export default function SchedulePageChairperson(props) {
               names.
             </p>
 
-            {shifts.length === 0 ? (
+            {loading ? (
+              <div className="empty-message">Loading schedule…</div>
+            ) : shiftList.length === 0 ? (
               <CreateSchedule date={date} setUpdated={setUpdated} />
             ) : (
               <div className="schedule-edit-table-wrap">
                 <ScheduleTable
-                  shifts={shifts}
+                  shifts={shiftList}
                   date={date}
                   setUpdated={setUpdated}
                 />

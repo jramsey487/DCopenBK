@@ -14,10 +14,22 @@ import {
   Banners,
 } from "../Utils";
 import { list, listNonchairperson } from "../HelpMessages";
+import { cacheGet, cacheSet } from "../apiCache";
 import "./ballkid-list-by-name.css";
 
-export default function BallkidList(props) {
-  const [ballkids, setBallkids] = useState([]);
+const LIST_CACHE_KEY = "api:list";
+
+function activeBallkids(data) {
+  return (Array.isArray(data) ? data : []).filter(
+    (ballkid) => ballkid.is_cut === false
+  );
+}
+
+export default function BallkidList() {
+  const cached = cacheGet(LIST_CACHE_KEY);
+  const [ballkids, setBallkids] = useState(() =>
+    cached != null ? activeBallkids(cached) : null
+  );
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterGroup, setFilterGroup] = useState();
@@ -27,14 +39,29 @@ export default function BallkidList(props) {
   const filters = ["captain", "chairperson", "back", "net"];
 
   useEffect(() => {
+    let cancelled = false;
+
     fetch("/api/list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) =>
-        setBallkids(data.filter((ballkid) => ballkid.is_cut === false))
-      );
+      .then((data) => {
+        cacheSet(LIST_CACHE_KEY, data);
+        if (!cancelled) {
+          setBallkids(activeBallkids(data));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBallkids((prev) => (prev == null ? [] : prev));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const filtered = filterBallkids(ballkids, searchKeyword, filterGroup);
+  const filtered =
+    ballkids == null ? [] : filterBallkids(ballkids, searchKeyword, filterGroup);
 
   return (
     <div className="page ballkid-list-page">
@@ -70,7 +97,9 @@ export default function BallkidList(props) {
         </div>
       </div>
 
-      {ballkids.length === 0 ? (
+      {ballkids == null ? (
+        <div className="ballkid-list-empty">Loading ballkids…</div>
+      ) : ballkids.length === 0 ? (
         <div className="ballkid-list-empty">There are no ballkids to show.</div>
       ) : (
         <div

@@ -261,6 +261,7 @@ export default function ScheduleMobileView({
   emptyContent,
   isChairperson = false,
   setUpdated,
+  loading = false,
 }) {
   const [myShiftsOn, setMyShiftsOn] = useState(!isChairperson);
   const [teamRoster, setTeamRoster] = useState({});
@@ -383,7 +384,9 @@ export default function ScheduleMobileView({
           toolbar={scheduleToolbar}
         />
 
-        {shifts.length === 0 ? (
+        {loading ? (
+          <div className="empty-message">Loading schedule…</div>
+        ) : shifts.length === 0 ? (
           emptyContent ? (
             <div className="schedule-empty">{emptyContent}</div>
           ) : (

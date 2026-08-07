@@ -1230,9 +1230,7 @@ class GetAverageCheckinTime(APIView):
     permission_classes = [IsChairpersonOrSelf]
 
     def get(self, request, pk):
-        recalc_checkin_analytics()
-        recalc_court_analytics()
-
+        # Annotate from CheckinHistory directly — no full-table analytics recalc.
         ballkids = Ballkid.objects.annotate(
             avg_checkin_time=Avg(
                 Case(

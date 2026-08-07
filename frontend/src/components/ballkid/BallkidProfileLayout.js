@@ -267,15 +267,16 @@ export function ProfileContent({ children }) {
 }
 
 export function ProfilePanel({ id, active, children }) {
+  // Only mount active tab content so heavy analytics charts don't fetch on Info.
+  if (active !== id) {
+    return null;
+  }
+
   return (
     <div
       id={`profile-panel-${id}`}
       role="tabpanel"
-      className={
-        active === id
-          ? "ballkid-profile-panel is-active"
-          : "ballkid-profile-panel"
-      }
+      className="ballkid-profile-panel is-active"
     >
       {children}
     </div>

@@ -18,7 +18,13 @@ import {
   courtNotesToMap,
   fetchCourtNotes,
 } from "./CourtNote";
+import { cacheGet, cacheSet } from "../apiCache";
 import "./teams-page.css";
+
+const ASSIGNED_CACHE = "teams:assigned";
+const TEAMS_CACHE = "teams:nums";
+const SHOW_TEAMS_CACHE = "teams:show";
+const NEXT_SHIFTS_CACHE = "teams:next-shifts";
 
 function Team({
   team,
@@ -113,11 +119,17 @@ function Team({
   );
 }
 
-export default function TeamsPage(props) {
-  const [assigned, setAssigned] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [nextShifts, setNextShifts] = useState([]);
-  const [showTeams, setShowTeams] = useState(false);
+export default function TeamsPage() {
+  const hadCache = cacheGet(ASSIGNED_CACHE) != null;
+  const [assigned, setAssigned] = useState(() => cacheGet(ASSIGNED_CACHE) ?? []);
+  const [teams, setTeams] = useState(() => cacheGet(TEAMS_CACHE) ?? []);
+  const [nextShifts, setNextShifts] = useState(
+    () => cacheGet(NEXT_SHIFTS_CACHE) ?? []
+  );
+  const [showTeams, setShowTeams] = useState(
+    () => cacheGet(SHOW_TEAMS_CACHE) ?? false
+  );
+  const [loading, setLoading] = useState(!hadCache);
   const [showPhotos, setShowPhotos] = useState(false);
   const [showYoe, setShowYoe] = useState(false);
   const [courtNotes, setCourtNotes] = useState({});
@@ -127,36 +139,63 @@ export default function TeamsPage(props) {
   const canEditNotes = group === "captain" || group === "chairperson";
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) =>
-        setAssigned(
-          data.filter(
-            (ballkid) =>
-              ballkid.is_checked_in === true && ballkid.current_team > 0
-          )
-        )
-      );
+    let cancelled = false;
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]));
+    Promise.all([
+      fetch("/api/sorted-list", { headers: getAuthHeader() }).then((response) =>
+        response.json()
+      ),
+      fetch("/api/calc-num-teams", { headers: getAuthHeader() }).then(
+        (response) => response.json()
+      ),
+      fetch("/api/get-tournament", {
+        method: "GET",
+        headers: getAuthHeader(),
+      }).then((response) => response.json()),
+      fetch("/api/get-next-shifts", { headers: getAuthHeader() }).then(
+        (response) => response.json()
+      ),
+      fetchCourtNotes(getToday()).catch(() => []),
+    ])
+      .then(([listData, teamsData, tournamentData, shiftsData, notesData]) => {
+        if (cancelled) {
+          return;
+        }
+        const nextAssigned = listData.filter(
+          (ballkid) =>
+            ballkid.is_checked_in === true && ballkid.current_team > 0
+        );
+        const nextTeams = teamsData["teams"] ?? [];
+        const nextShow = Boolean(tournamentData["show_teams"]);
+        const nextShiftsData = Array.isArray(shiftsData) ? shiftsData : [];
 
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setShowTeams(data["show_teams"]));
+        cacheSet(ASSIGNED_CACHE, nextAssigned);
+        cacheSet(TEAMS_CACHE, nextTeams);
+        cacheSet(SHOW_TEAMS_CACHE, nextShow);
+        cacheSet(NEXT_SHIFTS_CACHE, nextShiftsData);
 
-    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setNextShifts(data));
+        setAssigned(nextAssigned);
+        setTeams(nextTeams);
+        setShowTeams(nextShow);
+        setNextShifts(nextShiftsData);
+        setCourtNotes(courtNotesToMap(notesData));
+      })
+      .catch(() => {
+        if (!cancelled && !hadCache) {
+          setAssigned([]);
+          setShowTeams(false);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
 
-    fetchCourtNotes(getToday())
-      .then((data) => setCourtNotes(courtNotesToMap(data)))
-      .catch(() => setCourtNotes({}));
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [hadCache]);
 
   const myTeam = assigned.find((b) => b.id === myBallkidId)?.current_team;
 
@@ -165,6 +204,38 @@ export default function TeamsPage(props) {
     if (b === myTeam) return 1;
     return a - b;
   });
+
+  let body;
+  if (loading) {
+    body = <div className="teams-page-empty">Loading teams…</div>;
+  } else if (assigned.length > 0 && showTeams) {
+    body = (
+      <div className="teams-page-grid">
+        {orderedTeams.map((team) => (
+          <Team
+            key={team}
+            team={team}
+            assigned={assigned.filter(
+              (ballkid) => ballkid.current_team === team
+            )}
+            nextShifts={nextShifts.filter((shift) => shift.team === team)}
+            isMyTeam={team === myTeam}
+            showPhotos={showPhotos}
+            showYoe={showYoe}
+            canEditNotes={canEditNotes}
+            courtNotes={courtNotes}
+            setCourtNotes={setCourtNotes}
+          />
+        ))}
+      </div>
+    );
+  } else {
+    body = (
+      <div className="teams-page-empty">
+        There are currently no teams assigned.
+      </div>
+    );
+  }
 
   return (
     <div className="page ballkid-list-page teams-page-shell">
@@ -188,30 +259,7 @@ export default function TeamsPage(props) {
         }
       />
 
-      {assigned.length > 0 && showTeams ? (
-        <div className="teams-page-grid">
-          {orderedTeams.map((team) => (
-            <Team
-              key={team}
-              team={team}
-              assigned={assigned.filter(
-                (ballkid) => ballkid.current_team === team
-              )}
-              nextShifts={nextShifts.filter((shift) => shift.team === team)}
-              isMyTeam={team === myTeam}
-              showPhotos={showPhotos}
-              showYoe={showYoe}
-              canEditNotes={canEditNotes}
-              courtNotes={courtNotes}
-              setCourtNotes={setCourtNotes}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="teams-page-empty">
-          There are currently no teams assigned.
-        </div>
-      )}
+      {body}
     </div>
   );
 }
