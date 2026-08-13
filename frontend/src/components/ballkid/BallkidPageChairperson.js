@@ -232,17 +232,18 @@ function ChairpersonHeroMobileActions({
   );
 }
 
-function renderPreferredPosition(ballkid, setBallkid, setUpdated) {
+function renderPreferredPosition(ballkid, setBallkid) {
   const ALL_POSITIONS = ["Back", "Net", "Back/Net", "Net/Back"];
 
   return (
     <Box
       sx={{
         display: "flex",
-        flexWrap: "wrap",
-        gap: 1,
+        flexWrap: "nowrap",
+        gap: { xs: 0.5, sm: 1 },
         alignItems: "center",
         pt: 0.25,
+        width: "100%",
       }}
     >
       {ALL_POSITIONS.map((pos) => {
@@ -257,12 +258,15 @@ function renderPreferredPosition(ballkid, setBallkid, setUpdated) {
             sx={{
               borderRadius: "16px",
               textTransform: "none",
-              px: 1.5,
+              px: { xs: 1, sm: 1.5 },
               py: 0.25,
-              fontSize: "0.8125rem",
+              minWidth: 0,
+              flex: "1 1 0",
+              fontSize: { xs: "0.75rem", sm: "0.8125rem" },
               fontWeight: isSelected ? 600 : 400,
               opacity: isSelected ? 1 : 0.7,
               boxShadow: "none",
+              whiteSpace: "nowrap",
               "&:hover": { opacity: 1 },
               ...(isSelected
                 ? {
@@ -294,7 +298,10 @@ function renderPreferredPosition(ballkid, setBallkid, setUpdated) {
                 .then((response) => response.json())
                 .catch(() => {
                   // Revert back if request fails
-                  setBallkid((prev) => ({ ...prev, preferred_position: ballkid.preferred_position }));
+                  setBallkid((prev) => ({
+                    ...prev,
+                    preferred_position: ballkid.preferred_position,
+                  }));
                 });
             }}
           >
@@ -1415,7 +1422,7 @@ export default function BallkidPageChairperson(props) {
               value={ballkid.emergency_phone}
             />
             <ProfileInfoRow label="Preferred position" stack>
-              {renderPreferredPosition(ballkid, setUpdated)}
+              {renderPreferredPosition(ballkid, setBallkid)}
             </ProfileInfoRow>
           </ProfileCard>
 
