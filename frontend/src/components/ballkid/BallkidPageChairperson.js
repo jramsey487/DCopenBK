@@ -261,7 +261,7 @@ function renderPreferredPosition(ballkid, setBallkid) {
               px: { xs: 1, sm: 1.5 },
               py: 0.25,
               minWidth: 0,
-              flex: "1 1 0",
+              flex: { xs: "1 1 0", sm: "0 0 auto" },
               fontSize: { xs: "0.75rem", sm: "0.8125rem" },
               fontWeight: isSelected ? 600 : 400,
               opacity: isSelected ? 1 : 0.7,
