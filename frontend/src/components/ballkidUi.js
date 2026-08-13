@@ -610,7 +610,7 @@ function ExperiencePill({ ballkid, dense = true }) {
     return null;
   }
   return (
-    <Tooltip title="Years at Citi Open" arrow>
+    <Tooltip title="Years at DC Open" arrow>
       <span className="ballkid-pill ballkid-pill--yrs">
         {dense
           ? ballkid.num_years_experience

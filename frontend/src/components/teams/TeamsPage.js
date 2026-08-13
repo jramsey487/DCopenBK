@@ -4,20 +4,20 @@ import {
   CourtAssignment,
   getAuthHeader,
   isCurrentHour,
-  BallkidAndIcon,
   Banners,
   getLocalStorage,
   getToday,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
-import { PersonPhotoTile, TeamsPhotoToggle, TeamsYoeToggle } from "./TeamsShared";
+import { TeamsPhotoToggle, TeamsYoeToggle } from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import {
   CourtNoteBlock,
   courtNotesToMap,
   fetchCourtNotes,
 } from "./CourtNote";
+import { TeamPositionPairs, fetchTeamPairs } from "./TeamPairs";
 import { cacheGet, cacheSet } from "../apiCache";
 import "./teams-page.css";
 
@@ -34,8 +34,11 @@ function Team({
   showPhotos,
   showYoe,
   canEditNotes,
+  canEditPairs,
   courtNotes,
   setCourtNotes,
+  pairs,
+  setPairs,
 }) {
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
@@ -86,31 +89,16 @@ function Team({
                 </span>
               </div>
 
-              {positionBallkids.length === 0 ? (
-                <div className="team-position-empty">
-                  No {position.toLowerCase()}s assigned yet.
-                </div>
-              ) : showPhotos ? (
-                <div className="team-photo-grid">
-                  {positionBallkids.map((ballkid) => (
-                    <PersonPhotoTile
-                      key={ballkid.id}
-                      ballkid={ballkid}
-                      showYoe={showYoe}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="team-member-list">
-                  {positionBallkids.map((ballkid) => (
-                    <BallkidAndIcon
-                      key={ballkid.id}
-                      ballkid={ballkid}
-                      showYoe={showYoe}
-                    />
-                  ))}
-                </div>
-              )}
+              <TeamPositionPairs
+                team={team}
+                position={position}
+                ballkids={positionBallkids}
+                pairs={pairs}
+                onPairsChange={setPairs}
+                canEdit={canEditPairs}
+                showPhotos={showPhotos}
+                showYoe={showYoe}
+              />
             </div>
           );
         })}
@@ -133,6 +121,7 @@ export default function TeamsPage() {
   const [showPhotos, setShowPhotos] = useState(false);
   const [showYoe, setShowYoe] = useState(false);
   const [courtNotes, setCourtNotes] = useState({});
+  const [pairs, setPairs] = useState([]);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
   const group = getLocalStorage("group");
@@ -156,30 +145,41 @@ export default function TeamsPage() {
         (response) => response.json()
       ),
       fetchCourtNotes(getToday()).catch(() => []),
+      fetchTeamPairs().catch(() => []),
     ])
-      .then(([listData, teamsData, tournamentData, shiftsData, notesData]) => {
-        if (cancelled) {
-          return;
+      .then(
+        ([
+          listData,
+          teamsData,
+          tournamentData,
+          shiftsData,
+          notesData,
+          pairsData,
+        ]) => {
+          if (cancelled) {
+            return;
+          }
+          const nextAssigned = listData.filter(
+            (ballkid) =>
+              ballkid.is_checked_in === true && ballkid.current_team > 0
+          );
+          const nextTeams = teamsData["teams"] ?? [];
+          const nextShow = Boolean(tournamentData["show_teams"]);
+          const nextShiftsData = Array.isArray(shiftsData) ? shiftsData : [];
+
+          cacheSet(ASSIGNED_CACHE, nextAssigned);
+          cacheSet(TEAMS_CACHE, nextTeams);
+          cacheSet(SHOW_TEAMS_CACHE, nextShow);
+          cacheSet(NEXT_SHIFTS_CACHE, nextShiftsData);
+
+          setAssigned(nextAssigned);
+          setTeams(nextTeams);
+          setShowTeams(nextShow);
+          setNextShifts(nextShiftsData);
+          setCourtNotes(courtNotesToMap(notesData));
+          setPairs(Array.isArray(pairsData) ? pairsData : []);
         }
-        const nextAssigned = listData.filter(
-          (ballkid) =>
-            ballkid.is_checked_in === true && ballkid.current_team > 0
-        );
-        const nextTeams = teamsData["teams"] ?? [];
-        const nextShow = Boolean(tournamentData["show_teams"]);
-        const nextShiftsData = Array.isArray(shiftsData) ? shiftsData : [];
-
-        cacheSet(ASSIGNED_CACHE, nextAssigned);
-        cacheSet(TEAMS_CACHE, nextTeams);
-        cacheSet(SHOW_TEAMS_CACHE, nextShow);
-        cacheSet(NEXT_SHIFTS_CACHE, nextShiftsData);
-
-        setAssigned(nextAssigned);
-        setTeams(nextTeams);
-        setShowTeams(nextShow);
-        setNextShifts(nextShiftsData);
-        setCourtNotes(courtNotesToMap(notesData));
-      })
+      )
       .catch(() => {
         if (!cancelled && !hadCache) {
           setAssigned([]);
@@ -223,8 +223,11 @@ export default function TeamsPage() {
             showPhotos={showPhotos}
             showYoe={showYoe}
             canEditNotes={canEditNotes}
+            canEditPairs={group === "captain" && team === myTeam}
             courtNotes={courtNotes}
             setCourtNotes={setCourtNotes}
+            pairs={pairs}
+            setPairs={setPairs}
           />
         ))}
       </div>

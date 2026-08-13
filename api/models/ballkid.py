@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 
@@ -490,6 +490,8 @@ class Ballkid(models.Model):
             self.is_checked_in = value
 
         elif field == "position":
+            if self.position != value:
+                clear_team_pairs_for_ballkid(self.id)
             self.position = value
 
         elif field == "finals_position":
@@ -506,6 +508,7 @@ class Ballkid(models.Model):
             self.handle_team_history(value)
             self.handle_captain_history_team(value)
             if self.current_team != value:
+                clear_team_pairs_for_ballkid(self.id)
                 self.board_order = Ballkid.next_board_order(current_team=value)
             self.current_team = value
 
@@ -776,3 +779,47 @@ class Ticket(models.Model):
     num_requested = models.IntegerField(default=0)
     num_granted = models.IntegerField(default=0)
     num_delivered = models.IntegerField(default=0)
+
+
+class TeamPair(models.Model):
+    """Optional same-position partners on a current team (Net+Net or Back+Back)."""
+
+    team = models.IntegerField()
+    position = models.CharField(
+        max_length=10,
+        choices=[
+            (POSITION.B, POSITION.B.label),
+            (POSITION.N, POSITION.N.label),
+        ],
+    )
+    ballkid_a = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, related_name="team_pairs_as_a"
+    )
+    ballkid_b = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, related_name="team_pairs_as_b"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["team", "position", "id"]
+
+    def __str__(self):
+        return (
+            f"Team {self.team} {self.position}: "
+            f"{self.ballkid_a_id} + {self.ballkid_b_id}"
+        )
+
+
+def clear_team_pairs_for_ballkid(ballkid_id):
+    if not ballkid_id:
+        return
+    TeamPair.objects.filter(
+        Q(ballkid_a_id=ballkid_id) | Q(ballkid_b_id=ballkid_id)
+    ).delete()
+
+
+def clear_team_pairs_for_team(team=None):
+    if team is None or team == 0:
+        TeamPair.objects.all().delete()
+    else:
+        TeamPair.objects.filter(team=team).delete()

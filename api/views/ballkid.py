@@ -1064,6 +1064,7 @@ class ClearTeam(APIView):
                 ballkid.save()
 
         if team_type == "current_team":
+            clear_team_pairs_for_team(team)
             unassign_future_shifts(team)
 
         return Response(f"Team {team} cleared", status=status.HTTP_200_OK)
@@ -1088,6 +1089,145 @@ class CreateTeams(APIView):
             {"Success": "Teams auto-created"},
             status=status.HTTP_200_OK,
         )
+
+
+class TeamPairs(APIView):
+    """Optional same-position pairs on current teams (Net+Net / Back+Back)."""
+
+    PAIRABLE_POSITIONS = {POSITION.B, POSITION.N}
+
+    def get_permissions(self):
+        if self.request.method in ("GET", "HEAD", "OPTIONS"):
+            return [IsAuthenticated()]
+        return [IsChairpersonOrCaptain()]
+
+    def _can_edit_team(self, request, team):
+        if request.user.groups.filter(name="chairperson").exists():
+            return True
+        return Ballkid.objects.filter(
+            user=request.user,
+            is_captain=True,
+            is_active=True,
+            current_team=team,
+        ).exists()
+
+    def get(self, request, format=None):
+        team_param = request.query_params.get("team")
+        qs = TeamPair.objects.select_related("ballkid_a", "ballkid_b")
+        if team_param not in (None, ""):
+            try:
+                qs = qs.filter(team=int(team_param))
+            except (TypeError, ValueError):
+                return Response(
+                    {"Error": "team must be an integer"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return Response(TeamPairSerializer(qs, many=True).data)
+
+    def post(self, request, format=None):
+        try:
+            team = int(request.data.get("team"))
+            ballkid_a_id = int(request.data.get("ballkid_a"))
+            ballkid_b_id = int(request.data.get("ballkid_b"))
+        except (TypeError, ValueError):
+            return Response(
+                {"Error": "team, ballkid_a, and ballkid_b are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        position = (request.data.get("position") or "").strip()
+        if position not in self.PAIRABLE_POSITIONS:
+            return Response(
+                {"Error": "position must be Net or Back"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if ballkid_a_id == ballkid_b_id:
+            return Response(
+                {"Error": "Pick two different ballkids"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not self._can_edit_team(request, team):
+            return Response(
+                {"Error": "You can only edit pairs on your own team"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if ballkid_a_id > ballkid_b_id:
+            ballkid_a_id, ballkid_b_id = ballkid_b_id, ballkid_a_id
+
+        try:
+            a = Ballkid.objects.get(id=ballkid_a_id)
+            b = Ballkid.objects.get(id=ballkid_b_id)
+        except Ballkid.DoesNotExist:
+            return Response(
+                {"Error": "Ballkid not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        for kid in (a, b):
+            if kid.current_team != team:
+                return Response(
+                    {"Error": f"{kid.get_name()} is not on team {team}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if kid.position != position:
+                return Response(
+                    {
+                        "Error": (
+                            f"{kid.get_name()} is {kid.position}, not {position}"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        already = TeamPair.objects.filter(
+            Q(ballkid_a_id__in=[a.id, b.id]) | Q(ballkid_b_id__in=[a.id, b.id])
+        )
+        if already.exists():
+            return Response(
+                {"Error": "One of these ballkids is already paired"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pair = TeamPair.objects.create(
+            team=team,
+            position=position,
+            ballkid_a=a,
+            ballkid_b=b,
+        )
+        logger.info(
+            "[TeamPairs] created team=%s position=%s a=%s b=%s",
+            team,
+            position,
+            a.id,
+            b.id,
+        )
+        return Response(
+            TeamPairSerializer(pair).data, status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request, format=None):
+        try:
+            pair_id = int(request.data.get("id"))
+        except (TypeError, ValueError):
+            return Response(
+                {"Error": "id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pair = get_object_or_404(TeamPair, id=pair_id)
+        if not self._can_edit_team(request, pair.team):
+            return Response(
+                {"Error": "You can only edit pairs on your own team"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        team = pair.team
+        pair.delete()
+        logger.info("[TeamPairs] deleted id=%s team=%s", pair_id, team)
+        return Response({"Success": "Pair removed"}, status=status.HTTP_200_OK)
 
 
 class GetFinalsHistory(generics.ListAPIView):

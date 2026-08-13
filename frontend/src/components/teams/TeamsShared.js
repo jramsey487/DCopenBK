@@ -38,7 +38,7 @@ export function TeamsPhotoToggle({ showPhotos, onToggle }) {
 export function TeamsYoeToggle({ showYoe, onToggle }) {
   return (
     <TeamsLabeledToggle
-      label="Show Years of Experience"
+      label="Show Experience"
       checked={showYoe}
       onChange={() => onToggle()}
     />
@@ -56,7 +56,7 @@ export function YoePill({ ballkid }) {
     return null;
   }
   return (
-    <Tooltip title="Years at Citi Open" arrow>
+    <Tooltip title="Years at DC Open" arrow>
       <span className="ballkid-pill ballkid-pill--yrs">
         {ballkid.num_years_experience} yr
       </span>
@@ -84,10 +84,12 @@ export function PersonPhotoTile({ ballkid, showYoe = false }) {
       <span className="team-photo-name">
         {ballkid.first_name} {ballkid.last_name}
       </span>
-      {showYoe ? <YoePill ballkid={ballkid} /> : null}
-      <span className="team-photo-role-icons">
-        <Icons ballkid={ballkid} margin={0} isTeamsPage />
-      </span>
+      <div className="team-photo-meta">
+        {showYoe ? <YoePill ballkid={ballkid} /> : null}
+        <span className="team-photo-role-icons">
+          <Icons ballkid={ballkid} margin={0} isTeamsPage />
+        </span>
+      </div>
     </div>
   );
 }

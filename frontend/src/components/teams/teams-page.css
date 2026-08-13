@@ -23,8 +23,18 @@
   
   .teams-page-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 375px));
+    justify-content: start;
     gap: 16px;
+  }
+
+  .team-pair-member__meta .ballkid-and-icon {
+    flex-wrap: nowrap !important;
+  }
+
+  .team-pair-member__meta .ballkid-and-icon a,
+  .team-pair-member__meta .ballkid-and-icon .MuiTypography-root {
+    white-space: nowrap;
   }
   
   .team-card {
@@ -236,13 +246,233 @@
   .team-member-list > a {
     padding: 2px 0;
   }
-  
+
+  .team-pairs-hint {
+    font-size: 12px;
+    color: var(--tp-text2);
+    margin: 0 0 8px;
+    line-height: 1.35;
+  }
+
+  .team-pairs-error {
+    font-size: 12px;
+    color: var(--danger, #dc2626);
+    margin: 0 0 8px;
+  }
+
+  .team-pairs-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+    align-items: stretch;
+  }
+
+  .team-pairs--photos .team-pairs-list {
+    grid-template-columns: 1fr;
+  }
+
+  .team-pair-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 10px 8px 10px 12px;
+    border-radius: 12px;
+    border: 0.5px solid var(--tp-green-border, var(--tp-green));
+    background: var(--tp-green-bg);
+    box-sizing: border-box;
+  }
+
+  .team-pair-card__members {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    min-width: 0;
+  }
+
+  .team-pair-card__members--stack {
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .team-pair-card__members--linked {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    position: relative;
+  }
+
+  /* Vertical connector between the two avatars */
+  .team-pair-card__members--linked::before {
+    content: "";
+    position: absolute;
+    left: 25px;
+    top: 52px;
+    bottom: 52px;
+    width: 2px;
+    border-radius: 1px;
+    background: #cbd5e1;
+    pointer-events: none;
+  }
+
+  .team-pair-member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .team-pair-member__avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--tp-nav);
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 2px var(--tp-green-bg);
+  }
+
+  .team-pair-member__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .team-pair-member__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+  }
+
+  .team-pair-member__meta .team-photo-role-icons:empty {
+    display: none;
+  }
+
+  .team-pair-card__unpair.MuiIconButton-root {
+    color: #64748b;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: -2px;
+  }
+
+  .team-pair-card__unpair.MuiIconButton-root:hover {
+    color: var(--tp-nav);
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .team-pairs-unpaired {
+    margin-top: 8px;
+    /* Match .team-pair-card content inset; leave room for select padding */
+    padding: 0 32px 0 4px;
+    box-sizing: border-box;
+  }
+
+  .team-pairs-unpaired--rows {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .team-pairs-unpaired .team-pairs-select--row {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    /* Keep photo inside the selection ring */
+    padding: 6px 10px;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .team-pairs-unpaired--rows .team-pair-member {
+    width: 100%;
+  }
+
+  .team-pairs-unpaired.team-member-list .ballkid-and-icon {
+    padding-left: 0;
+  }
+
+  .team-pairs-select {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: default;
+  }
+
+  .team-pairs-select.is-editable {
+    cursor: pointer;
+  }
+
+  .team-pairs-select--row {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 8px;
+    padding: 2px 6px;
+  }
+
+  .team-pairs-select.is-editable:hover {
+    background: var(--tp-bg2);
+  }
+
+  .team-pairs-select.is-selected {
+    box-shadow: 0 0 0 2px var(--tp-nav);
+    border-radius: 8px;
+    background: var(--tp-bg2);
+  }
+
+  .team-pairs-select.is-editable:focus-visible {
+    outline: 2px solid var(--tp-nav);
+    outline-offset: 1px;
+  }
+
+  .team-photo-grid .team-pairs-select {
+    border-radius: 12px;
+    padding: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .team-photo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 12px;
   }
-  
+
   .team-photo-tile {
     display: flex;
     flex-direction: column;
@@ -250,8 +480,9 @@
     gap: 6px;
     text-align: center;
     text-decoration: none;
+    width: 100%;
   }
-  
+
   .team-photo-avatar {
     width: 56px;
     height: 56px;
@@ -266,25 +497,43 @@
     font-weight: 500;
     flex-shrink: 0;
   }
-  
+
   .team-photo-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
   }
-  
+
   .team-photo-name {
     font-size: 12.5px;
     font-weight: 500;
     color: var(--tp-text1);
     line-height: 1.25;
+    max-width: 100%;
+  }
+
+  .team-photo-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    min-height: 0;
+  }
+
+  .team-photo-meta:empty {
+    display: none;
   }
 
   .team-photo-role-icons {
     display: inline-flex;
     align-items: center;
     line-height: 0;
+  }
+
+  .team-photo-meta .team-photo-role-icons:empty {
+    display: none;
   }
 
   .team-card.teams-chairperson-card {
@@ -976,9 +1225,22 @@
   }
 
   .team-member-list .ballkid-and-icon a,
-  .team-member-list > a {
+  .team-member-list .ballkid-and-icon .ballkid-list-plain-name,
+  .team-member-list .ballkid-and-icon .MuiTypography-root,
+  .team-member-list > a,
+  .team-pair-card .ballkid-and-icon a,
+  .team-pair-card .ballkid-and-icon .ballkid-list-plain-name,
+  .team-pair-card .ballkid-and-icon .MuiTypography-root,
+  .team-pair-member .ballkid-and-icon a,
+  .team-pair-member .ballkid-and-icon .ballkid-list-plain-name,
+  .team-pair-member .ballkid-and-icon .MuiTypography-root,
+  .team-pairs-unpaired--rows .ballkid-and-icon a,
+  .team-pairs-unpaired--rows .ballkid-and-icon .ballkid-list-plain-name,
+  .team-pairs-unpaired--rows .ballkid-and-icon .MuiTypography-root {
     color: var(--tp-text1);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.25;
     text-decoration: none;
   }
 

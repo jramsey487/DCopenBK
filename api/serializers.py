@@ -120,6 +120,30 @@ class CourtNoteSerializer(serializers.ModelSerializer):
         fields = ("id", "court", "date", "message", "updated_at")
 
 
+class TeamPairSerializer(serializers.ModelSerializer):
+    ballkid_a_name = serializers.SerializerMethodField()
+    ballkid_b_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TeamPair
+        fields = (
+            "id",
+            "team",
+            "position",
+            "ballkid_a",
+            "ballkid_b",
+            "ballkid_a_name",
+            "ballkid_b_name",
+            "created_at",
+        )
+
+    def get_ballkid_a_name(self, obj):
+        return obj.ballkid_a.get_name()
+
+    def get_ballkid_b_name(self, obj):
+        return obj.ballkid_b.get_name()
+
+
 class TournamentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tournament

@@ -34,6 +34,7 @@ teams_urls = [
     path("calc-num-teams", CalcNumTeams.as_view(), name="calc-num-teams"),
     path("clear-team", ClearTeam.as_view(), name="clear-team"),
     path("create-teams", CreateTeams.as_view(), name="create-teams"),
+    path("team-pairs", TeamPairs.as_view(), name="team-pairs"),
     path(
         "get-past-finals/<int:year>",
         GetPastFinals.as_view(),
