@@ -455,8 +455,8 @@ function renderBallkids(ballkids, isCheckedIn, layout, setUpdated) {
 }
 
 export default function CheckinPage(props) {
-  const [checkedIn, setCheckedIn] = useState([]);
-  const [checkedOut, setCheckedOut] = useState([]);
+  const [checkedIn, setCheckedIn] = useState(null);
+  const [checkedOut, setCheckedOut] = useState(null);
   const [open, setOpen] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -464,22 +464,29 @@ export default function CheckinPage(props) {
   const [layout, setLayout] = useState(getLocalStorage("layout") ?? "list");
   const [updated, setUpdated] = useState(false);
 
+  const loading = checkedIn == null || checkedOut == null;
+
   useEffect(() => {
     fetch("/api/list", { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => {
+        const list = Array.isArray(data) ? data : [];
         setCheckedIn(
-          data.filter(
+          list.filter(
             (ballkid) =>
               ballkid.is_checked_in === true && ballkid.is_cut === false
           )
         );
         setCheckedOut(
-          data.filter(
+          list.filter(
             (ballkid) =>
               ballkid.is_checked_in === false && ballkid.is_cut === false
           )
         );
+      })
+      .catch(() => {
+        setCheckedIn((prev) => (prev == null ? [] : prev));
+        setCheckedOut((prev) => (prev == null ? [] : prev));
       })
       .then(() => setUpdated(false));
   }, [updated]);
@@ -490,8 +497,8 @@ export default function CheckinPage(props) {
 
       <ConfirmDialog
         message={`You are about to check out all ${
-          checkedIn.length
-        } checked in ballkid${checkedIn.length > 1 ? "s" : ""}.`}
+          checkedIn?.length ?? 0
+        } checked in ballkid${(checkedIn?.length ?? 0) > 1 ? "s" : ""}.`}
         url={"/api/checkout-all"}
         body={{
           checkout_group: "all",
@@ -521,55 +528,71 @@ export default function CheckinPage(props) {
         </div>
       </div>
 
-      <section className="checkin-section">
-        <div className="checkin-section-head">
-          <div className="checkin-section-title-row">
-            <Typography className="checkin-section-title" variant="h5">
-              Checked in
-            </Typography>
-            <Typography className="checkin-section-count" variant="h6">
-              ({filterBallkids(checkedIn, searchKeyword, filterGroup).length})
-            </Typography>
-          </div>
-          {checkedIn.length > 0 ? (
-            <Button
-              className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-checkout-all-btn"
-              variant="outlined"
-              size="small"
-              onClick={() => setOpen(true)}
-            >
-              Check out all
-            </Button>
-          ) : null}
-        </div>
+      {loading ? (
+        <div className="ballkid-list-empty">Loading ballkids…</div>
+      ) : (
+        <>
+          <section className="checkin-section">
+            <div className="checkin-section-head">
+              <div className="checkin-section-title-row">
+                <Typography className="checkin-section-title" variant="h5">
+                  Checked in
+                </Typography>
+                <Typography className="checkin-section-count" variant="h6">
+                  (
+                  {
+                    filterBallkids(checkedIn, searchKeyword, filterGroup)
+                      .length
+                  }
+                  )
+                </Typography>
+              </div>
+              {checkedIn.length > 0 ? (
+                <Button
+                  className="teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-checkout-all-btn"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setOpen(true)}
+                >
+                  Check out all
+                </Button>
+              ) : null}
+            </div>
 
-        {renderBallkids(
-          filterBallkids(checkedIn, searchKeyword, filterGroup),
-          true,
-          layout,
-          setUpdated
-        )}
-      </section>
+            {renderBallkids(
+              filterBallkids(checkedIn, searchKeyword, filterGroup),
+              true,
+              layout,
+              setUpdated
+            )}
+          </section>
 
-      <section className="checkin-section">
-        <div className="checkin-section-head">
-          <div className="checkin-section-title-row">
-            <Typography className="checkin-section-title" variant="h5">
-              Checked out
-            </Typography>
-            <Typography className="checkin-section-count" variant="h6">
-              ({filterBallkids(checkedOut, searchKeyword, filterGroup).length})
-            </Typography>
-          </div>
-        </div>
+          <section className="checkin-section">
+            <div className="checkin-section-head">
+              <div className="checkin-section-title-row">
+                <Typography className="checkin-section-title" variant="h5">
+                  Checked out
+                </Typography>
+                <Typography className="checkin-section-count" variant="h6">
+                  (
+                  {
+                    filterBallkids(checkedOut, searchKeyword, filterGroup)
+                      .length
+                  }
+                  )
+                </Typography>
+              </div>
+            </div>
 
-        {renderBallkids(
-          filterBallkids(checkedOut, searchKeyword, filterGroup),
-          false,
-          layout,
-          setUpdated
-        )}
-      </section>
+            {renderBallkids(
+              filterBallkids(checkedOut, searchKeyword, filterGroup),
+              false,
+              layout,
+              setUpdated
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
