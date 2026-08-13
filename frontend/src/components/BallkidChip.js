@@ -200,6 +200,7 @@ export function DraggableBallkidRow({
           hoverCommentTypes={hoverCommentTypes}
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
+          showChart
         />
       ) : null}
     </div>

@@ -528,7 +528,7 @@ export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
   const [emails, setEmails] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showHovercard, setShowHovercard] = useState(true);
+  const [showHovercard, setShowHovercard] = useState(false);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");

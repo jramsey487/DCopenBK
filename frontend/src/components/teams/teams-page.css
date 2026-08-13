@@ -981,3 +981,127 @@
     font-weight: 600;
     text-decoration: none;
   }
+
+/* Auto-create teams dialog — same chrome as confirm, create accent */
+.create-teams-dialog-paper .create-teams-dialog-accent {
+  background: #7c3aed;
+}
+
+.create-teams-dialog-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.create-teams-dialog-stepper-btn.MuiIconButton-root {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: #fff;
+  color: var(--nav, #0d1b3e);
+}
+
+.create-teams-dialog-stepper-btn.MuiIconButton-root:hover:not(.Mui-disabled) {
+  background: var(--bg0, #f8fafc);
+  border-color: #cbd5e1;
+}
+
+.create-teams-dialog-stepper-btn.MuiIconButton-root.Mui-disabled {
+  opacity: 0.45;
+}
+
+.create-teams-dialog-input.MuiTextField-root {
+  width: 72px;
+}
+
+.create-teams-dialog-input .MuiOutlinedInput-root {
+  border-radius: 10px;
+  background: #fff;
+}
+
+.create-teams-dialog-input .MuiOutlinedInput-input {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--nav, #0d1b3e);
+  padding: 10px 8px;
+  -moz-appearance: textfield;
+}
+
+.create-teams-dialog-input
+  .MuiOutlinedInput-input::-webkit-outer-spin-button,
+.create-teams-dialog-input
+  .MuiOutlinedInput-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.create-teams-dialog-input .MuiOutlinedInput-notchedOutline {
+  border-color: var(--border, #e2e8f0);
+}
+
+.create-teams-dialog-input
+  .MuiOutlinedInput-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #cbd5e1;
+}
+
+.create-teams-dialog-input
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #7c3aed;
+  border-width: 1.5px;
+}
+
+.create-teams-dialog-hint {
+  margin: 8px 0 0 !important;
+  text-align: center;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--text2, #64748b) !important;
+  letter-spacing: -0.01em;
+}
+
+.create-teams-dialog-action-btn.MuiButton-root,
+.create-teams-dialog-action-btn.MuiLoadingButton-root {
+  font-family: inherit !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.35 !important;
+  border-radius: 10px !important;
+  padding: 7px 14px !important;
+  min-height: 36px !important;
+  min-width: 0 !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  background: #6d28d9 !important;
+  border: 1px solid #6d28d9 !important;
+}
+
+.create-teams-dialog-action-btn.MuiButton-root:hover:not(.Mui-disabled),
+.create-teams-dialog-action-btn.MuiLoadingButton-root:hover:not(.Mui-disabled) {
+  background: #5b21b6 !important;
+  border-color: #5b21b6 !important;
+}
+
+.create-teams-dialog-action-btn.create-teams-dialog-action-btn--success.MuiButton-root,
+.create-teams-dialog-action-btn.create-teams-dialog-action-btn--success.MuiButton-root:hover,
+.create-teams-dialog-action-btn.create-teams-dialog-action-btn--success.Mui-disabled {
+  background-color: var(--success, #15803d) !important;
+  border-color: var(--success, #15803d) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  animation: confirm-dialog-btn-success 0.55s ease-out;
+}
+
+.create-teams-dialog-action-btn.create-teams-dialog-action-btn--success
+  .MuiButton-startIcon {
+  margin-right: 6px;
+  animation: confirm-dialog-check-pop 0.45s ease-out;
+}

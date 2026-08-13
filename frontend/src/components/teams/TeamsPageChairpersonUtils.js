@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./teams-page.css";
 import { useDrop } from "react-dnd";
 
@@ -7,16 +7,19 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 
 import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 import SwapVert from "@mui/icons-material/SwapVert";
 import HighlightOff from "@mui/icons-material/HighlightOff";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
+import Add from "@mui/icons-material/Add";
+import Remove from "@mui/icons-material/Remove";
+import Check from "@mui/icons-material/Check";
 
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
@@ -33,7 +36,6 @@ import {
 } from "../Utils";
 import {
   POSITIONS,
-  TIMEOUT_MS,
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
@@ -41,6 +43,7 @@ import { DraggableBallkidRow, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { teams, finalsTeams } from "../HelpMessages.js";
 import { CourtNoteBlock } from "./CourtNote";
 import "../ballkid-row.css";
+import "../confirm-dialog.css";
 
 export function renderSwitchButton(ballkid, setUpdated, isFinalsPage = false) {
   const field = isFinalsPage ? "finals_position" : "position";
@@ -549,87 +552,191 @@ export function Header({
 function CreateTeamsDialog({ open, setOpen, setUpdated }) {
   const [numTeams, setNumTeams] = useState(10);
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [succeeded, setSucceeded] = useState(false);
+  const closeTimeoutRef = useRef(null);
+  const pendingRefreshRef = useRef(false);
+
+  const clampTeams = (value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 1;
+    return Math.max(1, Math.min(30, Math.round(n)));
+  };
 
   useEffect(() => {
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) =>
-        setNumTeams(
-          Math.min(
-            10,
-            Math.round(
-              data.filter((ballkid) => ballkid.is_checked_in === true).length /
-                TARGET_NUM_BALLKIDS_PER_TEAM
-            )
-          )
-        )
-      );
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+
+    setErrorMsg("");
+    setLoading(false);
+    setSucceeded(false);
+    pendingRefreshRef.current = false;
+
+    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
+      .then((response) => response.json())
+      .then((data) => {
+        const checkedIn = (Array.isArray(data) ? data : []).filter(
+          (ballkid) => ballkid.is_checked_in === true
+        ).length;
+        setNumTeams(
+          clampTeams(
+            Math.min(
+              10,
+              Math.round(checkedIn / TARGET_NUM_BALLKIDS_PER_TEAM)
+            )
+          )
+        );
+      })
+      .catch(() => {});
+  }, [open]);
+
+  const handleClose = () => {
+    if (succeeded || loading) return;
+    setOpen(false);
+    setErrorMsg("");
+  };
+
+  const handleExited = () => {
+    if (pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      setUpdated?.(true);
+    }
+    setSucceeded(false);
+    setErrorMsg("");
+    setLoading(false);
+  };
+
+  const finishSuccess = () => {
+    setLoading(false);
+    setErrorMsg("");
+    setSucceeded(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      pendingRefreshRef.current = true;
+      setOpen(false);
+    }, 900);
+  };
+
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      TransitionProps={{ onExited: handleExited }}
+      PaperProps={{
+        className: "confirm-dialog-paper create-teams-dialog-paper",
+      }}
+    >
+      <div
+        className="confirm-dialog-accent create-teams-dialog-accent"
+        aria-hidden="true"
+      />
+      <DialogContent className="confirm-dialog-content">
         <Alerts
-          successMsg={successMsg}
+          successMsg=""
           errorMsg={errorMsg}
-          setSuccessMsg={setSuccessMsg}
+          setSuccessMsg={() => {}}
           setErrorMsg={setErrorMsg}
         />
-        Auto-create Teams
-      </DialogTitle>
 
-      <DialogContent>
-        <Box className="sxs">
-          <DialogContentText sx={{ my: 1, color: "black" }}>
-            Enter number of teams to auto-create:
-          </DialogContentText>
+        <Typography className="confirm-dialog-title">
+          Auto-create teams
+        </Typography>
+        <DialogContentText className="confirm-dialog-message">
+          Suggested from checked-in ballkids. Adjust the count if needed, then
+          create.
+        </DialogContentText>
 
+        <div className="create-teams-dialog-stepper">
+          <IconButton
+            className="create-teams-dialog-stepper-btn"
+            size="small"
+            aria-label="Decrease teams"
+            disabled={succeeded || loading || Number(numTeams) <= 1}
+            onClick={() => setNumTeams((n) => clampTeams(Number(n) - 1))}
+          >
+            <Remove fontSize="small" />
+          </IconButton>
           <TextField
+            className="create-teams-dialog-input"
             value={numTeams}
-            variant="standard"
-            required
+            variant="outlined"
             type="number"
-            InputProps={{
-              inputProps: { style: { textAlign: "center" } },
+            inputProps={{
+              min: 1,
+              max: 30,
+              "aria-label": "Number of teams",
             }}
-            style={{ width: 50 }}
-            sx={{ mx: 1 }}
+            disabled={succeeded || loading}
             onChange={(e) => setNumTeams(e.target.value)}
+            onBlur={() => setNumTeams((n) => clampTeams(n))}
           />
-        </Box>
+          <IconButton
+            className="create-teams-dialog-stepper-btn"
+            size="small"
+            aria-label="Increase teams"
+            disabled={succeeded || loading || Number(numTeams) >= 30}
+            onClick={() => setNumTeams((n) => clampTeams(Number(n) + 1))}
+          >
+            <Add fontSize="small" />
+          </IconButton>
+        </div>
+        <Typography className="create-teams-dialog-hint" component="p">
+          Number of teams
+        </Typography>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
+      <DialogActions className="confirm-dialog-actions">
+        <Button
+          className="confirm-dialog-cancel"
+          variant="outlined"
+          onClick={handleClose}
+          disabled={succeeded || loading}
+        >
+          Cancel
+        </Button>
         <LoadingButton
+          className={
+            succeeded
+              ? "create-teams-dialog-action-btn create-teams-dialog-action-btn--success"
+              : "create-teams-dialog-action-btn"
+          }
           loading={loading}
+          variant="contained"
+          disabled={succeeded}
+          startIcon={succeeded ? <Check /> : <AutoAwesome />}
           onClick={() => {
+            if (succeeded || loading) return;
+            const teamsCount = clampTeams(numTeams);
+            setNumTeams(teamsCount);
             setLoading(true);
+            setErrorMsg("");
 
             fetch("/api/create-teams", {
               method: "PATCH",
               headers: getAuthHeader(),
-              body: JSON.stringify({ numTeams: numTeams }),
+              body: JSON.stringify({ numTeams: teamsCount }),
             })
               .then((response) => {
                 if (response.ok) {
-                  setUpdated(true);
-                  setSuccessMsg("Teams auto-created!");
-                  setTimeout(() => {
-                    setOpen(false);
-                    setSuccessMsg("");
-                    setErrorMsg("");
-                  }, TIMEOUT_MS);
+                  finishSuccess();
                 } else {
-                  setErrorMsg("Error creating teams.");
+                  setErrorMsg("Error creating teams. Please try again.");
+                  setLoading(false);
                 }
               })
-              .then(() => setLoading(false));
+              .catch(() => {
+                setErrorMsg("Error creating teams. Please try again.");
+                setLoading(false);
+              });
           }}
         >
-          Create
+          {succeeded ? "Done" : "Create"}
         </LoadingButton>
       </DialogActions>
     </Dialog>
