@@ -22,7 +22,8 @@ export function fetchTeamPairs(team) {
   );
 }
 
-/** Merge server pairs with in-flight optimistic creates; honor pending deletes. */
+/** Merge server pairs with in-flight optimistic creates; honor pending deletes.
+ * Preserves local display order (first/second tap) so sync never swaps names. */
 export function mergePairsFromServer(prev, server, pendingDeleteIds) {
   const serverList = (Array.isArray(server) ? server : []).filter(
     (pair) => !pendingDeleteIds?.has?.(pair.id)
@@ -34,18 +35,34 @@ export function mergePairsFromServer(prev, server, pendingDeleteIds) {
       }
     }
   }
-  const coversTemp = (temp) =>
-    serverList.some(
-      (s) =>
-        s.team === temp.team &&
-        s.position === temp.position &&
-        ((s.ballkid_a === temp.ballkid_a && s.ballkid_b === temp.ballkid_b) ||
-          (s.ballkid_a === temp.ballkid_b && s.ballkid_b === temp.ballkid_a))
-    );
+
+  const sameMembers = (a, b) =>
+    a.team === b.team &&
+    a.position === b.position &&
+    ((Number(a.ballkid_a) === Number(b.ballkid_a) &&
+      Number(a.ballkid_b) === Number(b.ballkid_b)) ||
+      (Number(a.ballkid_a) === Number(b.ballkid_b) &&
+        Number(a.ballkid_b) === Number(b.ballkid_a)));
+
+  const merged = serverList.map((serverPair) => {
+    const local = (prev || []).find((p) => sameMembers(p, serverPair));
+    if (!local) {
+      return serverPair;
+    }
+    // Keep whatever order the UI already showed.
+    return {
+      ...serverPair,
+      ballkid_a: local.ballkid_a,
+      ballkid_b: local.ballkid_b,
+    };
+  });
+
   const pendingTemps = (prev || []).filter(
-    (pair) => String(pair.id).startsWith("temp-") && !coversTemp(pair)
+    (pair) =>
+      String(pair.id).startsWith("temp-") &&
+      !merged.some((s) => sameMembers(s, pair))
   );
-  return [...serverList, ...pendingTemps];
+  return [...merged, ...pendingTemps];
 }
 
 function createTeamPair({ team, position, ballkid_a, ballkid_b }) {
@@ -74,26 +91,6 @@ function deleteTeamPair(id) {
     }
     return data;
   });
-}
-
-/** Keep pair members in roster order so create/sync never visually swaps them. */
-function orderPairMembers(a, b, ballkids) {
-  if (!a || !b) return [a, b];
-  const indexA = ballkids.findIndex((k) => k.id === a.id);
-  const indexB = ballkids.findIndex((k) => k.id === b.id);
-  if (indexA === -1 || indexB === -1) {
-    return a.id <= b.id ? [a, b] : [b, a];
-  }
-  return indexA <= indexB ? [a, b] : [b, a];
-}
-
-function orderPairIds(idA, idB, ballkids) {
-  const [first, second] = orderPairMembers(
-    { id: idA },
-    { id: idB },
-    ballkids
-  );
-  return [first.id, second.id];
 }
 
 /** Avatar left, name + meta right — used in photo pair cards. */
@@ -156,14 +153,14 @@ export function TeamPositionPairs({
   );
   const pairedIds = new Set();
   positionPairs.forEach((pair) => {
-    pairedIds.add(pair.ballkid_a);
-    pairedIds.add(pair.ballkid_b);
+    pairedIds.add(Number(pair.ballkid_a));
+    pairedIds.add(Number(pair.ballkid_b));
   });
-  const unpaired = ballkids.filter((b) => !pairedIds.has(b.id));
+  const unpaired = ballkids.filter((b) => !pairedIds.has(Number(b.id)));
 
   const ballkidById = {};
   ballkids.forEach((b) => {
-    ballkidById[b.id] = b;
+    ballkidById[Number(b.id)] = b;
   });
 
   const refreshHint = canEdit && unpaired.length >= 2;
@@ -182,11 +179,9 @@ export function TeamPositionPairs({
       return;
     }
 
-    const [ballkidA, ballkidB] = orderPairIds(
-      selectedId,
-      ballkid.id,
-      ballkids
-    );
+    // Preserve tap order in the UI (first selected on top).
+    const ballkidA = selectedId;
+    const ballkidB = ballkid.id;
     const tempId = `temp-${ballkidA}-${ballkidB}`;
     const optimisticPair = {
       id: tempId,
@@ -211,15 +206,15 @@ export function TeamPositionPairs({
       ballkid_b: ballkidB,
     })
       .then((pair) => {
-        const [firstId, secondId] = orderPairIds(
-          pair.ballkid_a,
-          pair.ballkid_b,
-          ballkids
-        );
         onPairsChange((prev) =>
           prev.map((p) =>
             p.id === tempId
-              ? { ...pair, ballkid_a: firstId, ballkid_b: secondId }
+              ? {
+                  ...pair,
+                  // Keep local tap order — server may store by id.
+                  ballkid_a: p.ballkid_a,
+                  ballkid_b: p.ballkid_b,
+                }
               : p
           )
         );
@@ -313,13 +308,15 @@ export function TeamPositionPairs({
       {positionPairs.length > 0 ? (
         <div className="team-pairs-list">
           {positionPairs.map((pair) => {
-            const rawA = ballkidById[pair.ballkid_a];
-            const rawB = ballkidById[pair.ballkid_b];
-            if (!rawA || !rawB) return null;
-            const [a, b] = orderPairMembers(rawA, rawB, ballkids);
+            const a = ballkidById[Number(pair.ballkid_a)];
+            const b = ballkidById[Number(pair.ballkid_b)];
+            if (!a || !b) return null;
 
             return (
-              <div className="team-pair-card" key={pair.id}>
+              <div
+                className="team-pair-card"
+                key={`${pair.team}-${pair.position}-${pair.ballkid_a}-${pair.ballkid_b}`}
+              >
                 <div
                   className={`team-pair-card__members${
                     showPhotos
