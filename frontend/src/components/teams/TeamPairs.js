@@ -50,6 +50,26 @@ function deleteTeamPair(id) {
   });
 }
 
+/** Keep pair members in roster order so create/sync never visually swaps them. */
+function orderPairMembers(a, b, ballkids) {
+  if (!a || !b) return [a, b];
+  const indexA = ballkids.findIndex((k) => k.id === a.id);
+  const indexB = ballkids.findIndex((k) => k.id === b.id);
+  if (indexA === -1 || indexB === -1) {
+    return a.id <= b.id ? [a, b] : [b, a];
+  }
+  return indexA <= indexB ? [a, b] : [b, a];
+}
+
+function orderPairIds(idA, idB, ballkids) {
+  const [first, second] = orderPairMembers(
+    { id: idA },
+    { id: idB },
+    ballkids
+  );
+  return [first.id, second.id];
+}
+
 /** Avatar left, name + meta right — used in photo pair cards. */
 function PairMemberRow({ ballkid, showYoe, plainName = false }) {
   const src = ballkidImageSrc(ballkid.image);
@@ -136,8 +156,11 @@ export function TeamPositionPairs({
       return;
     }
 
-    const ballkidA = selectedId;
-    const ballkidB = ballkid.id;
+    const [ballkidA, ballkidB] = orderPairIds(
+      selectedId,
+      ballkid.id,
+      ballkids
+    );
     const tempId = `temp-${ballkidA}-${ballkidB}`;
     const optimisticPair = {
       id: tempId,
@@ -162,8 +185,17 @@ export function TeamPositionPairs({
       ballkid_b: ballkidB,
     })
       .then((pair) => {
+        const [firstId, secondId] = orderPairIds(
+          pair.ballkid_a,
+          pair.ballkid_b,
+          ballkids
+        );
         onPairsChange((prev) =>
-          prev.map((p) => (p.id === tempId ? pair : p))
+          prev.map((p) =>
+            p.id === tempId
+              ? { ...pair, ballkid_a: firstId, ballkid_b: secondId }
+              : p
+          )
         );
       })
       .catch((err) => {
@@ -255,9 +287,10 @@ export function TeamPositionPairs({
       {positionPairs.length > 0 ? (
         <div className="team-pairs-list">
           {positionPairs.map((pair) => {
-            const a = ballkidById[pair.ballkid_a];
-            const b = ballkidById[pair.ballkid_b];
-            if (!a || !b) return null;
+            const rawA = ballkidById[pair.ballkid_a];
+            const rawB = ballkidById[pair.ballkid_b];
+            if (!rawA || !rawB) return null;
+            const [a, b] = orderPairMembers(rawA, rawB, ballkids);
 
             return (
               <div className="team-pair-card" key={pair.id}>
