@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import LinkOffOutlined from "@mui/icons-material/LinkOffOutlined";
@@ -140,6 +140,9 @@ export function TeamPositionPairs({
   const [selectedId, setSelectedId] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Suppress the synthetic click that follows a touch select.
+  const touchHandledIdRef = useRef(null);
+  const touchStartRef = useRef(null);
 
   useEffect(() => {
     if (!canEdit) {
@@ -410,7 +413,47 @@ export function TeamPositionPairs({
                 className={`team-pairs-select team-pairs-select--row is-editable${
                   selected ? " is-selected" : ""
                 }`}
-                onClick={() => onSelectUnpaired(ballkid)}
+                onPointerDown={(e) => {
+                  if (e.pointerType !== "touch" && e.pointerType !== "pen") {
+                    return;
+                  }
+                  if (e.button != null && e.button !== 0) {
+                    return;
+                  }
+                  touchStartRef.current = {
+                    id: ballkid.id,
+                    x: e.clientX,
+                    y: e.clientY,
+                  };
+                }}
+                onPointerUp={(e) => {
+                  const start = touchStartRef.current;
+                  touchStartRef.current = null;
+                  if (!start || start.id !== ballkid.id) {
+                    return;
+                  }
+                  if (e.pointerType !== "touch" && e.pointerType !== "pen") {
+                    return;
+                  }
+                  // Ignore if this was a scroll gesture.
+                  const dx = Math.abs(e.clientX - start.x);
+                  const dy = Math.abs(e.clientY - start.y);
+                  if (dx > 12 || dy > 12) {
+                    return;
+                  }
+                  touchHandledIdRef.current = ballkid.id;
+                  onSelectUnpaired(ballkid);
+                }}
+                onPointerCancel={() => {
+                  touchStartRef.current = null;
+                }}
+                onClick={() => {
+                  if (touchHandledIdRef.current === ballkid.id) {
+                    touchHandledIdRef.current = null;
+                    return;
+                  }
+                  onSelectUnpaired(ballkid);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();

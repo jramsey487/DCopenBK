@@ -475,6 +475,10 @@
 
   .team-pairs-select.is-editable {
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   /* Pairing mode only: block profile navigation from names */
@@ -490,6 +494,14 @@
     max-width: 100%;
     border-radius: 8px;
     padding: 2px 6px;
+  }
+
+  .team-pairs--editing .team-pairs-unpaired .team-pairs-select--row {
+    min-height: 44px;
+    padding: 8px 10px;
+    margin: 0 -10px;
+    width: calc(100% + 20px);
+    box-sizing: border-box;
   }
 
   /* Brief tap feedback on touch; hover only on real pointers */
