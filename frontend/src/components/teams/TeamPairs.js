@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import LinkOffOutlined from "@mui/icons-material/LinkOffOutlined";
 
 import { getAuthHeader, BallkidAndIcon } from "../Utils";
-import { PersonPhotoTile, personInitials } from "./TeamsShared";
+import { personInitials } from "./TeamsShared";
 import { ballkidImageSrc } from "../authStorage";
 
 export function fetchTeamPairs(team) {
@@ -51,7 +51,7 @@ function deleteTeamPair(id) {
 }
 
 /** Avatar left, name + meta right — used in photo pair cards. */
-function PairMemberRow({ ballkid, showYoe }) {
+function PairMemberRow({ ballkid, showYoe, plainName = false }) {
   const src = ballkidImageSrc(ballkid.image);
   const [failed, setFailed] = useState(false);
 
@@ -70,7 +70,11 @@ function PairMemberRow({ ballkid, showYoe }) {
         )}
       </div>
       <div className="team-pair-member__meta">
-        <BallkidAndIcon ballkid={ballkid} showYoe={showYoe} />
+        <BallkidAndIcon
+          ballkid={ballkid}
+          showYoe={showYoe}
+          plainName={plainName}
+        />
       </div>
     </div>
   );
@@ -93,6 +97,13 @@ export function TeamPositionPairs({
   const [selectedId, setSelectedId] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!canEdit) {
+      setSelectedId(null);
+      setError("");
+    }
+  }, [canEdit]);
 
   const positionPairs = (pairs || []).filter(
     (pair) => pair.team === team && pair.position === position
@@ -168,9 +179,9 @@ export function TeamPositionPairs({
   if (positionPairs.length === 0 && !canEdit) {
     if (showPhotos) {
       return (
-        <div className="team-photo-grid">
+        <div className="team-pairs-photo-list">
           {ballkids.map((ballkid) => (
-            <PersonPhotoTile
+            <PairMemberRow
               key={ballkid.id}
               ballkid={ballkid}
               showYoe={showYoe}
@@ -180,7 +191,7 @@ export function TeamPositionPairs({
       );
     }
     return (
-      <div className="team-member-list">
+      <div className="team-member-list team-pairs-name-inset">
         {ballkids.map((ballkid) => (
           <BallkidAndIcon
             key={ballkid.id}
@@ -193,7 +204,11 @@ export function TeamPositionPairs({
   }
 
   return (
-    <div className={`team-pairs${showPhotos ? " team-pairs--photos" : ""}`}>
+    <div
+      className={`team-pairs${showPhotos ? " team-pairs--photos" : ""}${
+        canEdit ? " team-pairs--editing" : ""
+      }`}
+    >
       {canEdit ? (
         <div className="team-pairs-hint">
           {refreshHint
@@ -226,13 +241,29 @@ export function TeamPositionPairs({
                 >
                   {showPhotos ? (
                     <>
-                      <PairMemberRow ballkid={a} showYoe={showYoe} />
-                      <PairMemberRow ballkid={b} showYoe={showYoe} />
+                      <PairMemberRow
+                        ballkid={a}
+                        showYoe={showYoe}
+                        plainName={canEdit}
+                      />
+                      <PairMemberRow
+                        ballkid={b}
+                        showYoe={showYoe}
+                        plainName={canEdit}
+                      />
                     </>
                   ) : (
                     <>
-                      <BallkidAndIcon ballkid={a} showYoe={showYoe} />
-                      <BallkidAndIcon ballkid={b} showYoe={showYoe} />
+                      <BallkidAndIcon
+                        ballkid={a}
+                        showYoe={showYoe}
+                        plainName={canEdit}
+                      />
+                      <BallkidAndIcon
+                        ballkid={b}
+                        showYoe={showYoe}
+                        plainName={canEdit}
+                      />
                     </>
                   )}
                 </div>
@@ -303,7 +334,11 @@ export function TeamPositionPairs({
                 }}
               >
                 {showPhotos ? (
-                  <PairMemberRow ballkid={ballkid} showYoe={showYoe} />
+                  <PairMemberRow
+                    ballkid={ballkid}
+                    showYoe={showYoe}
+                    plainName
+                  />
                 ) : (
                   <BallkidAndIcon
                     ballkid={ballkid}

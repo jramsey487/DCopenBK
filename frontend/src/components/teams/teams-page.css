@@ -60,11 +60,29 @@
     gap: 10px;
     padding: 12px 16px;
     background: var(--tp-bg2);
-    flex-wrap: wrap;
   }
   
   .team-card.is-on-court .team-card-head {
     background: var(--tp-green-bg);
+  }
+
+  .team-card-head-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .team-card-pairing-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .team-card-pairing-bar .teams-page-photo-toggle {
+    gap: 10px;
   }
 
   .court-note {
@@ -261,16 +279,16 @@
   }
 
   .team-pairs-list {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
     width: 100%;
     margin-bottom: 8px;
-    align-items: stretch;
   }
 
   .team-pairs--photos .team-pairs-list {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
 
   .team-pair-card {
@@ -278,14 +296,11 @@
     align-items: flex-start;
     gap: 4px;
     width: 100%;
-    max-width: 100%;
-    height: 100%;
-    min-width: 0;
-    padding: 10px 8px 10px 12px;
+    box-sizing: border-box;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 0.5px solid var(--tp-green-border, var(--tp-green));
     background: var(--tp-green-bg);
-    box-sizing: border-box;
   }
 
   .team-pair-card__members {
@@ -303,6 +318,7 @@
     align-items: flex-start;
     gap: 8px;
     min-width: 0;
+    width: 100%;
   }
 
   .team-pair-card__members--linked {
@@ -387,9 +403,24 @@
 
   .team-pairs-unpaired {
     margin-top: 8px;
-    /* Match .team-pair-card content inset; leave room for select padding */
-    padding: 0 32px 0 4px;
+    /* Match .team-pair-card horizontal padding so names line up */
+    padding: 0 12px;
     box-sizing: border-box;
+  }
+
+  .team-pairs-name-inset,
+  .team-pairs-photo-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    /* Match pair card / unpaired inset across Backs + Nets */
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  .team-pairs-photo-list {
+    gap: 8px;
   }
 
   .team-pairs-unpaired--rows {
@@ -401,12 +432,20 @@
 
   .team-pairs-unpaired .team-pairs-select--row {
     display: flex;
-    width: 100%;
+    width: calc(100% + 16px);
     max-width: none;
-    /* Keep photo inside the selection ring */
-    padding: 6px 10px;
+    /* Pad inside the highlight; negative margin keeps names aligned with the list */
+    padding: 4px 8px;
+    margin: 0 -8px;
     box-sizing: border-box;
     overflow: visible;
+  }
+
+  .team-pairs-unpaired--rows .team-pairs-select--row {
+    /* Keep photo inside the selection ring; offset parent padding */
+    padding: 6px 10px;
+    margin: 0 -10px;
+    width: calc(100% + 20px);
   }
 
   .team-pairs-unpaired--rows .team-pair-member {
@@ -431,6 +470,12 @@
 
   .team-pairs-select.is-editable {
     cursor: pointer;
+  }
+
+  /* Pairing mode only: block profile navigation from names */
+  .team-pairs--editing .team-pairs-select.is-editable a,
+  .team-pairs--editing .team-pair-card a {
+    pointer-events: none;
   }
 
   .team-pairs-select--row {
@@ -1207,14 +1252,19 @@
     }
 
     .teams-page-shell .team-card-head {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
     }
 
     .teams-page-shell .team-card-assignment {
       font-size: 13px;
       line-height: 1.35;
+    }
+
+    .teams-page-shell .team-card-pairing-bar .teams-page-photo-toggle {
+      width: auto;
+      justify-content: flex-end;
     }
   }
 

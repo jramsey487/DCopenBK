@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -17,6 +17,45 @@ const BackChevron = () => (
     />
   </svg>
 );
+
+/** Paths that are safe to return to from a profile back link. */
+const PROFILE_BACK_LABELS = {
+  "/teams": "Back to teams",
+  "/finals-teams": "Back to finals teams",
+  "/past-finals": "Back to past finals",
+  "/list": "Back to roster",
+  "/checkin": "Back to check-in",
+  "/cut": "Back to cut page",
+  "/inactive": "Back to inactive",
+};
+
+function normalizeBackPath(from) {
+  if (typeof from !== "string" || !from.startsWith("/")) {
+    return null;
+  }
+  const path = from.split("?")[0].split("#")[0];
+  if (
+    path === "/me" ||
+    path === "/login" ||
+    path.startsWith("/ballkid/")
+  ) {
+    return null;
+  }
+  return path;
+}
+
+/** Resolve back link from router location.state.from (set by BallkidLink etc.). */
+export function useProfileBackLink(defaultTo = "/list", defaultLabel = "Back to roster") {
+  const location = useLocation();
+  const path = normalizeBackPath(location.state?.from);
+  if (!path) {
+    return { backTo: defaultTo, backLabel: defaultLabel };
+  }
+  return {
+    backTo: path,
+    backLabel: PROFILE_BACK_LABELS[path] || "Back",
+  };
+}
 
 export function profileInitials(firstName, lastName) {
   const f = (firstName ?? "").trim()[0] ?? "";

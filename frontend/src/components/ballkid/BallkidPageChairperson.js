@@ -68,6 +68,7 @@ import {
   ProfileCard,
   ProfileInfoRow,
   isBallkidCut,
+  useProfileBackLink,
 } from "./BallkidProfileLayout";
 import {
   NUM_RATERS_WARNING_THRESHOLD,
@@ -1285,6 +1286,7 @@ export default function BallkidPageChairperson(props) {
 
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { backTo, backLabel } = useProfileBackLink();
   const { pk: pkParam } = useParams();
   const myBallkidId = getBallkidId();
   const onMeRoute =
@@ -1392,6 +1394,8 @@ export default function BallkidPageChairperson(props) {
 
       <ProfileBrandedHero
         ballkid={ballkid}
+        backTo={backTo}
+        backLabel={backLabel}
         nameExtra={profileOverflowMenu(ballkid, setUpdated)}
         status={profileHeaderStatus(ballkid)}
         actions={profileHeaderActions(

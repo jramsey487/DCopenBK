@@ -28,7 +28,7 @@ export function TeamsLabeledToggle({
 export function TeamsPhotoToggle({ showPhotos, onToggle }) {
   return (
     <TeamsLabeledToggle
-      label="Show photos"
+      label="Show Photos"
       checked={showPhotos}
       onChange={() => onToggle()}
     />
@@ -40,6 +40,16 @@ export function TeamsYoeToggle({ showYoe, onToggle }) {
     <TeamsLabeledToggle
       label="Show Experience"
       checked={showYoe}
+      onChange={() => onToggle()}
+    />
+  );
+}
+
+export function TeamsPairingToggle({ enabled, onToggle }) {
+  return (
+    <TeamsLabeledToggle
+      label="Enable Pairing"
+      checked={enabled}
       onChange={() => onToggle()}
     />
   );

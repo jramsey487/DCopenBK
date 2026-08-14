@@ -10,7 +10,11 @@ import {
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { teamsNonchairperson } from "../HelpMessages";
-import { TeamsPhotoToggle, TeamsYoeToggle } from "./TeamsShared";
+import {
+  TeamsPhotoToggle,
+  TeamsYoeToggle,
+  TeamsPairingToggle,
+} from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import {
   CourtNoteBlock,
@@ -35,6 +39,9 @@ function Team({
   showYoe,
   canEditNotes,
   canEditPairs,
+  showPairingToggle = false,
+  pairingEnabled = false,
+  onPairingToggle,
   courtNotes,
   setCourtNotes,
   pairs,
@@ -43,6 +50,9 @@ function Team({
   const isCurrentlyOn =
     nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
   const court = nextShifts.length > 0 ? nextShifts[0].court : "";
+  // Captains only — never show pairing controls for ballkids/chairpersons.
+  const showCaptainPairingToggle =
+    showPairingToggle && getLocalStorage("group") === "captain";
 
   return (
     <div
@@ -51,16 +61,26 @@ function Team({
       }`}
     >
       <div className="team-card-head">
-        <div className="team-card-title-group">
-          <span className="team-card-title">Team {team}</span>
-          <span className="team-card-count">({assigned.length})</span>
-          {isCurrentlyOn ? (
-            <span className="team-card-oncourt-badge">On court</span>
-          ) : null}
+        <div className="team-card-head-left">
+          <div className="team-card-title-group">
+            <span className="team-card-title">Team {team}</span>
+            <span className="team-card-count">({assigned.length})</span>
+            {isCurrentlyOn ? (
+              <span className="team-card-oncourt-badge">On court</span>
+            ) : null}
+          </div>
+          <span className="team-card-assignment">
+            <CourtAssignment nextShifts={nextShifts} />
+          </span>
         </div>
-        <span className="team-card-assignment">
-          <CourtAssignment nextShifts={nextShifts} />
-        </span>
+        {showCaptainPairingToggle ? (
+          <div className="team-card-pairing-bar">
+            <TeamsPairingToggle
+              enabled={pairingEnabled}
+              onToggle={onPairingToggle}
+            />
+          </div>
+        ) : null}
       </div>
 
       {court ? (
@@ -120,12 +140,12 @@ export default function TeamsPage() {
   const [loading, setLoading] = useState(!hadCache);
   const [showPhotos, setShowPhotos] = useState(false);
   const [showYoe, setShowYoe] = useState(false);
+  const [pairingEnabled, setPairingEnabled] = useState(false);
   const [courtNotes, setCourtNotes] = useState({});
   const [pairs, setPairs] = useState([]);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
   const group = getLocalStorage("group");
-  const canEditNotes = group === "captain" || group === "chairperson";
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +218,8 @@ export default function TeamsPage() {
   }, [hadCache]);
 
   const myTeam = assigned.find((b) => b.id === myBallkidId)?.current_team;
+  const isCaptain = group === "captain";
+  const canUsePairing = isCaptain && myTeam != null && myTeam > 0;
 
   const orderedTeams = [...teams].sort((a, b) => {
     if (a === myTeam) return -1;
@@ -222,8 +244,17 @@ export default function TeamsPage() {
             isMyTeam={team === myTeam}
             showPhotos={showPhotos}
             showYoe={showYoe}
-            canEditNotes={canEditNotes}
-            canEditPairs={group === "captain" && team === myTeam}
+            canEditNotes={isCaptain && team === myTeam}
+            canEditPairs={
+              canUsePairing && pairingEnabled && team === myTeam
+            }
+            showPairingToggle={isCaptain && canUsePairing && team === myTeam}
+            pairingEnabled={pairingEnabled}
+            onPairingToggle={
+              isCaptain
+                ? () => setPairingEnabled(!pairingEnabled)
+                : undefined
+            }
             courtNotes={courtNotes}
             setCourtNotes={setCourtNotes}
             pairs={pairs}

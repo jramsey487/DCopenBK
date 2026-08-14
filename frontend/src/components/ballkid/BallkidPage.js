@@ -14,12 +14,14 @@ import {
   ProfileCurrentTournamentCard,
   fetchTournament,
   shouldShowCurrentTournament,
+  useProfileBackLink,
 } from "./BallkidProfileLayout";
 
 export default function BallkidPage() {
   const [ballkid, setBallkid] = useState(null);
   const [showTeams, setShowTeams] = useState(false);
   const [loadState, setLoadState] = useState("loading");
+  const { backTo, backLabel } = useProfileBackLink();
 
   const { pk } = useParams();
 
@@ -70,8 +72,8 @@ export default function BallkidPage() {
     <ProfilePageShell>
       <ProfileBrandedHero
         ballkid={ballkid}
-        backTo="/list"
-        backLabel="Back to roster"
+        backTo={backTo}
+        backLabel={backLabel}
       />
 
       <ProfileContent>

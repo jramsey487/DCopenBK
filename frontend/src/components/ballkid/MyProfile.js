@@ -26,6 +26,7 @@ import {
   ProfileCurrentTournamentCard,
   fetchTournament,
   shouldShowCurrentTournament,
+  useProfileBackLink,
 } from "./BallkidProfileLayout";
 
 function RatingSection({ ballkid }) {
@@ -91,6 +92,7 @@ export default function MyProfile(props) {
   const [cuts, setCuts] = useState([]);
   const [updated, setUpdated] = useState(false);
   const [tab, setTab] = useState("info");
+  const { backTo, backLabel } = useProfileBackLink();
 
   const pk = getBallkidId();
 
@@ -169,8 +171,8 @@ export default function MyProfile(props) {
     <ProfilePageShell>
       <ProfileBrandedHero
         ballkid={ballkid}
-        backTo="/list"
-        backLabel="Back to roster"
+        backTo={backTo}
+        backLabel={backLabel}
       />
 
       <ProfileTabs

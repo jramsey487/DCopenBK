@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -352,6 +352,7 @@ export function BallkidPopover({
   setAnchorEl,
   showChart = false,
 }) {
+  const location = useLocation();
   return (
     <Popover
       open={Boolean(anchorEl)}
@@ -382,6 +383,7 @@ export function BallkidPopover({
               ? "/me"
               : `/ballkid/${ballkid.id}`
           }
+          state={{ from: `${location.pathname}${location.search}` }}
         >
           <CardContent className="ballkid-hover-popover__content">
             <Typography
@@ -459,11 +461,13 @@ export function BallkidAndIcon({
 }
 
 export function BallkidLink({ id, name }) {
+  const location = useLocation();
   return (
     <Link
       variant="body2"
       component={RouterLink}
       to={id === getLocalStorage("ballkid_id") ? "/me" : `/ballkid/${id}`}
+      state={{ from: `${location.pathname}${location.search}` }}
       sx={{
         lineHeight: 1.25,
         display: "inline-flex",
@@ -477,6 +481,7 @@ export function BallkidLink({ id, name }) {
 
 export function BallkidCard({ ballkid, renderAdditional, renderNameTrailing }) {
   const layout = getLocalStorage("layout") ?? "list";
+  const location = useLocation();
 
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -487,6 +492,7 @@ export function BallkidCard({ ballkid, renderAdditional, renderNameTrailing }) {
             ? "/me"
             : `/ballkid/${ballkid.id}`
         }
+        state={{ from: `${location.pathname}${location.search}` }}
         sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         {layout === "list" ? (

@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
 from api.models.schedule import Schedule, CourtNote
+from api.models.ballkid import Ballkid
 from api.models.enums import COURT
 from api.utils.utils import setup_testing_client
 from api.utils.consts import SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -113,9 +114,22 @@ class TestCourtNotes(APITestCase):
             "Visible", CourtNote.objects.get().message
         )
 
-    def test_captain_allowed(self):
+    def test_captain_allowed_on_own_team_court(self):
         user = User.objects.create(username="captain_user")
         user.groups.add(Group.objects.create(name="captain"))
+        Ballkid.objects.create(
+            first_name="Cap",
+            last_name="Tain",
+            user=user,
+            is_captain=True,
+            current_team=1,
+            is_checked_in=True,
+        )
+        Schedule.objects.create(
+            team=1,
+            court=COURT.STADIUM,
+            start=datetime(2026, 8, 5, 11, 0, 0),
+        )
         client = APIClient()
         client.force_authenticate(user=user)
 
@@ -134,6 +148,42 @@ class TestCourtNotes(APITestCase):
         response = client.get(self.url, {"date": self.date_str})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.data))
+
+    def test_captain_cannot_edit_other_team_court(self):
+        user = User.objects.create(username="captain_user")
+        user.groups.add(Group.objects.create(name="captain"))
+        Ballkid.objects.create(
+            first_name="Cap",
+            last_name="Tain",
+            user=user,
+            is_captain=True,
+            current_team=1,
+            is_checked_in=True,
+        )
+        Schedule.objects.create(
+            team=1,
+            court=COURT.STADIUM,
+            start=datetime(2026, 8, 5, 11, 0, 0),
+        )
+        Schedule.objects.create(
+            team=2,
+            court=COURT.GRANDSTAND,
+            start=datetime(2026, 8, 5, 11, 0, 0),
+        )
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.put(
+            self.url,
+            {
+                "court": COURT.GRANDSTAND,
+                "date": self.date_str,
+                "message": "Nope",
+            },
+            format="json",
+        )
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        self.assertEqual(0, CourtNote.objects.count())
 
     def test_court_rename_updates_note(self):
         CourtNote.objects.create(

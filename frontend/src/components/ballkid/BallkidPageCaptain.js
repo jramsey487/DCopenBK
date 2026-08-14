@@ -22,12 +22,14 @@ import {
   ProfileCurrentTournamentCard,
   fetchTournament,
   shouldShowCurrentTournament,
+  useProfileBackLink,
 } from "./BallkidProfileLayout";
 
 export default function BallkidPageCaptain() {
   const [ballkid, setBallkid] = useState(null);
   const [updated, setUpdated] = useState(false);
   const [showTeams, setShowTeams] = useState(false);
+  const { backTo, backLabel } = useProfileBackLink();
 
   const isMobile = useIsMobile();
   const { pk } = useParams();
@@ -84,7 +86,12 @@ export default function BallkidPageCaptain() {
   return (
     <ProfilePageShell>
       <Box className="ballkid-profile-captain-hero">
-        <ProfileBrandedHero ballkid={ballkid} actions={ratingButton} />
+        <ProfileBrandedHero
+          ballkid={ballkid}
+          backTo={backTo}
+          backLabel={backLabel}
+          actions={ratingButton}
+        />
       </Box>
 
       <ProfileContent>
