@@ -136,33 +136,62 @@ export function TeamPositionPairs({
       return;
     }
 
+    const ballkidA = selectedId;
+    const ballkidB = ballkid.id;
+    const tempId = `temp-${ballkidA}-${ballkidB}`;
+    const optimisticPair = {
+      id: tempId,
+      team,
+      position,
+      ballkid_a: ballkidA,
+      ballkid_b: ballkidB,
+    };
+
+    // Show the pair immediately; sync with the server in the background.
+    setSelectedId(null);
+    onPairsChange((prev) => [...prev, optimisticPair]);
     setBusy(true);
+    if (typeof document !== "undefined" && document.activeElement?.blur) {
+      document.activeElement.blur();
+    }
+
     createTeamPair({
       team,
       position,
-      ballkid_a: selectedId,
-      ballkid_b: ballkid.id,
+      ballkid_a: ballkidA,
+      ballkid_b: ballkidB,
     })
       .then((pair) => {
-        setSelectedId(null);
-        onPairsChange((prev) => [...prev, pair]);
+        onPairsChange((prev) =>
+          prev.map((p) => (p.id === tempId ? pair : p))
+        );
       })
       .catch((err) => {
+        onPairsChange((prev) => prev.filter((p) => p.id !== tempId));
         setError(err.message || "Could not create pair");
-        setSelectedId(null);
       })
       .finally(() => setBusy(false));
   };
 
   const onUnpair = (pairId) => {
     if (!canEdit || busy) return;
-    setBusy(true);
     setError("");
+
+    // Optimistic temp pairs were never saved — just drop them.
+    if (String(pairId).startsWith("temp-")) {
+      onPairsChange((prev) => prev.filter((p) => p.id !== pairId));
+      return;
+    }
+
+    const removed = (pairs || []).find((p) => p.id === pairId);
+    onPairsChange((prev) => prev.filter((p) => p.id !== pairId));
+    setBusy(true);
+
     deleteTeamPair(pairId)
-      .then(() => {
-        onPairsChange((prev) => prev.filter((p) => p.id !== pairId));
-      })
       .catch((err) => {
+        if (removed) {
+          onPairsChange((prev) => [...prev, removed]);
+        }
         setError(err.message || "Could not remove pair");
       })
       .finally(() => setBusy(false));
