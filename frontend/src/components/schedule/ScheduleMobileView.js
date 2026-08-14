@@ -109,7 +109,29 @@ function TeamSheet({ team, members, open, onClose }) {
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+
+    // Lock background scroll while the sheet is open (esp. mobile overscroll).
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      window.scrollTo(0, scrollY);
+    };
   }, [open, onClose]);
 
   return (
@@ -117,6 +139,7 @@ function TeamSheet({ team, members, open, onClose }) {
       <div
         className={`schedule-sheet-backdrop${open ? " open" : ""}`}
         onClick={onClose}
+        onTouchMove={(e) => e.preventDefault()}
         role="presentation"
       />
       <div
@@ -125,7 +148,6 @@ function TeamSheet({ team, members, open, onClose }) {
         aria-modal="true"
         aria-labelledby="schedule-team-sheet-title"
       >
-        <div className="pop-handle" aria-hidden="true" />
         <header className="sheet-header">
           <div className="sheet-header-text">
             <h2 id="schedule-team-sheet-title" className="sheet-title">
