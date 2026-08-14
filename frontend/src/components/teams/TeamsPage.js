@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import {
   CourtAssignment,
@@ -21,7 +21,7 @@ import {
   courtNotesToMap,
   fetchCourtNotes,
 } from "./CourtNote";
-import { TeamPositionPairs, fetchTeamPairs } from "./TeamPairs";
+import { TeamPositionPairs, fetchTeamPairs, mergePairsFromServer } from "./TeamPairs";
 import { cacheGet, cacheSet } from "../apiCache";
 import "./teams-page.css";
 
@@ -162,6 +162,23 @@ export default function TeamsPage() {
   );
   const [courtNotes, setCourtNotes] = useState({});
   const [pairs, setPairs] = useState([]);
+  const pendingDeleteIdsRef = useRef(new Set());
+
+  const updatePairs = useCallback((updater) => {
+    setPairs((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      const nextIds = new Set((next || []).map((pair) => pair.id));
+      (prev || []).forEach((pair) => {
+        if (
+          !nextIds.has(pair.id) &&
+          !String(pair.id).startsWith("temp-")
+        ) {
+          pendingDeleteIdsRef.current.add(pair.id);
+        }
+      });
+      return next;
+    });
+  }, []);
 
   const myBallkidId = Number(getLocalStorage("ballkid_id"));
   const group = getLocalStorage("group");
@@ -236,6 +253,62 @@ export default function TeamsPage() {
     };
   }, [hadCache]);
 
+  // Keep pairings in sync for everyone on the page (multi-captain / viewers).
+  useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+
+    const schedule = (delay = 2000) => {
+      if (cancelled) {
+        return;
+      }
+      timer = window.setTimeout(poll, delay);
+    };
+
+    const poll = () => {
+      if (cancelled) {
+        return;
+      }
+      if (typeof document !== "undefined" && document.hidden) {
+        schedule();
+        return;
+      }
+      fetchTeamPairs()
+        .then((data) => {
+          if (cancelled || !Array.isArray(data)) {
+            return;
+          }
+          setPairs((prev) =>
+            mergePairsFromServer(prev, data, pendingDeleteIdsRef.current)
+          );
+        })
+        .catch(() => {})
+        .finally(() => {
+          schedule();
+        });
+    };
+
+    schedule(1500);
+
+    const onVisibility = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        if (timer) {
+          window.clearTimeout(timer);
+        }
+        poll();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      if (timer) {
+        window.clearTimeout(timer);
+      }
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
   const myTeam = assigned.find((b) => b.id === myBallkidId)?.current_team;
   const isCaptain = group === "captain";
   const canUsePairing = isCaptain && myTeam != null && myTeam > 0;
@@ -281,7 +354,7 @@ export default function TeamsPage() {
             courtNotes={courtNotes}
             setCourtNotes={setCourtNotes}
             pairs={pairs}
-            setPairs={setPairs}
+            setPairs={updatePairs}
           />
         ))}
       </div>

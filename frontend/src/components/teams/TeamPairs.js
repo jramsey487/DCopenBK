@@ -22,6 +22,32 @@ export function fetchTeamPairs(team) {
   );
 }
 
+/** Merge server pairs with in-flight optimistic creates; honor pending deletes. */
+export function mergePairsFromServer(prev, server, pendingDeleteIds) {
+  const serverList = (Array.isArray(server) ? server : []).filter(
+    (pair) => !pendingDeleteIds?.has?.(pair.id)
+  );
+  if (pendingDeleteIds) {
+    for (const id of [...pendingDeleteIds]) {
+      if (!server.some((pair) => pair.id === id)) {
+        pendingDeleteIds.delete(id);
+      }
+    }
+  }
+  const coversTemp = (temp) =>
+    serverList.some(
+      (s) =>
+        s.team === temp.team &&
+        s.position === temp.position &&
+        ((s.ballkid_a === temp.ballkid_a && s.ballkid_b === temp.ballkid_b) ||
+          (s.ballkid_a === temp.ballkid_b && s.ballkid_b === temp.ballkid_a))
+    );
+  const pendingTemps = (prev || []).filter(
+    (pair) => String(pair.id).startsWith("temp-") && !coversTemp(pair)
+  );
+  return [...serverList, ...pendingTemps];
+}
+
 function createTeamPair({ team, position, ballkid_a, ballkid_b }) {
   return fetch("/api/team-pairs", {
     method: "POST",
