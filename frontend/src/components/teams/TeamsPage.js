@@ -29,6 +29,21 @@ const ASSIGNED_CACHE = "teams:assigned";
 const TEAMS_CACHE = "teams:nums";
 const SHOW_TEAMS_CACHE = "teams:show";
 const NEXT_SHIFTS_CACHE = "teams:next-shifts";
+const UI_TOGGLES_CACHE = "teams:ui-toggles";
+
+const DEFAULT_UI_TOGGLES = {
+  showPhotos: false,
+  showYoe: false,
+  pairingEnabled: false,
+};
+
+function readUiToggles() {
+  return { ...DEFAULT_UI_TOGGLES, ...(cacheGet(UI_TOGGLES_CACHE) ?? {}) };
+}
+
+function writeUiToggles(patch) {
+  cacheSet(UI_TOGGLES_CACHE, { ...readUiToggles(), ...patch });
+}
 
 function Team({
   team,
@@ -138,9 +153,13 @@ export default function TeamsPage() {
     () => cacheGet(SHOW_TEAMS_CACHE) ?? false
   );
   const [loading, setLoading] = useState(!hadCache);
-  const [showPhotos, setShowPhotos] = useState(false);
-  const [showYoe, setShowYoe] = useState(false);
-  const [pairingEnabled, setPairingEnabled] = useState(false);
+  const [showPhotos, setShowPhotos] = useState(
+    () => readUiToggles().showPhotos
+  );
+  const [showYoe, setShowYoe] = useState(() => readUiToggles().showYoe);
+  const [pairingEnabled, setPairingEnabled] = useState(
+    () => readUiToggles().pairingEnabled
+  );
   const [courtNotes, setCourtNotes] = useState({});
   const [pairs, setPairs] = useState([]);
 
@@ -252,7 +271,11 @@ export default function TeamsPage() {
             pairingEnabled={pairingEnabled}
             onPairingToggle={
               isCaptain
-                ? () => setPairingEnabled(!pairingEnabled)
+                ? () => {
+                    const next = !pairingEnabled;
+                    setPairingEnabled(next);
+                    writeUiToggles({ pairingEnabled: next });
+                  }
                 : undefined
             }
             courtNotes={courtNotes}
@@ -283,11 +306,19 @@ export default function TeamsPage() {
           <>
             <TeamsPhotoToggle
               showPhotos={showPhotos}
-              onToggle={() => setShowPhotos(!showPhotos)}
+              onToggle={() => {
+                const next = !showPhotos;
+                setShowPhotos(next);
+                writeUiToggles({ showPhotos: next });
+              }}
             />
             <TeamsYoeToggle
               showYoe={showYoe}
-              onToggle={() => setShowYoe(!showYoe)}
+              onToggle={() => {
+                const next = !showYoe;
+                setShowYoe(next);
+                writeUiToggles({ showYoe: next });
+              }}
             />
           </>
         }

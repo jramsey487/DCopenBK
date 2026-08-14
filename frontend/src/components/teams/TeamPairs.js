@@ -214,7 +214,7 @@ export function TeamPositionPairs({
           {refreshHint
             ? selectedId
               ? "Tap another ballkid to pair them."
-              : "Optional: tap two ballkids to pair them."
+              : "Tap two ballkids to pair them."
             : positionPairs.length > 0
               ? "Tap the unlink icon to remove a pair."
               : null}
