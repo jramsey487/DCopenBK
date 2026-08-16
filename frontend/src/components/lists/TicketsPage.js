@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Edit from "@mui/icons-material/Edit";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import Tooltip from "@mui/material/Tooltip";
 
 import {
   Banners,
@@ -153,7 +154,7 @@ function formatEt(iso) {
   if (!parts) {
     return "";
   }
-  return `${parts.date}, ${parts.time}`;
+  return `${parts.date}, ${parts.time} ET`;
 }
 
 function formatEtShort(iso) {
@@ -174,7 +175,7 @@ function formatEtShort(iso) {
       .map((p) => [p.type, p.value])
   );
   const dayPeriod = parts.dayPeriod ? ` ${parts.dayPeriod}` : "";
-  return `${parts.weekday}, ${parts.month} ${parts.day} at ${parts.hour}:${parts.minute}${dayPeriod}`;
+  return `${parts.weekday}, ${parts.month} ${parts.day} at ${parts.hour}:${parts.minute}${dayPeriod} ET`;
 }
 
 function BallkidStatus({ kicker, title, children, tone }) {
@@ -279,6 +280,14 @@ function newOption(overrides = {}) {
 
 function ticketWord(n) {
   return n === 1 ? "ticket" : "tickets";
+}
+
+function remainingQuotaCopy(remaining) {
+  const left = Math.max(0, Number(remaining) || 0);
+  if (left <= 0) {
+    return `You've used all ${TICKET_LIMIT} ${ticketWord(TICKET_LIMIT)} for this tournament.`;
+  }
+  return `You have ${left} of ${TICKET_LIMIT} ${ticketWord(TICKET_LIMIT)} left this tournament.`;
 }
 
 function earliestOptionDate(options) {
@@ -795,8 +804,15 @@ function roundSortDate(session) {
   return earliestOptionDate(session?.options) || session?.ticket_date || "";
 }
 
-function sortedRounds(sessions) {
+function sortedRounds(sessions, { pinLive = false } = {}) {
   return [...(sessions || [])].sort((a, b) => {
+    if (pinLive) {
+      const aLive = staffRoundState(a) === "live" ? 0 : 1;
+      const bLive = staffRoundState(b) === "live" ? 0 : 1;
+      if (aLive !== bLive) {
+        return aLive - bLive;
+      }
+    }
     const byDate = roundSortDate(a).localeCompare(roundSortDate(b));
     if (byDate) {
       return byDate;
@@ -1234,6 +1250,7 @@ function SavedRound({
   const [editing, setEditing] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [liveOpen, setLiveOpen] = useState(false);
 
   const formStamp = `${session.id}:${session.closes_at}:${session.winner_confirm_by}:${(session.options || [])
     .map((o) => `${o.id}-${o.session_number}-${o.ticket_date}-${o.period}-${o.pool_size}`)
@@ -1273,23 +1290,12 @@ function SavedRound({
       .finally(() => setSaving(false));
   };
 
-  const toggleLive = () => {
-    setError("");
-    fetch("/api/ticket-session", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({ id: session.id, is_live: true }),
-    })
-      .then(jsonOrThrow)
-      .then(() => onRefresh())
-      .catch((err) => setError(err.message));
-  };
-
   const state = staffRoundState(session);
   const badge = STAFF_ROUND_BADGE[state];
   const showMakeLive = state === "draft" && !isPastRound(session);
   const canEdit = state !== "finalized";
   const closeLabel = formatEtShort(session.closes_at);
+  const declineLabel = formatEtShort(session.winner_confirm_by);
 
   return (
     <div
@@ -1332,14 +1338,27 @@ function SavedRound({
             </button>
           ) : null}
           {showMakeLive ? (
-            <button
-              type="button"
-              className="tickets-btn tickets-btn--live"
-              disabled={anotherLive}
-              onClick={toggleLive}
-            >
-              Make live
-            </button>
+            anotherLive ? (
+              <Tooltip title="Only one round can be live at a time">
+                <span className="tickets-btn-tooltip-wrap">
+                  <button
+                    type="button"
+                    className="tickets-btn tickets-btn--live"
+                    disabled
+                  >
+                    Make live
+                  </button>
+                </span>
+              </Tooltip>
+            ) : (
+              <button
+                type="button"
+                className="tickets-btn tickets-btn--live"
+                onClick={() => setLiveOpen(true)}
+              >
+                Make live
+              </button>
+            )
           ) : null}
           <button
             type="button"
@@ -1357,6 +1376,13 @@ function SavedRound({
       ) : null}
       {state === "draft" ? (
         <p className="tickets-round-subtext">Not visible to ballkids yet</p>
+      ) : null}
+      {state === "allocating" ? (
+        <p className="tickets-round-subtext">
+          {declineLabel
+            ? `Winners can decline until ${declineLabel} — leftover tickets go to the waitlist.`
+            : "Winners can decline — leftover tickets go to the waitlist."}
+        </p>
       ) : null}
       {state === "finalized" ? (
         <p className="tickets-round-subtext">Tickets confirmed for this date</p>
@@ -1402,6 +1428,15 @@ function SavedRound({
         />
       ) : null}
       <ConfirmDialog
+        message={`Making ${roundTitle(session)} live will show this ticket form to ballkids right away.`}
+        url="/api/ticket-session"
+        body={{ id: session.id, is_live: true }}
+        method="PATCH"
+        open={liveOpen}
+        setOpen={setLiveOpen}
+        setUpdated={() => onRefresh()}
+      />
+      <ConfirmDialog
         message={`Deleting ${roundTitle(session)} will remove this round and all of its ticket requests.`}
         url="/api/ticket-session"
         body={{ id: session.id }}
@@ -1421,9 +1456,12 @@ function StaffTickets({
   error,
   setError,
 }) {
+  const hasRounds = sessions.length > 0;
   const [form, setForm] = useState(emptyRoundForm);
   const [saving, setSaving] = useState(false);
   const [pastOpen, setPastOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const showCreate = creating || !hasRounds;
 
   const saveNewRound = (e) => {
     e.preventDefault();
@@ -1451,6 +1489,7 @@ function StaffTickets({
       .then(jsonOrThrow)
       .then(() => {
         setForm(emptyRoundForm());
+        setCreating(false);
         onRefresh();
       })
       .catch((err) => setError(err.message))
@@ -1467,11 +1506,31 @@ function StaffTickets({
   });
 
   const currentRounds = sortedRounds(
-    sessions.filter((round) => staffRoundState(round) !== "finalized")
+    sessions.filter((round) => staffRoundState(round) !== "finalized"),
+    { pinLive: true }
   );
   const pastRounds = sortedRounds(
     sessions.filter((round) => staffRoundState(round) === "finalized")
   );
+
+  const closeCreate = () => {
+    setForm(emptyRoundForm());
+    setCreating(false);
+  };
+
+  const errorBanner = error ? (
+    <div className="tickets-error-banner" role="alert">
+      <span className="tickets-error-banner-text">{error}</span>
+      <button
+        type="button"
+        className="tickets-error-banner-close"
+        aria-label="Dismiss"
+        onClick={() => setError("")}
+      >
+        ×
+      </button>
+    </div>
+  ) : null;
 
   const renderRounds = (rounds) =>
     rounds.map((round) => (
@@ -1487,33 +1546,45 @@ function StaffTickets({
 
   return (
     <>
-      <div className="tickets-card tickets-config">
-        <h2 className="tickets-card-title">Create ticket round</h2>
-        <p className="tickets-hint">All times on this page are in EST.</p>
-        {error ? (
-          <div className="tickets-error-banner" role="alert">
-            <span className="tickets-error-banner-text">{error}</span>
-            <button
-              type="button"
-              className="tickets-error-banner-close"
-              aria-label="Dismiss"
-              onClick={() => setError("")}
-            >
-              ×
-            </button>
+      {errorBanner}
+      <p className="tickets-hint">All times on this page are in Eastern Time.</p>
+      {showCreate ? (
+        <div className="tickets-card tickets-config">
+          <div className="tickets-create-header">
+            <h2 className="tickets-card-title">Create ticket round</h2>
+            {hasRounds ? (
+              <button
+                type="button"
+                className="tickets-btn tickets-btn--secondary"
+                onClick={closeCreate}
+              >
+                Cancel
+              </button>
+            ) : null}
           </div>
-        ) : null}
-        <RoundEditor
-          form={form}
-          setForm={setForm}
-          onSubmit={saveNewRound}
-          saving={saving}
-          submitLabel="Save round"
-        />
-      </div>
+          <RoundEditor
+            form={form}
+            setForm={setForm}
+            onSubmit={saveNewRound}
+            saving={saving}
+            submitLabel="Save round"
+          />
+        </div>
+      ) : null}
 
       <section className="tickets-bk-section">
-        <h2 className="tickets-bk-section-title">Upcoming rounds</h2>
+        <div className="tickets-section-heading">
+          <h2 className="tickets-bk-section-title">Upcoming rounds</h2>
+          {hasRounds && !showCreate ? (
+            <button
+              type="button"
+              className="tickets-btn"
+              onClick={() => setCreating(true)}
+            >
+              New round
+            </button>
+          ) : null}
+        </div>
         {currentRounds.length === 0 ? (
           <p className="tickets-bk-empty">No upcoming rounds.</p>
         ) : (
@@ -1808,8 +1879,8 @@ function BallkidTickets({
         <h2 className="tickets-card-title">{roundTitle(session)}</h2>
         <p className="tickets-state-copy tickets-state-copy--spaced">
           {canEdit
-            ? `You can edit or cancel your request until ${closes?.date} at ${closes?.time}.`
-            : `Ticket request form closes on ${closes?.date} at ${closes?.time}.`}
+            ? `You can edit or cancel your request until ${closes?.date} at ${closes?.time} ET.`
+            : `Ticket request form closes on ${closes?.date} at ${closes?.time} ET.`}
         </p>
         {options.length ? (
           <fieldset className="tickets-radios">
@@ -1923,6 +1994,14 @@ function BallkidTickets({
 
   return (
     <>
+      <p
+        className={
+          remaining > 0 ? "tickets-quota" : "tickets-quota tickets-quota--none"
+        }
+      >
+        {remainingQuotaCopy(remaining)}
+      </p>
+      <p className="tickets-hint">Times are in Eastern Time.</p>
       <section className="tickets-bk-section">
         <h2 className="tickets-bk-section-title">Current form</h2>
         {currentPanel}

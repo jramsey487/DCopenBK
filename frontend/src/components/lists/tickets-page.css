@@ -64,6 +64,21 @@
   max-width: 520px;
 }
 
+.tickets-quota {
+  margin: -8px 0 4px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text2);
+}
+
+.tickets-page--ballkid .tickets-hint {
+  margin: 0 0 20px;
+}
+
+.tickets-quota--none {
+  color: #a16207;
+}
+
 .tickets-bk-section {
   margin-bottom: 28px;
 }
@@ -75,6 +90,34 @@
   color: var(--text1);
   line-height: 1.25;
   letter-spacing: -0.02em;
+}
+
+.tickets-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tickets-section-heading .tickets-bk-section-title {
+  margin: 0;
+}
+
+.tickets-section-heading .tickets-btn {
+  flex-shrink: 0;
+}
+
+.tickets-create-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.tickets-create-header .tickets-card-title {
+  margin: 0;
 }
 
 .tickets-section-toggle {
@@ -350,6 +393,10 @@
   justify-content: flex-end;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.tickets-btn-tooltip-wrap {
+  display: inline-flex;
 }
 
 .tickets-requests-toggle {

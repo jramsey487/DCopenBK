@@ -8,7 +8,7 @@ import History from "@mui/icons-material/History";
 import Replay from "@mui/icons-material/Replay";
 import { SUPERVET_THRESHOLD } from "./Consts";
 
-const TICKETS_UI_TERMS = ["Make live", "Requests", "Allocate"];
+const TICKETS_UI_TERMS = ["New round", "Make live", "Requests", "Allocate"];
 
 function withTicketsUiTerms(text) {
   const parts = text.split(new RegExp(`(${TICKETS_UI_TERMS.join("|")})`, "g"));
@@ -149,12 +149,12 @@ export const ticketsPage = (
     <TicketsHelpSection
       icon={<EventAvailable fontSize="inherit" />}
       title="Creating a round"
-      copy="A round is a ticket form for one date. Add each session ballkids can choose (session #, day/night/all day, pool size), then set when requests close and when winners can decline. Times are shown in EST. Each date can only have one round — edit the existing one instead of creating a duplicate."
+      copy="Click New round to add a ticket form for one date. Add each session ballkids can choose (session #, day/night/all day, pool size), then set when requests close and when winners can decline. Times are shown in Eastern Time. Each date can only have one round — edit the existing one instead of creating a duplicate."
     />
     <TicketsHelpSection
       icon={<Campaign fontSize="inherit" />}
       title="Publishing"
-      copy="Rounds start as drafts. Click Make live when you're ready for ballkids to request tickets — the form appears on their Tickets page right away. Only one round can be live at a time. The form closes automatically when the request deadline passes."
+      copy="Rounds start as drafts. Click Make live when you're ready for ballkids to request tickets — the form appears on their Tickets page right away. You'll be asked to confirm first. Only one round can be live at a time; Make live is disabled until the current live round closes. The form closes automatically when the request deadline passes."
     />
     <TicketsHelpSection
       icon={<ConfirmationNumber fontSize="inherit" />}
@@ -179,7 +179,7 @@ export const ticketsPage = (
     <TicketsHelpSection
       icon={<History fontSize="inherit" />}
       title="Upcoming vs. finalized rounds"
-      copy="Draft, live, and allocating rounds stay under Upcoming rounds. Once a round is finalized, it moves to Finalized rounds, which starts collapsed."
+      copy="Draft, live, and allocating rounds stay under Upcoming rounds, with the live round pinned at the top. Once a round is finalized, it moves to Finalized rounds, which starts collapsed."
     />
   </div>
 );
@@ -193,7 +193,7 @@ export const ticketsPageBallkid = (
     are confirmed automatically — decline in this page by the deadline if you
     can&apos;t use them. If you&apos;re waitlisted, keep checking this page
     until the decline deadline in case a spot opens up. Past requests are from
-    earlier rounds.
+    earlier rounds. All deadlines are in Eastern Time.
   </DialogContentText>
 );
 
