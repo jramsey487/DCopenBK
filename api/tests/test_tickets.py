@@ -308,6 +308,36 @@ class TicketFlowTests(APITestCase):
         self.assertEqual(ticket.num_requested, 2)
         self.assertEqual(ticket.ticket_option_id, night.id)
 
+    def test_can_cancel_request_while_window_open(self):
+        self._auth(self.bk_user)
+        self.assertEqual(self._request(1).status_code, status.HTTP_201_CREATED)
+        response = self.client.delete(reverse("request-tickets"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+            Ticket.objects.filter(
+                ballkid=self.ballkid, ticket_session=self.session
+            ).exists()
+        )
+        self.assertEqual(self._request(1).status_code, status.HTTP_201_CREATED)
+
+    def test_cannot_cancel_request_without_one(self):
+        self._auth(self.bk_user)
+        response = self.client.delete(reverse("request-tickets"))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_cancel_request_after_window_closes(self):
+        self._auth(self.bk_user)
+        self.assertEqual(self._request(1).status_code, status.HTTP_201_CREATED)
+        self.session.closes_at = _naive(self.now - timedelta(minutes=1))
+        self.session.save()
+        response = self.client.delete(reverse("request-tickets"))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            Ticket.objects.filter(
+                ballkid=self.ballkid, ticket_session=self.session
+            ).exists()
+        )
+
     def test_leftover_waitlist_auto_allocated_after_decline_deadline(self):
         self.option.pool_size = 1
         self.option.save()

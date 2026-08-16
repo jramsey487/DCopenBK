@@ -994,7 +994,7 @@ function RequestsTable({ tickets, session, onRefresh }) {
           <tr>
             <th>Name</th>
             <th>Session</th>
-            <th>Status</th>
+            <th className="tickets-status-cell">Status</th>
             <th>Requested</th>
             <th>Granted</th>
             <th>Accepted</th>
@@ -1590,7 +1590,7 @@ function requestOutcomeCopy(ticket, session, { past = false } = {}) {
   switch (ticket.status) {
     case "requested":
       return current?.closes_at
-        ? `You requested ${requested} ${reqWord}. You can edit this request until ${formatEt(current.closes_at)}.`
+        ? `You requested ${requested} ${reqWord}. You can edit or cancel this request until ${formatEt(current.closes_at)}.`
         : `You requested ${requested} ${reqWord}.`;
     case "waitlist":
       if (current && !current.waitlist_run_at && !ticket.waitlist_run_at) {
@@ -1645,6 +1645,7 @@ function BallkidTickets({
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const phase = session?.phase;
   const sessionTicket = session
     ? myTickets.find((ticket) => Number(ticket.ticket_session) === Number(session.id))
@@ -1790,6 +1791,13 @@ function BallkidTickets({
             Edit
             <Edit className="tickets-btn-icon" fontSize="inherit" />
           </button>
+          <button
+            type="button"
+            className="tickets-btn tickets-btn--danger"
+            onClick={() => setCancelOpen(true)}
+          >
+            Cancel request
+          </button>
         </div>
         {error ? <p className="tickets-error">{error}</p> : null}
       </BallkidStatus>
@@ -1800,7 +1808,7 @@ function BallkidTickets({
         <h2 className="tickets-card-title">{roundTitle(session)}</h2>
         <p className="tickets-state-copy tickets-state-copy--spaced">
           {canEdit
-            ? `You can edit your request until ${closes?.date} at ${closes?.time}.`
+            ? `You can edit or cancel your request until ${closes?.date} at ${closes?.time}.`
             : `Ticket request form closes on ${closes?.date} at ${closes?.time}.`}
         </p>
         {options.length ? (
@@ -1870,7 +1878,17 @@ function BallkidTickets({
                 setError("");
               }}
             >
-              Cancel
+              Back
+            </button>
+          ) : null}
+          {canEdit ? (
+            <button
+              type="button"
+              className="tickets-btn tickets-btn--danger"
+              disabled={submitting}
+              onClick={() => setCancelOpen(true)}
+            >
+              Cancel request
             </button>
           ) : null}
         </div>
@@ -1945,6 +1963,18 @@ function BallkidTickets({
         open={declineOpen}
         setOpen={setDeclineOpen}
         setUpdated={() => onRefresh()}
+      />
+      <ConfirmDialog
+        message="Cancelling will withdraw your ticket request for this round. You can submit a new request until the form closes."
+        url="/api/request-tickets"
+        body={{}}
+        method="DELETE"
+        open={cancelOpen}
+        setOpen={setCancelOpen}
+        setUpdated={() => {
+          setEditing(false);
+          onRefresh();
+        }}
       />
     </>
   );

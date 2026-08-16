@@ -188,11 +188,12 @@ export const ticketsPageBallkid = (
   <DialogContentText>
     While the window is open, pick one session and request 1 or 2 tickets (up to
     however many you have left of the tournament cap of 2). After you submit,
-    your request stays under Current form — use Edit to change it until the
-    form closes. After the lottery, winners are confirmed automatically —
-    decline in this page by the deadline if you can&apos;t use them. If
-    you&apos;re waitlisted, keep checking this page until the decline deadline
-    in case a spot opens up. Past requests are from earlier rounds.
+    your request stays under Current form — use Edit to change it, or Cancel
+    request to withdraw it, until the form closes. After the lottery, winners
+    are confirmed automatically — decline in this page by the deadline if you
+    can&apos;t use them. If you&apos;re waitlisted, keep checking this page
+    until the decline deadline in case a spot opens up. Past requests are from
+    earlier rounds.
   </DialogContentText>
 );
 

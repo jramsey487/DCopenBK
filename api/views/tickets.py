@@ -431,6 +431,28 @@ class RequestTickets(APIView):
             )
         return num, None
 
+    def _open_requested_ticket(self, request):
+        ballkid = _my_ballkid(request.user)
+        if ballkid is None:
+            return None, None, None, Response(
+                {"detail": "No ballkid profile linked to this account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        session, error = self._live_open_session()
+        if error:
+            return None, None, None, error
+
+        ticket = session.tickets.filter(
+            ballkid=ballkid, status=TICKET_STATUS.REQUESTED
+        ).first()
+        if ticket is None:
+            return None, None, None, Response(
+                {"detail": "No editable request found for this round."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return ballkid, session, ticket, None
+
     def post(self, request, format=None):
         ballkid = _my_ballkid(request.user)
         if ballkid is None:
@@ -472,25 +494,9 @@ class RequestTickets(APIView):
         return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, format=None):
-        ballkid = _my_ballkid(request.user)
-        if ballkid is None:
-            return Response(
-                {"detail": "No ballkid profile linked to this account."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        session, error = self._live_open_session()
+        ballkid, session, ticket, error = self._open_requested_ticket(request)
         if error:
             return error
-
-        ticket = session.tickets.filter(
-            ballkid=ballkid, status=TICKET_STATUS.REQUESTED
-        ).first()
-        if ticket is None:
-            return Response(
-                {"detail": "No editable request found for this round."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         remaining = remaining_tickets(ballkid)
         option, error = self._parse_option(session, request)
@@ -511,6 +517,21 @@ class RequestTickets(APIView):
         )
         logger.info("Ticket request %s updated for ballkid %s", ticket.id, ballkid.id)
         return Response(TicketSerializer(ticket).data)
+
+    def delete(self, request, format=None):
+        ballkid, session, ticket, error = self._open_requested_ticket(request)
+        if error:
+            return error
+
+        ticket_id = ticket.id
+        ticket.delete()
+        logger.info(
+            "Ticket request %s cancelled for ballkid %s (round %s)",
+            ticket_id,
+            ballkid.id,
+            session.id,
+        )
+        return Response({"detail": "Request cancelled."})
 
 
 class ConfirmTickets(APIView):

@@ -812,13 +812,19 @@
   text-underline-offset: 2px;
 }
 
-.tickets-status-cell {
+.tickets-table th.tickets-status-cell,
+.tickets-table td.tickets-status-cell {
+  padding-left: 6px;
+}
+
+td.tickets-status-cell {
   font-size: 0;
 }
 
 .tickets-status {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  vertical-align: middle;
   width: max-content;
   height: 22px;
   margin: 0;

@@ -358,10 +358,10 @@ Ticket requests and a lottery, managed on the **Tickets** page (`/tickets`).
 
 A **round** (`TicketSession`) is one form: one close time and decline deadline, plus one or more **session options**. Staff save rounds as drafts, then **Make live** so ballkids can request (only one live round at a time). After close, a lottery runs **per option**; winners are confirmed automatically and can decline until the deadline. Each decline immediately reallocates those tickets to a random waitlisted ballkid for that session who has not already declined that day. Leftover unclaimed tickets are auto-allocated to the waitlist when the decline window ends. Tournament cap is 2 tickets per ballkid (`num_tickets` = tickets used).
 
-**Roles:** chairperson and **ticketing** can create rounds, make one live, edit pool size and deadlines, allocate leftover tickets, and delete rounds. Captains and ballkids can submit their own request for the live round and decline a confirmed win before the deadline.
+**Roles:** chairperson and **ticketing** can create rounds, make one live, edit pool size and deadlines, allocate leftover tickets, and delete rounds. Captains and ballkids can submit their own request for the live round, edit or cancel it while the window is open, and decline a confirmed win before the deadline.
 
 - `GET/PUT/PATCH/DELETE /api/ticket-session` — PUT create/update; PATCH `{id, is_live}` to publish (chairperson + ticketing)
-- `POST/PATCH /api/request-tickets` — self, while the window is open
+- `POST/PATCH/DELETE /api/request-tickets` — self, while the window is open; DELETE withdraws the request
 - `POST /api/confirm-tickets` — self, decline a confirmed win before the deadline
 - `POST /api/allocate-tickets` — chairperson + ticketing failsafe: confirm leftover tickets for a waitlisted or denied request
 - `GET /api/ticket-list` — staff see all; others see their own
