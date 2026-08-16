@@ -17,6 +17,7 @@ import {
   NavIconProfile,
   NavIconSettings,
   NavIconLogout,
+  NavIconTickets,
 } from "./MobileNavIcons";
 import "./mobile-nav-drawer.css";
 
@@ -43,6 +44,8 @@ function formatMeta(ballkid, group) {
     parts.push("Captain");
   } else if (group === "chairperson") {
     parts.push("Chairperson");
+  } else if (group === "ticketing") {
+    parts.push("Ticketing");
   } else {
     parts.push("Ballkid");
   }
@@ -104,6 +107,11 @@ function getNavSections(group) {
     url: "/schedule",
     Icon: NavIconSchedule,
   };
+  const tickets = {
+    label: "Tickets",
+    url: "/tickets",
+    Icon: NavIconTickets,
+  };
   const ratingsChairperson = {
     label: "Ratings",
     Icon: NavIconRatings,
@@ -138,11 +146,13 @@ function getNavSections(group) {
 
   switch (group) {
     case "chairperson":
-      return [list, teamsChairperson, schedule, ratingsChairperson, leaderboards];
+      return [list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets];
     case "captain":
-      return [listByName, teamsBallkidCaptain, schedule, ratingsCaptain];
+      return [listByName, teamsBallkidCaptain, schedule, tickets, ratingsCaptain];
+    case "ticketing":
+      return [tickets];
     default:
-      return [listByName, teamsBallkidCaptain, schedule];
+      return [listByName, teamsBallkidCaptain, schedule, tickets];
   }
 }
 
@@ -181,6 +191,9 @@ function getAccountItems(group) {
       },
     ];
   }
+  if (group === "ticketing") {
+    return [];
+  }
   return base;
 }
 
@@ -197,13 +210,13 @@ export default function MobileNavDrawer({ group, setToken }) {
     setOpenSections((s) => ({ ...s, [label]: !s[label] }));
 
   useEffect(() => {
-    if (!pk || !open) {
+    if (!pk || !open || group === "ticketing") {
       return;
     }
     fetch(`/api/get-ballkid/${pk}/${pk}`, { headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setBallkid(data));
-  }, [pk, open]);
+  }, [pk, open, group]);
 
   useEffect(() => {
     setOpen(false);

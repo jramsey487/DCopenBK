@@ -79,3 +79,12 @@ export function NavIconLogout({ className }) {
     </svg>
   );
 }
+
+export function NavIconTickets({ className }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+      <rect x="3" y="5" width="14" height="10" rx="2" {...stroke} />
+      <path d="M3 9h14M7 5v10M13 5v10" {...stroke} />
+    </svg>
+  );
+}

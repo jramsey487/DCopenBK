@@ -15,12 +15,14 @@ const ballkidTabs = [
   { label: "By Name", url: "/list" },
   { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
+  { label: "Tickets", url: "/tickets" },
 ];
 
 const captainTabs = [
   { label: "By Name", url: "/list" },
   { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
+  { label: "Tickets", url: "/tickets" },
   {
     label: "Ratings",
     url: "/rate-by-name",
@@ -75,6 +77,7 @@ const chairpersonTabs = [
       { label: "Ratings - Captain", url: "/leaderboards/captain" },
     ],
   },
+  { label: "Tickets", url: "/tickets" },
 ];
 
 const ballkidAccountTab = {
@@ -109,6 +112,14 @@ const chairpersonAccountTab = {
     { label: "Feedback", url: "/feedback" },
     { label: "Logout", url: "/login" },
   ],
+};
+
+const ticketingTabs = [{ label: "Tickets", url: "/tickets" }];
+
+const ticketingAccountTab = {
+  label: "Account",
+  url: "/tickets",
+  subtabs: [{ label: "Logout", url: "/login" }],
 };
 
 function getUserInitials() {
@@ -250,11 +261,19 @@ export default function Navbar({ isLoggedIn, setToken }) {
       tabs = chairpersonTabs;
       accountTab = chairpersonAccountTab;
       break;
+    case "ticketing":
+      tabs = ticketingTabs;
+      accountTab = ticketingAccountTab;
+      break;
     default:
       break;
   }
 
-  const homeUrl = isLoggedIn ? "/list" : "/login";
+  const homeUrl = !isLoggedIn
+    ? "/login"
+    : group === "ticketing"
+    ? "/tickets"
+    : "/list";
 
   return (
     <header className="app-navbar">

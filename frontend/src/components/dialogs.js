@@ -162,10 +162,23 @@ export function ConfirmDialog({
               .then((response) => {
                 if (response.ok) {
                   finishSuccess();
-                } else {
-                  setErrorMsg("Something went wrong. Please try again.");
-                  setLoading(false);
+                  return;
                 }
+                return response.json().then(
+                  (data) => {
+                    const detail = data?.detail;
+                    setErrorMsg(
+                      typeof detail === "string" && detail
+                        ? detail
+                        : "Something went wrong. Please try again."
+                    );
+                    setLoading(false);
+                  },
+                  () => {
+                    setErrorMsg("Something went wrong. Please try again.");
+                    setLoading(false);
+                  }
+                );
               })
               .catch(() => {
                 setErrorMsg("Something went wrong. Please try again.");
@@ -185,9 +198,15 @@ export function HelpIcon({ page, message }) {
 
   return (
     <div>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{page} Help</DialogTitle>
-        <DialogContent>{message}</DialogContent>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        scroll="paper"
+        maxWidth={false}
+        PaperProps={{ className: "help-dialog-paper" }}
+      >
+        <DialogTitle className="help-dialog-title">{page} Help</DialogTitle>
+        <DialogContent className="help-dialog-content">{message}</DialogContent>
       </Dialog>
 
       <Tooltip title="Help">

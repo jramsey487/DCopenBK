@@ -1,5 +1,33 @@
 import DialogContentText from "@mui/material/DialogContentText";
+import Campaign from "@mui/icons-material/Campaign";
+import ConfirmationNumber from "@mui/icons-material/ConfirmationNumber";
+import Edit from "@mui/icons-material/Edit";
+import EventAvailable from "@mui/icons-material/EventAvailable";
+import PlaylistAddCheck from "@mui/icons-material/PlaylistAddCheck";
+import History from "@mui/icons-material/History";
+import Replay from "@mui/icons-material/Replay";
 import { SUPERVET_THRESHOLD } from "./Consts";
+
+const TICKETS_UI_TERMS = ["Make live", "Requests", "Allocate"];
+
+function withTicketsUiTerms(text) {
+  const parts = text.split(new RegExp(`(${TICKETS_UI_TERMS.join("|")})`, "g"));
+  return parts.map((part, i) =>
+    TICKETS_UI_TERMS.includes(part) ? <strong key={i}>{part}</strong> : part
+  );
+}
+
+function TicketsHelpSection({ icon, title, copy }) {
+  return (
+    <section className="tickets-help-section">
+      <h3 className="tickets-help-heading">
+        <span className="tickets-help-icon">{icon}</span>
+        {title}
+      </h3>
+      <p className="tickets-help-copy">{withTicketsUiTerms(copy)}</p>
+    </section>
+  );
+}
 
 export const list = (
   <DialogContentText>
@@ -114,26 +142,57 @@ export const inactive = (
 );
 
 export const ticketsPage = (
+  <div className="tickets-help">
+    <p className="tickets-help-subtitle">
+      How rounds, lotteries, and the waitlist work.
+    </p>
+    <TicketsHelpSection
+      icon={<EventAvailable fontSize="inherit" />}
+      title="Creating a round"
+      copy="A round is a ticket form for one date. Add each session ballkids can choose (session #, day/night/all day, pool size), then set when requests close and when winners can decline. Times are shown in EST. Each date can only have one round — edit the existing one instead of creating a duplicate."
+    />
+    <TicketsHelpSection
+      icon={<Campaign fontSize="inherit" />}
+      title="Publishing"
+      copy="Rounds start as drafts. Click Make live when you're ready for ballkids to request tickets — the form appears on their Tickets page right away. Only one round can be live at a time. The form closes automatically when the request deadline passes."
+    />
+    <TicketsHelpSection
+      icon={<ConfirmationNumber fontSize="inherit" />}
+      title="How winners are chosen"
+      copy="When requests close, each session runs its own lottery. Winners are confirmed automatically, and those tickets count toward their tournament cap of 2. Everyone else for that session is placed on the waitlist."
+    />
+    <TicketsHelpSection
+      icon={<Replay fontSize="inherit" />}
+      title="Declines and backfilling"
+      copy="Winners can decline up until the decline deadline. A decline immediately reallocates those tickets to a random waitlisted ballkid for that same session (never someone who already declined that day) — if fewer tickets remain than they requested, they get a partial allocation. Once the decline deadline passes, any tickets still unclaimed are given out the same way, and anyone left on the waitlist is marked denied."
+    />
+    <TicketsHelpSection
+      icon={<PlaylistAddCheck fontSize="inherit" />}
+      title="Managing requests"
+      copy="Expand Requests on a round to see each person's session, status, and how many tickets they requested, were granted, and accepted (accepted reflects the confirmed amount, or 0 if none). Allocate only appears on waitlisted or denied rows when leftover tickets remain after automatic allocation. It is disabled if that ballkid is already at the tournament cap."
+    />
+    <TicketsHelpSection
+      icon={<Edit fontSize="inherit" />}
+      title="Editing and deleting"
+      copy="While a round is a draft, you can add or remove sessions. After it's live, Edit still lets you adjust pool size or deadlines. Delete removes the round and its requests entirely, and returns any confirmed tickets to those ballkids' tournament totals."
+    />
+    <TicketsHelpSection
+      icon={<History fontSize="inherit" />}
+      title="Upcoming vs. finalized rounds"
+      copy="Draft, live, and allocating rounds stay under Upcoming rounds. Once a round is finalized, it moves to Finalized rounds, which starts collapsed."
+    />
+  </div>
+);
+
+export const ticketsPageBallkid = (
   <DialogContentText>
-    This page allows you to keep track of which ballkids have requested, been
-    granted, and received tickets for which sessions.
-    <br /> <br />
-    Each session is listed, along with the ballkids who requested tickets and
-    the priority order in which they requested tickets. The number of tickets
-    they have received is listed to the right of the ballkid name and
-    highlighted pink if they have received 2 or more tickets. This count
-    includes tickets delivered for the given session.
-    <br /> <br />
-    New ticket requests for a session can be made by clicking on the '+' icon,
-    selecting the ballkid name from the dropdown and the number of tickets
-    requested, and saving. Once a ticket request is made, the number of tickets
-    requested is represented by the circles next to each ballkid's name. A blue
-    open circle means that the ticket has been requested, but not granted or
-    delivered. A purple outlined checkmark means that the ticket has been
-    requested and granted, but not delivered. A filled in green checkmark means
-    that the ticket has been delivered. To toggle between states, click on the
-    ticket to go from requested to granted, granted to delivered, or delivered
-    back to granted.
+    While the window is open, pick one session and request 1 or 2 tickets (up to
+    however many you have left of the tournament cap of 2). After you submit,
+    your request stays under Current form — use Edit to change it until the
+    form closes. After the lottery, winners are confirmed automatically —
+    decline in this page by the deadline if you can&apos;t use them. If
+    you&apos;re waitlisted, keep checking this page until the decline deadline
+    in case a spot opens up. Past requests are from earlier rounds.
   </DialogContentText>
 );
 

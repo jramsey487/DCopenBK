@@ -396,6 +396,7 @@ function CreateUser() {
             <MenuItem value={"ballkid"}>Ballkid</MenuItem>
             <MenuItem value={"captain"}>Captain</MenuItem>
             <MenuItem value={"chairperson"}>Chairperson</MenuItem>
+            <MenuItem value={"ticketing"}>Ticketing</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>

@@ -5,7 +5,7 @@ from api.dev_local import DEFAULT_DEV_PASSWORD, DEV_ROLES, create_dev_user
 
 class Command(BaseCommand):
     help = (
-        "Local dev: create a ballkid profile and login (ballkid, captain, or chairperson)."
+        "Local dev: create a login (ballkid, captain, chairperson, or ticketing)."
     )
 
     def add_arguments(self, parser):
@@ -15,7 +15,7 @@ class Command(BaseCommand):
             "--role",
             required=True,
             choices=DEV_ROLES,
-            help="Django group and ballkid flags",
+            help="Django group (ticketing has no ballkid profile)",
         )
         parser.add_argument("--email", help="Default: first.last@example.com")
         parser.add_argument(
@@ -58,7 +58,11 @@ class Command(BaseCommand):
         except (RuntimeError, ValueError) as exc:
             raise CommandError(str(exc)) from exc
 
-        name = f"{ballkid.first_name} {ballkid.last_name}"
+        name = (
+            f"{ballkid.first_name} {ballkid.last_name}"
+            if ballkid
+            else f"{options['first']} {options['last']}"
+        )
         if user:
             self.stdout.write(
                 self.style.SUCCESS(

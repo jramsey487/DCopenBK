@@ -24,6 +24,13 @@ class IsChairperson(BasePermission):
         # return request.user.is_staff
 
 
+class IsChairpersonOrTicketing(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.groups.filter(
+            Q(name="chairperson") | Q(name="ticketing")
+        ).exists()
+
+
 class IsChairpersonOrCaptain(BasePermission):
     def has_permission(self, request, view):
         filtered = request.user.groups.filter(Q(name="chairperson") | Q(name="captain"))

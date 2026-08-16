@@ -117,15 +117,16 @@ class RegisterUserView(APIView):
                     group = Group.objects.get(name=group_name)
                     user.groups.add(group)
 
-                ballkid = Ballkid.objects.filter(
-                    is_active=True, first_name=first_name, last_name=last_name
-                ).first()
-                if ballkid:
-                    logger.info(
-                        f"[RegisterUserView] Assigning user {user} to ballkid {ballkid}"
-                    )
-                    ballkid.user = user
-                    ballkid.save()
+                if group_name != "ticketing":
+                    ballkid = Ballkid.objects.filter(
+                        is_active=True, first_name=first_name, last_name=last_name
+                    ).first()
+                    if ballkid:
+                        logger.info(
+                            f"[RegisterUserView] Assigning user {user} to ballkid {ballkid}"
+                        )
+                        ballkid.user = user
+                        ballkid.save()
 
                 token = Token.objects.create(user=user)
                 json = serializer.data

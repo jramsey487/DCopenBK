@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from api.models.ballkid import Ballkid
 from api.utils.consts import DEFAULT_IMAGE_FILE
 
-DEV_ROLES = ("ballkid", "captain", "chairperson")
+DEV_ROLES = ("ballkid", "captain", "chairperson", "ticketing")
 DEFAULT_DEV_PASSWORD = "password"
 
 
@@ -40,8 +40,8 @@ def create_dev_user(
     with_login=True,
 ):
     """
-    Create or update a ballkid profile and optional Django user for local dev.
-    Matches production behavior: username first.last, group from role, user linked to ballkid.
+    Create or update a local-dev login. Ballkids, captains, and chairpersons
+    get a ballkid profile. Ticketing is a login-only staff account (no profile).
     """
     require_debug_mode()
     ensure_dev_groups()
@@ -51,6 +51,33 @@ def create_dev_user(
 
     first_name = first_name.strip()
     last_name = last_name.strip()
+
+    if role == "ticketing":
+        if not with_login:
+            raise ValueError("Ticketing accounts need a login user.")
+        username = dev_username(first_name, last_name)
+        email = email or f"{username}@example.com"
+        user, user_created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+            },
+        )
+        if user_created:
+            user.set_password(password)
+            user.save()
+        else:
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save(update_fields=["first_name", "last_name", "email"])
+        user.groups.set([Group.objects.get(name="ticketing")])
+        Token.objects.get_or_create(user=user)
+        Ballkid.all_objects.filter(user=user).delete()
+        return None, user
+
     is_captain = role == "captain"
     is_chairperson = role == "chairperson"
 

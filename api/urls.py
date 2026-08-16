@@ -3,6 +3,7 @@ from api.views.ballkid import *
 from api.views.schedule import *
 from api.views.rating import *
 from api.views.debug import *
+from api.views.tickets import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -126,6 +127,21 @@ tournament_urls = [
     path("reset-data", ResetData.as_view(), name="reset-data"),
     path("ticket-list", TicketList.as_view(), name="ticket-list"),
     path("update-ticket", UpdateTicket.as_view(), name="update-ticket"),
+    path("ticket-session", TicketSessionView.as_view(), name="ticket-session"),
+    path("request-tickets", RequestTickets.as_view(), name="request-tickets"),
+    path("confirm-tickets", ConfirmTickets.as_view(), name="confirm-tickets"),
+    path("allocate-tickets", AllocateTickets.as_view(), name="allocate-tickets"),
+    path(
+        "run-ticket-lottery",
+        RunTicketLottery.as_view(),
+        name="run-ticket-lottery",
+    ),
+    path(
+        "run-ticket-waitlist",
+        RunTicketWaitlist.as_view(),
+        name="run-ticket-waitlist",
+    ),
+    path("ticket-used", UpdateTicketUsed.as_view(), name="ticket-used"),
 ]
 
 # Rating URLs

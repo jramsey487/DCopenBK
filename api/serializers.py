@@ -2,6 +2,7 @@ from rest_framework import serializers
 from api.models.ballkid import *
 from api.models.schedule import *
 from api.models.rating import *
+from api.utils.tickets import as_et, option_label, winner_confirm_by
 from api.utils.utils import calculate_ballkid_age
 
 
@@ -242,8 +243,34 @@ class BannerSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     ballkid_name = serializers.CharField(max_length=60, required=False)
-    num_tickets = serializers.IntegerField(default=0, required=False)
+    num_tickets = serializers.SerializerMethodField()
+    option_label = serializers.SerializerMethodField()
+    winner_confirm_by = serializers.SerializerMethodField()
+    waitlist_run_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Ticket
         fields = "__all__"
+
+    def get_num_tickets(self, obj):
+        ballkid = getattr(obj, "ballkid", None)
+        if ballkid is not None:
+            return ballkid.num_tickets or 0
+        return getattr(obj, "num_tickets", 0) or 0
+
+    def get_option_label(self, obj):
+        if getattr(obj, "ticket_option_id", None):
+            return option_label(obj.ticket_option)
+        return obj.session or ""
+
+    def get_winner_confirm_by(self, obj):
+        session = getattr(obj, "ticket_session", None)
+        if session is None:
+            return None
+        return as_et(winner_confirm_by(session)).isoformat()
+
+    def get_waitlist_run_at(self, obj):
+        session = getattr(obj, "ticket_session", None)
+        if session is None or not session.waitlist_run_at:
+            return None
+        return as_et(session.waitlist_run_at).isoformat()

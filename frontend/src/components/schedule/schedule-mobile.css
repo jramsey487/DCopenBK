@@ -437,7 +437,7 @@
 }
 
 @media (min-width: 640px) {
-  .mini-calendar {
+  .schedule-page .mini-calendar {
     left: auto;
     right: 0;
   }

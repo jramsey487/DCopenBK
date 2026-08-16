@@ -354,10 +354,17 @@ The **Tournament** model (one row per year) stores:
 
 ### Tickets
 
-The **Ticket** model tracks ticket allocations per ballkid per session (Sunday through Finals). Fields: `num_requested`, `num_granted`, `num_delivered`.
+Ticket requests and a lottery, managed on the **Tickets** page (`/tickets`).
 
-- `GET /api/ticket-list`
-- `PATCH /api/update-ticket`
+A **round** (`TicketSession`) is one form: one close time and decline deadline, plus one or more **session options**. Staff save rounds as drafts, then **Make live** so ballkids can request (only one live round at a time). After close, a lottery runs **per option**; winners are confirmed automatically and can decline until the deadline. Each decline immediately reallocates those tickets to a random waitlisted ballkid for that session who has not already declined that day. Leftover unclaimed tickets are auto-allocated to the waitlist when the decline window ends. Tournament cap is 2 tickets per ballkid (`num_tickets` = tickets used).
+
+**Roles:** chairperson and **ticketing** can create rounds, make one live, edit pool size and deadlines, allocate leftover tickets, and delete rounds. Captains and ballkids can submit their own request for the live round and decline a confirmed win before the deadline.
+
+- `GET/PUT/PATCH/DELETE /api/ticket-session` — PUT create/update; PATCH `{id, is_live}` to publish (chairperson + ticketing)
+- `POST/PATCH /api/request-tickets` — self, while the window is open
+- `POST /api/confirm-tickets` — self, decline a confirmed win before the deadline
+- `POST /api/allocate-tickets` — chairperson + ticketing failsafe: confirm leftover tickets for a waitlisted or denied request
+- `GET /api/ticket-list` — staff see all; others see their own
 
 **Frontend page:** `TicketsPage`
 
@@ -489,7 +496,7 @@ cd frontend; npm install
 
 </details>
 
-`bootstrap_dev` creates **`local.chair` / `password`**. Log in and open `/debug` to seed more data, or use `create_dev_user` below.
+`bootstrap_dev` creates **`local.chair` / `password`** and **`alexis.tickets` / `password`**. Log in and open `/debug` to seed more data, or use `create_dev_user` below.
 
 ### Running the app
 
@@ -574,21 +581,24 @@ python manage.py migrate          # if needed after pulling model changes
 python manage.py bootstrap_dev    # default chairperson: local.chair / password
 ```
 
-Add ballkids, captains, or chairpersons:
+Add ballkids, captains, chairpersons, or a ticketing account:
 
 ```bash
 python manage.py create_dev_user --first Jane --last Doe --role ballkid
 python manage.py create_dev_user --first Pat --last Lee --role captain --yoe 4
 python manage.py create_dev_user --first Sam --last Kim --role chairperson --dob 2008-06-15
+python manage.py create_dev_user --first Alexis --last Tickets --role ticketing
 ```
 
 `DEBUG` defaults to `False` if unset, so dev user commands will error until you turn it on.
 
-These commands create Django auth groups, ballkid profiles, login users (`firstname.lastname`), and API tokens — the same linking behavior as the Debug page and `POST /accounts/register`.
+These commands create Django auth groups, login users (`firstname.lastname`), and API tokens. Ballkid / captain / chairperson also get a ballkid profile. **Ticketing** is login-only: Tickets page access, no ballkid profile (so they do not appear on check-in, lists, teams, etc.).
+
+On production, create Alexis from **Debug → Create User** with Permissions Group **Ticketing** (do not create a ballkid row for her). Locally, `bootstrap_dev` already makes `alexis.tickets` / `password`.
 
 | Flag | Purpose |
 |------|---------|
-| `--role` | Required: `ballkid`, `captain`, or `chairperson` (sets Django group and `is_captain` / `is_chairperson` on the profile) |
+| `--role` | Required: `ballkid`, `captain`, `chairperson`, or `ticketing` (sets Django group; `captain` / `chairperson` also set the matching profile flags) |
 | `--password` | Login password (default: `password`) |
 | `--email` | Default: `first.last@example.com` |
 | `--position` | `Back`, `Net`, `Back/Net`, or `Net/Back` (default: `Back`) |

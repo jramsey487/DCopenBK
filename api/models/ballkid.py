@@ -17,6 +17,16 @@ import logging
 logger = logging.getLogger("api.ballkid")
 
 
+class BallkidQuerySet(models.QuerySet):
+    def exclude_ticketing(self):
+        return self.exclude(user__groups__name="ticketing")
+
+
+class BallkidManager(models.Manager.from_queryset(BallkidQuerySet)):
+    def get_queryset(self):
+        return super().get_queryset().exclude_ticketing()
+
+
 class Ballkid(models.Model):
     # Ballkid static information
     user = models.ForeignKey(
@@ -69,6 +79,9 @@ class Ballkid(models.Model):
         max_length=10, choices=CHECKOUT_TIMES.choices, null=True, blank=True
     )
     comments = models.TextField(default="", blank=True)
+
+    objects = BallkidManager()
+    all_objects = models.Manager()
 
     # TODO: consider adding this in the future but need to
     # figure out how to make it play nicely with update
@@ -766,11 +779,75 @@ class Banner(models.Model):
         return f"Banner for ({self.audience}, ballkid {self.ballkid}) with message {self.message} at {self.timestamp}"
 
 
+class TicketSession(models.Model):
+    """A round: one ticket form for one date, with one or more session options."""
+
+    year = models.IntegerField()
+    ticket_date = models.DateField()
+    session_number = models.PositiveIntegerField(null=True, blank=True)
+    closes_at = models.DateTimeField()
+    pool_size = models.PositiveIntegerField(default=0)
+    winner_confirm_by = models.DateTimeField(null=True, blank=True)
+    waitlist_confirm_by = models.DateTimeField(null=True, blank=True)  # unused; kept for existing rows
+    lottery_run_at = models.DateTimeField(null=True, blank=True)
+    waitlist_run_at = models.DateTimeField(null=True, blank=True)
+    is_live = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["ticket_date", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["year", "ticket_date"],
+                name="unique_ticket_session_year_date",
+            )
+        ]
+
+    def __str__(self):
+        return f"Ticket round {self.id} for {self.ticket_date} (close {self.closes_at})"
+
+
+class TicketOption(models.Model):
+    """A session ballkids can pick on a round (session #, period, pool size)."""
+
+    ticket_session = models.ForeignKey(
+        TicketSession,
+        on_delete=models.CASCADE,
+        related_name="options",
+    )
+    session_number = models.PositiveIntegerField()
+    ticket_date = models.DateField()
+    period = models.CharField(
+        max_length=10,
+        choices=TICKET_PERIOD.choices,
+        blank=True,
+        default=TICKET_PERIOD.ALL_DAY,
+    )
+    pool_size = models.PositiveIntegerField(default=0)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"Session {self.session_number} {self.ticket_date} {self.period}"
+
+
 class Ticket(models.Model):
     year = models.IntegerField()
-    session = models.CharField(
-        max_length=15,
-        choices=TICKET_SESSIONS.choices,
+    session = models.CharField(max_length=15, blank=True, default="")
+    ticket_session = models.ForeignKey(
+        TicketSession,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="tickets",
+    )
+    ticket_option = models.ForeignKey(
+        "TicketOption",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tickets",
     )
     ballkid = models.ForeignKey(
         Ballkid, on_delete=models.CASCADE, null=True, blank=True
@@ -779,6 +856,22 @@ class Ticket(models.Model):
     num_requested = models.IntegerField(default=0)
     num_granted = models.IntegerField(default=0)
     num_delivered = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=20,
+        choices=TICKET_STATUS.choices,
+        default=TICKET_STATUS.REQUESTED,
+        blank=True,
+    )
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ticket_session", "ballkid"],
+                name="unique_ticket_per_session_ballkid",
+                condition=Q(ticket_session__isnull=False, ballkid__isnull=False),
+            )
+        ]
 
 
 class TeamPair(models.Model):

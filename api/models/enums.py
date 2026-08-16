@@ -24,17 +24,21 @@ class MATCH_TYPE(models.TextChoices):
     WD = "Women's Doubles"
 
 
-class TICKET_SESSIONS(models.TextChoices):
-    SUNDAY = "Sunday"
-    MONDAY = "Monday"
-    TUESDAY = "Tuesday"
-    WEDNESDAY = "Wednesday"
-    THURSDAY = "Thursday"
-    FRIDAY_AM = "Friday AM"
-    FRIDAY_PM = "Friday PM"
-    SATURDAY_AM = "Saturday AM"
-    SATURDAY_PM = "Saturday PM"
-    FINALS = "Finals"
+class TICKET_PERIOD(models.TextChoices):
+    ALL_DAY = "all_day", "All day"
+    DAY = "day", "Day"
+    NIGHT = "night", "Night"
+
+
+class TICKET_STATUS(models.TextChoices):
+    REQUESTED = "requested"
+    SELECTED = "selected"
+    WAITLIST = "waitlist"
+    WAITLIST_OFFERED = "waitlist_offered"
+    CONFIRMED = "confirmed"
+    DECLINED = "declined"
+    EXPIRED = "expired"
+    DENIED = "denied"
 
 
 class CUT_STATUS(models.TextChoices):

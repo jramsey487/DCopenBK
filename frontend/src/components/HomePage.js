@@ -116,6 +116,7 @@ function captainRoutes(setToken) {
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/settings" element={<AccountSettings />} />
       <Route path="/teams" element={<TeamsPage />} />
+      <Route path="/tickets" element={<TicketsPage />} />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
   );
@@ -133,6 +134,18 @@ function ballkidRoutes(setToken) {
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/settings" element={<AccountSettings />} />
       <Route path="/teams" element={<TeamsPage />} />
+      <Route path="/tickets" element={<TicketsPage />} />
+      <Route path="*" element={<RouteNotFound />} />
+    </Routes>
+  );
+}
+
+function ticketingRoutes(setToken) {
+  return (
+    <Routes>
+      <Route exact path="/" element={<TicketsPage />} />
+      <Route path="/login" element={<LoginPage setToken={setToken} />} />
+      <Route path="/tickets" element={<TicketsPage />} />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
   );
@@ -171,6 +184,8 @@ export default function HomePage(props) {
         ? chairpersonRoutes(isMobile, setToken)
         : group === "captain"
         ? captainRoutes(setToken)
+        : group === "ticketing"
+        ? ticketingRoutes(setToken)
         : ballkidRoutes(setToken)}
     </Router>
   );

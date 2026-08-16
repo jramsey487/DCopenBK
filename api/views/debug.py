@@ -190,12 +190,13 @@ class BulkCreateUsers(APIView):
             group = Group.objects.get(name=line["group"])
             user.groups.add(group)
 
-            ballkid = Ballkid.objects.filter(
-                is_active=True, first_name=first_name, last_name=last_name
-            ).first()
-            if ballkid:
-                ballkid.user = user
-                ballkid.save()
+            if line["group"] != "ticketing":
+                ballkid = Ballkid.objects.filter(
+                    is_active=True, first_name=first_name, last_name=last_name
+                ).first()
+                if ballkid:
+                    ballkid.user = user
+                    ballkid.save()
 
         return Response(
             {"Success": f"Bulk created users"},

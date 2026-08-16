@@ -149,8 +149,46 @@
   }
 }
 
+.help-dialog-paper {
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  border-radius: 14px !important;
+  border: 0.5px solid var(--border, #e2e8f0) !important;
+  box-shadow:
+    0 1px 2px rgba(13, 27, 62, 0.04),
+    0 12px 32px rgba(13, 27, 62, 0.12) !important;
+  max-width: 520px !important;
+  width: calc(100% - 32px);
+  max-height: calc(100% - 64px);
+  background: var(--bg1, #fff) !important;
+}
+
+.help-dialog-paper .MuiTypography-root,
+.help-dialog-paper .MuiDialogContentText-root {
+  font-family: inherit !important;
+}
+
+.help-dialog-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--text1, #0d1b3e) !important;
+  letter-spacing: -0.02em;
+  line-height: 1.25 !important;
+  padding: 18px 20px 8px !important;
+}
+
+.help-dialog-content {
+  padding: 4px 20px 20px !important;
+  overflow-y: auto;
+}
+
 @media (max-width: 480px) {
   .confirm-dialog-paper {
+    width: calc(100% - 24px);
+    max-width: none;
+  }
+
+  .help-dialog-paper {
     width: calc(100% - 24px);
     max-width: none;
   }

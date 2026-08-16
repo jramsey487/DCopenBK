@@ -33,7 +33,7 @@ async function submitPassword(
     setSessionFromLogin(setToken, state.username, data);
     setSuccessMsg("Logged in");
     if (window.location.pathname === "/login") {
-      navigate("/teams");
+      navigate(data.group === "ticketing" ? "/tickets" : "/teams");
     }
   } catch {
     setErrorMsg("Could not reach the server. Is the backend running?");

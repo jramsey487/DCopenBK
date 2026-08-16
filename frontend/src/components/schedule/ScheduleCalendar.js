@@ -15,16 +15,15 @@ const MONTH_NAMES = [
   "December",
 ];
 
-const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
 function daysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-// Monday-first offset: 0 = Monday ... 6 = Sunday
+// Sunday-first offset: 0 = Sunday ... 6 = Saturday
 function firstWeekdayOffset(year, month) {
-  const jsDay = new Date(year, month, 1).getDay(); // 0 = Sunday
-  return (jsDay + 6) % 7;
+  return new Date(year, month, 1).getDay();
 }
 
 export function parseSlashDate(dateStr) {
@@ -111,7 +110,15 @@ export default function ScheduleCalendar({ date, today, onSelect, onClose }) {
     onClose();
   };
 
-  const jumpToToday = () => {
+  const pickFromPointer = (event, d) => {
+    event.preventDefault();
+    event.stopPropagation();
+    pick(d);
+  };
+
+  const jumpToToday = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     setViewYear(todayDate.getFullYear());
     setViewMonth(todayDate.getMonth());
     onSelect(today);
@@ -163,7 +170,8 @@ export default function ScheduleCalendar({ date, today, onSelect, onClose }) {
                 className={`cal-cell${isSelected(d) ? " selected" : ""}${
                   isToday(d) && !isSelected(d) ? " is-today" : ""
                 }`}
-                onClick={() => pick(d)}
+                onMouseDown={(event) => pickFromPointer(event, d)}
+                onClick={(event) => pickFromPointer(event, d)}
               >
                 {d}
               </button>
@@ -172,7 +180,12 @@ export default function ScheduleCalendar({ date, today, onSelect, onClose }) {
         </div>
 
         <div className="cal-footer">
-          <button type="button" className="cal-today-btn" onClick={jumpToToday}>
+          <button
+            type="button"
+            className="cal-today-btn"
+            onMouseDown={jumpToToday}
+            onClick={jumpToToday}
+          >
             Today
           </button>
         </div>
