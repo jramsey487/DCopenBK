@@ -19,8 +19,11 @@ export {
 
 export {
   getCurrentYear,
+  parseIsoDateLocal,
+  localDateToIso,
   dayHourToStr,
   getDays,
+  useTournamentDays,
   getTimeFloat,
   getDurationStr,
   getTimeStr,

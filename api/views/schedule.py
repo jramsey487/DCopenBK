@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from django.db.models import Max
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -8,10 +8,31 @@ from rest_framework.permissions import IsAuthenticated
 from api.serializers import *
 from api.permissions import *
 from api.utils.consts import *
+from api.utils.utils import get_current_year, refresh_ballkid_ages
 
 import logging
 
 logger = logging.getLogger("api.schedule")
+
+
+def parse_tournament_date(value):
+    """Calendar date from `YYYY-MM-DD` or a legacy ISO datetime string."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    raw = str(value).strip()
+    if len(raw) >= 10 and raw[4] == "-" and raw[7] == "-":
+        try:
+            return date.fromisoformat(raw[:10])
+        except ValueError:
+            return None
+    try:
+        return datetime.strptime(raw, T_YEAR_MONTH_DAY_Z_FORMAT_STR).date()
+    except ValueError:
+        return None
 
 
 def get_days_shifts(param):
@@ -393,12 +414,22 @@ class GetTournament(APIView):
     permission_classes = [IsChairpersonOrAuthenticatedReadOnly]
 
     def post(self, request, format=None):
-        start = datetime.strptime(
-            request.data["start"], T_YEAR_MONTH_DAY_Z_FORMAT_STR
-        ).date()
-        end = datetime.strptime(
-            request.data["end"], T_YEAR_MONTH_DAY_Z_FORMAT_STR
-        ).date()
+        start = parse_tournament_date(
+            request.data.get("start_date") or request.data.get("start")
+        )
+        end = parse_tournament_date(
+            request.data.get("end_date") or request.data.get("end")
+        )
+        if start is None or end is None:
+            return Response(
+                {"detail": "Start and end dates are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if start >= end:
+            return Response(
+                {"detail": "Start date must be before end date."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         tournament, _ = Tournament.objects.update_or_create(
             year=request.data["year"],
@@ -407,6 +438,7 @@ class GetTournament(APIView):
                 "end_date": end,
             },
         )
+        refresh_ballkid_ages(year=request.data["year"])
         return Response(TournamentSerializer(tournament).data)
 
     def get(self, request, format=None):
@@ -419,6 +451,7 @@ class GetTournament(APIView):
     def patch(self, request, format=None):
         current_year = get_current_year()
         tournament = Tournament.objects.get(year=current_year)
+        previous_start = tournament.start_date
 
         if "time" in request.data:
             timestamp = datetime.strptime(
@@ -453,7 +486,39 @@ class GetTournament(APIView):
         if "rcal_bucket_size" in request.data:
             tournament.rcal_bucket_size = int(request.data["rcal_bucket_size"])
 
+        if "start" in request.data or "start_date" in request.data:
+            start = parse_tournament_date(
+                request.data.get("start_date") or request.data.get("start")
+            )
+            if start is None:
+                return Response(
+                    {"detail": "Start date is invalid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tournament.start_date = start
+
+        if "end" in request.data or "end_date" in request.data:
+            end = parse_tournament_date(
+                request.data.get("end_date") or request.data.get("end")
+            )
+            if end is None:
+                return Response(
+                    {"detail": "End date is invalid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tournament.end_date = end
+
+        if tournament.start_date and tournament.end_date:
+            if tournament.start_date >= tournament.end_date:
+                return Response(
+                    {"detail": "Start date must be before end date."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         tournament.save()
+
+        if tournament.start_date != previous_start:
+            refresh_ballkid_ages(year=current_year)
 
         logger.info(
             f"[GetTournament PATCH] tournament {tournament} updated with request {request.data}"

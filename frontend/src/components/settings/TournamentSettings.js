@@ -25,6 +25,7 @@ import {
   ConfirmDialog,
   getCurrentYear,
 } from "../Utils";
+import { localDateToIso, parseIsoDateLocal } from "../dateTime";
 import { tournamentSettings } from "../HelpMessages";
 import "./tournament-settings.css";
 import ScheduleCalendar from "../schedule/ScheduleCalendar";
@@ -664,6 +665,89 @@ function TournamentDateField({ label, value, onChange }) {
   );
 }
 
+function TournamentDates({
+  tournament,
+  setUpdated,
+  setSuccessMsg,
+  setErrorMsg,
+}) {
+  const [start, setStart] = useState(() =>
+    parseIsoDateLocal(tournament.start_date)
+  );
+  const [end, setEnd] = useState(() => parseIsoDateLocal(tournament.end_date));
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setStart(parseIsoDateLocal(tournament.start_date));
+    setEnd(parseIsoDateLocal(tournament.end_date));
+  }, [tournament.start_date, tournament.end_date]);
+
+  const dirty =
+    localDateToIso(start) !== (tournament.start_date || "") ||
+    localDateToIso(end) !== (tournament.end_date || "");
+
+  return (
+    <section className="tournament-settings-card">
+      <h2 className="tournament-settings-section-title">Dates</h2>
+      <div className="tournament-settings-date-row">
+        <TournamentDateField
+          label="Start Date"
+          value={start}
+          onChange={setStart}
+        />
+        <TournamentDateField label="End Date" value={end} onChange={setEnd} />
+      </div>
+      <Button
+        color="primary"
+        variant="contained"
+        size="small"
+        disabled={!dirty || saving}
+        onClick={() => {
+          if (start === null || end === null) {
+            setErrorMsg("Start and end dates are required.");
+            return;
+          }
+          if (start.getTime() >= end.getTime()) {
+            setErrorMsg(
+              "Tournament start date cannot be on or after the end date."
+            );
+            return;
+          }
+          setSaving(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({
+              start_date: localDateToIso(start),
+              end_date: localDateToIso(end),
+            }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                setSuccessMsg("Tournament dates updated.");
+                setErrorMsg("");
+                setUpdated(true);
+              } else {
+                return response.json().then((data) => {
+                  throw new Error(
+                    data.detail || "Error updating tournament dates."
+                  );
+                });
+              }
+            })
+            .catch((err) => {
+              setSuccessMsg("");
+              setErrorMsg(err.message || "Error updating tournament dates.");
+            })
+            .finally(() => setSaving(false));
+        }}
+      >
+        {saving ? "Saving…" : "Save dates"}
+      </Button>
+    </section>
+  );
+}
+
 function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [year, setYear] = useState(getCurrentYear());
   const [start, setStart] = useState(null);
@@ -715,8 +799,8 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
               headers: getAuthHeader(),
               body: JSON.stringify({
                 year: year,
-                start: start,
-                end: end,
+                start: localDateToIso(start),
+                end: localDateToIso(end),
               }),
             }).then((response) => {
               if (response.ok) {
@@ -870,6 +954,13 @@ export default function TournamentSettings(props) {
                 </div>
               ))}
             </section>
+
+            <TournamentDates
+              tournament={tournament}
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
 
             <section className="tournament-settings-card">
               <h2 className="tournament-settings-section-title">

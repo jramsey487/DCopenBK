@@ -56,10 +56,6 @@ export const TOOLTIP_DICT = {
 export const NUM_RATINGS_WARNING_THRESHOLD = 5;
 export const NUM_RATERS_WARNING_THRESHOLD = 3;
 
-// Note that these dates are 0-indexed!!
-export const START_DATE = new Date(2025, 6, 19);
-export const END_DATE = new Date(2025, 6, 27);
-
 export const CHART_COLORS = [
   "#e60049",
   "#0bb4ff",

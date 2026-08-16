@@ -1,6 +1,7 @@
 from django.test import TestCase
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from api.utils.utils import *
+from api.models.schedule import Tournament
 
 
 class TestUtils(TestCase):
@@ -119,11 +120,25 @@ class TestUtils(TestCase):
 
         self.assertEqual(obj, datetime_str_to_datetime(input_str))
 
-    def test_tournament_age_reference_is_july_23(self):
+    def test_tournament_age_reference_falls_back_to_july_23(self):
         ref = get_tournament_age_reference_date(2026)
         self.assertEqual(datetime(2026, 7, 23), ref)
 
+    def test_tournament_age_reference_uses_start_date(self):
+        Tournament.objects.create(
+            year=2026,
+            start_date=date(2026, 7, 19),
+            end_date=date(2026, 7, 27),
+        )
+        ref = get_tournament_age_reference_date(2026)
+        self.assertEqual(datetime(2026, 7, 19), ref)
+
     def test_calculate_ballkid_age_uses_tournament_year(self):
+        Tournament.objects.create(
+            year=2025,
+            start_date=date(2025, 7, 19),
+            end_date=date(2025, 7, 27),
+        )
         dob = datetime(2010, 3, 15)
         expected = int(
             (get_tournament_age_reference_date(2025).date() - dob.date()).days

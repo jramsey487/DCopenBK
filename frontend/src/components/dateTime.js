@@ -1,7 +1,89 @@
-import { END_DATE, START_DATE } from "./Consts";
+import { useEffect, useState } from "react";
+import { getAuthHeader } from "./authStorage";
 
 export function getCurrentYear() {
   return new Date().getFullYear();
+}
+
+/** `YYYY-MM-DD` (or ISO datetime) → local calendar Date, no UTC shift. */
+export function parseIsoDateLocal(iso) {
+  if (!iso) {
+    return null;
+  }
+  const match = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    return null;
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+  const parsed = new Date(year, month - 1, day);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+}
+
+/** Local Date → `YYYY-MM-DD` using calendar parts (not UTC). */
+export function localDateToIso(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Inclusive local calendar days from startIso to endIso (`YYYY-MM-DD`).
+ * Both endpoints are included (Jul 19–27 → 9 days).
+ */
+export function getDays(startIso, endIso) {
+  const startDate = parseIsoDateLocal(startIso);
+  const endDate = parseIsoDateLocal(endIso);
+  if (!startDate || !endDate || startDate > endDate) {
+    return [];
+  }
+  const days = [];
+  const cursor = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  );
+  const last = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate()
+  );
+  while (cursor.getTime() <= last.getTime() && days.length < 62) {
+    days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+/** Current tournament start/end as an inclusive local day list. */
+export function useTournamentDays() {
+  const [days, setDays] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/get-tournament", { headers: getAuthHeader() })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        setDays(getDays(data?.start_date, data?.end_date));
+      })
+      .catch(() => setDays([]));
+  }, []);
+
+  return days;
 }
 
 /** Convert `[year]-[month]-[day]T[24hour]:[minute]:…` → `3pm` / `3:30pm`. */
@@ -19,21 +101,6 @@ export function dayHourToStr(dayHour, showMinutes = false) {
     return `${hour}:${minutes}${suffix}`;
   }
   return `${hour}${suffix}`;
-}
-
-export function getDays() {
-  // Note that these dates are 0-indexed!!
-  const startDate = new Date(START_DATE);
-  const endDate = new Date(END_DATE);
-
-  const days = [];
-  const date = startDate;
-  while (date <= endDate) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-
-  return days;
 }
 
 /**

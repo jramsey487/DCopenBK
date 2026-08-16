@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Scatter } from "react-chartjs-2";
-import { getDays } from "../Utils";
+import { useTournamentDays } from "../dateTime";
 import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(
@@ -24,7 +24,7 @@ ChartJS.register(
 );
 
 export function BallkidParamsChart({ offset, improvement }) {
-  const days = getDays();
+  const days = useTournamentDays();
   const labels = days.map((day) => day.toDateString());
 
   const options = {

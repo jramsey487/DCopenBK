@@ -10,7 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { getAuthHeader } from "../authStorage";
-import { getTimeFloat, getDays } from "../dateTime";
+import { getTimeFloat, useTournamentDays } from "../dateTime";
 import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
@@ -60,6 +60,7 @@ export function CheckinHistoryChart({ pk }) {
   // TODO: modify to capture if ballkid checks in after midnight
 
   const [histories, setHistories] = useState([]);
+  const days = useTournamentDays();
 
   useEffect(() => {
     fetch(`/api/get-checkins/${pk}`, { headers: getAuthHeader() })
@@ -67,7 +68,6 @@ export function CheckinHistoryChart({ pk }) {
       .then((data) => setHistories(data));
   }, [pk]);
 
-  const days = getDays();
   const labels = days.map((day) => day.toDateString());
 
   const options = {

@@ -567,6 +567,11 @@ export const tournamentSettings = (
   <DialogContentText>
     This page allows you to view and change tournament-wide settings.
     <br /> <br />
+    Start and end dates on this page set the window used by check-in and rating
+    charts (both days are included). Ballkid age is measured as of the start
+    date. Create those dates when you add a tournament for a new calendar year,
+    or edit them here afterward.
+    <br /> <br />
     Up to three site-wide banners can be set and published from here. This will
     show up as banner(s) at the top of the screen for all logged in ballkids,
     captains, and chairpeople.

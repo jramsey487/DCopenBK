@@ -24,16 +24,27 @@ def get_current_year():
 
 
 def get_tournament_age_reference_date(year=None):
-    """Age for the Citi Open is measured as of July 23 of the tournament year."""
+    """Age is measured as of that year's tournament start date.
+
+    If no tournament (or no start_date) exists yet, July 23 is used.
+    """
     if year is None:
         year = get_current_year()
+    from api.models.schedule import Tournament
+
+    tournament = Tournament.objects.filter(year=year).first()
+    start = getattr(tournament, "start_date", None) if tournament else None
+    if start:
+        if isinstance(start, datetime):
+            return datetime(start.year, start.month, start.day)
+        return datetime(start.year, start.month, start.day)
     return datetime(year, 7, 23)
 
 
 def calculate_ballkid_age(date_of_birth, year=None):
     """
-    Tournament age from date of birth, as of July 23 of the given year
-    (defaults to the current calendar year).
+    Tournament age from date of birth, as of that year's tournament start date
+    (defaults to the current calendar year; July 23 if no start date is set).
     """
     reference = get_tournament_age_reference_date(year).date()
     if isinstance(date_of_birth, datetime):
@@ -43,6 +54,16 @@ def calculate_ballkid_age(date_of_birth, year=None):
     else:
         raise TypeError("date_of_birth must be a date or datetime")
     return int((reference - dob).days // 365.2425)
+
+
+def refresh_ballkid_ages(year=None):
+    """Recompute stored age for every ballkid with a date of birth."""
+    from api.models.ballkid import Ballkid
+
+    for ballkid in Ballkid.objects.exclude(date_of_birth=None):
+        age = calculate_ballkid_age(ballkid.date_of_birth, year=year)
+        if ballkid.age != age:
+            Ballkid.objects.filter(pk=ballkid.pk).update(age=age)
 
 
 def get_first_name(full_name):
