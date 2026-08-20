@@ -119,11 +119,116 @@ class TicketFlowTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("both", response.data["detail"].lower())
 
-    def test_one_request_per_session(self):
+    def test_one_request_per_option(self):
         self._auth(self.bk_user)
         self._request(1)
         response = self._request(1)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("already", response.data["detail"].lower())
+
+    def test_can_split_requests_across_options(self):
+        night = TicketOption.objects.create(
+            ticket_session=self.session,
+            session_number=12,
+            ticket_date=self.ticket_date,
+            period="night",
+            pool_size=2,
+            order=1,
+        )
+        self._auth(self.bk_user)
+        response = self.client.post(
+            reverse("request-tickets"),
+            {
+                "requests": [
+                    {"option_id": self.option.id, "num_requested": 1},
+                    {"option_id": night.id, "num_requested": 1},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        tickets = Ticket.objects.filter(
+            ballkid=self.ballkid, ticket_session=self.session
+        )
+        self.assertEqual(tickets.count(), 2)
+        self.assertEqual(
+            sorted(tickets.values_list("num_requested", flat=True)), [1, 1]
+        )
+
+    def test_cannot_exceed_cap_across_options(self):
+        night = TicketOption.objects.create(
+            ticket_session=self.session,
+            session_number=12,
+            ticket_date=self.ticket_date,
+            period="night",
+            pool_size=2,
+            order=1,
+        )
+        self._auth(self.bk_user)
+        response = self.client.post(
+            reverse("request-tickets"),
+            {
+                "requests": [
+                    {"option_id": self.option.id, "num_requested": 2},
+                    {"option_id": night.id, "num_requested": 1},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(
+            Ticket.objects.filter(
+                ballkid=self.ballkid, ticket_session=self.session
+            ).exists()
+        )
+
+    def test_can_decline_specific_confirmed_session(self):
+        night = TicketOption.objects.create(
+            ticket_session=self.session,
+            session_number=12,
+            ticket_date=self.ticket_date,
+            period="night",
+            pool_size=1,
+            order=1,
+        )
+        self.option.pool_size = 1
+        self.option.save()
+        self._auth(self.bk_user)
+        response = self.client.post(
+            reverse("request-tickets"),
+            {
+                "requests": [
+                    {"option_id": self.option.id, "num_requested": 1},
+                    {"option_id": night.id, "num_requested": 1},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        run_lottery(self.session)
+        confirmed = list(
+            Ticket.objects.filter(
+                ballkid=self.ballkid, status=TICKET_STATUS.CONFIRMED
+            ).order_by("id")
+        )
+        self.assertEqual(len(confirmed), 2)
+        self.ballkid.refresh_from_db()
+        self.assertEqual(self.ballkid.num_tickets, 2)
+
+        target = confirmed[0]
+        kept = confirmed[1]
+        response = self.client.post(
+            reverse("confirm-tickets"),
+            {"accept": False, "id": target.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        target.refresh_from_db()
+        kept.refresh_from_db()
+        self.ballkid.refresh_from_db()
+        self.assertEqual(target.status, TICKET_STATUS.DECLINED)
+        self.assertEqual(kept.status, TICKET_STATUS.CONFIRMED)
+        self.assertEqual(self.ballkid.num_tickets, 1)
 
     def test_ballkid_cannot_put_session_or_change_used(self):
         self._auth(self.bk_user)

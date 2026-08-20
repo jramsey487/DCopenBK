@@ -149,6 +149,92 @@ def _create_ticket_request(session, ballkid, option, num):
     )
 
 
+def _parse_request_items(session, data):
+    """Parse bulk {requests:[...]} or legacy {option_id, num_requested}."""
+    raw = data.get("requests")
+    if raw is None:
+        option, error = _option_from_request(session, data)
+        if error:
+            return None, error
+        try:
+            num = int(data.get("num_requested") or data.get("numTickets"))
+        except (TypeError, ValueError):
+            return None, "num_requested is required."
+        return [{"option": option, "num_requested": num}], None
+
+    if not isinstance(raw, list):
+        return None, "requests must be a list."
+
+    options_by_id = {str(o.id): o for o in session.options.all()}
+    seen = set()
+    items = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            return None, "Each request must be an object."
+        option_id = entry.get("option_id") or entry.get("optionId")
+        if option_id is None:
+            return None, "Each request needs an option_id."
+        option = options_by_id.get(str(option_id))
+        if option is None:
+            return None, "Pick a valid session."
+        if option.id in seen:
+            return None, "Duplicate session in request."
+        seen.add(option.id)
+        try:
+            num = int(entry.get("num_requested") or entry.get("numTickets") or 0)
+        except (TypeError, ValueError):
+            return None, "num_requested must be a number."
+        if num < 0:
+            return None, "num_requested can't be negative."
+        items.append({"option": option, "num_requested": num})
+    return items, None
+
+
+def _sync_open_requests(session, ballkid, items, remaining):
+    """Create/update/delete REQUESTED rows so they match items; sum ≤ remaining."""
+    positive = [item for item in items if item["num_requested"] > 0]
+    total = sum(item["num_requested"] for item in positive)
+    if total < 1:
+        return None, "Request at least one ticket."
+    if total > remaining:
+        return None, f"You can request at most {remaining} ticket(s) across sessions."
+
+    existing = {
+        t.ticket_option_id: t
+        for t in session.tickets.filter(
+            ballkid=ballkid, status=TICKET_STATUS.REQUESTED
+        ).select_related("ticket_option")
+    }
+    if session.tickets.filter(ballkid=ballkid).exclude(
+        status=TICKET_STATUS.REQUESTED
+    ).exists():
+        return None, "Your requests for this round can no longer be edited."
+
+    kept_option_ids = set()
+    result = []
+    for item in positive:
+        option = item["option"]
+        num = item["num_requested"]
+        kept_option_ids.add(option.id)
+        ticket = existing.get(option.id)
+        if ticket is None:
+            ticket = _create_ticket_request(session, ballkid, option, num)
+        else:
+            ticket.ticket_option = option
+            ticket.session = str(option.session_number)
+            ticket.num_requested = num
+            ticket.save(
+                update_fields=["ticket_option", "session", "num_requested"]
+            )
+        result.append(ticket)
+
+    for option_id, ticket in existing.items():
+        if option_id not in kept_option_ids:
+            ticket.delete()
+
+    return result, None
+
+
 def _parse_period(value):
     value = (value or "").strip().lower().replace("-", "_")
     if value in ("allday",):
@@ -405,132 +491,270 @@ class RequestTickets(APIView):
             )
         return session, None
 
-    def _parse_option(self, session, request):
-        option, error = _option_from_request(session, request.data)
-        if error:
-            return None, Response(
-                {"detail": error},
+    def _ballkid_and_open_session(self, request):
+        ballkid = _my_ballkid(request.user)
+        if ballkid is None:
+            return None, None, Response(
+                {"detail": "No ballkid profile linked to this account."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return option, None
+        session, error = self._live_open_session()
+        if error:
+            return None, None, error
+        return ballkid, session, None
 
-    def _parse_num(self, request, remaining):
+    def _budget_error(self, remaining):
+        if remaining <= 0:
+            return Response(
+                {"detail": "You've used both of your tournament tickets."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return None
+
+    def _sync_response(self, request, tickets, created=False):
+        payload = TicketSerializer(tickets, many=True).data
+        status_code = (
+            status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+        if request.data.get("requests") is None and len(payload) == 1:
+            return Response(payload[0], status=status_code)
+        return Response({"tickets": payload}, status=status_code)
+
+    def post(self, request, format=None):
+        ballkid, session, error = self._ballkid_and_open_session(request)
+        if error:
+            return error
+
+        remaining = remaining_tickets(ballkid)
+        budget_error = self._budget_error(remaining)
+        if budget_error:
+            return budget_error
+
+        if request.data.get("requests") is not None:
+            items, parse_error = _parse_request_items(session, request.data)
+            if parse_error:
+                return Response(
+                    {"detail": parse_error},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tickets, sync_error = _sync_open_requests(
+                session, ballkid, items, remaining
+            )
+            if sync_error:
+                return Response(
+                    {"detail": sync_error},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            for ticket in tickets:
+                email_request_confirmation(
+                    ballkid,
+                    session,
+                    ticket.num_requested,
+                    option=ticket.ticket_option,
+                )
+            return self._sync_response(request, tickets, created=True)
+
+        option, option_error = _option_from_request(session, request.data)
+        if option_error:
+            return Response(
+                {"detail": option_error},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             num = int(
                 request.data.get("num_requested") or request.data.get("numTickets")
             )
         except (TypeError, ValueError):
-            return None, Response(
+            return Response(
                 {"detail": "num_requested is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if num < 1 or num > remaining:
-            return None, Response(
-                {"detail": f"You can request between 1 and {remaining} ticket(s)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return num, None
-
-    def _open_requested_ticket(self, request):
-        ballkid = _my_ballkid(request.user)
-        if ballkid is None:
-            return None, None, None, Response(
-                {"detail": "No ballkid profile linked to this account."},
+        if num < 1:
+            return Response(
+                {"detail": "Request at least one ticket."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        session, error = self._live_open_session()
-        if error:
-            return None, None, None, error
-
-        ticket = session.tickets.filter(
+        pending = session.tickets.filter(
             ballkid=ballkid, status=TICKET_STATUS.REQUESTED
-        ).first()
-        if ticket is None:
-            return None, None, None, Response(
-                {"detail": "No editable request found for this round."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return ballkid, session, ticket, None
-
-    def post(self, request, format=None):
-        ballkid = _my_ballkid(request.user)
-        if ballkid is None:
+        )
+        if option and pending.filter(ticket_option=option).exists():
             return Response(
-                {"detail": "No ballkid profile linked to this account."},
+                {"detail": "You already have a request for this session."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        session, error = self._live_open_session()
-        if error:
-            return error
-
-        remaining = remaining_tickets(ballkid)
-        if remaining <= 0:
-            return Response(
-                {
-                    "detail": "You've used both of your tournament tickets.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        option, error = self._parse_option(session, request)
-        if error:
-            return error
-
-        num, error = self._parse_num(request, remaining)
-        if error:
-            return error
-
-        if session.tickets.filter(ballkid=ballkid).exists():
+        if not option and pending.exists():
             return Response(
                 {"detail": "You already have a request for this round."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if session.tickets.filter(ballkid=ballkid).exclude(
+            status=TICKET_STATUS.REQUESTED
+        ).exists():
+            return Response(
+                {"detail": "Your requests for this round can no longer be edited."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        already = sum(t.num_requested for t in pending) or 0
+        if already + num > remaining:
+            left = max(0, remaining - already)
+            return Response(
+                {
+                    "detail": (
+                        f"You can request at most {left} more ticket(s) "
+                        f"({remaining} total left this tournament)."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         ticket = _create_ticket_request(session, ballkid, option, num)
         email_request_confirmation(ballkid, session, num, option=option)
         logger.info("Ticket request %s for ballkid %s", ticket.id, ballkid.id)
-        return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
+        return Response(
+            TicketSerializer(ticket).data, status=status.HTTP_201_CREATED
+        )
 
     def patch(self, request, format=None):
-        ballkid, session, ticket, error = self._open_requested_ticket(request)
+        ballkid, session, error = self._ballkid_and_open_session(request)
         if error:
             return error
 
         remaining = remaining_tickets(ballkid)
-        option, error = self._parse_option(session, request)
-        if error:
-            return error
+        budget_error = self._budget_error(remaining)
+        if budget_error:
+            return budget_error
 
-        num, error = self._parse_num(request, remaining)
-        if error:
-            return error
+        pending = list(
+            session.tickets.filter(
+                ballkid=ballkid, status=TICKET_STATUS.REQUESTED
+            ).select_related("ticket_option")
+        )
+        if not pending:
+            return Response(
+                {"detail": "No editable request found for this round."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.data.get("requests") is not None:
+            items, parse_error = _parse_request_items(session, request.data)
+            if parse_error:
+                return Response(
+                    {"detail": parse_error},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tickets, sync_error = _sync_open_requests(
+                session, ballkid, items, remaining
+            )
+            if sync_error:
+                return Response(
+                    {"detail": sync_error},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return self._sync_response(request, tickets, created=False)
+
+        option, option_error = _option_from_request(session, request.data)
+        if option_error:
+            return Response(
+                {"detail": option_error},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            num = int(
+                request.data.get("num_requested") or request.data.get("numTickets")
+            )
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "num_requested is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if num < 1 or num > remaining:
+            return Response(
+                {"detail": f"You can request between 1 and {remaining} ticket(s)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Legacy: one open request → move/update it. Else update matching option.
+        ticket = None
+        if len(pending) == 1:
+            ticket = pending[0]
+        elif option is not None:
+            ticket = next(
+                (t for t in pending if t.ticket_option_id == option.id), None
+            )
+        if ticket is None:
+            return Response(
+                {"detail": "No editable request found for this session."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        others = sum(
+            t.num_requested for t in pending if t.id != ticket.id
+        )
+        if others + num > remaining:
+            left = max(0, remaining - others)
+            return Response(
+                {
+                    "detail": (
+                        f"You can request at most {left} more ticket(s) "
+                        f"across your other sessions."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (
+            option
+            and option.id != ticket.ticket_option_id
+            and session.tickets.filter(
+                ballkid=ballkid, ticket_option=option
+            ).exclude(pk=ticket.pk).exists()
+        ):
+            return Response(
+                {"detail": "You already have a request for this session."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         ticket.ticket_option = option
         ticket.session = (
             str(option.session_number) if option else session.ticket_date.isoformat()
         )
         ticket.num_requested = num
-        ticket.save(
-            update_fields=["ticket_option", "session", "num_requested"]
+        ticket.save(update_fields=["ticket_option", "session", "num_requested"])
+        logger.info(
+            "Ticket request %s updated for ballkid %s", ticket.id, ballkid.id
         )
-        logger.info("Ticket request %s updated for ballkid %s", ticket.id, ballkid.id)
         return Response(TicketSerializer(ticket).data)
 
     def delete(self, request, format=None):
-        ballkid, session, ticket, error = self._open_requested_ticket(request)
+        ballkid, session, error = self._ballkid_and_open_session(request)
         if error:
             return error
 
-        ticket_id = ticket.id
-        ticket.delete()
-        logger.info(
-            "Ticket request %s cancelled for ballkid %s (round %s)",
-            ticket_id,
-            ballkid.id,
-            session.id,
+        qs = session.tickets.filter(
+            ballkid=ballkid, status=TICKET_STATUS.REQUESTED
         )
+        option_id = request.data.get("option_id") or request.data.get("optionId")
+        if option_id:
+            qs = qs.filter(ticket_option_id=option_id)
+
+        tickets = list(qs)
+        if not tickets:
+            return Response(
+                {"detail": "No editable request found for this round."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for ticket in tickets:
+            ticket_id = ticket.id
+            ticket.delete()
+            logger.info(
+                "Ticket request %s cancelled for ballkid %s (round %s)",
+                ticket_id,
+                ballkid.id,
+                session.id,
+            )
         return Response({"detail": "Request cancelled."})
 
 
@@ -546,29 +770,56 @@ class ConfirmTickets(APIView):
             )
 
         now = now_et()
-        candidates = (
-            Ticket.objects.filter(
-                ballkid=ballkid,
-                status=TICKET_STATUS.CONFIRMED,
-            )
-            .select_related("ticket_session", "ticket_option", "ballkid")
-            .order_by("-ticket_session__ticket_date", "-id")
-        )
+        ticket_id = request.data.get("id") or request.data.get("ticketId")
         ticket = None
-        for candidate in candidates:
-            session_candidate = candidate.ticket_session
-            if (
+        if ticket_id:
+            ticket = (
+                Ticket.objects.filter(
+                    id=ticket_id,
+                    ballkid=ballkid,
+                    status=TICKET_STATUS.CONFIRMED,
+                )
+                .select_related("ticket_session", "ticket_option", "ballkid")
+                .first()
+            )
+            if ticket is None:
+                return Response(
+                    {"detail": "Confirmed ticket not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            session_candidate = ticket.ticket_session
+            if not (
                 session_candidate
                 and not session_candidate.waitlist_run_at
                 and now < winner_confirm_by(session_candidate)
             ):
-                ticket = candidate
-                break
-        if ticket is None:
-            return Response(
-                {"detail": "No confirmed tickets to decline."},
-                status=status.HTTP_400_BAD_REQUEST,
+                return Response(
+                    {"detail": "This ticket can no longer be declined."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            candidates = (
+                Ticket.objects.filter(
+                    ballkid=ballkid,
+                    status=TICKET_STATUS.CONFIRMED,
+                )
+                .select_related("ticket_session", "ticket_option", "ballkid")
+                .order_by("-ticket_session__ticket_date", "-id")
             )
+            for candidate in candidates:
+                session_candidate = candidate.ticket_session
+                if (
+                    session_candidate
+                    and not session_candidate.waitlist_run_at
+                    and now < winner_confirm_by(session_candidate)
+                ):
+                    ticket = candidate
+                    break
+            if ticket is None:
+                return Response(
+                    {"detail": "No confirmed tickets to decline."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         session = maybe_advance_session(ticket.ticket_session)
         ticket.refresh_from_db()
@@ -708,16 +959,22 @@ class UpdateTicket(APIView):
             )
 
         ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
-        if session.tickets.filter(ballkid=ballkid).exists():
-            return Response(
-                {"detail": "That ballkid already has a request for this date."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         option, option_error = _option_from_request(session, request.data)
         if option_error:
             return Response(
                 {"detail": option_error},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if option and session.tickets.filter(
+            ballkid=ballkid, ticket_option=option
+        ).exists():
+            return Response(
+                {"detail": "That ballkid already has a request for this session."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not option and session.tickets.filter(ballkid=ballkid).exists():
+            return Response(
+                {"detail": "That ballkid already has a request for this date."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -729,7 +986,12 @@ class UpdateTicket(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         remaining = remaining_tickets(ballkid)
-        if remaining <= 0 or num < 1 or num > remaining:
+        pending = sum(
+            session.tickets.filter(
+                ballkid=ballkid, status=TICKET_STATUS.REQUESTED
+            ).values_list("num_requested", flat=True)
+        )
+        if remaining <= 0 or num < 1 or pending + num > remaining:
             return Response(
                 {"detail": "Request exceeds remaining ticket budget."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -747,9 +1009,16 @@ class UpdateTicket(APIView):
                 ticket_date=_parse_ticket_date(request.data.get("ticket_date"))
             )
             ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
-            ticket = get_object_or_404(
-                Ticket, ticket_session=session, ballkid=ballkid
-            )
+            option_id = request.data.get("option_id") or request.data.get("optionId")
+            qs = Ticket.objects.filter(ticket_session=session, ballkid=ballkid)
+            if option_id:
+                qs = qs.filter(ticket_option_id=option_id)
+            ticket = qs.first()
+            if ticket is None:
+                return Response(
+                    {"detail": "Ticket not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
         if ticket.status == TICKET_STATUS.CONFIRMED and ticket.ballkid:
             ticket.ballkid.num_tickets = max(

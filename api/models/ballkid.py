@@ -867,9 +867,13 @@ class Ticket(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["ticket_session", "ballkid"],
-                name="unique_ticket_per_session_ballkid",
-                condition=Q(ticket_session__isnull=False, ballkid__isnull=False),
+                fields=["ticket_session", "ballkid", "ticket_option"],
+                name="unique_ticket_per_session_ballkid_option",
+                condition=Q(
+                    ticket_session__isnull=False,
+                    ballkid__isnull=False,
+                    ticket_option__isnull=False,
+                ),
             )
         ]
 

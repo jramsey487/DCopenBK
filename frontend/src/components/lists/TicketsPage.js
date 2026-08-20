@@ -1456,12 +1456,29 @@ function StaffTickets({
   error,
   setError,
 }) {
-  const hasRounds = sessions.length > 0;
   const [form, setForm] = useState(emptyRoundForm);
   const [saving, setSaving] = useState(false);
   const [pastOpen, setPastOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const showCreate = creating || !hasRounds;
+
+  const ticketsBySession = {};
+  tickets.forEach((ticket) => {
+    const key = ticket.ticket_session;
+    if (!ticketsBySession[key]) {
+      ticketsBySession[key] = [];
+    }
+    ticketsBySession[key].push(ticket);
+  });
+
+  const currentRounds = sortedRounds(
+    sessions.filter((round) => staffRoundState(round) !== "finalized"),
+    { pinLive: true }
+  );
+  const pastRounds = sortedRounds(
+    sessions.filter((round) => staffRoundState(round) === "finalized")
+  );
+  const hasUpcoming = currentRounds.length > 0;
+  const showCreate = creating || !hasUpcoming;
 
   const saveNewRound = (e) => {
     e.preventDefault();
@@ -1495,23 +1512,6 @@ function StaffTickets({
       .catch((err) => setError(err.message))
       .finally(() => setSaving(false));
   };
-
-  const ticketsBySession = {};
-  tickets.forEach((ticket) => {
-    const key = ticket.ticket_session;
-    if (!ticketsBySession[key]) {
-      ticketsBySession[key] = [];
-    }
-    ticketsBySession[key].push(ticket);
-  });
-
-  const currentRounds = sortedRounds(
-    sessions.filter((round) => staffRoundState(round) !== "finalized"),
-    { pinLive: true }
-  );
-  const pastRounds = sortedRounds(
-    sessions.filter((round) => staffRoundState(round) === "finalized")
-  );
 
   const closeCreate = () => {
     setForm(emptyRoundForm());
@@ -1552,7 +1552,7 @@ function StaffTickets({
         <div className="tickets-card tickets-config">
           <div className="tickets-create-header">
             <h2 className="tickets-card-title">Create ticket round</h2>
-            {hasRounds ? (
+            {hasUpcoming ? (
               <button
                 type="button"
                 className="tickets-btn tickets-btn--secondary"
@@ -1575,7 +1575,7 @@ function StaffTickets({
       <section className="tickets-bk-section">
         <div className="tickets-section-heading">
           <h2 className="tickets-bk-section-title">Upcoming rounds</h2>
-          {hasRounds && !showCreate ? (
+          {hasUpcoming && !showCreate ? (
             <button
               type="button"
               className="tickets-btn"
@@ -1585,10 +1585,10 @@ function StaffTickets({
             </button>
           ) : null}
         </div>
-        {currentRounds.length === 0 ? (
-          <p className="tickets-bk-empty">No upcoming rounds.</p>
-        ) : (
+        {hasUpcoming ? (
           renderRounds(currentRounds)
+        ) : showCreate ? null : (
+          <p className="tickets-bk-empty">No upcoming rounds.</p>
         )}
       </section>
 
@@ -1709,146 +1709,176 @@ function BallkidTickets({
 }) {
   const myTickets = tickets || [];
   const options = session?.options || [];
-  const [num, setNum] = useState("1");
-  const [optionId, setOptionId] = useState(
-    options[0] ? String(options[0].id) : ""
-  );
+  const [qtyByOption, setQtyByOption] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineTicket, setDeclineTicket] = useState(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const phase = session?.phase;
-  const sessionTicket = session
-    ? myTickets.find((ticket) => Number(ticket.ticket_session) === Number(session.id))
-    : null;
+  const sessionTickets = session
+    ? myTickets.filter(
+        (ticket) => Number(ticket.ticket_session) === Number(session.id)
+      )
+    : [];
+  const requestedTickets = sessionTickets.filter(
+    (ticket) => ticket.status === "requested"
+  );
   const pastTickets = myTickets.filter(
     (ticket) =>
       !session || Number(ticket.ticket_session) !== Number(session.id)
   );
-  const actionTicket = myTickets.find((ticket) =>
-    canDeclineConfirmedWin(ticket, session)
-  );
+  const outcomeTickets = sortRequestTickets(sessionTickets);
+  const declineOpen = Boolean(declineTicket);
   const canEdit =
-    Boolean(session) &&
-    phase === "open" &&
-    sessionTicket?.status === "requested";
+    Boolean(session) && phase === "open" && requestedTickets.length > 0;
   const canRequest =
     Boolean(session) &&
     phase === "open" &&
     remaining > 0 &&
-    !sessionTicket;
+    sessionTickets.length === 0;
   const showForm = canRequest || (canEdit && editing);
-  const editDirty =
+
+  const qtyTotal = options.reduce(
+    (sum, option) => sum + (Number(qtyByOption[option.id]) || 0),
+    0
+  );
+  const formDirty =
     canEdit &&
-    (String(num) !== String(sessionTicket?.num_requested ?? "") ||
-      (options.length > 0 &&
-        String(optionId) !== String(sessionTicket?.ticket_option ?? "")));
+    options.some((option) => {
+      const existing =
+        requestedTickets.find(
+          (ticket) => Number(ticket.ticket_option) === Number(option.id)
+        )?.num_requested || 0;
+      return (Number(qtyByOption[option.id]) || 0) !== existing;
+    });
 
   const resetEditForm = () => {
-    if (sessionTicket) {
-      setNum(String(sessionTicket.num_requested || 1));
-      if (sessionTicket.ticket_option) {
-        setOptionId(String(sessionTicket.ticket_option));
-      }
+    const next = {};
+    options.forEach((option) => {
+      const existing = requestedTickets.find(
+        (ticket) => Number(ticket.ticket_option) === Number(option.id)
+      );
+      next[option.id] = String(existing?.num_requested || 0);
+    });
+    if (options.length === 1 && !requestedTickets.length) {
+      next[options[0].id] = String(Math.min(1, remaining) || 0);
     }
+    setQtyByOption(next);
   };
 
   useEffect(() => {
     setEditing(false);
-  }, [session?.id, sessionTicket?.id]);
+  }, [session?.id, requestedTickets.map((t) => t.id).join(",")]);
 
   useEffect(() => {
-    if (canEdit && sessionTicket) {
-      setNum(String(sessionTicket.num_requested || 1));
-      if (sessionTicket.ticket_option) {
-        setOptionId(String(sessionTicket.ticket_option));
+    if (!session) return;
+    const next = {};
+    options.forEach((option) => {
+      const existing = requestedTickets.find(
+        (ticket) => Number(ticket.ticket_option) === Number(option.id)
+      );
+      if (existing) {
+        next[option.id] = String(existing.num_requested || 0);
+      } else if (options.length === 1 && remaining > 0) {
+        next[option.id] = "1";
+      } else {
+        next[option.id] = "0";
       }
-      return;
-    }
-    if (remaining > 0) {
-      setNum(String(Math.min(Number(num) || 1, remaining)));
-    }
+    });
+    setQtyByOption(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remaining, canEdit, sessionTicket?.id, sessionTicket?.num_requested, sessionTicket?.ticket_option]);
+  }, [
+    session?.id,
+    remaining,
+    options.map((o) => o.id).join(","),
+    requestedTickets.map((t) => `${t.id}:${t.num_requested}`).join(","),
+  ]);
 
-  useEffect(() => {
-    if (options.length && !options.some((o) => String(o.id) === optionId)) {
-      setOptionId(String(options[0].id));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  const setOptionQty = (optionId, value) => {
+    const nextQty = Number(value) || 0;
+    setQtyByOption((prev) => {
+      const next = { ...prev, [optionId]: String(nextQty) };
+      const others = options.reduce((sum, option) => {
+        if (String(option.id) === String(optionId)) return sum;
+        return sum + (Number(next[option.id]) || 0);
+      }, 0);
+      if (others + nextQty > remaining) {
+        next[optionId] = String(Math.max(0, remaining - others));
+      }
+      return next;
+    });
+  };
+
+  const maxForOption = (optionId) => {
+    const others = options.reduce((sum, option) => {
+      if (String(option.id) === String(optionId)) return sum;
+      return sum + (Number(qtyByOption[option.id]) || 0);
+    }, 0);
+    return Math.max(0, remaining - others);
+  };
 
   const requestTickets = (e) => {
     e.preventDefault();
-    if (canEdit && !editDirty) {
+    if (canEdit && !formDirty) {
+      return;
+    }
+    if (qtyTotal < 1) {
+      setError("Request at least one ticket.");
       return;
     }
     setSubmitting(true);
     setError("");
+    const requests = options.map((option) => ({
+      option_id: Number(option.id),
+      num_requested: Number(qtyByOption[option.id]) || 0,
+    }));
     fetch("/api/request-tickets", {
       method: canEdit ? "PATCH" : "POST",
       headers: getAuthHeader(),
-      body: JSON.stringify({
-        num_requested: Number(num),
-        option_id: optionId ? Number(optionId) : undefined,
-      }),
+      body: JSON.stringify({ requests }),
     })
       .then(jsonOrThrow)
-      .then((ticket) => {
+      .then((payload) => {
         setEditing(false);
-        onTicketSaved?.(ticket);
+        const saved = Array.isArray(payload?.tickets)
+          ? payload.tickets
+          : payload?.id
+            ? [payload]
+            : [];
+        if (saved.length === 1) {
+          onTicketSaved?.(saved[0]);
+        } else {
+          onRefresh?.();
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setSubmitting(false));
   };
 
   const closes = formatEtParts(session?.closes_at);
-  const maxRequestable = canEdit
-    ? Math.max(remaining, Number(sessionTicket?.num_requested) || 1, 1)
-    : Math.max(remaining, 1);
 
   let currentPanel;
-  if (actionTicket) {
-    currentPanel = (
-      <BallkidStatus
-        tone="success"
-        kicker="Confirmed"
-        title={
-          actionTicket.option_label ||
-          sessionDateLabel(session, actionTicket)
-        }
-      >
-        <p className="tickets-state-copy">
-          {confirmedGrantCopy(actionTicket)}
-          <br />
-          {`Can't make it? Decline by `}
-          <strong>{formatEtShort(session?.winner_confirm_by)}</strong>.
-        </p>
-        <div className="tickets-actions">
-          <button
-            type="button"
-            className="tickets-btn"
-            disabled={submitting}
-            onClick={() => setDeclineOpen(true)}
-          >
-            Decline
-          </button>
-        </div>
-        {error ? <p className="tickets-error">{error}</p> : null}
-      </BallkidStatus>
-    );
-  } else if (canEdit && !editing) {
+  if (canEdit && !editing) {
     currentPanel = (
       <BallkidStatus
         tone="info"
         kicker="Requested"
-        title={
-          sessionTicket.option_label ||
-          sessionDateLabel(session, sessionTicket)
-        }
+        title={roundTitle(session)}
       >
+        <ul className="tickets-request-list">
+          {requestedTickets.map((ticket) => (
+            <li key={ticket.id}>
+              <strong>
+                {ticket.option_label || sessionDateLabel(session, ticket)}
+              </strong>
+              {`: ${ticket.num_requested} ${ticketWord(ticket.num_requested)}`}
+            </li>
+          ))}
+        </ul>
         <p className="tickets-state-copy">
-          {requestOutcomeCopy(sessionTicket, session)}
+          {closes
+            ? `You can edit or cancel until ${closes.date} at ${closes.time} ET.`
+            : null}
         </p>
         <div className="tickets-actions">
           <button
@@ -1882,54 +1912,53 @@ function BallkidTickets({
             ? `You can edit or cancel your request until ${closes?.date} at ${closes?.time} ET.`
             : `Ticket request form closes on ${closes?.date} at ${closes?.time} ET.`}
         </p>
-        {options.length ? (
-          <fieldset className="tickets-radios">
-            <legend>Which session?</legend>
-            {options.map((option) => (
-              <label
-                key={option.id}
-                className={
-                  String(option.id) === optionId
-                    ? "tickets-radio tickets-radio--selected"
-                    : "tickets-radio"
-                }
-              >
-                <input
-                  type="radio"
-                  name="ticket-option"
-                  value={option.id}
-                  checked={String(option.id) === optionId}
-                  onChange={() => setOptionId(String(option.id))}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </fieldset>
+        {options.length > 1 ? (
+          <p className="tickets-state-copy">
+            Request tickets per session. Total can&apos;t exceed your{" "}
+            {remaining} remaining.
+          </p>
         ) : null}
-        <label className="tickets-field">
-          How many?
-          <select
-            className="tickets-select"
-            value={num}
-            onChange={(e) => setNum(e.target.value)}
-          >
-            {Array.from({ length: maxRequestable }, (_, i) => i + 1).map(
-              (n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              )
-            )}
-          </select>
-        </label>
+        {options.length ? (
+          <div className="tickets-option-qtys">
+            {options.map((option) => {
+              const max = maxForOption(option.id);
+              const value = Number(qtyByOption[option.id]) || 0;
+              return (
+                <label key={option.id} className="tickets-option-qty">
+                  <span className="tickets-option-qty-label">
+                    {option.label}
+                  </span>
+                  <select
+                    className="tickets-select"
+                    value={String(Math.min(value, max))}
+                    onChange={(e) => setOptionQty(option.id, e.target.value)}
+                  >
+                    {Array.from({ length: max + 1 }, (_, i) => i).map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="tickets-error">No sessions are configured for this round.</p>
+        )}
+        {options.length > 1 ? (
+          <p className="tickets-qty-summary">
+            {qtyTotal} of {remaining} selected
+          </p>
+        ) : null}
         <div className="tickets-actions">
           <button
             type="submit"
             className="tickets-btn"
             disabled={
               submitting ||
-              (options.length > 0 && !optionId) ||
-              (canEdit && !editDirty)
+              qtyTotal < 1 ||
+              (canEdit && !formDirty)
             }
           >
             {submitting
@@ -1966,21 +1995,41 @@ function BallkidTickets({
         {error ? <p className="tickets-error">{error}</p> : null}
       </form>
     );
-  } else if (sessionTicket && session) {
-    const outcome = requestOutcomeCopy(sessionTicket, session);
+  } else if (outcomeTickets.length && session) {
     currentPanel = (
-      <BallkidStatus
-        tone={statusTone(sessionTicket.status)}
-        kicker={STATUS_LABEL[sessionTicket.status] || sessionTicket.status}
-        title={
-          sessionTicket.option_label ||
-          sessionDateLabel(session, sessionTicket)
-        }
-      >
-        {outcome ? (
-          <p className="tickets-state-copy">{outcome}</p>
-        ) : null}
-      </BallkidStatus>
+      <>
+        {outcomeTickets.map((ticket) => {
+          const outcome = requestOutcomeCopy(ticket, session);
+          const canDecline = canDeclineConfirmedWin(ticket, session);
+          return (
+            <BallkidStatus
+              key={ticket.id}
+              tone={statusTone(ticket.status)}
+              kicker={STATUS_LABEL[ticket.status] || ticket.status}
+              title={
+                ticket.option_label || sessionDateLabel(session, ticket)
+              }
+            >
+              {outcome ? (
+                <p className="tickets-state-copy">{outcome}</p>
+              ) : null}
+              {canDecline ? (
+                <div className="tickets-actions">
+                  <button
+                    type="button"
+                    className="tickets-btn"
+                    disabled={submitting}
+                    onClick={() => setDeclineTicket(ticket)}
+                  >
+                    Decline
+                  </button>
+                </div>
+              ) : null}
+            </BallkidStatus>
+          );
+        })}
+        {error ? <p className="tickets-error">{error}</p> : null}
+      </>
     );
   } else {
     currentPanel = (
@@ -2025,26 +2074,37 @@ function BallkidTickets({
             );
           })
         ) : (
-          <p className="tickets-bk-empty">You don't have any past requests.</p>
+          <p className="tickets-bk-empty">You don&apos;t have any past requests.</p>
         )}
       </section>
       <ConfirmDialog
         message={`Declining will remove ${
-          actionTicket?.num_granted === 1
+          declineTicket?.num_granted === 1
             ? "this ticket"
-            : `these ${actionTicket?.num_granted} tickets`
+            : `these ${declineTicket?.num_granted || 0} tickets`
         } from your tournament total so ${
-          actionTicket?.num_granted === 1 ? "it" : "they"
+          declineTicket?.num_granted === 1 ? "it" : "they"
         } can go to the waitlist.`}
         url="/api/confirm-tickets"
-        body={{ accept: false }}
+        body={{ accept: false, id: declineTicket?.id }}
         method="POST"
         open={declineOpen}
-        setOpen={setDeclineOpen}
-        setUpdated={() => onRefresh()}
+        setOpen={(open) => {
+          if (!open) {
+            setDeclineTicket(null);
+          }
+        }}
+        setUpdated={() => {
+          setDeclineTicket(null);
+          onRefresh();
+        }}
       />
       <ConfirmDialog
-        message="Cancelling will withdraw your ticket request for this round. You can submit a new request until the form closes."
+        message={
+          requestedTickets.length > 1
+            ? "Cancelling will withdraw all of your ticket requests for this round. You can submit a new request until the form closes."
+            : "Cancelling will withdraw your ticket request for this round. You can submit a new request until the form closes."
+        }
         url="/api/request-tickets"
         body={{}}
         method="DELETE"
