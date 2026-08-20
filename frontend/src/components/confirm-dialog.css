@@ -36,7 +36,7 @@
 }
 
 .confirm-dialog-content {
-  padding: 18px 20px 14px !important;
+  padding: 20px 22px 18px !important;
 }
 
 .confirm-dialog-title {
@@ -44,7 +44,7 @@
   font-weight: 600 !important;
   color: var(--cd-nav) !important;
   text-align: left;
-  margin: 0 0 8px !important;
+  margin: 0 0 10px !important;
   padding: 0 !important;
   letter-spacing: -0.02em;
   line-height: 1.25 !important;
@@ -53,9 +53,88 @@
 .confirm-dialog-message {
   margin: 0 !important;
   font-size: 14px !important;
-  line-height: 1.5 !important;
+  line-height: 1.55 !important;
   color: var(--cd-text2) !important;
   text-align: left;
+}
+
+.confirm-dialog-message-body {
+  margin: 0;
+}
+
+.confirm-dialog-proceed {
+  margin: 16px 0 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--cd-text2);
+}
+
+.confirm-dialog-highlight {
+  display: block;
+  margin-top: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--cd-text1);
+  background: #eff6ff;
+  border-left: 3px solid #1d4ed8;
+  padding: 10px 12px;
+  border-radius: 0 8px 8px 0;
+}
+
+.confirm-dialog-paper--make-live {
+  max-width: 460px;
+}
+
+.confirm-dialog-paper--make-live .confirm-dialog-accent {
+  background: var(--cd-success);
+}
+
+.confirm-dialog-paper--make-live .confirm-dialog-ack input {
+  accent-color: var(--cd-success);
+}
+
+.confirm-dialog-paper--make-live .confirm-dialog-action-btn.MuiButton-root,
+.confirm-dialog-paper--make-live .confirm-dialog-action-btn.MuiLoadingButton-root {
+  background: var(--cd-success) !important;
+  border-color: var(--cd-success) !important;
+}
+
+.confirm-dialog-paper--make-live
+  .confirm-dialog-action-btn.MuiButton-root:hover:not(.Mui-disabled),
+.confirm-dialog-paper--make-live
+  .confirm-dialog-action-btn.MuiLoadingButton-root:hover:not(.Mui-disabled) {
+  background: #166534 !important;
+  border-color: #166534 !important;
+}
+
+.confirm-dialog-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cd-text1);
+  font-weight: 500;
+}
+
+.confirm-dialog-ack input {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--cd-danger);
+}
+
+.confirm-dialog-ack span {
+  flex: 1;
+  min-width: 0;
 }
 
 .confirm-dialog-actions {

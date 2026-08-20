@@ -1,0 +1,42 @@
+{% extends "email/tickets/base.html" %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:22px;font-weight:600;line-height:1.3;color:#0d1b3e;letter-spacing:-0.02em;">
+  No tickets this round
+</h1>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Hi {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  The waitlist closed for {{ session_date_display }}. You didn&apos;t receive tickets this time for your requested session{% if outcomes %}{{ outcomes|length|pluralize }}{% endif %}.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;margin-bottom:20px;overflow:hidden;">
+  {% if outcomes %}
+    {% for row in outcomes %}
+  <tr>
+    <td bgcolor="#fef2f2" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#991b1b;background-color:#fef2f2;border-left:4px solid #dc2626;{% if not forloop.last %}border-bottom:1px solid #fecaca;{% endif %}">
+      <strong style="display:block;color:#7f1d1d;">{{ row.session_display }}</strong>
+    </td>
+  </tr>
+    {% endfor %}
+  {% else %}
+  <tr>
+    <td bgcolor="#fef2f2" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#991b1b;background-color:#fef2f2;border-left:4px solid #dc2626;">
+      <strong style="display:block;color:#7f1d1d;">{{ session_display }}</strong>
+    </td>
+  </tr>
+  {% endif %}
+</table>
+<p style="margin:0 0 24px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  You still have {{ tickets_remaining_display }} tournament tickets left for future rounds.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+  <tr>
+    <td align="left" style="border-radius:8px;background-color:#0f2a4a;">
+      <a href="{{ cta_url }}" style="display:inline-block;padding:12px 20px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;font-weight:700;line-height:1.35;color:#ffffff;text-decoration:none;text-transform:uppercase;letter-spacing:-0.01em;border-radius:8px;">
+        View tickets
+      </a>
+    </td>
+  </tr>
+</table>
+{% endblock %}

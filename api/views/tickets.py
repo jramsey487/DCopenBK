@@ -33,6 +33,8 @@ from api.utils.tickets import (
     reallocate_declined_grants,
     serialize_session,
     set_session_live,
+    set_ticket_emails_enabled,
+    ticket_email_staff_payload,
     winner_confirm_by,
 )
 
@@ -112,6 +114,7 @@ def _admin_rounds_payload(session=None):
     payload = {
         "sessions": [serialize_session(s) for s in _year_sessions()],
         "can_manage": True,
+        **ticket_email_staff_payload(),
     }
     if session is not None:
         payload["session"] = serialize_session(session)
@@ -316,6 +319,7 @@ class TicketSessionView(APIView):
             sessions = [serialize_session(s) for s in _year_sessions()]
             payload["sessions"] = sessions
             payload["session"] = next((s for s in sessions if s["is_live"]), None)
+            payload.update(ticket_email_staff_payload())
             return Response(payload)
 
         session = pick_ballkid_session(ballkid) if ballkid else pick_live_session()
@@ -368,11 +372,19 @@ class TicketSessionView(APIView):
         )
         if existing:
             duplicate = duplicate.exclude(pk=existing.pk)
-        if duplicate.exists():
+        clash = duplicate.first()
+        if clash is not None:
+            finalized = bool(
+                clash.lottery_run_at
+                and now_et() >= winner_confirm_by(clash)
+            )
+            detail = (
+                "A finalized round for this date already exists - open Finalized rounds to view it."
+                if finalized
+                else "A round for this date already exists - edit it below."
+            )
             return Response(
-                {
-                    "detail": "A round for this date already exists — edit it below.",
-                },
+                {"detail": detail},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -402,6 +414,16 @@ class TicketSessionView(APIView):
         denied = _require_ticket_admin(request.user)
         if denied:
             return denied
+
+        if "ticket_emails_enabled" in request.data and not request.data.get("id"):
+            enabled = set_ticket_emails_enabled(request.data["ticket_emails_enabled"])
+            return Response(
+                {
+                    **ticket_email_staff_payload(),
+                    "ticket_emails_enabled": enabled,
+                }
+            )
+
         session_id = request.data.get("id")
         if not session_id:
             return Response(

@@ -486,6 +486,11 @@ class GetTournament(APIView):
         if "rcal_bucket_size" in request.data:
             tournament.rcal_bucket_size = int(request.data["rcal_bucket_size"])
 
+        if "ticket_emails_enabled" in request.data:
+            tournament.ticket_emails_enabled = bool(
+                request.data["ticket_emails_enabled"]
+            )
+
         if "start" in request.data or "start_date" in request.data:
             start = parse_tournament_date(
                 request.data.get("start_date") or request.data.get("start")

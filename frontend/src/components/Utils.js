@@ -36,7 +36,7 @@ export {
   getDayFromHyphenated,
 } from "./dateTime";
 
-export { Alerts, ConfirmDialog, HelpIcon } from "./dialogs";
+export { Alerts, ConfirmDialog, MakeLiveDialog, HelpIcon } from "./dialogs";
 
 export {
   LayoutButtons,

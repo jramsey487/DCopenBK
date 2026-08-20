@@ -152,6 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DOMAIN = "dcopenbk.fly.dev"
+SITE_BASE_URL = env.str("SITE_BASE_URL", default=f"https://{DOMAIN}")
 SITE_NAME = "Mubadala DC Open Ballcrew"
 DJOSER = {
     "USER_ID_FIELD": "username",
@@ -165,6 +166,10 @@ DJOSER = {
     "SERIALIZERS": {
         "token_create": "accounts.serializers.CustomTokenCreateSerializer",
     },
+    "EMAIL": {
+        "password_reset": "accounts.emails.PasswordResetEmail",
+        "password_changed_confirmation": "accounts.emails.PasswordChangedConfirmationEmail",
+    },
 }
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -173,6 +178,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = "mubadalacitiopenballcrew@gmail.com"
 EMAIL_HOST_PASSWORD = "dpihginhhvhpnrni"
 EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
 
 # Internationalization

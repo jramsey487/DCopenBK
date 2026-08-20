@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from api.models.ballkid import Ticket, TicketSession
+from api.models.ballkid import Ballkid, Ticket, TicketSession
 from api.models.enums import TICKET_STATUS
 from api.utils.consts import (
     TICKET_LIMIT,
@@ -70,7 +70,7 @@ def remaining_tickets(ballkid):
 def option_label(option):
     if option is None:
         return ""
-    date_part = f"{option.ticket_date.strftime('%a %B')} {option.ticket_date.day}"
+    date_part = f"{option.ticket_date.strftime('%A, %B')} {option.ticket_date.day}"
     label = f"{date_part}: Session {option.session_number}"
     if option.period == "day":
         return f"{label} (DAY SESSION)"
@@ -201,6 +201,54 @@ def is_ticket_admin(user):
     return user.groups.filter(name__in=["chairperson", "ticketing"]).exists()
 
 
+def round_live_email_recipients():
+    """Active ballkids who still have tournament tickets left and an email."""
+    return (
+        Ballkid.objects.filter(is_active=True, is_cut=False)
+        .filter(Q(num_tickets__lt=TICKET_LIMIT) | Q(num_tickets__isnull=True))
+        .exclude(user__isnull=True)
+        .exclude(user__email="")
+        .select_related("user")
+    )
+
+
+def ticket_emails_enabled(year=None):
+    """Whether automated ticket emails should send for this tournament year."""
+    from api.models.schedule import Tournament
+
+    year = year or get_current_year()
+    tournament = Tournament.objects.filter(year=year).only("ticket_emails_enabled").first()
+    if tournament is None:
+        return True
+    return bool(tournament.ticket_emails_enabled)
+
+
+def set_ticket_emails_enabled(enabled, year=None):
+    from api.models.schedule import Tournament
+
+    year = year or get_current_year()
+    tournament, _ = Tournament.objects.get_or_create(year=year)
+    tournament.ticket_emails_enabled = bool(enabled)
+    tournament.save(update_fields=["ticket_emails_enabled"])
+    return tournament.ticket_emails_enabled
+
+
+def ticket_email_staff_payload():
+    return {
+        "ticket_email_recipient_count": round_live_email_recipients().count(),
+        "ticket_emails_enabled": ticket_emails_enabled(),
+    }
+
+
+def send_ticket_email(ballkid, subject, template_name, context):
+    from api.utils.ticket_emails import send_ticket_html_email
+
+    if not ticket_emails_enabled():
+        return False
+    context.setdefault("email_title", subject)
+    return send_ticket_html_email(ballkid, subject, template_name, context)
+
+
 def pick_current_session(now=None, ticket_date=None, year=None):
     year = year or get_current_year()
     qs = TicketSession.objects.filter(year=year).prefetch_related("options")
@@ -286,74 +334,112 @@ def set_session_live(session, is_live=True):
             status=TICKET_STATUS.DENIED
         )
     session.save(update_fields=["is_live"])
+    if is_live:
+        email_round_live_broadcast(session)
     return session
 
 
-def send_ticket_email(ballkid, subject, body):
-    # Ticket emails are paused; keep helpers in place to turn back on later.
-    return False
+def email_round_live_broadcast(session):
+    from api.utils.ticket_emails import round_live_context
 
-
-def _name(ballkid):
-    return f"{ballkid.first_name} {ballkid.last_name}".strip()
-
-
-def _format_et(dt):
-    local = as_et(dt)
-    return local.strftime("%-I:%M %p ET on %a %-m/%-d")
-
-
-def _request_label(ticket=None, session=None, option=None):
-    option = option or (ticket.ticket_option if ticket else None)
-    if option:
-        return option_label(option)
-    session = session or (ticket.ticket_session if ticket else None)
-    if session:
-        return session.ticket_date.strftime("%-m/%-d")
-    return "tickets"
+    options = list(session.options.order_by("order", "id"))
+    for ballkid in round_live_email_recipients():
+        if remaining_tickets(ballkid) <= 0:
+            continue
+        ctx = round_live_context(ballkid, session, options)
+        subject = f"Ticket requests open - {ctx['session_subject_suffix']}"
+        send_ticket_email(ballkid, subject, "round_live", ctx)
 
 
 def email_request_confirmation(ballkid, session, num_requested, option=None):
-    date_label = _request_label(session=session, option=option)
-    send_ticket_email(
+    # Request confirmation is in-app only; no HTML template in v1.
+    return False
+
+
+def email_confirmed(
+    ballkid, session, num_granted, option=None, source="waitlist", num_requested=None
+):
+    from api.utils.ticket_emails import base_context
+
+    ctx = base_context(
         ballkid,
-        f"Ticket request received for {date_label}",
-        (
-            f"Hi {_name(ballkid)},\n\n"
-            f"We received your request for {num_requested} ticket(s) "
-            f"for {date_label}. You'll get another email after the lottery "
-            f"closes at {_format_et(session.closes_at)}.\n"
-        ),
+        session,
+        option,
+        ticket_count=num_granted,
+        num_requested=num_requested,
+        confirmed_source=source,
+    )
+    date_suffix = ctx["session_date_display"]
+    ctx["session_subject_suffix"] = date_suffix
+    ctx["email_title"] = f"You're off the waitlist - {date_suffix}"
+    send_ticket_email(ballkid, ctx["email_title"], "confirmed", ctx)
+
+
+def email_selected(
+    ballkid, session, num_granted, option=None, source="waitlist", num_requested=None
+):
+    """Immediate confirmation email (waitlist promo / staff allocate)."""
+    email_confirmed(
+        ballkid,
+        session,
+        num_granted,
+        option=option,
+        source=source,
+        num_requested=num_requested,
     )
 
 
-def email_selected(ballkid, session, num_granted, option=None):
-    date_label = _request_label(session=session, option=option)
-    confirm_by = winner_confirm_by(session)
-    send_ticket_email(
-        ballkid,
-        f"You won {date_label} tickets",
-        (
-            f"Hi {_name(ballkid)},\n\n"
-            f"You were selected for {num_granted} ticket(s) for {date_label}. "
-            f"They've been added to your tournament total. "
-            f"If you can't use them, decline in the app by {_format_et(confirm_by)} "
-            f"so they can go to the waitlist.\n"
-        ),
-    )
+def email_denied(ballkid, session, option=None):
+    from api.utils.ticket_emails import denied_digest_context
+
+    class _Ticket:
+        status = TICKET_STATUS.DENIED
+        ticket_option = option
+        num_granted = 0
+        num_requested = 0
+
+    ctx = denied_digest_context(ballkid, session, [_Ticket()])
+    send_ticket_email(ballkid, ctx["email_title"], "denied", ctx)
 
 
-def email_not_selected(ballkid, session, option=None):
-    date_label = _request_label(session=session, option=option)
-    send_ticket_email(
-        ballkid,
-        f"You weren't selected for {date_label} tickets",
-        (
-            f"Hi {_name(ballkid)},\n\n"
-            f"You weren't selected in the lottery for {date_label} tickets. "
-            f"You're on the waitlist in case winners decline.\n"
-        ),
+def _tickets_by_ballkid(tickets):
+    grouped = {}
+    for ticket in tickets:
+        if not ticket.ballkid_id:
+            continue
+        grouped.setdefault(ticket.ballkid_id, []).append(ticket)
+    return grouped
+
+
+def email_lottery_results(session):
+    """One digest per ballkid after the lottery (confirmed + waitlisted)."""
+    from api.utils.ticket_emails import lottery_results_context
+
+    tickets = list(
+        session.tickets.filter(
+            status__in=(TICKET_STATUS.CONFIRMED, TICKET_STATUS.WAITLIST)
+        )
+        .select_related("ballkid", "ballkid__user", "ticket_option")
+        .order_by("ticket_option__order", "ticket_option_id", "id")
     )
+    for group in _tickets_by_ballkid(tickets).values():
+        ballkid = group[0].ballkid
+        ctx = lottery_results_context(ballkid, session, group)
+        send_ticket_email(
+            ballkid, ctx["email_title"], "lottery_results", ctx
+        )
+
+
+def email_denied_digests(session, tickets):
+    """One digest per ballkid when waitlist closes with no tickets."""
+    from api.utils.ticket_emails import denied_digest_context
+
+    for group in _tickets_by_ballkid(tickets).values():
+        ballkid = group[0].ballkid
+        ctx = denied_digest_context(ballkid, session, group)
+        send_ticket_email(
+            ballkid, ctx["email_title"], "denied", ctx
+        )
 
 
 def ticket_event_date(ticket):
@@ -435,13 +521,15 @@ def reallocate_declined_grants(declined_ticket, now=None):
             continue
         remaining_pool -= grant
         _auto_confirm_win(
-            ticket, grant, now, session, option=option or ticket.ticket_option
+            ticket, grant, now, session, option=option or ticket.ticket_option, source="waitlist"
         )
         allocated.append(ticket)
     return allocated
 
 
-def _auto_confirm_win(ticket, grant, now, session, option=None):
+def _auto_confirm_win(
+    ticket, grant, now, session, option=None, source="lottery", notify=True
+):
     ticket.num_granted = grant
     ticket.status = TICKET_STATUS.CONFIRMED
     ticket.confirmed_at = for_storage(now)
@@ -450,7 +538,15 @@ def _auto_confirm_win(ticket, grant, now, session, option=None):
         ballkid = ticket.ballkid
         ballkid.num_tickets = (ballkid.num_tickets or 0) + grant
         ballkid.save(update_fields=["num_tickets"])
-        email_selected(ballkid, session, grant, option=option or ticket.ticket_option)
+        if notify:
+            email_selected(
+                ballkid,
+                session,
+                grant,
+                option=option or ticket.ticket_option,
+                source=source,
+                num_requested=ticket.num_requested,
+            )
 
 
 def _lottery_one_option(session, option, tickets, now=None):
@@ -465,11 +561,11 @@ def _lottery_one_option(session, option, tickets, now=None):
             ticket.status = TICKET_STATUS.WAITLIST
             ticket.num_granted = 0
             ticket.save()
-            if ticket.ballkid:
-                email_not_selected(ticket.ballkid, session, option=ticket_option)
             continue
         remaining_pool -= grant
-        _auto_confirm_win(ticket, grant, now, session, option=ticket_option)
+        _auto_confirm_win(
+            ticket, grant, now, session, option=ticket_option, notify=False
+        )
 
 
 @transaction.atomic
@@ -505,6 +601,7 @@ def run_lottery(session, now=None):
 
     session.lottery_run_at = for_storage(now)
     session.save(update_fields=["lottery_run_at"])
+    email_lottery_results(session)
     return session
 
 
@@ -539,7 +636,13 @@ def run_waitlist_pass(session, now=None):
                 continue
             remaining_pool -= grant
             _auto_confirm_win(
-                ticket, grant, now, session, option=option or ticket.ticket_option
+                ticket,
+                grant,
+                now,
+                session,
+                option=option or ticket.ticket_option,
+                source="waitlist",
+                notify=True,
             )
 
     deny_unfilled_waitlist(session)
@@ -549,9 +652,16 @@ def run_waitlist_pass(session, now=None):
 
 
 def deny_unfilled_waitlist(session):
+    waitlisted = list(
+        session.tickets.filter(status=TICKET_STATUS.WAITLIST).select_related(
+            "ballkid", "ballkid__user", "ticket_option"
+        )
+    )
     session.tickets.filter(status=TICKET_STATUS.WAITLIST).update(
         status=TICKET_STATUS.DENIED
     )
+    if waitlisted:
+        email_denied_digests(session, waitlisted)
 
 
 @transaction.atomic
@@ -578,7 +688,7 @@ def allocate_waitlist_ticket(ticket, now=None):
         if leftover <= 0:
             raise ValueError("No tickets left to allocate for this session.")
         raise ValueError("This ballkid has no tickets remaining this tournament.")
-    _auto_confirm_win(ticket, grant, now, session, option=option)
+    _auto_confirm_win(ticket, grant, now, session, option=option, source="waitlist")
     return Ticket.objects.select_related("ticket_option", "ballkid").get(pk=ticket.pk)
 
 

@@ -1,0 +1,53 @@
+{% extends "email/tickets/base.html" %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:22px;font-weight:600;line-height:1.3;color:#0d1b3e;letter-spacing:-0.02em;">
+  Your ticket results
+</h1>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Hi {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Here&apos;s how your request{{ outcomes|length|pluralize }} turned out for {{ session_date_display }}:
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:20px;overflow:hidden;">
+  {% for row in outcomes %}
+  <tr>
+    {% if row.status == "confirmed" %}
+    <td bgcolor="#ecfdf3" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#166534;background-color:#ecfdf3;border-left:4px solid #15803d;{% if not forloop.last %}border-bottom:1px solid #d1fae5;{% endif %}">
+      <strong style="display:block;margin-bottom:4px;color:#14532d;">{{ row.session_display }}</strong>
+      Confirmed for {{ row.ticket_count }} ticket{{ row.ticket_count|pluralize }}{% if row.num_requested and row.ticket_count < row.num_requested %} (you requested {{ row.num_requested }}){% endif %}.
+    </td>
+    {% elif row.status == "waitlist" %}
+    <td bgcolor="#fef9c3" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#854d0e;background-color:#fef9c3;border-left:4px solid #ca8a04;{% if not forloop.last %}border-bottom:1px solid #fde68a;{% endif %}">
+      <strong style="display:block;margin-bottom:4px;color:#713f12;">{{ row.session_display }}</strong>
+      Waitlisted. We&apos;ll email you automatically if a spot opens up.
+    </td>
+    {% else %}
+    <td bgcolor="#fef2f2" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#991b1b;background-color:#fef2f2;border-left:4px solid #dc2626;{% if not forloop.last %}border-bottom:1px solid #fecaca;{% endif %}">
+      <strong style="display:block;margin-bottom:4px;color:#7f1d1d;">{{ row.session_display }}</strong>
+      No tickets this time.
+    </td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+{% if has_confirmed %}
+<p style="margin:0 0 24px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Can&apos;t use a confirmed ticket? Decline in the app by {{ decline_deadline_display }}.
+</p>
+{% elif not has_waitlist %}
+<p style="margin:0 0 24px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  You still have {{ tickets_remaining_display }} tournament tickets left for future rounds.
+</p>
+{% endif %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+  <tr>
+    <td align="left" style="border-radius:8px;background-color:#0f2a4a;">
+      <a href="{{ cta_url }}" style="display:inline-block;padding:12px 20px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;font-weight:700;line-height:1.35;color:#ffffff;text-decoration:none;text-transform:uppercase;letter-spacing:-0.01em;border-radius:8px;">
+        View tickets
+      </a>
+    </td>
+  </tr>
+</table>
+{% endblock %}

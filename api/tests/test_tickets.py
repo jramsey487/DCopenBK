@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User, Group
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
@@ -34,6 +35,7 @@ def _naive(dt):
     return for_storage(dt)
 
 
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class TicketFlowTests(APITestCase):
     def setUp(self):
         self.now = datetime.now(EASTERN)
@@ -229,6 +231,66 @@ class TicketFlowTests(APITestCase):
         self.assertEqual(target.status, TICKET_STATUS.DECLINED)
         self.assertEqual(kept.status, TICKET_STATUS.CONFIRMED)
         self.assertEqual(self.ballkid.num_tickets, 1)
+
+    def test_lottery_sends_one_digest_for_multi_session_requests(self):
+        from django.core import mail
+
+        night = TicketOption.objects.create(
+            ticket_session=self.session,
+            session_number=12,
+            ticket_date=self.ticket_date,
+            period="night",
+            pool_size=1,
+            order=1,
+        )
+        self.option.pool_size = 1
+        self.option.save()
+        self._auth(self.bk_user)
+        response = self.client.post(
+            reverse("request-tickets"),
+            {
+                "requests": [
+                    {"option_id": self.option.id, "num_requested": 1},
+                    {"option_id": night.id, "num_requested": 1},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mail.outbox.clear()
+        run_lottery(self.session)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Ticket results", mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].to, [self.bk_user.email])
+        body = mail.outbox[0].alternatives[0][0]
+        self.assertIn("Confirmed", body)
+        # Both options filled this ballkid alone - two confirmed lines.
+        self.assertEqual(body.count("Confirmed for 1 ticket"), 2)
+
+    def test_waitlist_promo_still_sends_individual_confirmed_email(self):
+        from django.core import mail
+
+        self.option.pool_size = 1
+        self.option.save()
+        for user in (self.bk_user, self.bk2_user):
+            self._auth(user)
+            self._request(1)
+        run_lottery(self.session)
+        confirmed = Ticket.objects.get(status=TICKET_STATUS.CONFIRMED)
+        waitlisted = Ticket.objects.get(status=TICKET_STATUS.WAITLIST)
+        mail.outbox.clear()
+        self._auth(confirmed.ballkid.user)
+        response = self.client.post(
+            reverse("confirm-tickets"),
+            {"accept": False, "id": confirmed.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        waitlisted.refresh_from_db()
+        self.assertEqual(waitlisted.status, TICKET_STATUS.CONFIRMED)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("You're off the waitlist", mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].to, [waitlisted.ballkid.user.email])
 
     def test_ballkid_cannot_put_session_or_change_used(self):
         self._auth(self.bk_user)
@@ -1221,7 +1283,205 @@ class TicketFlowTests(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("already exists", response.data["detail"].lower())
+        self.assertIn("edit it below", response.data["detail"].lower())
         self.assertEqual(
             TicketSession.objects.filter(year=self.ticket_date.year).count(), 1
         )
+
+    def test_cannot_create_round_for_finalized_date(self):
+        self._auth(self.ticketing)
+        self.session.lottery_run_at = _naive(self.now - timedelta(hours=3))
+        self.session.winner_confirm_by = _naive(self.now - timedelta(hours=1))
+        self.session.waitlist_run_at = _naive(self.now - timedelta(hours=1))
+        self.session.is_live = False
+        self.session.save()
+        response = self.client.put(
+            reverse("ticket-session"),
+            {
+                "closes_at": "2026-08-15T11:00:00",
+                "options": [
+                    {
+                        "session_number": 20,
+                        "ticket_date": self.ticket_date.isoformat(),
+                        "period": "all_day",
+                        "pool_size": 4,
+                    }
+                ],
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        detail = response.data["detail"].lower()
+        self.assertIn("finalized", detail)
+        self.assertIn("finalized rounds", detail)
+        self.assertEqual(
+            TicketSession.objects.filter(year=self.ticket_date.year).count(), 1
+        )
+
+
+class TestTicketEmailTemplates(APITestCase):
+    def test_preview_templates_render(self):
+        from api.utils.ticket_emails import render_ticket_email, sample_contexts
+
+        samples = sample_contexts()
+        for sample_name, template_name in (
+            ("round_live", "round_live"),
+            ("confirmed_waitlist", "confirmed"),
+            ("denied", "denied"),
+        ):
+            html = render_ticket_email(template_name, samples[sample_name])
+            self.assertIn("Mubadala DC Open", html)
+            self.assertIn("Hi Andrea", html)
+            self.assertIn("/tickets", html)
+
+        live_html = render_ticket_email("round_live", samples["round_live"])
+        self.assertNotIn("LIVE", live_html)
+        self.assertIn(
+            "You have 1 of your allotted 2 tickets left to request", live_html
+        )
+        self.assertIn(
+            "You can request tickets by 6:00 PM ET on Saturday, August 1 for the "
+            "Sunday, August 2 session:",
+            live_html,
+        )
+        self.assertIn("Sunday, August 2 · Session 1 (Day session)", live_html)
+        self.assertEqual(
+            samples["round_live"]["session_subject_suffix"], "Sunday, August 2"
+        )
+        self.assertEqual(
+            samples["round_live_multi"]["session_subject_suffix"], "Sunday, August 2"
+        )
+
+        multi_html = render_ticket_email("round_live", samples["round_live_multi"])
+        self.assertIn(
+            "You can request tickets by 6:00 PM ET on Saturday, August 1 for the "
+            "Sunday, August 2 sessions:",
+            multi_html,
+        )
+        self.assertIn("Sunday, August 2 · Session 1 (Day session)", multi_html)
+        self.assertIn("Sunday, August 2 · Session 2 (Night session)", multi_html)
+
+        display = samples["confirmed_waitlist"]["session_display"]
+        self.assertEqual(display, "Sunday, August 2 · Session 1 (Day session)")
+        confirmed_html = render_ticket_email(
+            "confirmed", samples["confirmed_waitlist"]
+        )
+        self.assertIn(display, confirmed_html)
+        self.assertIn("You&apos;re off the waitlist", confirmed_html)
+        self.assertIn("session you were waitlisted for", confirmed_html)
+        self.assertIn("#ecfdf3", confirmed_html)
+        self.assertEqual(
+            samples["confirmed_waitlist"]["session_subject_suffix"], "Sunday, August 2"
+        )
+
+        mixed = render_ticket_email(
+            "lottery_results", samples["lottery_results_mixed"]
+        )
+        self.assertIn("Your ticket results", mixed)
+        self.assertNotIn("RESULTS", mixed)
+        self.assertIn("Confirmed for 1 ticket", mixed)
+        self.assertIn("Waitlisted", mixed)
+        self.assertIn("#ecfdf3", mixed)
+        self.assertIn("#fef9c3", mixed)
+
+        waitlist_html = render_ticket_email(
+            "lottery_results", samples["lottery_results_waitlist"]
+        )
+        self.assertIn("Your ticket results", waitlist_html)
+        self.assertIn("Waitlisted", waitlist_html)
+        self.assertIn("email you automatically", waitlist_html)
+        self.assertIn("#fef9c3", waitlist_html)
+
+        denied_html = render_ticket_email("denied", samples["denied"])
+        self.assertIn("No tickets this round", denied_html)
+        self.assertNotIn("DENIED", denied_html)
+        self.assertIn("#fef2f2", denied_html)
+        self.assertIn(
+            "You didn&apos;t receive tickets this time for your requested session.",
+            denied_html,
+        )
+        self.assertIn("Sunday, August 2 · Session 1 (Day session)", denied_html)
+        self.assertEqual(samples["denied"]["session_subject_suffix"], "Sunday, August 2")
+
+        denied_multi = render_ticket_email("denied", samples["denied_digest"])
+        self.assertNotIn("DENIED", denied_multi)
+        self.assertIn("#fef2f2", denied_multi)
+        self.assertIn(
+            "You didn&apos;t receive tickets this time for your requested sessions.",
+            denied_multi,
+        )
+        self.assertIn("Sunday, August 2 · Session 2 (Night session)", denied_multi)
+
+        partial_html = render_ticket_email("confirmed", samples["confirmed_partial"])
+        self.assertIn("session you were waitlisted for", partial_html)
+        self.assertIn("Partially confirmed for 1 ticket", partial_html)
+        self.assertIn("you requested 2", partial_html)
+        self.assertIn("Can&apos;t use it?", partial_html)
+        waitlist_html = render_ticket_email(
+            "confirmed", samples["confirmed_waitlist"]
+        )
+        self.assertIn("Can&apos;t use it?", waitlist_html)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class TestTicketEmailRecipients(APITestCase):
+    def setUp(self):
+        self.ticketing = _user("alexis.emails", "ticketing", "alexis.emails@example.com")
+        self.client = APIClient()
+        self.client.force_authenticate(self.ticketing)
+
+    def test_recipient_count_on_session_payload(self):
+        response = self.client.get(reverse("ticket-session"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(response.data["ticket_email_recipient_count"], 0)
+        self.assertIn("ticket_emails_enabled", response.data)
+        self.assertTrue(response.data["ticket_emails_enabled"])
+
+    def test_can_toggle_ticket_emails(self):
+        from api.models.schedule import Tournament
+        from api.utils.utils import get_current_year
+
+        Tournament.objects.get_or_create(year=get_current_year())
+        response = self.client.patch(
+            reverse("ticket-session"),
+            {"ticket_emails_enabled": False},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["ticket_emails_enabled"])
+        session = self.client.get(reverse("ticket-session"))
+        self.assertFalse(session.data["ticket_emails_enabled"])
+
+    def test_disabled_emails_skip_lottery_digest(self):
+        from django.core import mail
+        from api.models.schedule import Tournament
+        from api.utils.tickets import run_lottery
+        from api.utils.utils import get_current_year
+
+        Tournament.objects.update_or_create(
+            year=get_current_year(),
+            defaults={"ticket_emails_enabled": False},
+        )
+        flow = TicketFlowTests()
+        flow.setUp()
+        flow._auth(flow.bk_user)
+        flow._request(1)
+        mail.outbox.clear()
+        run_lottery(flow.session)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_round_live_count_skips_used_up_tickets(self):
+        from api.utils.tickets import round_live_email_recipients
+
+        used = _user("used.up", "ballkid", "used.up@example.com")
+        open_kid = _user("has.tix", "ballkid", "has.tix@example.com")
+        Ballkid.objects.create(
+            first_name="Used", last_name="Up", user=used, num_tickets=TICKET_LIMIT
+        )
+        Ballkid.objects.create(
+            first_name="Has", last_name="Tix", user=open_kid, num_tickets=1
+        )
+        emails = set(round_live_email_recipients().values_list("user__email", flat=True))
+        self.assertIn("has.tix@example.com", emails)
+        self.assertNotIn("used.up@example.com", emails)
+

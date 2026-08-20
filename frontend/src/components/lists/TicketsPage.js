@@ -7,6 +7,7 @@ import {
   Banners,
   BallkidLink,
   ConfirmDialog,
+  MakeLiveDialog,
   HelpIcon,
   getAuthHeader,
   getDayFromHyphenated,
@@ -16,6 +17,7 @@ import {
 import { ticketsPage, ticketsPageBallkid } from "../HelpMessages";
 import { TICKET_LIMIT } from "../Consts";
 import ScheduleCalendar from "../schedule/ScheduleCalendar";
+import { TeamsLabeledToggle } from "../teams/TeamsShared";
 import "../page-chrome.css";
 import "../schedule/schedule-mobile.css";
 import "./tickets-page.css";
@@ -242,13 +244,11 @@ function formatLongTicketDate(isoDate) {
   if (!year || !month || !day) {
     return isoDate;
   }
-  return new Date(year, month - 1, day)
-    .toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "long",
-      day: "numeric",
-    })
-    .replace(",", "");
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function sessionDateLabel(session, ticket) {
@@ -1244,6 +1244,8 @@ function SavedRound({
   onRefresh,
   setError,
   anotherLive,
+  emailRecipientCount,
+  emailsEnabled,
 }) {
   const [form, setForm] = useState(() => formFromSession(session));
   const [saving, setSaving] = useState(false);
@@ -1380,8 +1382,8 @@ function SavedRound({
       {state === "allocating" ? (
         <p className="tickets-round-subtext">
           {declineLabel
-            ? `Winners can decline until ${declineLabel} — leftover tickets go to the waitlist.`
-            : "Winners can decline — leftover tickets go to the waitlist."}
+            ? `Winners can decline until ${declineLabel} - leftover tickets go to the waitlist.`
+            : "Winners can decline - leftover tickets go to the waitlist."}
         </p>
       ) : null}
       {state === "finalized" ? (
@@ -1427,14 +1429,15 @@ function SavedRound({
           onRefresh={onRefresh}
         />
       ) : null}
-      <ConfirmDialog
-        message={`Making ${roundTitle(session)} live will show this ticket form to ballkids right away.`}
-        url="/api/ticket-session"
-        body={{ id: session.id, is_live: true }}
-        method="PATCH"
+      <MakeLiveDialog
         open={liveOpen}
         setOpen={setLiveOpen}
         setUpdated={() => onRefresh()}
+        roundLabel={roundTitle(session)}
+        emailCount={emailRecipientCount}
+        emailsEnabled={emailsEnabled}
+        url="/api/ticket-session"
+        body={{ id: session.id, is_live: true }}
       />
       <ConfirmDialog
         message={`Deleting ${roundTitle(session)} will remove this round and all of its ticket requests.`}
@@ -1455,6 +1458,8 @@ function StaffTickets({
   onRefresh,
   error,
   setError,
+  emailRecipientCount,
+  emailsEnabled,
 }) {
   const [form, setForm] = useState(emptyRoundForm);
   const [saving, setSaving] = useState(false);
@@ -1483,14 +1488,18 @@ function StaffTickets({
   const saveNewRound = (e) => {
     e.preventDefault();
     const date = form.ticket_date;
-    if (
-      date &&
-      sessions.some((s) => (s.ticket_date || roundSortDate(s)) === date)
-    ) {
-      setError(
-        "A round for this date already exists — edit it below."
+    if (date) {
+      const existing = sessions.find(
+        (s) => (s.ticket_date || roundSortDate(s)) === date
       );
-      return;
+      if (existing) {
+        setError(
+          staffRoundState(existing) === "finalized"
+            ? "A finalized round for this date already exists - open Finalized rounds to view it."
+            : "A round for this date already exists - edit it below."
+        );
+        return;
+      }
     }
     setSaving(true);
     setError("");
@@ -1541,13 +1550,14 @@ function StaffTickets({
         onRefresh={onRefresh}
         setError={setError}
         anotherLive={sessions.some((s) => s.is_live && s.id !== round.id)}
+        emailRecipientCount={emailRecipientCount}
+        emailsEnabled={emailsEnabled}
       />
     ));
 
   return (
     <>
       {errorBanner}
-      <p className="tickets-hint">All times on this page are in Eastern Time.</p>
       {showCreate ? (
         <div className="tickets-card tickets-config">
           <div className="tickets-create-header">
@@ -2126,6 +2136,8 @@ export default function TicketsPage() {
   const [sessions, setSessions] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [remaining, setRemaining] = useState(TICKET_LIMIT);
+  const [emailRecipientCount, setEmailRecipientCount] = useState(0);
+  const [emailsEnabled, setEmailsEnabled] = useState(true);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
 
@@ -2148,11 +2160,41 @@ export default function TicketsPage() {
               : []
         );
         setRemaining(sessionPayload.remaining ?? TICKET_LIMIT);
+        setEmailRecipientCount(
+          Number(sessionPayload.ticket_email_recipient_count) || 0
+        );
+        if (typeof sessionPayload.ticket_emails_enabled === "boolean") {
+          setEmailsEnabled(sessionPayload.ticket_emails_enabled);
+        }
         setTickets(Array.isArray(ticketList) ? ticketList : []);
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
   }, []);
+
+  const setTicketEmailsEnabled = useCallback(
+    (enabled) => {
+      const previous = emailsEnabled;
+      setEmailsEnabled(enabled);
+      setError("");
+      fetch("/api/ticket-session", {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: JSON.stringify({ ticket_emails_enabled: enabled }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            setEmailsEnabled(previous);
+            setError("Could not update ticket email setting.");
+          }
+        })
+        .catch(() => {
+          setEmailsEnabled(previous);
+          setError("Could not update ticket email setting.");
+        });
+    },
+    [emailsEnabled]
+  );
 
   const applyTicketSaved = useCallback(
     (ticket) => {
@@ -2191,6 +2233,15 @@ export default function TicketsPage() {
             message={canManage ? ticketsPage : ticketsPageBallkid}
           />
         </div>
+        {canManage ? (
+          <div className="cut-page-top-bar__end">
+            <TeamsLabeledToggle
+              label="Email ballkids"
+              checked={Boolean(emailsEnabled)}
+              onChange={setTicketEmailsEnabled}
+            />
+          </div>
+        ) : null}
       </div>
 
       {!loaded ? (
@@ -2202,6 +2253,8 @@ export default function TicketsPage() {
           onRefresh={refresh}
           error={error}
           setError={setError}
+          emailRecipientCount={emailRecipientCount}
+          emailsEnabled={emailsEnabled}
         />
       ) : (
         <BallkidTickets

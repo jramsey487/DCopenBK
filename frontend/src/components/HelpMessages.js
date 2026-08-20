@@ -4,6 +4,7 @@ import ConfirmationNumber from "@mui/icons-material/ConfirmationNumber";
 import Edit from "@mui/icons-material/Edit";
 import EventAvailable from "@mui/icons-material/EventAvailable";
 import PlaylistAddCheck from "@mui/icons-material/PlaylistAddCheck";
+import MailOutline from "@mui/icons-material/MailOutline";
 import History from "@mui/icons-material/History";
 import Replay from "@mui/icons-material/Replay";
 import { SUPERVET_THRESHOLD } from "./Consts";
@@ -149,12 +150,17 @@ export const ticketsPage = (
     <TicketsHelpSection
       icon={<EventAvailable fontSize="inherit" />}
       title="Creating a round"
-      copy="Click New round to add a ticket form for one date. Add each session ballkids can choose (session #, day/night/all day, pool size), then set when requests close and when winners can decline. Times are shown in Eastern Time. Each date can only have one round — edit the existing one instead of creating a duplicate."
+      copy="Click New round to add a ticket form for one date. Add each session ballkids can choose (session #, day/night/all day, pool size), then set when requests close and when winners can decline. Times are shown in Eastern Time. Each date can only have one round - edit the existing one instead of creating a duplicate."
     />
     <TicketsHelpSection
       icon={<Campaign fontSize="inherit" />}
       title="Publishing"
-      copy="Rounds start as drafts. Click Make live when you're ready for ballkids to request tickets — the form appears on their Tickets page right away. You'll be asked to confirm first. Only one round can be live at a time; Make live is disabled until the current live round closes. The form closes automatically when the request deadline passes."
+      copy="Rounds start as drafts. Click Make live when you're ready for ballkids to request tickets - the form appears on their Tickets page right away. Confirm with Email & make live (checkbox required). Only one round can be live at a time; Make live is disabled until the current live round closes. The form closes automatically when the request deadline passes."
+    />
+    <TicketsHelpSection
+      icon={<MailOutline fontSize="inherit" />}
+      title="Email ballkids"
+      copy="Make live emails ballkids who still have tickets left when Email ballkids is on - you'll confirm with a checkbox first. After the lottery, each ballkid gets one results email for the round. If a waitlist spot opens later, they get a separate confirmation for that session. Turn Email ballkids off to stop automated ticket emails."
     />
     <TicketsHelpSection
       icon={<ConfirmationNumber fontSize="inherit" />}
@@ -164,7 +170,7 @@ export const ticketsPage = (
     <TicketsHelpSection
       icon={<Replay fontSize="inherit" />}
       title="Declines and backfilling"
-      copy="Winners can decline up until the decline deadline. A decline immediately reallocates those tickets to a random waitlisted ballkid for that same session (never someone who already declined that day) — if fewer tickets remain than they requested, they get a partial allocation. Once the decline deadline passes, any tickets still unclaimed are given out the same way, and anyone left on the waitlist is marked denied."
+      copy="Winners can decline up until the decline deadline. A decline immediately reallocates those tickets to a random waitlisted ballkid for that same session (never someone who already declined that day) - if fewer tickets remain than they requested, they get a partial allocation. Once the decline deadline passes, any tickets still unclaimed are given out the same way, and anyone left on the waitlist is marked denied."
     />
     <TicketsHelpSection
       icon={<PlaylistAddCheck fontSize="inherit" />}
@@ -190,11 +196,11 @@ export const ticketsPageBallkid = (
     form. You can ask for 1 or 2 tickets on a single session, but your total
     across all sessions in the round can&apos;t go over how many you have left
     of the tournament cap of 2. After you submit, your request stays under
-    Current form — use Edit to change it, or Cancel request to withdraw it,
+    Current form - use Edit to change it, or Cancel request to withdraw it,
     until the form closes. Each session runs its own lottery. Winners are
-    confirmed automatically — decline in this page by the deadline if you
-    can&apos;t use them. If you&apos;re waitlisted, keep checking this page
-    until the decline deadline in case a spot opens up. Past requests are from
+    confirmed automatically - decline in this page by the deadline if you
+    can&apos;t use them. If you&apos;re waitlisted, you&apos;ll get another
+    email automatically if a spot opens up. Past requests are from
     earlier rounds. All deadlines are in Eastern Time.
   </DialogContentText>
 );
