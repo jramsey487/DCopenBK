@@ -39,14 +39,14 @@ import {
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
+import { CURRENT_TEAMS_MODE } from "./TeamsChairpersonMode";
 import { DraggableBallkidRow, sortBallkidsByBoardOrder } from "../BallkidChip";
-import { teams, finalsTeams } from "../HelpMessages.js";
 import { CourtNoteBlock } from "./CourtNote";
 import "../ballkid-row.css";
 import "../confirm-dialog.css";
 
-export function renderSwitchButton(ballkid, setUpdated, isFinalsPage = false) {
-  const field = isFinalsPage ? "finals_position" : "position";
+export function renderSwitchButton(ballkid, setUpdated, mode = CURRENT_TEAMS_MODE) {
+  const field = mode.positionField;
 
   return (
     <Tooltip title="Switch">
@@ -73,8 +73,8 @@ export function renderSwitchButton(ballkid, setUpdated, isFinalsPage = false) {
   );
 }
 
-function renderUnassignButton(ballkid, setUpdated, isFinalsPage = false) {
-  const patch = isFinalsPage ? { finals_team: "" } : { current_team: 0 };
+function renderUnassignButton(ballkid, setUpdated, mode = CURRENT_TEAMS_MODE) {
+  const patch = mode.unassignPatch();
 
   return (
     <Tooltip title="Unassign">
@@ -134,9 +134,9 @@ function ballkidCanSwitchPosition(ballkid) {
 function renderBallkidRowActions(
   ballkid,
   setUpdated,
-  { showCheckout = true, isFinalsPage = false } = {}
+  { showCheckout = true, mode = CURRENT_TEAMS_MODE } = {}
 ) {
-  const showSwitch = ballkidCanSwitchPosition(ballkid, isFinalsPage);
+  const showSwitch = ballkidCanSwitchPosition(ballkid);
 
   return (
     <div className="teams-chairperson-ballkid-actions">
@@ -145,10 +145,12 @@ function renderBallkidRowActions(
           showSwitch ? "" : " is-empty"
         }`}
       >
-        {showSwitch ? renderSwitchButton(ballkid, setUpdated, isFinalsPage) : null}
+        {showSwitch ? renderSwitchButton(ballkid, setUpdated, mode) : null}
       </div>
-      {renderUnassignButton(ballkid, setUpdated, isFinalsPage)}
-      {showCheckout && !isFinalsPage ? renderCheckoutButton(ballkid, setUpdated) : null}
+      {renderUnassignButton(ballkid, setUpdated, mode)}
+      {showCheckout && mode.showCheckout
+        ? renderCheckoutButton(ballkid, setUpdated)
+        : null}
     </div>
   );
 }
@@ -159,7 +161,7 @@ export function renderBallkidsOnTeam(
   commentTypes,
   showHovercard,
   hoverCommentTypes,
-  isFinalsPage = false,
+  mode = CURRENT_TEAMS_MODE,
   dropAssign = null,
   dropGroupBy = null
 ) {
@@ -173,7 +175,7 @@ export function renderBallkidsOnTeam(
           commentTypes={commentTypes}
           showHovercard={showHovercard}
           hoverCommentTypes={hoverCommentTypes}
-          actions={renderBallkidRowActions(ballkid, setUpdated, { isFinalsPage })}
+          actions={renderBallkidRowActions(ballkid, setUpdated, { mode })}
           setUpdated={setUpdated}
           dropAssign={dropAssign}
           dropGroupBy={dropGroupBy}
@@ -190,20 +192,22 @@ function Team({
   showHovercard,
   setUpdated,
   isNewTeam = false,
-  isFinalsPage = false,
+  mode = CURRENT_TEAMS_MODE,
   courtNotes = {},
   setCourtNotes,
 }) {
   const isCurrentlyOn =
-    !isFinalsPage && nextShifts.length > 0 && isCurrentHour(nextShifts[0]["start"]);
+    mode.showOnCourtUi &&
+    nextShifts.length > 0 &&
+    isCurrentHour(nextShifts[0]["start"]);
   const court =
-    !isFinalsPage && nextShifts.length > 0 ? nextShifts[0].court : "";
+    mode.showCourtNotes && nextShifts.length > 0 ? nextShifts[0].court : "";
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
 
-  const teamField = isFinalsPage ? "finals_team" : "current_team";
-  const positionField = isFinalsPage ? "finals_position" : "position";
+  const teamField = mode.teamField;
+  const positionField = mode.positionField;
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "ballkid",
@@ -217,7 +221,7 @@ function Team({
         body: JSON.stringify({
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
-          [teamField]: team,
+          ...mode.assignPatch(team),
         }),
       })
         .then((response) => response.json())
@@ -236,11 +240,11 @@ function Team({
     .filter(Boolean)
     .join(" ");
 
-  const teamLabel = isFinalsPage ? team : `Team ${team}`;
+  const teamLabel = mode.teamLabel(team);
 
   return (
     <div ref={dropRef} className={cardClass}>
-      {!isFinalsPage && (
+      {mode.showCheckout && (
         <ConfirmDialog
           message={`You are about to check out all ${assigned.length} ballkid${
             assigned.length > 1 ? "s" : ""
@@ -254,17 +258,7 @@ function Team({
       )}
 
       <ConfirmDialog
-        message={
-          isFinalsPage
-            ? `You are about to clear Team ${team} and unassign all ${
-                assigned.length
-              } ballkid${assigned.length > 1 ? "s" : ""}.`
-            : `You are about to clear Team ${team}, unassign all ${
-                assigned.length
-              } ballkid${
-                assigned.length > 1 ? "s" : ""
-              }, and delete all future shifts for Team ${team} from the schedule.`
-        }
+        message={mode.clearTeamMessage(team, assigned.length)}
         url={"/api/clear-team"}
         body={{ [teamField]: team }}
         open={clearOpen}
@@ -288,7 +282,7 @@ function Team({
                 <span className="team-card-oncourt-badge">On court</span>
               ) : null}
             </div>
-            {isFinalsPage && assigned.length > 0 ? (
+            {mode.isFinals && assigned.length > 0 ? (
               <div className="teams-chairperson-head-actions">
                 <Button
                   size="small"
@@ -302,7 +296,7 @@ function Team({
             ) : null}
           </div>
 
-          {!isFinalsPage && assigned.length > 0 ? (
+          {!mode.isFinals && assigned.length > 0 ? (
             <div className="teams-chairperson-head-secondary">
               <div className="teams-chairperson-head-secondary__assignment">
                 <CourtAssignment nextShifts={nextShifts} showIcon />
@@ -331,7 +325,7 @@ function Team({
             </div>
           ) : null}
 
-          {!isFinalsPage && court && setCourtNotes ? (
+          {mode.showCourtNotes && court && setCourtNotes ? (
             <CourtNoteBlock
               court={court}
               note={courtNotes[court]}
@@ -364,16 +358,12 @@ function Team({
                         renderBallkidsOnTeam(
                           positionBallkids,
                           setUpdated,
-                          isFinalsPage ? ["rank", "experience"] : ["checkout_teams"],
+                          mode.commentTypes,
                           showHovercard,
-                          isFinalsPage ? ["experience", "rank", "calibrated_avg"] : [],
-                          isFinalsPage,
-                          isFinalsPage
-                            ? { finals_team: team, finals_position: position }
-                            : { current_team: team, position },
-                          isFinalsPage
-                            ? ["finals_team", "finals_position"]
-                            : ["current_team", "position"]
+                          mode.hoverCommentTypes,
+                          mode,
+                          mode.dropAssignOnTeam(team, position),
+                          mode.dropGroupBy
                         )
                       )}
                     </div>
@@ -386,18 +376,14 @@ function Team({
   );
 }
 
-export function assignBallkidToTeam(ballkid, team, { isFinalsPage = false } = {}) {
-  const teamAssignDict = isFinalsPage
-    ? { finals_team: team }
-    : { current_team: team };
-
+export function assignBallkidToTeam(ballkid, team, mode = CURRENT_TEAMS_MODE) {
   return fetch("/api/update-ballkid", {
     method: "PATCH",
     headers: getAuthHeader(),
     body: JSON.stringify({
       first_name: ballkid.first_name,
       last_name: ballkid.last_name,
-      ...teamAssignDict,
+      ...mode.assignPatch(team),
     }),
   });
 }
@@ -423,12 +409,13 @@ export function Teams({
   setUpdated,
   courtNotes = {},
   setCourtNotes,
+  mode = CURRENT_TEAMS_MODE,
 }) {
   const isMobile = useIsMobile();
 
   const sortedTeams = [...teams].sort((a, b) => {
-    const aEmpty = !assigned.some((ballkid) => ballkid.current_team === a);
-    const bEmpty = !assigned.some((ballkid) => ballkid.current_team === b);
+    const aEmpty = !assigned.some((ballkid) => mode.isOnTeam(ballkid, a));
+    const bEmpty = !assigned.some((ballkid) => mode.isOnTeam(ballkid, b));
     if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
     return a - b;
   });
@@ -439,11 +426,12 @@ export function Teams({
         <Team
           key={team}
           team={team}
-          assigned={assigned.filter((ballkid) => ballkid.current_team === team)}
+          assigned={assigned.filter((ballkid) => mode.isOnTeam(ballkid, team))}
           nextShifts={nextShifts.filter((shift) => shift.team === team)}
           setUpdated={setUpdated}
           courtNotes={courtNotes}
           setCourtNotes={setCourtNotes}
+          mode={mode}
         />
       ))}
 
@@ -456,6 +444,7 @@ export function Teams({
           nextShifts={[]}
           setUpdated={setUpdated}
           isNewTeam={true}
+          mode={mode}
         />
       )}
     </div>
@@ -464,17 +453,17 @@ export function Teams({
 
 // Finals page calls this as a plain function (not a JSX component),
 // matching its existing call convention.
-export function renderTeams(assigned, teams, showHovercard, setUpdated) {
+export function renderTeams(assigned, teams, showHovercard, setUpdated, mode) {
   return (
     <div className="teams-page-grid teams-chairperson-teams-grid">
       {teams.map((team) => (
         <Team
           key={team}
           team={team}
-          assigned={assigned.filter((ballkid) => ballkid.finals_team === team)}
+          assigned={assigned.filter((ballkid) => mode.isOnTeam(ballkid, team))}
           showHovercard={showHovercard}
           setUpdated={setUpdated}
-          isFinalsPage
+          mode={mode}
         />
       ))}
     </div>
@@ -485,7 +474,7 @@ export function Header({
   topBarActions,
   showHovercard,
   setShowHovercard,
-  isFinalsPage = false,
+  mode = CURRENT_TEAMS_MODE,
   showHovercardToggle = true,
 }) {
   const [tournament, setTournament] = useState();
@@ -493,21 +482,21 @@ export function Header({
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    if (isFinalsPage) {
+    if (!mode.showVisibilityToggle) {
       return;
     }
     fetch("/api/get-tournament", { method: "GET", headers: getAuthHeader() })
       .then((response) => response.json())
       .then((data) => setTournament(data));
-  }, [isFinalsPage]);
+  }, [mode.showVisibilityToggle]);
 
-  if (!isFinalsPage && (tournament === null || tournament === undefined)) {
+  if (mode.showVisibilityToggle && (tournament === null || tournament === undefined)) {
     return "";
   }
 
   const toolbarItems = (
     <>
-      {!isFinalsPage ? (
+      {mode.showVisibilityToggle ? (
         <div className="teams-chairperson-pill">
           <span className="teams-chairperson-pill-label">Visible to ballkids</span>
           <HideShowToggle
@@ -518,7 +507,7 @@ export function Header({
           />
         </div>
       ) : null}
-      {isFinalsPage && showHovercardToggle ? (
+      {mode.isFinals && showHovercardToggle ? (
         <HovercardToggle
           enabled={showHovercard}
           setEnabled={setShowHovercard}
@@ -528,13 +517,14 @@ export function Header({
   );
 
   const hasToolbar =
-    (!isFinalsPage && tournament) || (isFinalsPage && showHovercardToggle);
+    (mode.showVisibilityToggle && tournament) ||
+    (mode.isFinals && showHovercardToggle);
 
   return (
     <TeamsChairpersonPageHeader
-      title={isFinalsPage ? "Finals Teams" : "Current Teams"}
-      helpPage={isFinalsPage ? "Finals Teams" : "Teams"}
-      helpMessage={isFinalsPage ? finalsTeams : teams}
+      title={mode.title}
+      helpPage={mode.helpPage}
+      helpMessage={mode.helpMessage}
       alerts={
         <Alerts
           successMsg={successMsg}

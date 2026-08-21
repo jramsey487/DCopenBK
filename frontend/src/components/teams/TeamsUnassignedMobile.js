@@ -16,6 +16,7 @@ import {
   assignBallkidToTeam,
   renderCheckoutUnassignedButton,
 } from "./TeamsPageChairpersonUtils";
+import { CURRENT_TEAMS_MODE } from "./TeamsChairpersonMode";
 
 function preferredPositionLabel(ballkid) {
   if (
@@ -31,7 +32,7 @@ export function UnassignedMobilePanel({
   unassigned,
   teams,
   setUpdated,
-  isFinalsPage = false,
+  mode = CURRENT_TEAMS_MODE,
 }) {
   const [open, setOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -53,7 +54,7 @@ export function UnassignedMobilePanel({
 
   const handleAssign = (ballkid, team) => {
     setAssigningId(ballkid.id);
-    assignBallkidToTeam(ballkid, team, { isFinalsPage })
+    assignBallkidToTeam(ballkid, team, mode)
       .then(() => setUpdated(true))
       .finally(() => setAssigningId(null));
   };
@@ -63,7 +64,7 @@ export function UnassignedMobilePanel({
       component={Paper}
       elevation={0}
       className={`cut-page-active-panel teams-chairperson-unassigned-panel teams-mobile-unassigned-panel${
-        isFinalsPage ? " is-finals" : ""
+        mode.isFinals ? " is-finals" : ""
       }`}
     >
       <ConfirmDialog
@@ -107,7 +108,7 @@ export function UnassignedMobilePanel({
           </Typography>
         </Box>
 
-        {unassigned.length === 0 || isFinalsPage
+        {unassigned.length === 0 || !mode.showCheckout
           ? ""
           : renderCheckoutUnassignedButton(setOpen)}
       </Box>
@@ -127,18 +128,13 @@ export function UnassignedMobilePanel({
           setSearchKeyword={setSearchKeyword}
           filterGroup={filterGroup}
           setFilterGroup={setFilterGroup}
-          filters={
-            isFinalsPage
-              ? ["rookie", "supervet", "captain", "back", "net"]
-              : ["rookie", "supervet", "captain", "chairperson", "back", "net"]
-          }
+          filters={mode.poolFilters}
         />
       </Box>
 
       {unassigned.length === 0 ? (
         <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
-          There are currently no {isFinalsPage ? "" : "checked in "}
-          ballkids who are unassigned.
+          {mode.emptyUnassignedCopy}
         </Typography>
       ) : filteredBallkids.length === 0 ? (
         <Typography sx={{ opacity: 0.7, fontSize: "0.9rem" }}>
@@ -159,7 +155,7 @@ export function UnassignedMobilePanel({
             >
               <div className="teams-mobile-unassigned-table__name">
                 <BallkidAndIcon ballkid={ballkid} />
-                {isFinalsPage ? (
+                {mode.isFinals ? (
                   ""
                 ) : (
                   <CommentsText
@@ -185,9 +181,7 @@ export function UnassignedMobilePanel({
                     {team}
                   </Button>
                 ))}
-                {isFinalsPage ? (
-                  ""
-                ) : (
+                {mode.showNewTeamAssign ? (
                   <Button
                     size="small"
                     variant="outlined"
@@ -198,7 +192,7 @@ export function UnassignedMobilePanel({
                   >
                     New team
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           ))}

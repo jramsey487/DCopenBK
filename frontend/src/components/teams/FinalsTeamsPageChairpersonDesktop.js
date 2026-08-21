@@ -6,6 +6,7 @@ import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedPanel } from "./TeamsPageChairpersonDesktop";
 import { Header, renderTeams } from "./TeamsPageChairpersonUtils";
+import { FINALS_TEAMS_MODE } from "./TeamsChairpersonMode";
 
 export default function FinalsTeamsPageChairpersonDesktop(props) {
   const [assigned, setAssigned] = useState([]);
@@ -35,13 +36,13 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
   }, [updated]);
 
   return (
-    <div className="page ballkid-list-page teams-page-shell teams-chairperson-page teams-chairperson-page--finals">
+    <div className={`page ballkid-list-page teams-page-shell teams-chairperson-page${FINALS_TEAMS_MODE.pageClassSuffix}`}>
       <Banners />
 
       <Header
         showHovercard={showHovercard}
         setShowHovercard={setShowHovercard}
-        isFinalsPage={true}
+        mode={FINALS_TEAMS_MODE}
       />
 
       <Grid container className="justify-top teams-chairperson-split" spacing={2}>
@@ -53,7 +54,13 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
           xl={8}
           className="teams-chairperson-main"
         >
-          {renderTeams(assigned, teams, showHovercard, setUpdated)}
+          {renderTeams(
+            assigned,
+            teams,
+            showHovercard,
+            setUpdated,
+            FINALS_TEAMS_MODE
+          )}
         </Grid>
 
         <Grid
@@ -68,7 +75,7 @@ export default function FinalsTeamsPageChairpersonDesktop(props) {
             unassigned={unassigned}
             setUpdated={setUpdated}
             showHovercard={showHovercard}
-            isFinalsPage={true}
+            mode={FINALS_TEAMS_MODE}
           />
         </Grid>
       </Grid>

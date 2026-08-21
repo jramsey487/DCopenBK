@@ -4,6 +4,7 @@ import { Banners, getAuthHeader } from "../Utils";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import { Header, renderTeams } from "./TeamsPageChairpersonUtils";
+import { FINALS_TEAMS_MODE } from "./TeamsChairpersonMode";
 
 export default function FinalsTeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
@@ -34,14 +35,14 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
     <div className="page ballkid-list-page teams-page-shell teams-chairperson-page">
       <Banners />
 
-      <Header isFinalsPage={true} showHovercardToggle={false} />
-      {renderTeams(assigned, teams, false, setUpdated)}
+      <Header mode={FINALS_TEAMS_MODE} showHovercardToggle={false} />
+      {renderTeams(assigned, teams, false, setUpdated, FINALS_TEAMS_MODE)}
 
       <UnassignedMobilePanel
         unassigned={unassigned}
         teams={teams}
         setUpdated={setUpdated}
-        isFinalsPage={true}
+        mode={FINALS_TEAMS_MODE}
       />
     </div>
   );

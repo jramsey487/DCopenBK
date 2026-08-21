@@ -21,6 +21,7 @@ import {
   renderCheckoutUnassignedButton,
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
+import { CURRENT_TEAMS_MODE } from "./TeamsChairpersonMode";
 import { DraggableBallkidRowTwoColumns } from "../BallkidChip";
 import { courtNotesToMap, fetchCourtNotes } from "./CourtNote";
 
@@ -28,7 +29,7 @@ export function UnassignedPanel({
   unassigned,
   setUpdated,
   showHovercard = false,
-  isFinalsPage = false,
+  mode = CURRENT_TEAMS_MODE,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -47,17 +48,13 @@ export function UnassignedPanel({
       if (monitor.didDrop()) {
         return;
       }
-      const teamAssignDict = isFinalsPage
-        ? { finals_team: "" }
-        : { current_team: 0 };
-
       fetch("/api/update-ballkid", {
         method: "PATCH",
         headers: getAuthHeader(),
         body: JSON.stringify({
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
-          ...teamAssignDict,
+          ...mode.unassignPatch(),
         }),
       })
         .then((response) => response.json())
@@ -116,7 +113,7 @@ export function UnassignedPanel({
           </Typography>
         </Box>
 
-        {unassigned.length === 0 || isFinalsPage
+        {unassigned.length === 0 || !mode.showCheckout
           ? ""
           : renderCheckoutUnassignedButton(setOpen)}
       </Box>
@@ -135,18 +132,13 @@ export function UnassignedPanel({
           setSearchKeyword={setSearchKeyword}
           filterGroup={filterGroup}
           setFilterGroup={setFilterGroup}
-          filters={
-            isFinalsPage
-              ? ["rookie", "supervet", "captain", "back", "net"]
-              : ["rookie", "supervet", "captain", "chairperson", "back", "net"]
-          }
+          filters={mode.poolFilters}
         />
       </Box>
 
       {unassigned.length === 0 ? (
         <Typography sx={{ opacity: 0.7, fontSize: "0.9rem", fontFamily: "Inter, sans-serif" }}>
-          There are currently no {isFinalsPage ? "" : "checked in "}
-          ballkids who are unassigned.
+          {mode.emptyUnassignedCopy}
         </Typography>
       ) : (
         POSITIONS.map((position) => {
@@ -194,26 +186,12 @@ export function UnassignedPanel({
               ) : (
                 <DraggableBallkidRowTwoColumns
                   ballkids={ballkids}
-                  commentTypes={
-                    isFinalsPage ? ["rank", "experience"] : ["checkout_teams"]
-                  }
+                  commentTypes={mode.commentTypes}
                   showHovercard={showHovercard}
-                  hoverCommentTypes={
-                    isFinalsPage
-                      ? ["experience", "rank", "calibrated_avg"]
-                      : []
-                  }
+                  hoverCommentTypes={mode.hoverCommentTypes}
                   setUpdated={setUpdated}
-                  dropAssign={
-                    isFinalsPage
-                      ? { finals_team: "", finals_position: position }
-                      : { current_team: 0, position }
-                  }
-                  dropGroupBy={
-                    isFinalsPage
-                      ? ["finals_team", "finals_position"]
-                      : ["current_team", "position"]
-                  }
+                  dropAssign={mode.dropAssignUnassigned(position)}
+                  dropGroupBy={mode.dropGroupBy}
                 />
               )}
             </div>
