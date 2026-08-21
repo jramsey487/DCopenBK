@@ -1,3 +1,0 @@
-id,year,start_date,end_date,show_teams,show_finals_teams,on_rain_delay,rcal_ignore_outliers,rcal_year_threshold,rcal_bucket_size
-2,2024,2024-07-27,2024-08-04,1,1,0,1.5,2000,2
-1,2023,2023-07-29,2023-08-06,0,1,0,1.5,0,3

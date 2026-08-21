@@ -7,6 +7,13 @@ db.sqlite3
 venv/
 .venv/
 
+# Django / Whitenoise collectstatic output (source assets stay in api/static/)
+/static/
+/staticfiles/
+
+# Generated / historical dumps (regenerate email previews with preview_ticket_emails)
+/exports/
+
 # Logs
 logs
 *.log
@@ -34,7 +41,7 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+# Grunt intermediate storage (https://gruntjs.org/creating-plugins#storing-task-files)
 .grunt
 
 # Bower dependency directory (https://bower.io/)
