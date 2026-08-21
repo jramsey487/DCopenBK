@@ -17,7 +17,6 @@ from api.serializers import TicketSerializer
 from api.utils.utils import get_current_year
 from api.utils.tickets import (
     default_winner_confirm_by,
-    email_request_confirmation,
     for_storage,
     is_ticket_admin,
     ballkid_eligible_for_tickets,
@@ -581,13 +580,6 @@ class RequestTickets(APIView):
                     {"detail": sync_error},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            for ticket in tickets:
-                email_request_confirmation(
-                    ballkid,
-                    session,
-                    ticket.num_requested,
-                    option=ticket.ticket_option,
-                )
             return self._sync_response(request, tickets, created=True)
 
         option, option_error = _option_from_request(session, request.data)
@@ -646,7 +638,6 @@ class RequestTickets(APIView):
             )
 
         ticket = _create_ticket_request(session, ballkid, option, num)
-        email_request_confirmation(ballkid, session, num, option=option)
         logger.info("Ticket request %s for ballkid %s", ticket.id, ballkid.id)
         return Response(
             TicketSerializer(ticket).data, status=status.HTTP_201_CREATED

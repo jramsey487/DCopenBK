@@ -360,11 +360,6 @@ def email_round_live_broadcast(session):
         send_ticket_email(ballkid, subject, "round_live", ctx)
 
 
-def email_request_confirmation(ballkid, session, num_requested, option=None):
-    # Request confirmation is in-app only; no HTML template in v1.
-    return False
-
-
 def email_confirmed(
     ballkid, session, num_granted, option=None, source="waitlist", num_requested=None
 ):
