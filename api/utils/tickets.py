@@ -67,6 +67,13 @@ def remaining_tickets(ballkid):
     return max(0, TICKET_LIMIT - used)
 
 
+def ballkid_eligible_for_tickets(ballkid):
+    """Active, non-cut ballkids only - cut/archived cannot request or receive tickets."""
+    if ballkid is None:
+        return False
+    return bool(ballkid.is_active) and not bool(ballkid.is_cut)
+
+
 def option_label(option):
     if option is None:
         return ""
@@ -245,6 +252,8 @@ def send_ticket_email(ballkid, subject, template_name, context):
 
     if not ticket_emails_enabled():
         return False
+    if not ballkid_eligible_for_tickets(ballkid):
+        return False
     context.setdefault("email_title", subject)
     return send_ticket_html_email(ballkid, subject, template_name, context)
 
@@ -311,7 +320,7 @@ def pick_ballkid_session(ballkid, now=None):
             return previous
 
     live = pick_live_session(now=now)
-    if live:
+    if live and ballkid_eligible_for_tickets(ballkid):
         return live
     return previous
 
@@ -485,7 +494,9 @@ def _grant_size(ticket, remaining_pool):
     """Tickets this request can take from remaining_pool (0 if none)."""
     if remaining_pool <= 0:
         return 0
-    budget = remaining_tickets(ticket.ballkid) if ticket.ballkid else 0
+    if not ballkid_eligible_for_tickets(ticket.ballkid):
+        return 0
+    budget = remaining_tickets(ticket.ballkid)
     need = min(ticket.num_requested, budget) if budget > 0 else 0
     if need <= 0:
         return 0
@@ -556,6 +567,11 @@ def _lottery_one_option(session, option, tickets, now=None):
     for index, ticket in enumerate(tickets, start=1):
         ticket.order = index
         ticket_option = option or ticket.ticket_option
+        if not ballkid_eligible_for_tickets(ticket.ballkid):
+            ticket.status = TICKET_STATUS.DENIED
+            ticket.num_granted = 0
+            ticket.save()
+            continue
         grant = _grant_size(ticket, remaining_pool)
         if grant <= 0:
             ticket.status = TICKET_STATUS.WAITLIST
@@ -677,11 +693,15 @@ def allocate_waitlist_ticket(ticket, now=None):
     TicketSession.objects.select_for_update().get(pk=session.pk)
     if ticket.ballkid_id:
         ticket.ballkid.refresh_from_db()
+        if not ballkid_eligible_for_tickets(ticket.ballkid):
+            raise ValueError(
+                "Cut or archived ballkids cannot receive tournament tickets."
+            )
+        if ticket.ballkid_id in declined_ballkid_ids_for_date(
+            ticket_event_date(ticket), year=ticket.year or session.year
+        ):
+            raise ValueError("This ballkid already declined tickets for that day.")
     option = ticket.ticket_option
-    if ticket.ballkid_id in declined_ballkid_ids_for_date(
-        ticket_event_date(ticket), year=ticket.year or session.year
-    ):
-        raise ValueError("This ballkid already declined tickets for that day.")
     leftover = option_unclaimed(option) if option else unclaimed_count(session)
     grant = _grant_size(ticket, leftover)
     if leftover <= 0 or grant <= 0:

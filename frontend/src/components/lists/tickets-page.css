@@ -64,8 +64,12 @@
   max-width: 520px;
 }
 
+.tickets-page--ballkid .cut-page-top-bar {
+  margin-bottom: 12px;
+}
+
 .tickets-quota {
-  margin: -8px 0 4px;
+  margin: 0 0 20px;
   font-size: 14px;
   line-height: 1.45;
   color: var(--text2);
@@ -80,7 +84,11 @@
 }
 
 .tickets-bk-section {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+}
+
+.tickets-bk-section:last-child {
+  margin-bottom: 0;
 }
 
 .tickets-bk-section-title {

@@ -1485,3 +1485,81 @@ class TestTicketEmailRecipients(APITestCase):
         self.assertIn("has.tix@example.com", emails)
         self.assertNotIn("used.up@example.com", emails)
 
+    def test_round_live_count_skips_cut_and_archived(self):
+        from api.utils.tickets import round_live_email_recipients
+
+        cut_user = _user("cut.kid", "ballkid", "cut.kid@example.com")
+        archived_user = _user("arch.kid", "ballkid", "arch.kid@example.com")
+        ok_user = _user("ok.kid", "ballkid", "ok.kid@example.com")
+        Ballkid.objects.create(
+            first_name="Cut", last_name="Kid", user=cut_user, is_cut=True
+        )
+        Ballkid.objects.create(
+            first_name="Arch", last_name="Kid", user=archived_user, is_active=False
+        )
+        Ballkid.objects.create(
+            first_name="Ok", last_name="Kid", user=ok_user, num_tickets=0
+        )
+        emails = set(round_live_email_recipients().values_list("user__email", flat=True))
+        self.assertIn("ok.kid@example.com", emails)
+        self.assertNotIn("cut.kid@example.com", emails)
+        self.assertNotIn("arch.kid@example.com", emails)
+
+
+class TicketEligibilityTests(APITestCase):
+    def setUp(self):
+        flow = TicketFlowTests()
+        flow.setUp()
+        self.flow = flow
+        self.client = flow.client
+
+    def test_cut_ballkid_cannot_request(self):
+        self.flow.ballkid.is_cut = True
+        self.flow.ballkid.save(update_fields=["is_cut"])
+        self.flow._auth(self.flow.bk_user)
+        response = self.flow._request(1)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        session = self.client.get(reverse("ticket-session"))
+        self.assertFalse(session.data["ticket_eligible"])
+        self.assertIsNone(session.data["session"])
+
+    def test_archived_ballkid_cannot_request(self):
+        self.flow.ballkid.is_active = False
+        self.flow.ballkid.save(update_fields=["is_active"])
+        self.flow._auth(self.flow.bk_user)
+        response = self.flow._request(1)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_lottery_denies_cut_ballkid_and_skips_email(self):
+        from django.core import mail
+        from api.utils.tickets import run_lottery
+
+        self.flow._auth(self.flow.bk_user)
+        self.flow._request(1)
+        self.flow.ballkid.is_cut = True
+        self.flow.ballkid.save(update_fields=["is_cut"])
+        mail.outbox.clear()
+        run_lottery(self.flow.session)
+        ticket = Ticket.objects.get(ballkid=self.flow.ballkid)
+        self.assertEqual(ticket.status, TICKET_STATUS.DENIED)
+        self.assertEqual(ticket.num_granted, 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_staff_cannot_allocate_waitlist_to_cut_ballkid(self):
+        from api.utils.tickets import allocate_waitlist_ticket, run_lottery
+
+        self.flow.session.pool_size = 0
+        self.flow.session.save(update_fields=["pool_size"])
+        self.flow.option.pool_size = 0
+        self.flow.option.save(update_fields=["pool_size"])
+        self.flow._auth(self.flow.bk_user)
+        self.flow._request(1)
+        run_lottery(self.flow.session)
+        ticket = Ticket.objects.get(ballkid=self.flow.ballkid)
+        self.assertEqual(ticket.status, TICKET_STATUS.WAITLIST)
+        self.flow.ballkid.is_cut = True
+        self.flow.ballkid.save(update_fields=["is_cut"])
+        self.flow.option.pool_size = 2
+        self.flow.option.save(update_fields=["pool_size"])
+        with self.assertRaises(ValueError):
+            allocate_waitlist_ticket(ticket)

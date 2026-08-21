@@ -290,6 +290,10 @@ function remainingQuotaCopy(remaining) {
   return `You have ${left} of ${TICKET_LIMIT} ${ticketWord(TICKET_LIMIT)} left this tournament.`;
 }
 
+function ineligibleQuotaCopy() {
+  return "You're not eligible to request tickets for this tournament.";
+}
+
 function earliestOptionDate(options) {
   const dates = (options || []).map((o) => o.ticket_date).filter(Boolean).sort();
   return dates[0] || "";
@@ -1698,7 +1702,10 @@ function requestOutcomeCopy(ticket, session, { past = false } = {}) {
   }
 }
 
-function noFormCopy(session, phase, remaining) {
+function noFormCopy(session, phase, remaining, eligible = true) {
+  if (!eligible) {
+    return "You're not eligible to request tickets for this tournament.";
+  }
   if (remaining <= 0) {
     return "You've used all allocated tickets for this tournament. No further requests can be submitted.";
   }
@@ -1712,6 +1719,7 @@ function BallkidTickets({
   session,
   tickets,
   remaining,
+  ticketEligible = true,
   onRefresh,
   onTicketSaved,
   error,
@@ -1740,8 +1748,12 @@ function BallkidTickets({
   const outcomeTickets = sortRequestTickets(sessionTickets);
   const declineOpen = Boolean(declineTicket);
   const canEdit =
-    Boolean(session) && phase === "open" && requestedTickets.length > 0;
+    ticketEligible &&
+    Boolean(session) &&
+    phase === "open" &&
+    requestedTickets.length > 0;
   const canRequest =
+    ticketEligible &&
     Boolean(session) &&
     phase === "open" &&
     remaining > 0 &&
@@ -2043,9 +2055,15 @@ function BallkidTickets({
     );
   } else {
     currentPanel = (
-      <BallkidStatus title="Ticket form for upcoming session is not available">
+      <BallkidStatus
+        title={
+          ticketEligible
+            ? "Ticket form for upcoming session is not available"
+            : "Ticket requests unavailable"
+        }
+      >
         <p className="tickets-state-copy">
-          {noFormCopy(session, phase, remaining)}
+          {noFormCopy(session, phase, remaining, ticketEligible)}
         </p>
       </BallkidStatus>
     );
@@ -2055,12 +2073,15 @@ function BallkidTickets({
     <>
       <p
         className={
-          remaining > 0 ? "tickets-quota" : "tickets-quota tickets-quota--none"
+          !ticketEligible || remaining <= 0
+            ? "tickets-quota tickets-quota--none"
+            : "tickets-quota"
         }
       >
-        {remainingQuotaCopy(remaining)}
+        {ticketEligible
+          ? remainingQuotaCopy(remaining)
+          : ineligibleQuotaCopy()}
       </p>
-      <p className="tickets-hint">Times are in Eastern Time.</p>
       <section className="tickets-bk-section">
         <h2 className="tickets-bk-section-title">Current form</h2>
         {currentPanel}
@@ -2136,6 +2157,7 @@ export default function TicketsPage() {
   const [sessions, setSessions] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [remaining, setRemaining] = useState(TICKET_LIMIT);
+  const [ticketEligible, setTicketEligible] = useState(true);
   const [emailRecipientCount, setEmailRecipientCount] = useState(0);
   const [emailsEnabled, setEmailsEnabled] = useState(true);
   const [error, setError] = useState("");
@@ -2160,6 +2182,11 @@ export default function TicketsPage() {
               : []
         );
         setRemaining(sessionPayload.remaining ?? TICKET_LIMIT);
+        setTicketEligible(
+          typeof sessionPayload.ticket_eligible === "boolean"
+            ? sessionPayload.ticket_eligible
+            : true
+        );
         setEmailRecipientCount(
           Number(sessionPayload.ticket_email_recipient_count) || 0
         );
@@ -2261,6 +2288,7 @@ export default function TicketsPage() {
           session={session}
           tickets={tickets}
           remaining={remaining}
+          ticketEligible={ticketEligible}
           onRefresh={refresh}
           onTicketSaved={applyTicketSaved}
           error={error}

@@ -20,6 +20,7 @@ from api.utils.tickets import (
     email_request_confirmation,
     for_storage,
     is_ticket_admin,
+    ballkid_eligible_for_tickets,
     maybe_advance_session,
     now_et,
     parse_et_datetime,
@@ -314,6 +315,9 @@ class TicketSessionView(APIView):
         payload = {
             "can_manage": can_manage,
             "remaining": remaining_tickets(ballkid) if ballkid else 0,
+            "ticket_eligible": (
+                ballkid_eligible_for_tickets(ballkid) if ballkid else False
+            ),
         }
         if can_manage:
             sessions = [serialize_session(s) for s in _year_sessions()]
@@ -519,6 +523,16 @@ class RequestTickets(APIView):
             return None, None, Response(
                 {"detail": "No ballkid profile linked to this account."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not ballkid_eligible_for_tickets(ballkid):
+            return None, None, Response(
+                {
+                    "detail": (
+                        "Cut or archived ballkids cannot request "
+                        "tournament tickets."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
         session, error = self._live_open_session()
         if error:
@@ -981,6 +995,16 @@ class UpdateTicket(APIView):
             )
 
         ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
+        if not ballkid_eligible_for_tickets(ballkid):
+            return Response(
+                {
+                    "detail": (
+                        "Cut or archived ballkids cannot request "
+                        "tournament tickets."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         option, option_error = _option_from_request(session, request.data)
         if option_error:
             return Response(

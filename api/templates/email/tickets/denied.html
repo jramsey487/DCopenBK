@@ -8,21 +8,31 @@
   Hi {{ recipient_name }},
 </p>
 <p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
-  The waitlist closed for {{ session_date_display }}. You didn&apos;t receive tickets this time for your requested session{% if outcomes %}{{ outcomes|length|pluralize }}{% endif %}.
+  The waitlist closed for {{ session_date_display }}. You didn&apos;t receive tickets this time for your requested session{% if outcomes %}{{ outcomes|length|pluralize }}{% endif %}:
 </p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;margin-bottom:20px;overflow:hidden;">
   {% if outcomes %}
     {% for row in outcomes %}
   <tr>
     <td bgcolor="#fef2f2" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#991b1b;background-color:#fef2f2;border-left:4px solid #dc2626;{% if not forloop.last %}border-bottom:1px solid #fecaca;{% endif %}">
-      <strong style="display:block;color:#7f1d1d;">{{ row.session_display }}</strong>
+      <strong style="display:block;margin-bottom:4px;color:#7f1d1d;">{{ row.session_display }}</strong>
+      {% if row.num_requested %}
+      Your request for {{ row.num_requested }} ticket{{ row.num_requested|pluralize }} for this session was denied.
+      {% else %}
+      Your request for this session was denied.
+      {% endif %}
     </td>
   </tr>
     {% endfor %}
   {% else %}
   <tr>
     <td bgcolor="#fef2f2" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#991b1b;background-color:#fef2f2;border-left:4px solid #dc2626;">
-      <strong style="display:block;color:#7f1d1d;">{{ session_display }}</strong>
+      <strong style="display:block;margin-bottom:4px;color:#7f1d1d;">{{ session_display }}</strong>
+      {% if num_requested %}
+      Your request for {{ num_requested }} ticket{{ num_requested|pluralize }} for this session was denied.
+      {% else %}
+      Your request for this session was denied.
+      {% endif %}
     </td>
   </tr>
   {% endif %}
