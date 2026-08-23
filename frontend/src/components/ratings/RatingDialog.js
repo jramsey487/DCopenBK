@@ -6,7 +6,6 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
-import Slider from "@mui/material/Slider";
 import Link from "@mui/material/Link";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Check from "@mui/icons-material/Check";
@@ -17,14 +16,9 @@ import { getAuthHeader, getLocalStorage } from "../authStorage";
 import { getToday, getDayFromHyphenated } from "../dateTime";
 import "./rating-dialog.css";
 
-const RATING_SLIDER_MARKS = [
-  { value: 0, label: "0" },
-  { value: 1 },
-  { value: 2 },
-  { value: 3 },
-  { value: 4 },
-  { value: 5, label: "5" },
-];
+const RATING_MIN = 0;
+const RATING_MAX = 5;
+const RATING_STEP = 0.5;
 
 function formatSliderRating(value) {
   if (value == null) return "—";
@@ -33,65 +27,45 @@ function formatSliderRating(value) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-/**
- * MUI Slider on touch devices fires a compatibility mouse event after touchend
- * that can snap the thumb back (mui/material-ui#31869). Ignore only those
- * ghost mouse events — never ignore real touch / pointer input (needed for
- * phones and desktop DevTools device mode).
- */
-function shouldIgnoreSliderEvent(event) {
-  const native = event?.nativeEvent ?? event;
-  if (!native?.sourceCapabilities?.firesTouchEvents) {
-    return false;
-  }
-
-  // Real touch / pen interaction — keep it
-  if (native.pointerType === "touch" || native.pointerType === "pen") {
-    return false;
-  }
-  const type = (native.type || event?.type || "").toLowerCase();
-  if (type.startsWith("touch") || type.startsWith("pointer")) {
-    return false;
-  }
-
-  // Leftover mouse event from a touch-capable device
-  return true;
+function parseSliderRating(raw) {
+  const n = Number(raw);
+  if (Number.isNaN(n) || n <= 0) return null;
+  return n;
 }
 
+/**
+ * Native range input — MUI Slider fights touch on mobile (first value sticks,
+ * later drags snap back via synthetic mouse + controlled-state sync).
+ */
 export function RatingAndLabel({ label, rating, setRating }) {
-  const [sliderValue, setSliderValue] = useState(rating ?? 0);
-
-  useEffect(() => {
-    setSliderValue(rating ?? 0);
-  }, [rating]);
+  const value = rating ?? RATING_MIN;
+  const fillPct = ((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100;
 
   return (
     <div className="rating-dialog-grade-row rating-dialog-grade-row--slider">
       <div className="rating-dialog-grade-slider-head">
         <span className="rating-dialog-grade-label">{label}</span>
         <span className="rating-dialog-grade-value">
-          {formatSliderRating(sliderValue === 0 ? null : sliderValue)}
+          {formatSliderRating(rating)}
         </span>
       </div>
-      <Slider
-        className="rating-dialog-grade-slider"
-        aria-label={label}
-        value={sliderValue}
-        min={0}
-        max={5}
-        step={0.5}
-        marks={RATING_SLIDER_MARKS}
-        valueLabelDisplay="off"
-        onChange={(event, newVal) => {
-          if (shouldIgnoreSliderEvent(event)) return;
-          setSliderValue(newVal);
-        }}
-        onChangeCommitted={(event, newVal) => {
-          if (shouldIgnoreSliderEvent(event)) return;
-          setSliderValue(newVal);
-          setRating(newVal === 0 ? null : newVal);
-        }}
-      />
+      <div className="rating-dialog-grade-slider-wrap">
+        <input
+          type="range"
+          className="rating-dialog-grade-slider"
+          aria-label={label}
+          min={RATING_MIN}
+          max={RATING_MAX}
+          step={RATING_STEP}
+          value={value}
+          style={{ "--rd-slider-fill": `${fillPct}%` }}
+          onChange={(event) => setRating(parseSliderRating(event.target.value))}
+        />
+        <div className="rating-dialog-grade-slider-marks" aria-hidden="true">
+          <span>0</span>
+          <span>5</span>
+        </div>
+      </div>
     </div>
   );
 }
