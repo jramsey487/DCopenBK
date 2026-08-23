@@ -18,7 +18,8 @@ import "./rating-dialog.css";
 
 const RATING_MIN = 0;
 const RATING_MAX = 5;
-const RATING_STEP = 0.5;
+/** Native range uses integer ticks; 1 tick = 0.5 rating (avoids iOS float-step quirks). */
+const RATING_TICKS = 10;
 
 function formatSliderRating(value) {
   if (value == null) return "—";
@@ -27,19 +28,27 @@ function formatSliderRating(value) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-function parseSliderRating(raw) {
-  const n = Number(raw);
+function ratingToTicks(rating) {
+  if (rating == null || Number.isNaN(Number(rating))) return 0;
+  return Math.max(
+    0,
+    Math.min(RATING_TICKS, Math.round(Number(rating) * 2))
+  );
+}
+
+function ticksToRating(ticks) {
+  const n = Number(ticks);
   if (Number.isNaN(n) || n <= 0) return null;
-  return n;
+  return n / 2;
 }
 
 /**
- * Native range input — MUI Slider fights touch on mobile (first value sticks,
- * later drags snap back via synthetic mouse + controlled-state sync).
+ * Native range with integer steps (0–10). Fractional step={0.5} on iOS can
+ * lock you on halves or wholes after the first value is set.
  */
 export function RatingAndLabel({ label, rating, setRating }) {
-  const value = rating ?? RATING_MIN;
-  const fillPct = ((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100;
+  const ticks = ratingToTicks(rating);
+  const fillPct = (ticks / RATING_TICKS) * 100;
 
   return (
     <div className="rating-dialog-grade-row rating-dialog-grade-row--slider">
@@ -54,16 +63,17 @@ export function RatingAndLabel({ label, rating, setRating }) {
           type="range"
           className="rating-dialog-grade-slider"
           aria-label={label}
-          min={RATING_MIN}
-          max={RATING_MAX}
-          step={RATING_STEP}
-          value={value}
+          min={0}
+          max={RATING_TICKS}
+          step={1}
+          value={ticks}
           style={{ "--rd-slider-fill": `${fillPct}%` }}
-          onChange={(event) => setRating(parseSliderRating(event.target.value))}
+          onInput={(event) => setRating(ticksToRating(event.target.value))}
+          onChange={(event) => setRating(ticksToRating(event.target.value))}
         />
         <div className="rating-dialog-grade-slider-marks" aria-hidden="true">
-          <span>0</span>
-          <span>5</span>
+          <span>{RATING_MIN}</span>
+          <span>{RATING_MAX}</span>
         </div>
       </div>
     </div>
