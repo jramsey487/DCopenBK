@@ -23,6 +23,7 @@
 }
 
 .ballkid-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,9 +38,35 @@
   background: #f8fafc;
 }
 
+.ballkid-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tp-nav, #0d1b3e) 45%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
 .ballkid-row.is-drop-before {
-  background: #eff6ff;
-  box-shadow: inset 0 2px 0 0 var(--nav, #0d1b3e);
+  background: transparent;
+}
+
+.ballkid-row.is-drop-before:hover {
+  background: transparent;
+}
+
+.ballkid-row.is-drop-before::before {
+  opacity: 1;
+}
+
+.ballkid-row--fit::before {
+  left: 8px;
+  right: 8px;
 }
 
 .ballkid-row--dense {

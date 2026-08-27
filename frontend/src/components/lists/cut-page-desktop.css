@@ -14,9 +14,21 @@
   margin-top: 8px;
 }
 
-.ballkid-pool-panel.is-drop-over {
-  box-shadow: 0 0 0 2px var(--tp-nav, #0d1b3e);
-  border-color: var(--tp-nav, #0d1b3e) !important;
+.ballkid-pool-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 6;
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--tp-nav, #0d1b3e) 28%, transparent);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.ballkid-pool-panel.is-drop-over::after {
+  opacity: 1;
 }
 
 .cut-page-mobile-sections {
@@ -40,6 +52,7 @@
 /* Shared pool panel chrome (cut Active + teams Unassigned) */
 .ballkid-pool-panel,
 .teams-chairperson-unassigned-panel {
+  position: relative;
   width: max-content;
   max-width: 100%;
   min-width: 0;
