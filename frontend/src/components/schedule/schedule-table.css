@@ -284,13 +284,20 @@
 }
 
 @media (min-width: 900px) {
+  /* Edit mode: use normal page scroll so trackpad/wheel works everywhere (not
+     only on the inner panel scrollbar). teams-chairperson-page otherwise locks
+     the viewport and traps scroll in .schedule-edit-body. */
+  .schedule-page.schedule-page--editing.teams-chairperson-page.page {
+    height: auto;
+    min-height: calc(100vh - var(--navbar-inner-height, 60px));
+    min-height: calc(100dvh - var(--navbar-inner-height, 60px));
+    overflow: visible;
+  }
+
   .schedule-page--editing .schedule-edit-body {
-    /* Page is viewport-locked via teams-chairperson-page; scroll the edit body */
     flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overflow: visible;
   }
 }
 
