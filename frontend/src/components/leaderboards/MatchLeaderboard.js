@@ -10,6 +10,7 @@ import {
   getLocalStorage,
   BallkidAndIcon,
 } from "../Utils";
+import { LEADERBOARD_BALLKID_COL_WIDTH_WIDE } from "./LeaderboardsShared";
 
 export default function MatchLeaderboard(props) {
   const [checkinTimes, setCheckinTimes] = useState([]);
@@ -30,7 +31,7 @@ export default function MatchLeaderboard(props) {
     {
       field: "name",
       headerName: "Ballkid",
-      width: 200,
+      width: LEADERBOARD_BALLKID_COL_WIDTH_WIDE,
       renderCell: (rowData) => <BallkidAndIcon ballkid={rowData.row.ballkid} />,
     },
     {

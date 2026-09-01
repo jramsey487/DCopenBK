@@ -112,7 +112,14 @@
 }
 
 .leaderboard-name-cell .ballkid-and-icon {
+  flex-wrap: nowrap;
   line-height: 1.2;
+  white-space: nowrap;
+}
+
+.leaderboard-name-cell .ballkid-and-icon a,
+.leaderboard-name-cell .ballkid-and-icon .MuiTypography-root {
+  white-space: nowrap;
 }
 
 .leaderboard-page .MuiDataGrid-cell[data-field="name"] {

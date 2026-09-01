@@ -10,6 +10,7 @@ import {
   LeaderboardShell,
   LeaderboardGridPanel,
   LeaderboardNote,
+  LEADERBOARD_BALLKID_COL_WIDTH,
 } from "./LeaderboardsShared";
 
 export default function BallkidLeaderboard() {
@@ -34,7 +35,7 @@ export default function BallkidLeaderboard() {
     {
       field: "name",
       headerName: "Ballkid",
-      width: 180,
+      width: LEADERBOARD_BALLKID_COL_WIDTH,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

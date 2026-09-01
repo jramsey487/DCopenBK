@@ -9,6 +9,12 @@ import "../teams/teams-page.css";
 import "../ratings/ratings-page.css";
 import "./leaderboards.css";
 
+/** Ballkid name column width (~20% wider than the original 180px). */
+export const LEADERBOARD_BALLKID_COL_WIDTH = 216;
+
+/** Wider variant where the column was previously 200px. */
+export const LEADERBOARD_BALLKID_COL_WIDTH_WIDE = 240;
+
 export function LeaderboardModePill({
   checked,
   onChange,

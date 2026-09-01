@@ -24,6 +24,7 @@ import {
   LeaderboardAvgPanel,
   LeaderboardModePill,
   LeaderboardNote,
+  LEADERBOARD_BALLKID_COL_WIDTH,
 } from "./LeaderboardsShared";
 
 const COURT_KEYS = [
@@ -104,7 +105,7 @@ export default function CourtLeaderboard() {
     {
       field: "name",
       headerName: "Ballkid",
-      width: 180,
+      width: LEADERBOARD_BALLKID_COL_WIDTH,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

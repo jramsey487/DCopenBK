@@ -15,6 +15,7 @@ import {
   LeaderboardShell,
   LeaderboardGridPanel,
   LeaderboardNote,
+  LEADERBOARD_BALLKID_COL_WIDTH_WIDE,
 } from "./LeaderboardsShared";
 
 function RaterParamsSection() {
@@ -97,7 +98,7 @@ export default function CaptainLeaderboard() {
     {
       field: "name",
       headerName: "Captain / Chairperson",
-      width: 200,
+      width: LEADERBOARD_BALLKID_COL_WIDTH_WIDE,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />

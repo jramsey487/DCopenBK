@@ -22,6 +22,7 @@ import {
   LeaderboardGridPanel,
   LeaderboardAvgPanel,
   LeaderboardNote,
+  LEADERBOARD_BALLKID_COL_WIDTH,
 } from "./LeaderboardsShared";
 
 function formatDurationShort(hoursFloat) {
@@ -110,7 +111,7 @@ export default function CheckinLeaderboard() {
     {
       field: "name",
       headerName: "Ballkid",
-      width: 180,
+      width: LEADERBOARD_BALLKID_COL_WIDTH,
       renderCell: (rowData) => (
         <Box className="leaderboard-name-cell">
           <BallkidAndIcon ballkid={rowData.row.ballkid} />
