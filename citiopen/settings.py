@@ -228,12 +228,20 @@ MEDIA_ROOT = BASE_DIR / "media"  # local/dev fallback only
 
 USE_R2_STORAGE = env.bool("USE_R2_STORAGE", default=not DEBUG)
 
+# Note: these are read with default=None (not required) even though
+# production always sets them as Fly secrets. That's because
+# `collectstatic` runs during the Docker *build* step (Dockerfile), and
+# Fly only injects secrets into the *running* container at deploy time --
+# they don't exist yet during the build. collectstatic never touches
+# DEFAULT_FILE_STORAGE (only STATICFILES_STORAGE/WhiteNoise), so it's safe
+# for these to be blank at build time; real values are present by the time
+# the app actually starts serving requests.
 if USE_R2_STORAGE:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_ACCESS_KEY_ID = env.str("R2_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = env.str("R2_SECRET_ACCESS_KEY")
-    AWS_STORAGE_BUCKET_NAME = env.str("R2_BUCKET_NAME")
-    AWS_S3_ENDPOINT_URL = env.str("R2_ENDPOINT_URL")
+    AWS_ACCESS_KEY_ID = env.str("R2_ACCESS_KEY_ID", default=None)
+    AWS_SECRET_ACCESS_KEY = env.str("R2_SECRET_ACCESS_KEY", default=None)
+    AWS_STORAGE_BUCKET_NAME = env.str("R2_BUCKET_NAME", default=None)
+    AWS_S3_ENDPOINT_URL = env.str("R2_ENDPOINT_URL", default=None)
     AWS_S3_CUSTOM_DOMAIN = env.str("R2_PUBLIC_DOMAIN", default=None)
     AWS_DEFAULT_ACL = None  # R2 doesn't support canned ACLs the way S3 does
     AWS_QUERYSTRING_AUTH = False  # serve plain URLs, not presigned/expiring ones
