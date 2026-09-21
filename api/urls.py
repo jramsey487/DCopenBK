@@ -4,6 +4,7 @@ from api.views.schedule import *
 from api.views.rating import *
 from api.views.debug import *
 from api.views.tickets import *
+from api.views.application import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -231,6 +232,39 @@ debug_urls = [
     ),
 ]
 
+# Ballcrew application + tryout review URLs
+application_urls = [
+    path(
+        "submit-application",
+        SubmitApplicationView.as_view(),
+        name="submit-application",
+    ),
+    path("applications", ApplicationListView.as_view(), name="applications"),
+    path(
+        "applications/<int:pk>",
+        ApplicationDetailView.as_view(),
+        name="application-detail",
+    ),
+    path(
+        "applications/<int:pk>/status",
+        UpdateApplicationStatusView.as_view(),
+        name="update-application-status",
+    ),
+    path(
+        "promote-application/<int:pk>",
+        PromoteApplicationView.as_view(),
+        name="promote-application",
+    ),
+    path(
+        "tryout-reviews", TryoutReviewCreateView.as_view(), name="tryout-reviews"
+    ),
+    path(
+        "tryout-reviews/application/<int:application_id>",
+        TryoutReviewListView.as_view(),
+        name="tryout-reviews-application",
+    ),
+]
+
 urlpatterns = (
     ballkid_urls
     + teams_urls
@@ -239,4 +273,5 @@ urlpatterns = (
     + tournament_urls
     + rating_urls
     + debug_urls
+    + application_urls
 )

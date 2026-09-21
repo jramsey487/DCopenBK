@@ -23,6 +23,7 @@ const captainTabs = [
   { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
   { label: "Tickets", url: "/tickets" },
+  { label: "Tryout Review", url: "/tryout-review" },
   {
     label: "Ratings",
     url: "/rate-by-name",
@@ -36,6 +37,15 @@ const captainTabs = [
 ];
 
 const chairpersonTabs = [
+  {
+    label: "Applications",
+    url: "/applications",
+    subtabs: [
+      { label: "Apply", url: "/apply" },
+      { label: "Review Applications", url: "/applications" },
+      { label: "Submit Tryout Review", url: "/tryout-review" },
+    ],
+  },
   {
     label: "List",
     url: "/checkin",

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "djoser",
     "import_export",
     "phonenumber_field",
+    "storages",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -69,6 +70,9 @@ REST_FRAMEWORK = {
     ],
     # "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAdminUser"],
     "DEFAULT_PERMISSION_CLASSES": ["api.permissions.IsChairperson"],
+    "DEFAULT_THROTTLE_RATES": {
+        "application-submit": "5/hour",
+    },
 }
 
 MIDDLEWARE = [
@@ -203,6 +207,37 @@ STATICFILES_DIRS = [FRONTEND_DIR / "build/static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_ROOT = FRONTEND_DIR / "build/root"
+
+# User-uploaded files (e.g. ballcrew application headshots)
+# https://docs.djangoproject.com/en/4.1/topics/files/
+#
+# Fly.io's container filesystem is ephemeral -- anything written to local
+# disk is lost on every redeploy or machine restart (no volume is currently
+# mounted; see fly.toml). So uploads go to Cloudflare R2 (S3-compatible
+# object storage) instead of MEDIA_ROOT whenever USE_R2_STORAGE is on,
+# which defaults to "on whenever DEBUG is off" so local dev still just
+# writes to disk without needing R2 credentials.
+#
+# Required env vars in production (set as Fly secrets, not in .env):
+#   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_ENDPOINT_URL
+# Optional:
+#   R2_PUBLIC_DOMAIN (a custom domain / Cloudflare CDN domain for the bucket,
+#   if you don't want to serve files via presigned URLs)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"  # local/dev fallback only
+
+USE_R2_STORAGE = env.bool("USE_R2_STORAGE", default=not DEBUG)
+
+if USE_R2_STORAGE:
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_ACCESS_KEY_ID = env.str("R2_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env.str("R2_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env.str("R2_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = env.str("R2_ENDPOINT_URL")
+    AWS_S3_CUSTOM_DOMAIN = env.str("R2_PUBLIC_DOMAIN", default=None)
+    AWS_DEFAULT_ACL = None  # R2 doesn't support canned ACLs the way S3 does
+    AWS_QUERYSTRING_AUTH = False  # serve plain URLs, not presigned/expiring ones
+    AWS_S3_FILE_OVERWRITE = False
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

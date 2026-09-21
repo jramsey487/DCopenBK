@@ -88,3 +88,13 @@ export function NavIconTickets({ className }) {
     </svg>
   );
 }
+
+export function NavIconApplications({ className }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+      <rect x="4" y="2" width="12" height="16" rx="1.5" {...stroke} />
+      <path d="M7 2.5h6" {...stroke} />
+      <path d="M6.5 10l2 2 4-4.5" {...stroke} />
+    </svg>
+  );
+}

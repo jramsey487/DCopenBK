@@ -18,6 +18,7 @@ import {
   NavIconSettings,
   NavIconLogout,
   NavIconTickets,
+  NavIconApplications,
 } from "./MobileNavIcons";
 import "./mobile-nav-drawer.css";
 
@@ -83,6 +84,20 @@ function getNavSections(group) {
       { label: "Inactive", url: "/inactive" },
     ],
   };
+  const applicationsChairperson = {
+    label: "Applications",
+    Icon: NavIconApplications,
+    items: [
+      { label: "Apply", url: "/apply" },
+      { label: "Review Applications", url: "/applications" },
+      { label: "Submit Tryout Review", url: "/tryout-review" },
+    ],
+  };
+  const tryoutReviewCaptain = {
+    label: "Tryout Review",
+    url: "/tryout-review",
+    Icon: NavIconApplications,
+  };
   const teamsChairperson = {
     label: "Teams",
     Icon: NavIconTeams,
@@ -146,9 +161,9 @@ function getNavSections(group) {
 
   switch (group) {
     case "chairperson":
-      return [list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets];
+      return [applicationsChairperson, list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets];
     case "captain":
-      return [listByName, teamsBallkidCaptain, schedule, tickets, ratingsCaptain];
+      return [listByName, teamsBallkidCaptain, schedule, tickets, tryoutReviewCaptain, ratingsCaptain];
     case "ticketing":
       return [tickets];
     default:
