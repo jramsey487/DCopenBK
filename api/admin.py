@@ -4,6 +4,7 @@ from import_export.admin import ExportMixin
 from .models.ballkid import *
 from .models.rating import *
 from .models.schedule import *
+from api.admin_application import *
 
 # Register your models here.
 

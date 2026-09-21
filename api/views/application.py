@@ -20,7 +20,12 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
-from api.models.application import BallcrewApplication, TryoutReview
+from api.models.application import (
+    ApplicationSettings,
+    APPLICATION_STATUS_CHOICES,
+    BallcrewApplication,
+    TryoutReview,
+)
 from api.models.ballkid import Ballkid
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
@@ -39,6 +44,30 @@ class ApplicationSubmitThrottle(AnonRateThrottle):
     scope = "application-submit"
 
 
+class ApplicationSettingsView(APIView):
+    """
+    GET is public (the /apply page checks this before showing the form).
+    PATCH is chairperson-only (the toggle on the review dashboard).
+    """
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsChairperson()]
+
+    def get(self, request):
+        return Response({"is_open": ApplicationSettings.get_solo().is_open})
+
+    def patch(self, request):
+        is_open = request.data.get("is_open")
+        if is_open is None:
+            raise ValidationError({"is_open": "This field is required."})
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = bool(is_open)
+        settings_obj.save(update_fields=["is_open"])
+        return Response({"is_open": settings_obj.is_open})
+
+
 class SubmitApplicationView(generics.CreateAPIView):
     """Public endpoint. Replaces the Google Form entirely."""
 
@@ -46,6 +75,14 @@ class SubmitApplicationView(generics.CreateAPIView):
     serializer_class = BallcrewApplicationSubmitSerializer
     permission_classes = [AllowAny]
     throttle_classes = [ApplicationSubmitThrottle]
+
+    def create(self, request, *args, **kwargs):
+        if not ApplicationSettings.get_solo().is_open:
+            return Response(
+                {"detail": "Applications are currently closed."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
 
 
 class ApplicationListView(generics.ListAPIView):
@@ -175,3 +212,31 @@ class TryoutReviewListView(generics.ListAPIView):
         return TryoutReview.objects.filter(
             application_id=self.kwargs["application_id"]
         )
+
+
+class PurgeUnpromotedApplicationsView(APIView):
+    """
+    GET returns a preview (count + breakdown by status) so the frontend can
+    show exactly what a confirm dialog is about to delete. POST performs
+    the deletion. Chairperson-only, both methods -- this is destructive.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def _candidates(self):
+        return BallcrewApplication.objects.filter(promoted_ballkid__isnull=True)
+
+    def get(self, request):
+        candidates = self._candidates()
+        by_status = {}
+        for value, _ in APPLICATION_STATUS_CHOICES:
+            by_status[value] = candidates.filter(status=value).count()
+        return Response({"count": candidates.count(), "by_status": by_status})
+
+    def post(self, request):
+        candidates = self._candidates()
+        count = candidates.count()
+        # QuerySet.delete() still fires pre_delete per-instance, so the
+        # headshot-cleanup signal in api/models/application.py runs for each.
+        candidates.delete()
+        return Response({"deleted_count": count})

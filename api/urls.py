@@ -235,6 +235,11 @@ debug_urls = [
 # Ballcrew application + tryout review URLs
 application_urls = [
     path(
+        "application-settings",
+        ApplicationSettingsView.as_view(),
+        name="application-settings",
+    ),
+    path(
         "submit-application",
         SubmitApplicationView.as_view(),
         name="submit-application",
@@ -262,6 +267,11 @@ application_urls = [
         "tryout-reviews/application/<int:application_id>",
         TryoutReviewListView.as_view(),
         name="tryout-reviews-application",
+    ),
+    path(
+        "purge-unpromoted-applications",
+        PurgeUnpromotedApplicationsView.as_view(),
+        name="purge-unpromoted-applications",
     ),
 ]
 

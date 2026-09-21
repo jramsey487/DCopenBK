@@ -203,3 +203,26 @@ class TryoutReview(models.Model):
 
     def __str__(self):
         return f"Review of {self.application.full_name} by {self.reviewer}"
+
+
+class ApplicationSettings(models.Model):
+    """
+    Singleton row controlling whether the public application form (/apply)
+    accepts submissions. Chairpersons toggle this from the review dashboard;
+    SubmitApplicationView checks it server-side so a closed toggle can't be
+    bypassed by hitting the API directly.
+    """
+
+    is_open = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Application settings"
+        verbose_name_plural = "Application settings"
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Applications open" if self.is_open else "Applications closed"

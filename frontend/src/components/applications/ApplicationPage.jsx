@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -72,11 +72,19 @@ const emptyForm = {
 const STEPS = ["Basic Info", "Experience", "Availability & Waiver"];
 
 export default function ApplicationPage() {
+  const [applicationsOpen, setApplicationsOpen] = useState(null); // null = still checking
   const [activeStep, setActiveStep] = useState(0);
   const [form, setForm] = useState(emptyForm);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/application-settings")
+      .then((res) => res.json())
+      .then((data) => setApplicationsOpen(Boolean(data.is_open)))
+      .catch(() => setApplicationsOpen(true)); // fail open on network hiccup rather than blocking real applicants
+  }, []);
 
   const set = (field) => (e) => {
     const value =
@@ -128,6 +136,25 @@ export default function ApplicationPage() {
       setSubmitting(false);
     }
   };
+
+  if (applicationsOpen === null) {
+    return null; // brief check, avoids a flash of the form before we know
+  }
+
+  if (applicationsOpen === false) {
+    return (
+      <Paper sx={{ p: 4, maxWidth: 600, mx: "auto", mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Applications are currently closed
+        </Typography>
+        <Typography>
+          We're not accepting new ballcrew applications right now. Check
+          back later, or reach out to mdetennis.ballcrew@gmail.com with any
+          questions.
+        </Typography>
+      </Paper>
+    );
+  }
 
   if (submitted) {
     return (

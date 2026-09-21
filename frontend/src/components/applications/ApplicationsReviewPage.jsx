@@ -3,8 +3,11 @@ import {
   Box,
   Button,
   Chip,
+  Divider,
+  FormControlLabel,
   MenuItem,
   Paper,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -14,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { getAuthHeader } from "../Utils";
+import { ConfirmDialog, getAuthHeader } from "../Utils";
 
 const STATUS_COLORS = {
   pending: "default",
@@ -26,6 +29,7 @@ const STATUS_COLORS = {
 export default function ApplicationsReviewPage() {
   const [applications, setApplications] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [applicationsOpen, setApplicationsOpen] = useState(null);
 
   const load = () => {
     const query = statusFilter ? `?status=${statusFilter}` : "";
@@ -35,6 +39,28 @@ export default function ApplicationsReviewPage() {
   };
 
   useEffect(load, [statusFilter]);
+
+  useEffect(() => {
+    fetch("/api/application-settings", { headers: getAuthHeader() })
+      .then((res) => res.json())
+      .then((data) => setApplicationsOpen(Boolean(data.is_open)));
+  }, []);
+
+  const toggleApplicationsOpen = async () => {
+    const next = !applicationsOpen;
+    setApplicationsOpen(next); // optimistic
+    const response = await fetch("/api/application-settings", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeader(),
+      },
+      body: JSON.stringify({ is_open: next }),
+    });
+    if (!response.ok) {
+      setApplicationsOpen(!next); // revert on failure
+    }
+  };
 
   const updateStatus = async (id, status) => {
     await fetch(`/api/applications/${id}/status`, {
@@ -56,6 +82,38 @@ export default function ApplicationsReviewPage() {
     load();
   };
 
+  const [purgeDialogOpen, setPurgeDialogOpen] = useState(false);
+  const [purgePreview, setPurgePreview] = useState(null);
+  const [purgeResult, setPurgeResult] = useState("");
+
+  const openPurgeDialog = async () => {
+    const res = await fetch("/api/purge-unpromoted-applications", {
+      headers: getAuthHeader(),
+    });
+    const data = await res.json();
+    setPurgePreview(data);
+    setPurgeDialogOpen(true);
+  };
+
+  const purgeMessage = purgePreview && (
+    purgePreview.count > 0 ? (
+      <>
+        This will permanently delete <strong>{purgePreview.count}</strong>{" "}
+        application(s) that were never promoted to a ballkid, along with
+        their uploaded headshots. This cannot be undone.
+        <Box component="ul" sx={{ mt: 1 }}>
+          {Object.entries(purgePreview.by_status)
+            .filter(([, n]) => n > 0)
+            .map(([status, n]) => (
+              <li key={status}>{status}: {n}</li>
+            ))}
+        </Box>
+      </>
+    ) : (
+      "There are no unpromoted applications to delete right now."
+    )
+  );
+
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -74,6 +132,41 @@ export default function ApplicationsReviewPage() {
           <MenuItem value="rejected">Rejected</MenuItem>
           <MenuItem value="waitlisted">Waitlisted</MenuItem>
         </TextField>
+      </Box>
+
+      <ConfirmDialog
+        open={purgeDialogOpen}
+        setOpen={setPurgeDialogOpen}
+        message={purgeMessage}
+        url="/api/purge-unpromoted-applications"
+        method="POST"
+        body={{}}
+        setUpdated={(didUpdate) => {
+          if (didUpdate && purgePreview) {
+            setPurgeResult(`Deleted ${purgePreview.count} unpromoted application(s).`);
+            load();
+          }
+        }}
+      />
+
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={Boolean(applicationsOpen)}
+              disabled={applicationsOpen === null}
+              onChange={toggleApplicationsOpen}
+              color="success"
+            />
+          }
+          label={
+            applicationsOpen === null
+              ? "Loading application status…"
+              : applicationsOpen
+              ? "Applications are OPEN — the public form is accepting submissions"
+              : "Applications are CLOSED — /apply shows a closed message"
+          }
+        />
       </Box>
 
       <Table size="small">
@@ -114,6 +207,22 @@ export default function ApplicationsReviewPage() {
           ))}
         </TableBody>
       </Table>
+
+      <Divider sx={{ mt: 4, mb: 2 }} />
+
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+        <Typography variant="caption" color="text.secondary">
+          End-of-season cleanup
+        </Typography>
+        <Button color="error" variant="outlined" onClick={openPurgeDialog}>
+          Purge Unpromoted Applications
+        </Button>
+        {purgeResult ? (
+          <Typography variant="body2" color="text.secondary">
+            {purgeResult}
+          </Typography>
+        ) : null}
+      </Box>
     </Paper>
   );
 }
