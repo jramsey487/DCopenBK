@@ -56,10 +56,7 @@ export default function ApplicationsReviewPage() {
     setApplicationsOpen(next); // optimistic
     const response = await fetch("/api/application-settings", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeader(),
-      },
+      headers: getAuthHeader(),
       body: JSON.stringify({ is_open: next }),
     });
     if (!response.ok) {
@@ -70,10 +67,7 @@ export default function ApplicationsReviewPage() {
   const updateStatus = async (id, status) => {
     await fetch(`/api/applications/${id}/status`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeader(),
-      },
+      headers: getAuthHeader(),
       body: JSON.stringify({ status }),
     });
     load();

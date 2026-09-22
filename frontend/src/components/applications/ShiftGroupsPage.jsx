@@ -42,10 +42,7 @@ export default function ShiftGroupsPage() {
     setError("");
     const response = await fetch("/api/shift-groups", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeader(),
-      },
+      headers: getAuthHeader(),
       body: JSON.stringify({
         name,
         ballkids: selected.map((b) => b.id),

@@ -63,10 +63,7 @@ export default function TryoutReviewPage() {
     try {
       const response = await fetch("/api/tryout-reviews", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeader(),
-        },
+        headers: getAuthHeader(),
         body: JSON.stringify({ ...review, application: selected.id }),
       });
       if (!response.ok) {
