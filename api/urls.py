@@ -5,6 +5,7 @@ from api.views.rating import *
 from api.views.debug import *
 from api.views.tickets import *
 from api.views.application import *
+from api.views.shift_group import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -275,6 +276,16 @@ application_urls = [
     ),
 ]
 
+# Shift group URLs (keep certain ballkids on the same team/shift)
+shift_group_urls = [
+    path("shift-groups", ShiftGroupListCreateView.as_view(), name="shift-groups"),
+    path(
+        "shift-groups/<int:pk>",
+        ShiftGroupDetailView.as_view(),
+        name="shift-group-detail",
+    ),
+]
+
 urlpatterns = (
     ballkid_urls
     + teams_urls
@@ -284,4 +295,5 @@ urlpatterns = (
     + rating_urls
     + debug_urls
     + application_urls
+    + shift_group_urls
 )

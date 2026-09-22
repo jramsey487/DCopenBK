@@ -15,6 +15,8 @@ never written directly into Ballkid.
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from api.models.enums import POSITION
 
@@ -96,6 +98,10 @@ class BallcrewApplication(models.Model):
     motivation = models.TextField()
     is_vegetarian = models.BooleanField()
     fun_fact = models.TextField(blank=True)
+    traveling_with_names = models.TextField(
+        blank=True,
+        help_text="Names of any other applicants/ballcrew this applicant is traveling/applying with.",
+    )
 
     # --- Branch flag: drives which of the two field groups below apply --
     is_veteran = models.BooleanField()
@@ -226,3 +232,23 @@ class ApplicationSettings(models.Model):
 
     def __str__(self):
         return "Applications open" if self.is_open else "Applications closed"
+
+
+@receiver(pre_delete, sender=BallcrewApplication)
+def delete_application_headshot_files(sender, instance, **kwargs):
+    """
+    Deleting a BallcrewApplication row should also remove its uploaded
+    headshot(s) from R2/storage -- otherwise the file is orphaned forever,
+    defeating the point of deleting an unpromoted applicant's data.
+
+    Skipped for promoted applications: PromoteApplicationView reuses this
+    same R2 file directly as the resulting Ballkid.image (no copy is made),
+    so deleting it here would break that ball kid's live photo. Only ever
+    delete an application that has promoted_ballkid set if you also intend
+    to lose that ball kid's photo.
+    """
+    if instance.promoted_ballkid_id:
+        return
+    for field in (instance.headshot, instance.headshot_update):
+        if field:
+            field.storage.delete(field.name)

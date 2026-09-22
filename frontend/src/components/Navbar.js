@@ -63,6 +63,7 @@ const chairpersonTabs = [
       { label: "Teams", url: "/teams" },
       { label: "Finals Teams", url: "/finals-teams" },
       { label: "Past Finals Teams", url: "/past-finals" },
+      { label: "Shift Groups", url: "/shift-groups" },
     ],
   },
   { label: "Schedule", url: "/schedule" },

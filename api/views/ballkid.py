@@ -32,6 +32,7 @@ from api.permissions import *
 from api.utils.teams_generator import TeamsGenerator
 from api.views.rating import run_calibration_and_save_params
 from accounts.views import UpdateCaptainStatus
+from api.models.shift_group import ShiftGroup
 
 from datetime import timedelta
 import logging
@@ -1076,8 +1077,13 @@ class CreateTeams(APIView):
     def patch(self, request, format=None):
         num_teams = int(request.data["numTeams"])
 
+        shift_groups = [
+            list(group.ballkids.all())
+            for group in ShiftGroup.objects.prefetch_related("ballkids").all()
+        ]
+
         generator = TeamsGenerator(num_teams)
-        teams = generator.create_teams()
+        teams = generator.create_teams(shift_groups=shift_groups)
 
         for team in teams:
             for ballkid in team.get_ballkids():

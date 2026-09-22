@@ -46,6 +46,7 @@ import PastFinalsTeamsPage from "./teams/PastFinalsTeamsPage";
 import ApplicationPage from "./applications/ApplicationPage";
 import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
+import ShiftGroupsPage from "./applications/ShiftGroupsPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 
@@ -100,7 +101,11 @@ function chairpersonRoutes(isMobile, setToken) {
         }
       />
       <Route path="/tickets" element={<TicketsPage />} />
-      <Route path="/tournament-settings" element={<TournamentSettings />} />
+      <Route
+        path="/tournament-settings"
+        element={<TournamentSettings />}
+      />
+      <Route path="/shift-groups" element={<ShiftGroupsPage />} />
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />

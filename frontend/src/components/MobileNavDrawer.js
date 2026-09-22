@@ -105,6 +105,7 @@ function getNavSections(group) {
       { label: "Teams", url: "/teams" },
       { label: "Finals Teams", url: "/finals-teams" },
       { label: "Past Finals Teams", url: "/past-finals" },
+      { label: "Shift Groups", url: "/shift-groups" },
     ],
   };
   const teamsBallkidCaptain = {

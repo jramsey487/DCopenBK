@@ -30,6 +30,7 @@ export default function ApplicationsReviewPage() {
   const [applications, setApplications] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [applicationsOpen, setApplicationsOpen] = useState(null);
+  const [settingsError, setSettingsError] = useState(false);
 
   const load = () => {
     const query = statusFilter ? `?status=${statusFilter}` : "";
@@ -40,11 +41,15 @@ export default function ApplicationsReviewPage() {
 
   useEffect(load, [statusFilter]);
 
-  useEffect(() => {
+  const loadApplicationSettings = () => {
+    setSettingsError(false);
     fetch("/api/application-settings", { headers: getAuthHeader() })
-      .then((res) => res.json())
-      .then((data) => setApplicationsOpen(Boolean(data.is_open)));
-  }, []);
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => setApplicationsOpen(Boolean(data.is_open)))
+      .catch(() => setSettingsError(true));
+  };
+
+  useEffect(loadApplicationSettings, []);
 
   const toggleApplicationsOpen = async () => {
     const next = !applicationsOpen;
@@ -149,24 +154,31 @@ export default function ApplicationsReviewPage() {
         }}
       />
 
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <FormControlLabel
           control={
             <Switch
               checked={Boolean(applicationsOpen)}
-              disabled={applicationsOpen === null}
+              disabled={applicationsOpen === null || settingsError}
               onChange={toggleApplicationsOpen}
               color="success"
             />
           }
           label={
-            applicationsOpen === null
+            settingsError
+              ? "Couldn't load application status"
+              : applicationsOpen === null
               ? "Loading application status…"
               : applicationsOpen
               ? "Applications are OPEN — the public form is accepting submissions"
               : "Applications are CLOSED — /apply shows a closed message"
           }
         />
+        {settingsError ? (
+          <Button size="small" onClick={loadApplicationSettings}>
+            Retry
+          </Button>
+        ) : null}
       </Box>
 
       <Table size="small">
@@ -174,6 +186,7 @@ export default function ApplicationsReviewPage() {
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Veteran?</TableCell>
+            <TableCell>Traveling With</TableCell>
             <TableCell># Reviews</TableCell>
             <TableCell>Avg Overall</TableCell>
             <TableCell>Status</TableCell>
@@ -185,6 +198,7 @@ export default function ApplicationsReviewPage() {
             <TableRow key={app.id}>
               <TableCell>{app.first_name} {app.last_name}</TableCell>
               <TableCell>{app.is_veteran ? "Veteran" : "First-time"}</TableCell>
+              <TableCell>{app.traveling_with_names || "—"}</TableCell>
               <TableCell>{app.review_count}</TableCell>
               <TableCell>{app.average_overall_rating ?? "—"}</TableCell>
               <TableCell>

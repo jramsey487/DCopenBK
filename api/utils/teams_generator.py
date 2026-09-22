@@ -167,7 +167,7 @@ class TeamsGenerator:
         ]
         return eligible_teams[0] if len(eligible_teams) > 0 else None
 
-    def create_teams(self):
+    def create_teams(self, shift_groups=None):
         """
         Creates teams as a list of populated Team objects, satisfying the criteria that:
         - Each team needs at least one captain or chairperson
@@ -177,12 +177,28 @@ class TeamsGenerator:
         - Randomize so the same person doesn't always get the same team / captain
         - Follows pre-defined order of team strength if relevant (>= 10 teams)
         - Ideally ballkids are assigned to their preferred position
+        - Ballkids in the same shift_groups entry all land on the same team,
+        so they end up working the same court/hour schedule together (a
+        team's Schedule rows are shared by everyone on that team) -- this
+        takes priority over the balancing heuristics below for that group
+
+        Arguments:
+        shift_groups: optional iterable of iterables of Ballkid instances (or
+        ids). Each inner group is placed together onto a single team before
+        anything else is assigned, then excluded from the normal per-person
+        passes so no one is placed twice. This is a hard constraint (unlike
+        the soft constraints elsewhere in this algorithm) -- group cohesion
+        wins over balance, though only checked-in members of a group are
+        considered, so a group where someone didn't show up still places
+        whoever did.
 
         General algorithm:
         - Let us consider 3 disjoint sets of ballkids, fully covering the space of checked
         in ballkids: captains/chairpeople, supervets (> 3 years experience OR out of town
         non-rookies), and all else.
-        - First go through captains (randomly ordered) at each position (net and back) and
+        - First place any shift_groups together on whichever team currently has the
+        fewest ballkids overall.
+        - Then go through captains (randomly ordered) at each position (net and back) and
         assign them to a team in priority order.
         - Then go through supervets and assign them to any teams that don't have an experienced
         ballkid at both positions yet. If all teams have experience at both positions, then
@@ -193,9 +209,37 @@ class TeamsGenerator:
         all = Ballkid.objects.filter(is_checked_in=True)
         max_ballkids_per_team = math.ceil(len(all) / len(self.teams))
 
-        captains = all.filter(Q(is_chairperson=True) | Q(is_captain=True))
+        all_by_id = {b.id: b for b in all}
+        grouped_ids = set()
+
+        if shift_groups:
+            # Larger groups first, so they get first pick of the smallest
+            # team while there's still the most room to balance everyone
+            # else afterward.
+            for group in sorted(shift_groups, key=lambda g: len(list(g)), reverse=True):
+                member_ids = [
+                    (member.id if hasattr(member, "id") else member)
+                    for member in group
+                ]
+                # Only checked-in members can actually be placed; someone who
+                # didn't check in today simply isn't part of the assignment.
+                members = [
+                    all_by_id[mid] for mid in member_ids if mid in all_by_id
+                ]
+                if not members:
+                    continue
+
+                team = self.get_smallest_team()
+                for member in members:
+                    team.add_ballkid(member)
+                    grouped_ids.add(member.id)
+
+        captains = all.exclude(id__in=grouped_ids).filter(
+            Q(is_chairperson=True) | Q(is_captain=True)
+        )
         supervets = list(
             all.exclude(id__in=captains)
+            .exclude(id__in=grouped_ids)
             .filter(num_years_experience__gt=0)
             .filter(
                 Q(num_years_experience__gt=SUPERVET_THRESHOLD) | Q(is_out_of_town=True)
@@ -206,6 +250,7 @@ class TeamsGenerator:
         ballkids = list(
             all.exclude(id__in=captains)
             .exclude(id__in=[s.id for s in supervets])
+            .exclude(id__in=grouped_ids)
             .order_by("?")
             .order_by("-num_years_experience")
         )
