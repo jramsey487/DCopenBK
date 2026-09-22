@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from datetime import date
 import math
+import random
 
 
 def get_previous_captains(ballkid_ids):
@@ -136,22 +137,29 @@ class TeamsGenerator:
         has the max number of ballkids
         avoid_captain_ids(set): if provided, prefer teams whose captain(s) don't overlap
         with this set (soft constraint - falls back to all teams if none qualify)
+
+        Ties are broken randomly rather than by list order -- otherwise, e.g. when every
+        team is still empty, "smallest team" would always resolve to the same team every
+        time this is called, making early placements (shift groups, the first captains)
+        fully deterministic run to run instead of spread out.
         """
         candidate_teams = self.get_eligible_teams(avoid_captain_ids)
 
-        # Keep track of both the smallest team and the team with the fewest ballkids at
-        # the position of interest
-        smallest_team = candidate_teams[0]
-        smallest_position_team = candidate_teams[0]
+        smallest_size = min(team.size() for team in candidate_teams)
+        smallest_team = random.choice(
+            [team for team in candidate_teams if team.size() == smallest_size]
+        )
 
-        for team in candidate_teams:
-            # Update smallest team
-            if team.size() < smallest_team.size():
-                smallest_team = team
-
-            # Update team with the fewest ballkids at position of interest
-            if team.size(position) < smallest_position_team.size(position):
-                smallest_position_team = team
+        smallest_position_size = min(
+            team.size(position) for team in candidate_teams
+        )
+        smallest_position_team = random.choice(
+            [
+                team
+                for team in candidate_teams
+                if team.size(position) == smallest_position_size
+            ]
+        )
 
         # If the smallest position team is already too large, then return the
         # smallest team instead
@@ -215,8 +223,11 @@ class TeamsGenerator:
         if shift_groups:
             # Larger groups first, so they get first pick of the smallest
             # team while there's still the most room to balance everyone
-            # else afterward.
-            for group in sorted(shift_groups, key=lambda g: len(list(g)), reverse=True):
+            # else afterward. Shuffle first so groups of the same size
+            # aren't always processed in the same (database) order.
+            shuffled_groups = list(shift_groups)
+            random.shuffle(shuffled_groups)
+            for group in sorted(shuffled_groups, key=lambda g: len(list(g)), reverse=True):
                 member_ids = [
                     (member.id if hasattr(member, "id") else member)
                     for member in group
