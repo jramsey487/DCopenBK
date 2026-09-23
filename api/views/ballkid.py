@@ -24,7 +24,7 @@ from django.shortcuts import get_object_or_404
 
 from api.models.ballkid import *
 from api.models.rating import *
-from api.models.schedule import COURT
+from api.models.schedule import COURT, Schedule
 from api.serializers import *
 from api.utils.utils import *
 from api.utils.consts import *
@@ -34,7 +34,7 @@ from api.views.rating import run_calibration_and_save_params
 from accounts.views import UpdateCaptainStatus
 from api.models.shift_group import ShiftGroup
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 logger = logging.getLogger("api.ballkid")
@@ -62,7 +62,34 @@ def _rating_count_subquery(extra_filters=None):
         .values("c")
     )
 
+def get_todays_team_cohorts(num_teams):
+    """
+    Groups team numbers by identical on-court schedule for today, based on
+    that day's actual Schedule rows -- not a formula. Two team numbers are
+    in the same cohort if they're on-court at exactly the same set of times
+    today, whatever that pattern actually is (a clean N-way split, an odd
+    extra team, or anything a chairperson hand-edited via UpdateSchedule/
+    ShiftSchedule/EndCourt).
+    """
+    now = datetime.now()
+    start_of_day = datetime(year=now.year, month=now.month, day=now.day, hour=8)
+    end_of_day = start_of_day + timedelta(days=1)
 
+    shifts = Schedule.objects.filter(
+        start__gte=start_of_day, start__lt=end_of_day
+    ).exclude(team=0)
+
+    on_times_by_team = {}
+    for shift in shifts:
+        on_times_by_team.setdefault(shift.team, set()).add(shift.start)
+
+    cohort_by_signature = {}
+    for team_num in range(1, num_teams + 1):
+        signature = frozenset(on_times_by_team.get(team_num, set()))
+        cohort_by_signature.setdefault(signature, []).append(team_num)
+
+    return list(cohort_by_signature.values())
+    
 def recalc_checkin_analytics(ballkid=None, now=None, year=None):
     """
     Recalculates total checkin duration for the ballkid and saves to the
@@ -1081,9 +1108,12 @@ class CreateTeams(APIView):
             list(group.ballkids.all())
             for group in ShiftGroup.objects.prefetch_related("ballkids").all()
         ]
+        team_cohorts = get_todays_team_cohorts(num_teams)
 
         generator = TeamsGenerator(num_teams)
-        teams = generator.create_teams(shift_groups=shift_groups)
+        teams = generator.create_teams(
+            shift_groups=shift_groups, team_cohorts=team_cohorts
+        )
 
         for team in teams:
             for ballkid in team.get_ballkids():
@@ -1095,7 +1125,6 @@ class CreateTeams(APIView):
             {"Success": "Teams auto-created"},
             status=status.HTTP_200_OK,
         )
-
 
 class TeamPairs(APIView):
     """Optional same-position pairs on current teams (Net+Net / Back+Back)."""

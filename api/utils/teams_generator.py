@@ -108,25 +108,33 @@ class TeamsGenerator:
                 ]
             ]
 
-    def get_eligible_teams(self, avoid_captain_ids=None):
+    def get_eligible_teams(self, avoid_captain_ids=None, restrict_to=None):
         """
         Returns the list of teams whose captain(s) don't overlap with
         avoid_captain_ids. This is a soft constraint: if every team conflicts
         (e.g. there aren't enough distinct captains to go around), falls back
         to the full list of teams rather than returning nothing.
+
+        restrict_to(list[Team]): if provided, only consider teams within this
+        list (e.g. teams sharing an on-court schedule "cohort") instead of
+        every team.
         """
+        pool = restrict_to if restrict_to is not None else self.teams
+
         if not avoid_captain_ids:
-            return self.teams
+            return pool
 
         eligible = [
             team
-            for team in self.teams
+            for team in pool
             if not (team.captain_ids & avoid_captain_ids)
         ]
 
-        return eligible if eligible else self.teams
+        return eligible if eligible else pool
 
-    def get_smallest_team(self, position=None, max_size=None, avoid_captain_ids=None):
+    def get_smallest_team(
+        self, position=None, max_size=None, avoid_captain_ids=None, restrict_to=None
+    ):
         """
         Returns the smallest team in the list of teams.
 
@@ -137,13 +145,14 @@ class TeamsGenerator:
         has the max number of ballkids
         avoid_captain_ids(set): if provided, prefer teams whose captain(s) don't overlap
         with this set (soft constraint - falls back to all teams if none qualify)
+        restrict_to(list[Team]): if provided, only choose among these teams
 
         Ties are broken randomly rather than by list order -- otherwise, e.g. when every
         team is still empty, "smallest team" would always resolve to the same team every
         time this is called, making early placements (shift groups, the first captains)
         fully deterministic run to run instead of spread out.
         """
-        candidate_teams = self.get_eligible_teams(avoid_captain_ids)
+        candidate_teams = self.get_eligible_teams(avoid_captain_ids, restrict_to=restrict_to)
 
         smallest_size = min(team.size() for team in candidate_teams)
         smallest_team = random.choice(
@@ -175,7 +184,7 @@ class TeamsGenerator:
         ]
         return eligible_teams[0] if len(eligible_teams) > 0 else None
 
-    def create_teams(self, shift_groups=None):
+    def create_teams(self, shift_groups=None, team_cohorts=None):
         """
         Creates teams as a list of populated Team objects, satisfying the criteria that:
         - Each team needs at least one captain or chairperson
@@ -185,27 +194,38 @@ class TeamsGenerator:
         - Randomize so the same person doesn't always get the same team / captain
         - Follows pre-defined order of team strength if relevant (>= 10 teams)
         - Ideally ballkids are assigned to their preferred position
-        - Ballkids in the same shift_groups entry all land on the same team,
-        so they end up working the same court/hour schedule together (a
-        team's Schedule rows are shared by everyone on that team) -- this
-        takes priority over the balancing heuristics below for that group
+        - Ballkids in the same shift_groups entry all land on teams within the same
+        on-court "cohort" (see team_cohorts below), so they end up on-court and
+        off-court at the same times as each other, even if not on the literal
+        same team -- this takes priority over the balancing heuristics below for
+        that group's cohort choice, but individual members are still placed with
+        normal position/experience balancing within that cohort
 
         Arguments:
         shift_groups: optional iterable of iterables of Ballkid instances (or
-        ids). Each inner group is placed together onto a single team before
-        anything else is assigned, then excluded from the normal per-person
-        passes so no one is placed twice. This is a hard constraint (unlike
-        the soft constraints elsewhere in this algorithm) -- group cohesion
-        wins over balance, though only checked-in members of a group are
-        considered, so a group where someone didn't show up still places
+        ids). Each inner group is placed together into a single cohort of teams
+        before anything else is assigned, then excluded from the normal
+        per-person passes so no one is placed twice. This is a hard constraint
+        (unlike the soft constraints elsewhere in this algorithm) -- group
+        cohesion wins over balance, though only checked-in members of a group
+        are considered, so a group where someone didn't show up still places
         whoever did.
+
+        team_cohorts: optional iterable of iterables of team numbers, where
+        each inner list is a set of team numbers that share an identical
+        on-court/off-court schedule for the day (derived from that day's
+        actual Schedule rows by the caller -- this module has no knowledge of
+        scheduling itself). If omitted (e.g. no schedule exists yet for the
+        day), every team is treated as its own cohort of one, which falls
+        back to the old "whole group on one exact team" behavior.
 
         General algorithm:
         - Let us consider 3 disjoint sets of ballkids, fully covering the space of checked
         in ballkids: captains/chairpeople, supervets (> 3 years experience OR out of town
         non-rookies), and all else.
-        - First place any shift_groups together on whichever team currently has the
-        fewest ballkids overall.
+        - First place any shift_groups: pick whichever cohort of teams currently has the
+        fewest ballkids overall, then place each group member individually onto the
+        smallest/best-fit team within just that cohort.
         - Then go through captains (randomly ordered) at each position (net and back) and
         assign them to a team in priority order.
         - Then go through supervets and assign them to any teams that don't have an experienced
@@ -220,11 +240,26 @@ class TeamsGenerator:
         all_by_id = {b.id: b for b in all}
         grouped_ids = set()
 
+        teams_by_number = {team.number: team for team in self.teams}
+
+        if team_cohorts:
+            cohorts = [
+                [teams_by_number[n] for n in cohort if n in teams_by_number]
+                for cohort in team_cohorts
+            ]
+            cohorts = [c for c in cohorts if c]  # drop any that resolved empty
+        else:
+            # No schedule info available -- each team is its own cohort of
+            # one, reproducing the old "whole group on one exact team"
+            # behavior as a fallback.
+            cohorts = [[team] for team in self.teams]
+
         if shift_groups:
-            # Larger groups first, so they get first pick of the smallest
-            # team while there's still the most room to balance everyone
-            # else afterward. Shuffle first so groups of the same size
-            # aren't always processed in the same (database) order.
+            # Larger groups first, so they get first pick of the
+            # least-loaded cohort while there's still the most room to
+            # balance everyone else afterward. Shuffle first so groups of
+            # the same size aren't always processed in the same (database)
+            # order.
             shuffled_groups = list(shift_groups)
             random.shuffle(shuffled_groups)
             for group in sorted(shuffled_groups, key=lambda g: len(list(g)), reverse=True):
@@ -240,8 +275,16 @@ class TeamsGenerator:
                 if not members:
                     continue
 
-                team = self.get_smallest_team()
+                # Pick whichever cohort currently has the fewest people
+                # overall, so groups don't pile onto one lucky cohort.
+                least_loaded_cohort = min(
+                    cohorts, key=lambda cohort: sum(t.size() for t in cohort)
+                )
+
                 for member in members:
+                    team = self.get_smallest_team(
+                        position=member.position, restrict_to=least_loaded_cohort
+                    )
                     team.add_ballkid(member)
                     grouped_ids.add(member.id)
 
