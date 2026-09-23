@@ -262,8 +262,7 @@ class TeamsGenerator:
             all.exclude(id__in=captains)
             .exclude(id__in=[s.id for s in supervets])
             .exclude(id__in=grouped_ids)
-            .order_by("?")
-            .order_by("-num_years_experience")
+            .order_by("-num_years_experience", "?")
         )
 
         # Soft constraint: avoid placing a ballkid with the same captain they
