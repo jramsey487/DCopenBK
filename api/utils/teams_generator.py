@@ -41,12 +41,57 @@ def get_previous_captains(ballkid_ids):
     return previous_captains
 
 
+def get_previous_teammates(ballkid_ids):
+    """
+    Returns a dict mapping ballkid_id -> set of teammate ballkid ids,
+    representing everyone who shared a team with that ballkid on the most
+    recent day strictly before today that they have a TeamHistory entry
+    for. Used as a soft constraint when auto-generating teams so ballkids
+    aren't repeatedly placed with the same teammates day after day.
+    """
+    histories = TeamHistory.objects.filter(
+        ballkid_id__in=ballkid_ids,
+        start__date__lt=date.today(),
+    ).order_by("ballkid_id", "-start")
+
+    # Step 1: find each ballkid's most recent team + day they were on
+    latest_start = {}
+    latest_team = {}
+    for history in histories:
+        bid = history.ballkid_id
+        if bid not in latest_start:
+            latest_start[bid] = history.start
+            latest_team[bid] = history.team
+
+    # Step 2: group ballkids by (team, day) so everyone sharing a (team,
+    # day) can be looked up with one query per distinct pair, rather than
+    # one query per ballkid
+    by_team_day = {}
+    for bid, start in latest_start.items():
+        key = (latest_team[bid], start.date())
+        by_team_day.setdefault(key, []).append(bid)
+
+    previous_teammates = {bid: set() for bid in latest_start}
+
+    for (team, day), bids_that_day in by_team_day.items():
+        teammates_that_day = set(
+            TeamHistory.objects.filter(team=team, start__date=day).values_list(
+                "ballkid_id", flat=True
+            )
+        )
+        for bid in bids_that_day:
+            previous_teammates[bid] = teammates_that_day - {bid}
+
+    return previous_teammates
+
+
 class Team:
     def __init__(self, num):
         self.number = num
         self.ballkids = {position: [] for position in [POSITION.N, POSITION.B]}
         self.experienced = {position: [] for position in [POSITION.N, POSITION.B]}
         self.captain_ids = set()
+        self.member_ids = set()
 
     def get_number(self):
         return self.number
@@ -81,6 +126,36 @@ class Team:
         if ballkid.is_captain:
             self.captain_ids.add(ballkid.id)
 
+        self.member_ids.add(ballkid.id)
+
+    def move_to_position(self, ballkid, new_position):
+        """
+        Re-buckets a ballkid already on this team from their current
+        position to new_position, updating both the ballkids and
+        experienced tracking to match, and mutating ballkid.position itself
+        so the change is picked up when the caller saves it. Used to nudge
+        a team's Net/Back split toward target ratios by flipping a
+        "switcher" (someone whose preferred_position is Back/Net or
+        Net/Back) rather than moving anyone locked into a single position.
+        """
+        old_position = ballkid.position
+
+        if ballkid in self.ballkids[old_position]:
+            self.ballkids[old_position].remove(ballkid)
+        if ballkid in self.experienced[old_position]:
+            self.experienced[old_position].remove(ballkid)
+
+        ballkid.position = new_position
+        self.ballkids[new_position].append(ballkid)
+
+        if (
+            ballkid.is_captain
+            or ballkid.is_chairperson
+            or ballkid.num_years_experience > SUPERVET_THRESHOLD
+            or (ballkid.is_out_of_town and ballkid.num_years_experience > 0)
+        ):
+            self.experienced[new_position].append(ballkid)
+
     def __repr__(self):
         return str(
             [
@@ -91,6 +166,12 @@ class Team:
 
 
 class TeamsGenerator:
+    # Program's preferred Net count for each common team size (the rest are
+    # Backs). Only tuned for the sizes actually used -- 8, 9, 10 -- since
+    # teams shouldn't go above 10. Sizes outside this map are left as
+    # whatever the normal placement produces.
+    TARGET_NET_COUNT_BY_TEAM_SIZE = {8: 3, 9: 3, 10: 4}
+
     def __init__(self, num_teams):
         # If number of teams is less than 10, then naively create an order
         if num_teams < len(TEAMS_STRENGTH_ORDER):
@@ -108,12 +189,14 @@ class TeamsGenerator:
                 ]
             ]
 
-    def get_eligible_teams(self, avoid_captain_ids=None, restrict_to=None):
+    def get_eligible_teams(self, avoid_captain_ids=None, avoid_teammate_ids=None, restrict_to=None):
         """
         Returns the list of teams whose captain(s) don't overlap with
-        avoid_captain_ids. This is a soft constraint: if every team conflicts
-        (e.g. there aren't enough distinct captains to go around), falls back
-        to the full list of teams rather than returning nothing.
+        avoid_captain_ids and whose current members don't overlap with
+        avoid_teammate_ids. Both are soft constraints: if every team
+        conflicts (e.g. not enough distinct captains/teammates to go
+        around), falls back to the full list of teams rather than
+        returning nothing.
 
         restrict_to(list[Team]): if provided, only consider teams within this
         list (e.g. teams sharing an on-court schedule "cohort") instead of
@@ -121,19 +204,27 @@ class TeamsGenerator:
         """
         pool = restrict_to if restrict_to is not None else self.teams
 
-        if not avoid_captain_ids:
+        if not avoid_captain_ids and not avoid_teammate_ids:
             return pool
 
-        eligible = [
-            team
-            for team in pool
-            if not (team.captain_ids & avoid_captain_ids)
-        ]
+        def is_eligible(team):
+            if avoid_captain_ids and (team.captain_ids & avoid_captain_ids):
+                return False
+            if avoid_teammate_ids and (team.member_ids & avoid_teammate_ids):
+                return False
+            return True
+
+        eligible = [team for team in pool if is_eligible(team)]
 
         return eligible if eligible else pool
 
     def get_smallest_team(
-        self, position=None, max_size=None, avoid_captain_ids=None, restrict_to=None
+        self,
+        position=None,
+        max_size=None,
+        avoid_captain_ids=None,
+        avoid_teammate_ids=None,
+        restrict_to=None,
     ):
         """
         Returns the smallest team in the list of teams.
@@ -145,6 +236,8 @@ class TeamsGenerator:
         has the max number of ballkids
         avoid_captain_ids(set): if provided, prefer teams whose captain(s) don't overlap
         with this set (soft constraint - falls back to all teams if none qualify)
+        avoid_teammate_ids(set): if provided, prefer teams whose current members don't
+        overlap with this set (soft constraint - falls back to all teams if none qualify)
         restrict_to(list[Team]): if provided, only choose among these teams
 
         Ties are broken randomly rather than by list order -- otherwise, e.g. when every
@@ -152,7 +245,9 @@ class TeamsGenerator:
         time this is called, making early placements (shift groups, the first captains)
         fully deterministic run to run instead of spread out.
         """
-        candidate_teams = self.get_eligible_teams(avoid_captain_ids, restrict_to=restrict_to)
+        candidate_teams = self.get_eligible_teams(
+            avoid_captain_ids, avoid_teammate_ids=avoid_teammate_ids, restrict_to=restrict_to
+        )
 
         smallest_size = min(team.size() for team in candidate_teams)
         smallest_team = random.choice(
@@ -177,8 +272,12 @@ class TeamsGenerator:
 
         return smallest_position_team
 
-    def get_team_without_experienced_position(self, position, avoid_captain_ids=None):
-        candidate_teams = self.get_eligible_teams(avoid_captain_ids)
+    def get_team_without_experienced_position(
+        self, position, avoid_captain_ids=None, avoid_teammate_ids=None
+    ):
+        candidate_teams = self.get_eligible_teams(
+            avoid_captain_ids, avoid_teammate_ids=avoid_teammate_ids
+        )
         eligible_teams = [
             team for team in candidate_teams if not team.has_experienced(position)
         ]
@@ -308,9 +407,13 @@ class TeamsGenerator:
             .order_by("-num_years_experience", "?")
         )
 
-        # Soft constraint: avoid placing a ballkid with the same captain they
-        # had on their most recent previous day, where possible
+        # Soft constraints: avoid placing a ballkid with the same captain or
+        # any of the same teammates they had on their most recent previous
+        # day, where possible
         previous_captains = get_previous_captains(
+            [b.id for b in supervets] + [b.id for b in ballkids]
+        )
+        previous_teammates = get_previous_teammates(
             [b.id for b in supervets] + [b.id for b in ballkids]
         )
 
@@ -332,30 +435,71 @@ class TeamsGenerator:
 
         for supervet in supervets:
             avoid_captain_ids = previous_captains.get(supervet.id, set())
+            avoid_teammate_ids = previous_teammates.get(supervet.id, set())
 
             team = self.get_team_without_experienced_position(
-                supervet.position, avoid_captain_ids=avoid_captain_ids
+                supervet.position,
+                avoid_captain_ids=avoid_captain_ids,
+                avoid_teammate_ids=avoid_teammate_ids,
             )
             if team is None:
                 team = self.get_smallest_team(
                     supervet.position,
                     max_size=max_ballkids_per_team,
                     avoid_captain_ids=avoid_captain_ids,
+                    avoid_teammate_ids=avoid_teammate_ids,
                 )
 
             team.add_ballkid(supervet)
 
         for ballkid in ballkids:
             avoid_captain_ids = previous_captains.get(ballkid.id, set())
+            avoid_teammate_ids = previous_teammates.get(ballkid.id, set())
 
             team = self.get_smallest_team(
                 ballkid.position,
                 max_size=max_ballkids_per_team,
                 avoid_captain_ids=avoid_captain_ids,
+                avoid_teammate_ids=avoid_teammate_ids,
             )
             team.add_ballkid(ballkid)
 
+        self.balance_switchers()
+
         return self.teams
+
+    def balance_switchers(self):
+        """
+        Best-effort pass, run after normal placement: nudges each team's
+        Net/Back split toward TARGET_NET_COUNT_BY_TEAM_SIZE by re-assigning
+        a "switcher" already on that team (preferred_position of Back/Net
+        or Net/Back) from the overrepresented position to the
+        underrepresented one. This is a soft adjustment -- if a team has no
+        switcher available in the direction needed, its imbalance is left
+        as-is rather than moving someone locked into a single position.
+        """
+        for team in self.teams:
+            target_nets = self.TARGET_NET_COUNT_BY_TEAM_SIZE.get(team.size())
+            if target_nets is None:
+                continue
+
+            net_deficit = target_nets - team.size(POSITION.N)
+
+            if net_deficit > 0:
+                self._shift_switchers(team, POSITION.B, POSITION.N, net_deficit)
+            elif net_deficit < 0:
+                self._shift_switchers(team, POSITION.N, POSITION.B, -net_deficit)
+
+    def _shift_switchers(self, team, frm, to, count):
+        switchers = [
+            ballkid
+            for ballkid in team.ballkids[frm]
+            if ballkid.preferred_position in (POSITION.BN, POSITION.NB)
+        ]
+        random.shuffle(switchers)
+
+        for switcher in switchers[:count]:
+            team.move_to_position(switcher, to)
 
     def __repr__(self):
         return str([team for team in self.teams])
