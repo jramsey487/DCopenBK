@@ -50,6 +50,7 @@ const emptyForm = {
   motivation: "",
   is_vegetarian: false,
   fun_fact: "",
+  traveling_with_names: "",
   is_veteran: null,
   // veteran-only
   years_experience: "",
@@ -175,6 +176,14 @@ export default function ApplicationPage() {
       <Typography variant="h5" gutterBottom>
         Ballcrew Application &mdash; Mubadala DC Open 2026
       </Typography>
+      <Typography variant="body2" sx={{ mb: 2 }}>
+        New to ball crew, or just want a refresher before tryouts? Check out
+        the{" "}
+        <a href="/handbook" target="_blank" rel="noopener noreferrer">
+          Ball Crew Handbook
+        </a>
+        .
+      </Typography>
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
         {STEPS.map((label) => (
           <Step key={label}>
@@ -230,6 +239,13 @@ export default function ApplicationPage() {
             label="Interesting fact about yourself (optional, for trivia)"
             value={form.fun_fact}
             onChange={set("fun_fact")}
+            multiline
+            rows={2}
+          />
+          <TextField
+            label="Are you traveling with any potential ballcrew? List their name(s) below (optional)"
+            value={form.traveling_with_names}
+            onChange={set("traveling_with_names")}
             multiline
             rows={2}
           />

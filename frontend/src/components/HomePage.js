@@ -47,6 +47,7 @@ import ApplicationPage from "./applications/ApplicationPage";
 import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
 import ShiftGroupsPage from "./applications/ShiftGroupsPage";
+import HandbookPage from "./applications/HandbookPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 
@@ -106,6 +107,7 @@ function chairpersonRoutes(isMobile, setToken) {
         element={<TournamentSettings />}
       />
       <Route path="/shift-groups" element={<ShiftGroupsPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />
@@ -131,6 +133,7 @@ function captainRoutes(setToken) {
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/tickets" element={<TicketsPage />} />
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
@@ -150,6 +153,7 @@ function ballkidRoutes(setToken) {
       <Route path="/settings" element={<AccountSettings />} />
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/tickets" element={<TicketsPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
@@ -162,6 +166,7 @@ function ticketingRoutes(setToken) {
       <Route exact path="/" element={<TicketsPage />} />
       <Route path="/login" element={<LoginPage setToken={setToken} />} />
       <Route path="/tickets" element={<TicketsPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />
     </Routes>
@@ -172,6 +177,7 @@ function loggedOutRoutes(setToken) {
   return (
     <Routes>
       <Route path="/apply" element={<ApplicationPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
       <Route path="/reset-email-sent" element={<ResetEmailSent />} />

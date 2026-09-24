@@ -89,6 +89,7 @@ function getNavSections(group) {
     Icon: NavIconApplications,
     items: [
       { label: "Apply", url: "/apply" },
+      { label: "Ball Crew Handbook", url: "/handbook" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
     ],
@@ -96,6 +97,11 @@ function getNavSections(group) {
   const tryoutReviewCaptain = {
     label: "Tryout Review",
     url: "/tryout-review",
+    Icon: NavIconApplications,
+  };
+  const handbook = {
+    label: "Handbook",
+    url: "/handbook",
     Icon: NavIconApplications,
   };
   const teamsChairperson = {

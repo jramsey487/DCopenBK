@@ -16,6 +16,7 @@ const ballkidTabs = [
   { label: "Teams", url: "/teams" },
   { label: "Schedule", url: "/schedule" },
   { label: "Tickets", url: "/tickets" },
+  { label: "Handbook", url: "/handbook" },
 ];
 
 const captainTabs = [
@@ -24,6 +25,7 @@ const captainTabs = [
   { label: "Schedule", url: "/schedule" },
   { label: "Tickets", url: "/tickets" },
   { label: "Tryout Review", url: "/tryout-review" },
+  { label: "Handbook", url: "/handbook" },
   {
     label: "Ratings",
     url: "/rate-by-name",
@@ -42,6 +44,7 @@ const chairpersonTabs = [
     url: "/applications",
     subtabs: [
       { label: "Apply", url: "/apply" },
+      { label: "Ball Crew Handbook", url: "/handbook" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
     ],
