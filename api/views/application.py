@@ -150,23 +150,64 @@ class PromoteApplicationView(APIView):
 
         image_url = self._resolve_headshot_url(application)
 
-        ballkid_kwargs = dict(
-            first_name=application.first_name,
-            last_name=application.last_name,
-            date_of_birth=application.date_of_birth,
-            phone=application.phone,
-            emergency_name=application.emergency_contact_name,
-            emergency_phone=application.emergency_contact_phone,
-            num_years_experience=application.years_experience or 0,
-            is_captain=bool(application.is_captain),
-            is_active=True,
-        )
-        if preferred_position:
-            ballkid_kwargs["preferred_position"] = preferred_position
-        if image_url:
-            ballkid_kwargs["image"] = image_url
+        existing_ballkid_id = request.data.get("ballkid_id")
 
-        ballkid = Ballkid.objects.create(**ballkid_kwargs)
+        if existing_ballkid_id:
+            # Returning veteran, matched to their existing record by a
+            # chairperson (never automatically -- see ApplyHeadshotUpdateView
+            # for why). Update it rather than creating a duplicate.
+            #
+            # Contact/identity fields are refreshed from this year's
+            # application, since those legitimately change year to year
+            # (phone numbers, and -- deliberately handled by matching on
+            # more than just name -- a legal name change after marriage).
+            # num_years_experience is auto-incremented from the existing
+            # record rather than trusted from the application's
+            # self-reported number, since people misremember their own
+            # tenure. is_captain is left untouched entirely -- captain
+            # status is set through a separate process outside applications.
+            try:
+                ballkid = Ballkid.objects.get(pk=existing_ballkid_id)
+            except Ballkid.DoesNotExist:
+                return Response(
+                    {"ballkid_id": "No ballkid found with that id."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            ballkid.first_name = application.first_name
+            ballkid.last_name = application.last_name
+            ballkid.date_of_birth = application.date_of_birth
+            ballkid.phone = application.phone
+            ballkid.emergency_name = application.emergency_contact_name
+            ballkid.emergency_phone = application.emergency_contact_phone
+            ballkid.num_years_experience = (ballkid.num_years_experience or 0) + 1
+            if preferred_position:
+                ballkid.preferred_position = preferred_position
+            if image_url:
+                ballkid.image = image_url
+            ballkid.is_active = True
+            ballkid.save()
+        else:
+            # First-time applicant, or a veteran with no existing record
+            # found (e.g. an old record that's since been purged) -- create
+            # fresh, same as before.
+            ballkid_kwargs = dict(
+                first_name=application.first_name,
+                last_name=application.last_name,
+                date_of_birth=application.date_of_birth,
+                phone=application.phone,
+                emergency_name=application.emergency_contact_name,
+                emergency_phone=application.emergency_contact_phone,
+                num_years_experience=application.years_experience or 0,
+                is_captain=bool(application.is_captain),
+                is_active=True,
+            )
+            if preferred_position:
+                ballkid_kwargs["preferred_position"] = preferred_position
+            if image_url:
+                ballkid_kwargs["image"] = image_url
+
+            ballkid = Ballkid.objects.create(**ballkid_kwargs)
 
         application.promoted_ballkid = ballkid
         application.save(update_fields=["promoted_ballkid"])
@@ -240,3 +281,49 @@ class PurgeUnpromotedApplicationsView(APIView):
         # headshot-cleanup signal in api/models/application.py runs for each.
         candidates.delete()
         return Response({"deleted_count": count})
+
+
+class ApplyHeadshotUpdateView(APIView):
+    """
+    Applies a veteran applicant's updated headshot (application.headshot_
+    update, already sitting in R2 from the moment they submitted) onto an
+    EXISTING Ballkid's image field -- for a returning veteran whose
+    application isn't going through the promote-a-new-Ballkid flow at all.
+
+    Deliberately requires the chairperson to name which Ballkid this is
+    (ballkid_id in the request body) rather than matching by name
+    automatically -- same reasoning as shift groups: an automatic
+    name-match here could silently overwrite the wrong person's photo, and
+    that's worse than requiring one extra click to confirm.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request, pk):
+        try:
+            application = BallcrewApplication.objects.get(pk=pk)
+        except BallcrewApplication.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if not application.headshot_update:
+            raise ValidationError(
+                "This application has no updated headshot to apply."
+            )
+
+        ballkid_id = request.data.get("ballkid_id")
+        if not ballkid_id:
+            raise ValidationError({"ballkid_id": "Required."})
+
+        try:
+            ballkid = Ballkid.objects.get(pk=ballkid_id)
+        except Ballkid.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # No file copy needed -- application.headshot_update is already in
+        # R2 (or local disk in dev) via Django's storage API, so we just
+        # point the Ballkid at the same URL, same as PromoteApplicationView
+        # does for a brand-new promotion.
+        ballkid.image = application.headshot_update.url
+        ballkid.save(update_fields=["image"])
+
+        return Response({"updated_ballkid_id": ballkid.id, "image": ballkid.image})

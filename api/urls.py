@@ -274,6 +274,11 @@ application_urls = [
         PurgeUnpromotedApplicationsView.as_view(),
         name="purge-unpromoted-applications",
     ),
+    path(
+        "applications/<int:pk>/apply-headshot-update",
+        ApplyHeadshotUpdateView.as_view(),
+        name="apply-headshot-update",
+    ),
 ]
 
 # Shift group URLs (keep certain ballkids on the same team/shift)
