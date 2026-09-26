@@ -32,6 +32,7 @@ from api.serializers_application import (
     ApplicationStatusUpdateSerializer,
     BallcrewApplicationReviewSerializer,
     BallcrewApplicationSubmitSerializer,
+    get_tournament_start_date,
     TryoutReviewSerializer,
 )
 
@@ -56,7 +57,16 @@ class ApplicationSettingsView(APIView):
         return [IsChairperson()]
 
     def get(self, request):
-        return Response({"is_open": ApplicationSettings.get_solo().is_open})
+        start_date = get_tournament_start_date()
+        return Response(
+            {
+                "is_open": ApplicationSettings.get_solo().is_open,
+                # Lets the public form compute and display real calendar
+                # dates (e.g. "Saturday, July 25") for each semantic day key
+                # without hardcoding a year -- see api/models/application.py
+                "tournament_start_date": start_date.isoformat() if start_date else None,
+            }
+        )
 
     def patch(self, request):
         is_open = request.data.get("is_open")

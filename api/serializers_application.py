@@ -4,16 +4,29 @@ Add these classes into the repo's existing api/serializers.py (or import
 this module from there) alongside the existing serializers.
 """
 
-from datetime import date
-
 from rest_framework import serializers
 
-from api.models.application import BallcrewApplication, TryoutReview
+from api.models.application import (
+    BallcrewApplication,
+    FIRST_TIMER_AVAILABILITY_DAYS,
+    TryoutReview,
+    VETERAN_END_OF_TOURNAMENT_DAYS,
+)
+from api.models.schedule import Tournament
 
-# Tournament start date drives the "must be 14 by start" check.
-# Move this to Tournament model / settings if it should vary by year.
-TOURNAMENT_START_DATE = date(2026, 7, 25)
 MINIMUM_AGE = 14
+
+
+def get_tournament_start_date():
+    """
+    Current tournament's start date, sourced from the Tournament model
+    rather than hardcoded -- so the age check and day labels stay correct
+    year to year without a code change. Falls back to None if no Tournament
+    row exists yet (age validation is skipped in that case rather than
+    guessing at a date).
+    """
+    tournament = Tournament.objects.order_by("-year").first()
+    return tournament.start_date if tournament else None
 
 
 class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
@@ -34,8 +47,12 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         ]
 
     def validate_date_of_birth(self, value):
-        age_at_tournament = TOURNAMENT_START_DATE.year - value.year
-        had_birthday = (TOURNAMENT_START_DATE.month, TOURNAMENT_START_DATE.day) >= (
+        start_date = get_tournament_start_date()
+        if start_date is None:
+            return value  # no Tournament row configured yet -- can't check
+
+        age_at_tournament = start_date.year - value.year
+        had_birthday = (start_date.month, start_date.day) >= (
             value.month,
             value.day,
         )
@@ -44,7 +61,7 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         if age_at_tournament < MINIMUM_AGE:
             raise serializers.ValidationError(
                 f"Applicants must be {MINIMUM_AGE} years old by the start of "
-                f"the tournament ({TOURNAMENT_START_DATE:%B %-d, %Y})."
+                f"the tournament ({start_date:%B %-d, %Y})."
             )
         return value
 
@@ -52,7 +69,14 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         is_veteran = data.get("is_veteran")
 
         if is_veteran:
-            required = ["years_experience", "position", "is_captain", "likelihood"]
+            required = [
+                "years_experience",
+                "position",
+                "is_captain",
+                "likelihood",
+                "veteran_sunday_or_monday",
+                "veteran_wed_thu_choice",
+            ]
         else:
             required = ["has_tried_out_before", "tryout_date"]
             if not data.get("headshot"):
@@ -65,6 +89,21 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
             branch = "veteran" if is_veteran else "first-time"
             raise serializers.ValidationError(
                 {f: f"Required for {branch} applicants." for f in missing}
+            )
+
+        # availability_days means something different per branch -- make
+        # sure whatever was submitted is actually a subset of the days that
+        # branch was allowed to pick from.
+        allowed_days = (
+            VETERAN_END_OF_TOURNAMENT_DAYS
+            if is_veteran
+            else FIRST_TIMER_AVAILABILITY_DAYS
+        )
+        submitted_days = data.get("availability_days") or []
+        invalid_days = [d for d in submitted_days if d not in allowed_days]
+        if invalid_days:
+            raise serializers.ValidationError(
+                {"availability_days": f"Invalid day(s) for this branch: {invalid_days}"}
             )
 
         # Waiver: either the applicant's own signature (18+) or a parent's.

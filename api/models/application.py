@@ -54,19 +54,94 @@ RECOMMENDATION_CHOICES = [
     ("strong_no", "Strong No"),
 ]
 
-# Tournament days offered across both the veteran and first-time sections of
-# the form. Stored as a JSON list of these values on availability_days.
+# Tournament days, keyed by their fixed position relative to the
+# tournament's start (which runs Saturday through the following Sunday --
+# 9 days), NOT by literal calendar date. The actual calendar date for each
+# is computed at render time from Tournament.start_date (see
+# ApplicationSettingsView), so this list never needs to change year to year
+# even though the tournament's actual dates do.
+DAY_SAT_1 = "sat_1"  # first Saturday
+DAY_SUN_1 = "sun_1"  # first Sunday
+DAY_MON = "mon"
+DAY_TUE = "tue"
+DAY_WED = "wed"
+DAY_THU = "thu"
+DAY_FRI = "fri"
+DAY_SAT_2 = "sat_2"  # second (final) Saturday
+DAY_SUN_2 = "sun_2"  # second (final) Sunday -- maps to "End" for last-day purposes
+
 TOURNAMENT_DAYS = [
-    "sat_jul_25",
-    "sun_jul_26",
-    "mon_jul_27",
-    "tue_jul_28",
-    "wed_jul_29",
-    "thu_jul_30",
-    "fri_jul_31",
-    "sat_aug_1",
-    "sun_aug_2",
+    DAY_SAT_1,
+    DAY_SUN_1,
+    DAY_MON,
+    DAY_TUE,
+    DAY_WED,
+    DAY_THU,
+    DAY_FRI,
+    DAY_SAT_2,
+    DAY_SUN_2,
 ]
+
+# Order matters here -- used to find the "latest" day someone picked.
+_DAY_ORDER = TOURNAMENT_DAYS
+
+# First-timers: the first four days are mandatory and not asked about at
+# all (see BallcrewApplicationSubmitSerializer); availability_days for a
+# first-timer is only ever a subset of these five.
+FIRST_TIMER_AVAILABILITY_DAYS = [DAY_WED, DAY_THU, DAY_FRI, DAY_SAT_2, DAY_SUN_2]
+
+# Veterans: the first Saturday and Tuesday are mandatory (with an email-us
+# escape hatch, handled outside the system); the Sunday/Monday choice
+# always falls chronologically before Tuesday, so it never affects last-day
+# derivation. availability_days for a veteran is only ever a subset of
+# these three (the end-of-tournament question).
+VETERAN_SUN_MON_CHOICES = [(DAY_SUN_1, "Sunday"), (DAY_MON, "Monday")]
+VETERAN_WED_THU_CHOICES = [
+    (DAY_WED, "Available for start of Wednesday"),
+    (DAY_THU, "Available for start of Thursday"),
+    ("both", "Available for start of Wednesday & Thursday"),
+]
+VETERAN_END_OF_TOURNAMENT_DAYS = [DAY_FRI, DAY_SAT_2, DAY_SUN_2]
+
+
+def _latest_day(days):
+    """Given a list of day keys, returns whichever falls latest in the
+    tournament, or None if the list is empty."""
+    present = [d for d in _DAY_ORDER if d in days]
+    return present[-1] if present else None
+
+
+def derive_last_day(application):
+    """
+    Computes an applicant's expected last working day from their
+    availability answers:
+
+    - First-timers: the first four days (Sat-Tue) are mandatory, so if they
+      picked no Wed-Sun day at all, their last day is Tuesday. Otherwise
+      it's the latest Wed-Sun day they picked.
+    - Veterans: the first Saturday and Tuesday are mandatory (their
+      Sunday-or-Monday choice always falls before Tuesday, so it's
+      irrelevant here). If they picked no end-of-tournament day, their last
+      day is the later of their Wed/Thu choice ("both" counts as Thursday).
+      Otherwise it's the latest end-of-tournament day they picked.
+
+    Returns one of the DAY_* constants above, or the string "END" for the
+    tournament's actual final day -- mapping that onto whatever choices
+    Ballkid's own last-day field uses is the caller's job.
+    """
+    if application.is_veteran:
+        if application.availability_days:
+            latest = _latest_day(application.availability_days)
+        else:
+            latest = (
+                DAY_THU
+                if application.veteran_wed_thu_choice in (DAY_THU, "both")
+                else DAY_WED
+            )
+    else:
+        latest = _latest_day(application.availability_days) or DAY_TUE
+
+    return "END" if latest == DAY_SUN_2 else latest
 
 
 def headshot_upload_path(instance, filename):
@@ -119,6 +194,12 @@ class BallcrewApplication(models.Model):
         upload_to=headshot_upload_path, null=True, blank=True
     )
     tryout_help_availability = models.JSONField(default=list, blank=True)
+    veteran_sunday_or_monday = models.CharField(
+        max_length=10, choices=VETERAN_SUN_MON_CHOICES, null=True, blank=True
+    )
+    veteran_wed_thu_choice = models.CharField(
+        max_length=10, choices=VETERAN_WED_THU_CHOICES, null=True, blank=True
+    )
 
     # --- First-timer-only fields -----------------------------------------
     headshot = models.ImageField(
@@ -128,7 +209,12 @@ class BallcrewApplication(models.Model):
     prior_experience = models.TextField(blank=True)
     tryout_date = models.CharField(max_length=100, null=True, blank=True)
 
-    # --- Availability (both branches use the same day vocabulary) -------
+    # --- Availability -----------------------------------------------------
+    # First-timers: subset of FIRST_TIMER_AVAILABILITY_DAYS (Wed-Sun) --
+    # the first four days are mandatory and not asked about.
+    # Veterans: subset of VETERAN_END_OF_TOURNAMENT_DAYS (Fri/Sat/Sun) --
+    # see veteran_sunday_or_monday and veteran_wed_thu_choice above for the
+    # rest of a veteran's week.
     availability_days = models.JSONField(default=list)
 
     # --- Waiver -----------------------------------------------------------
