@@ -72,7 +72,6 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
             required = [
                 "years_experience",
                 "position",
-                "is_captain",
                 "likelihood",
                 "veteran_sunday_or_monday",
                 "veteran_wed_thu_choice",

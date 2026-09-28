@@ -24,6 +24,7 @@ from api.models.application import (
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
+    derive_last_day,
     TryoutReview,
 )
 from api.models.ballkid import Ballkid
@@ -159,6 +160,7 @@ class PromoteApplicationView(APIView):
                 preferred_position = reviews.first().observed_position
 
         image_url = self._resolve_headshot_url(application)
+        last_day = self._resolve_last_day(application)
 
         existing_ballkid_id = request.data.get("ballkid_id")
 
@@ -196,6 +198,7 @@ class PromoteApplicationView(APIView):
             if image_url:
                 ballkid.image = image_url
             ballkid.is_active = True
+            ballkid.last_day = last_day
             ballkid.save()
         else:
             # First-time applicant, or a veteran with no existing record
@@ -209,8 +212,8 @@ class PromoteApplicationView(APIView):
                 emergency_name=application.emergency_contact_name,
                 emergency_phone=application.emergency_contact_phone,
                 num_years_experience=application.years_experience or 0,
-                is_captain=bool(application.is_captain),
                 is_active=True,
+                last_day=last_day,
             )
             if preferred_position:
                 ballkid_kwargs["preferred_position"] = preferred_position
@@ -242,6 +245,28 @@ class PromoteApplicationView(APIView):
         if not source_field:
             return None
         return source_field.url
+
+    @staticmethod
+    def _resolve_last_day(application):
+        """
+        Maps derive_last_day()'s semantic day key (or "END") onto whatever
+        string Ballkid.last_day / LAST_DAY_OPTIONS actually use -- plain
+        weekday names, with "End" for the tournament's final day.
+        """
+        day_key = derive_last_day(application)
+        label_by_key = {
+            "sat_1": "Saturday",
+            "sun_1": "Sunday",
+            "mon": "Monday",
+            "tue": "Tuesday",
+            "wed": "Wednesday",
+            "thu": "Thursday",
+            "fri": "Friday",
+            "sat_2": "Saturday",
+            "sun_2": "Sunday",
+            "END": "End",
+        }
+        return label_by_key.get(day_key, "End")
 
 
 class TryoutReviewCreateView(generics.CreateAPIView):

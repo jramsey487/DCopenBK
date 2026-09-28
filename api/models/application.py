@@ -95,7 +95,11 @@ FIRST_TIMER_AVAILABILITY_DAYS = [DAY_WED, DAY_THU, DAY_FRI, DAY_SAT_2, DAY_SUN_2
 # always falls chronologically before Tuesday, so it never affects last-day
 # derivation. availability_days for a veteran is only ever a subset of
 # these three (the end-of-tournament question).
-VETERAN_SUN_MON_CHOICES = [(DAY_SUN_1, "Sunday"), (DAY_MON, "Monday")]
+VETERAN_SUN_MON_CHOICES = [
+    (DAY_SUN_1, "Available for start of Sunday"),
+    (DAY_MON, "Available for start of Monday"),
+    ("both", "Available for start of Sunday & Monday"),
+]
 VETERAN_WED_THU_CHOICES = [
     (DAY_WED, "Available for start of Wednesday"),
     (DAY_THU, "Available for start of Thursday"),
@@ -186,7 +190,6 @@ class BallcrewApplication(models.Model):
     position = models.CharField(
         max_length=10, choices=POSITION.choices, null=True, blank=True
     )
-    is_captain = models.BooleanField(null=True, blank=True)
     likelihood = models.CharField(
         max_length=20, choices=LIKELIHOOD_CHOICES, null=True, blank=True
     )

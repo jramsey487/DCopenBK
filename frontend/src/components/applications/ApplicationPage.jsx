@@ -101,7 +101,6 @@ const emptyForm = {
   // veteran-only
   years_experience: "",
   position: "",
-  is_captain: false,
   likelihood: "",
   headshot_update: null,
   tryout_help_availability: [],
@@ -249,7 +248,7 @@ export default function ApplicationPage() {
           <TextField label="Email" value={form.email} onChange={set("email")} required />
           <TextField label="First Name" value={form.first_name} onChange={set("first_name")} required />
           <TextField label="Last Name" value={form.last_name} onChange={set("last_name")} required />
-          <TextField select label="Gender" value={form.gender} onChange={set("gender")} required>
+          <TextField select label="Gender (used for clothing sizing)" value={form.gender} onChange={set("gender")} required>
             <MenuItem value="M">Male</MenuItem>
             <MenuItem value="F">Female</MenuItem>
           </TextField>
@@ -268,7 +267,7 @@ export default function ApplicationPage() {
           />
           <TextField label="State of Residence (2-letter)" value={form.state} onChange={set("state")} inputProps={{ maxLength: 2 }} required />
           <TextField label="Phone Number" value={form.phone} onChange={set("phone")} placeholder="XXX-XXX-XXXX" required />
-          <TextField label="Additional Email Contact" value={form.additional_email} onChange={set("additional_email")} />
+          <TextField label="Additional Email Contact (OPTIONAL - will be copied on all emails)" value={form.additional_email} onChange={set("additional_email")} />
           <TextField label="Emergency Contact Name" value={form.emergency_contact_name} onChange={set("emergency_contact_name")} required />
           <TextField label="Emergency Contact Relationship" value={form.emergency_contact_relationship} onChange={set("emergency_contact_relationship")} required />
           <TextField label="Emergency Contact Phone" value={form.emergency_contact_phone} onChange={set("emergency_contact_phone")} required />
@@ -338,10 +337,6 @@ export default function ApplicationPage() {
             <MenuItem value="Net/Back">Switch (Prefer Net)</MenuItem>
             <MenuItem value="Back/Net">Switch (Prefer Back)</MenuItem>
           </TextField>
-          <FormControlLabel
-            control={<Checkbox checked={form.is_captain} onChange={set("is_captain")} />}
-            label="Are you a captain?"
-          />
           <TextField select label="Likelihood you'll volunteer this year" value={form.likelihood} onChange={set("likelihood")} required>
             <MenuItem value="certain">Absolutely Certain</MenuItem>
             <MenuItem value="moderate">Moderately Likely</MenuItem>
@@ -354,21 +349,39 @@ export default function ApplicationPage() {
             Availability
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            You'll need to work {formatDayLabel(DAY_SAT_1, tournamentStartDate)} and{" "}
-            {formatDayLabel(DAY_TUE, tournamentStartDate)}. Email us at
-            mdetennis.ballcrew@gmail.com if that's a problem for some reason.
+            We'll follow up with your specific daily schedule once teams are set. You'll
+            need to work {formatDayLabel(DAY_SAT_1, tournamentStartDate)} and{" "}
+            {formatDayLabel(DAY_TUE, tournamentStartDate)} -- email us at
+            mdetennis.ballcrew@gmail.com if that's a problem for some reason. You're only
+            required to work one of {formatDayLabel(DAY_SUN_1, tournamentStartDate)}/
+            {formatDayLabel(DAY_MON, tournamentStartDate)} and one of{" "}
+            {formatDayLabel(DAY_WED, tournamentStartDate)}/
+            {formatDayLabel(DAY_THU, tournamentStartDate)}.
           </Typography>
 
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            Which will you also work: {formatDayLabel(DAY_SUN_1, tournamentStartDate)} or{" "}
-            {formatDayLabel(DAY_MON, tournamentStartDate)}?
+            {formatDayLabel(DAY_SUN_1, tournamentStartDate)} /{" "}
+            {formatDayLabel(DAY_MON, tournamentStartDate)}
           </Typography>
           <RadioGroup
             value={form.veteran_sunday_or_monday}
             onChange={set("veteran_sunday_or_monday")}
           >
-            <FormControlLabel value={DAY_SUN_1} control={<Radio />} label={formatDayLabel(DAY_SUN_1, tournamentStartDate)} />
-            <FormControlLabel value={DAY_MON} control={<Radio />} label={formatDayLabel(DAY_MON, tournamentStartDate)} />
+            <FormControlLabel
+              value={DAY_SUN_1}
+              control={<Radio />}
+              label={`Available for start of ${formatDayLabel(DAY_SUN_1, tournamentStartDate)}`}
+            />
+            <FormControlLabel
+              value={DAY_MON}
+              control={<Radio />}
+              label={`Available for start of ${formatDayLabel(DAY_MON, tournamentStartDate)}`}
+            />
+            <FormControlLabel
+              value="both"
+              control={<Radio />}
+              label={`Available for start of ${formatDayLabel(DAY_SUN_1, tournamentStartDate)} & ${formatDayLabel(DAY_MON, tournamentStartDate)}`}
+            />
           </RadioGroup>
 
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -456,7 +469,9 @@ export default function ApplicationPage() {
           </Typography>
 
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            Which of the remaining days can you work?
+            All days after {formatDayLabel(DAY_TUE, tournamentStartDate)} are invite-only,
+            but let us know which of these you'd be available for in case you're invited to
+            stay on:
           </Typography>
           <FormGroup>
             {FIRST_TIMER_AVAILABILITY_DAYS.map((day) => (
