@@ -545,15 +545,37 @@ class EmailsList(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        emails = (
-            Ballkid.objects.filter(
-                is_active=True, is_chairperson=False, is_cut=False, user__isnull=False
-            )
-            .exclude(user__email="")
-            .values_list("user__email", flat=True)
+        ballkids = (
+            Ballkid.objects.filter(is_active=True, is_chairperson=False, is_cut=False)
+            .select_related("user", "additional_contact")
+            .order_by("last_name", "first_name")
         )
-        return Response({"emails": list(emails)}, status=status.HTTP_200_OK)
 
+        emails = []
+        seen = set()
+        missing = []
+
+        for ballkid in ballkids:
+            addresses = []
+            if ballkid.user and ballkid.user.email:
+                addresses.append(ballkid.user.email)
+
+            contact = getattr(ballkid, "additional_contact", None)
+            if contact and contact.email:
+                addresses.append(contact.email)
+
+            if not addresses:
+                missing.append(f"{ballkid.first_name} {ballkid.last_name}")
+
+            for address in addresses:
+                address = address.strip()
+                if address and address.lower() not in seen:
+                    seen.add(address.lower())
+                    emails.append(address)
+
+        return Response(
+            {"emails": emails, "missing": missing}, status=status.HTTP_200_OK
+        )
 
 class SelfCutList(generics.ListAPIView):
     serializer_class = BallkidListSerializer

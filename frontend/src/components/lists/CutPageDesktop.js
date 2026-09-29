@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
+import Alert from "@mui/material/Alert";
 
 import Dangerous from "@mui/icons-material/Dangerous";
 import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
@@ -435,6 +436,12 @@ export function renderCopyButtons(active, emails, setSuccessMsg) {
                 ballkid.cut_status === "Possibly Keep" ||
                 ballkid.cut_status === ""
             )
+            .slice()
+            .sort((a, b) =>
+              `${a.last_name} ${a.first_name}`.localeCompare(
+                `${b.last_name} ${b.first_name}`
+              )
+            )
             .map((ballkid) => `${ballkid.first_name} ${ballkid.last_name}`)
             .join("\n");
           navigator.clipboard.writeText(names);
@@ -527,6 +534,7 @@ export function SelfCutCard({
 export default function CutPageDesktop(props) {
   const [active, setActive] = useState([]);
   const [emails, setEmails] = useState([]);
+  const [missingEmails, setMissingEmails] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showHovercard, setShowHovercard] = useState(false);
 
@@ -554,12 +562,22 @@ export default function CutPageDesktop(props) {
 
     fetch("/api/emails-list", { headers: getAuthHeader() })
       .then((response) => response.json())
-      .then((data) => setEmails(data["emails"]));
+      .then((data) => {
+        setEmails(data["emails"]);
+        setMissingEmails(data["missing"] || []);
+      });
   }, [refreshKey]);
 
   return (
     <div className="page ballkid-list-page teams-page-shell teams-chairperson-page cut-page">
       <Banners />
+
+      {missingEmails.length > 0 ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {missingEmails.length} ballcrew {missingEmails.length === 1 ? "has" : "have"} no
+          email on file: {missingEmails.join(", ")}
+        </Alert>
+      ) : null}
 
       <TeamsChairpersonPageHeader
         title="Cut Page"

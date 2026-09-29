@@ -24,6 +24,7 @@ from api.models.application import (
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
+    BallkidAdditionalContact,
     derive_last_day,
     TryoutReview,
 )
@@ -221,6 +222,17 @@ class PromoteApplicationView(APIView):
                 ballkid_kwargs["image"] = image_url
 
             ballkid = Ballkid.objects.create(**ballkid_kwargs)
+
+        # Persist the "Additional Email Contact" (a parent, spouse, etc.)
+        # onto the Ballkid so it's copied on ballcrew-wide emails year
+        # after year. A non-blank answer replaces whatever was there; a
+        # blank one leaves an existing contact alone rather than silently
+        # deleting it (a chairperson can clear it manually in Django admin).
+        if application.additional_email:
+            BallkidAdditionalContact.objects.update_or_create(
+                ballkid=ballkid,
+                defaults={"email": application.additional_email},
+            )
 
         application.promoted_ballkid = ballkid
         application.save(update_fields=["promoted_ballkid"])

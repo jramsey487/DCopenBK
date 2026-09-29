@@ -323,6 +323,30 @@ class ApplicationSettings(models.Model):
         return "Applications open" if self.is_open else "Applications closed"
 
 
+class BallkidAdditionalContact(models.Model):
+    """
+    An extra email address (a parent, spouse, etc.) to copy whenever the
+    chairpersons email the whole ballcrew. Captured from the application's
+    "Additional Email Contact" question at promotion time and attached to
+    the Ballkid itself, so it persists year to year instead of disappearing
+    with the application. Kept as its own small model rather than a column
+    on Ballkid so this feature doesn't require editing that model.
+
+    Read by EmailsList (api/views/ballkid.py), which is what the Cut page's
+    "Copy All Ballkid Emails" button calls.
+    """
+
+    ballkid = models.OneToOneField(
+        "api.Ballkid",
+        on_delete=models.CASCADE,
+        related_name="additional_contact",
+    )
+    email = models.EmailField()
+
+    def __str__(self):
+        return f"{self.ballkid} -> {self.email}"
+
+
 @receiver(pre_delete, sender=BallcrewApplication)
 def delete_application_headshot_files(sender, instance, **kwargs):
     """
