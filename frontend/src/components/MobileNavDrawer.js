@@ -92,6 +92,7 @@ function getNavSections(group) {
       { label: "Ball Crew Handbook", url: "/handbook" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
+      { label: "Sizing Report", url: "/sizing-report" },
     ],
   };
   const tryoutReviewCaptain = {
@@ -165,10 +166,18 @@ function getNavSections(group) {
       { label: "Ratings - Captain", url: "/leaderboards/captain" },
     ],
   };
+  const adminTools = {
+    label: "Admin Tools",
+    Icon: () => <BugReportOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
+    items: [
+      { label: "Database Query", url: "/database-query" },
+      { label: "Debug", url: "/debug" },
+    ],
+  };
 
   switch (group) {
     case "chairperson":
-      return [applicationsChairperson, list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets];
+      return [applicationsChairperson, list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets, adminTools];
     case "captain":
       return [listByName, teamsBallkidCaptain, schedule, tickets, tryoutReviewCaptain, ratingsCaptain];
     case "ticketing":
@@ -190,11 +199,6 @@ function getAccountItems(group) {
         label: "Tournament Settings",
         url: "/tournament-settings",
         Icon: () => <SportsTennisOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
-      },
-      {
-        label: "Debug",
-        url: "/debug",
-        Icon: () => <BugReportOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
       },
       {
         label: "Feedback",

@@ -47,6 +47,7 @@ const chairpersonTabs = [
       { label: "Ball Crew Handbook", url: "/handbook" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
+      { label: "Sizing Report", url: "/sizing-report" },
     ],
   },
   {
@@ -92,6 +93,14 @@ const chairpersonTabs = [
     ],
   },
   { label: "Tickets", url: "/tickets" },
+  {
+    label: "Admin Tools",
+    url: "/database-query",
+    subtabs: [
+      { label: "Database Query", url: "/database-query" },
+      { label: "Debug", url: "/debug" },
+    ],
+  },
 ];
 
 const ballkidAccountTab = {
@@ -122,7 +131,6 @@ const chairpersonAccountTab = {
     { label: "My Profile", url: "/me" },
     { label: "Account Settings", url: "/settings" },
     { label: "Tournament Settings", url: "/tournament-settings" },
-    { label: "Debug", url: "/debug" },
     { label: "Feedback", url: "/feedback" },
     { label: "Logout", url: "/login" },
   ],

@@ -12,6 +12,7 @@ import Navbar from "./Navbar";
 import CheckinPage from "./lists/CheckinPage";
 import SchedulePage from "./schedule/SchedulePage";
 import DebugPage from "./settings/DebugPage";
+import DatabaseQueryPage from "./settings/DatabaseQueryPage";
 import LoginPage from "./auth/LoginPage";
 import ForgotPasswordPage from "./auth/ForgotPasswordPage";
 import ResetPasswordComplete from "./auth/ResetPasswordComplete";
@@ -44,6 +45,7 @@ import PastFinalsTeamsPage from "./teams/PastFinalsTeamsPage";
 
 // -- Ballcrew application feature --
 import ApplicationPage from "./applications/ApplicationPage";
+import SizingReportPage from "./applications/SizingReportPage";
 import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
 import ShiftGroupsPage from "./applications/ShiftGroupsPage";
@@ -64,6 +66,7 @@ function chairpersonRoutes(isMobile, setToken) {
         element={isMobile ? <CutPageMobile /> : <CutPageDesktop />}
       />
       <Route path="/debug" element={<DebugPage />} />
+      <Route path="/database-query" element={<DatabaseQueryPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route
         path="/finals-teams"
@@ -108,6 +111,7 @@ function chairpersonRoutes(isMobile, setToken) {
       />
       <Route path="/shift-groups" element={<ShiftGroupsPage />} />
       <Route path="/handbook" element={<HandbookPage />} />
+      <Route path="/sizing-report" element={<SizingReportPage />} />
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />

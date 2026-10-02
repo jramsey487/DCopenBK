@@ -6,6 +6,8 @@ from api.views.debug import *
 from api.views.tickets import *
 from api.views.application import *
 from api.views.shift_group import *
+from api.views.database_query import *
+from api.views.sizing_report import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -291,6 +293,15 @@ shift_group_urls = [
     ),
 ]
 
+# Read-only SQL console (chairperson-only, see api/views/database_query.py)
+database_query_urls = [
+    path("database-query", DatabaseQueryView.as_view(), name="database-query"),
+]
+
+sizing_report_urls = [
+    path("sizing-report", SizingReportView.as_view(), name="sizing-report"),
+]
+
 urlpatterns = (
     ballkid_urls
     + teams_urls
@@ -301,4 +312,6 @@ urlpatterns = (
     + debug_urls
     + application_urls
     + shift_group_urls
+    + database_query_urls
+    + sizing_report_urls
 )
