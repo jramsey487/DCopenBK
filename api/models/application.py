@@ -47,6 +47,14 @@ APPLICATION_STATUS_CHOICES = [
     ("waitlisted", "Waitlisted"),
 ]
 
+TRYOUT_SLOT_FIRST = "first"
+TRYOUT_SLOT_SECOND = "second"
+TRYOUT_SLOT_CHOICES = [
+    (TRYOUT_SLOT_FIRST, "First tryout date"),
+    (TRYOUT_SLOT_SECOND, "Second tryout date"),
+]
+TRYOUT_CAPACITY_PER_SLOT = 50
+
 RECOMMENDATION_CHOICES = [
     ("strong_yes", "Strong Yes"),
     ("yes", "Yes"),
@@ -210,7 +218,13 @@ class BallcrewApplication(models.Model):
     )
     has_tried_out_before = models.BooleanField(null=True, blank=True)
     prior_experience = models.TextField(blank=True)
-    tryout_date = models.CharField(max_length=100, null=True, blank=True)
+    # "first"/"second" rather than a literal date -- the actual calendar
+    # dates (and capacity) live on ApplicationSettings.tryout_date_1/2, so
+    # this stays meaningful even after the chairperson updates the dates
+    # for a new season.
+    tryout_date = models.CharField(
+        max_length=10, choices=TRYOUT_SLOT_CHOICES, null=True, blank=True
+    )
 
     # --- Availability -----------------------------------------------------
     # First-timers: subset of FIRST_TIMER_AVAILABILITY_DAYS (Wed-Sun) --
@@ -306,9 +320,16 @@ class ApplicationSettings(models.Model):
     accepts submissions. Chairpersons toggle this from the review dashboard;
     SubmitApplicationView checks it server-side so a closed toggle can't be
     bypassed by hitting the API directly.
+
+    Also holds the current season's two tryout dates. Editable from Django
+    admin. Storing the real dates here (rather than hardcoding them in code)
+    means a new season just needs these two fields updated, not a code
+    change -- same reasoning as the tournament's own dynamic date labeling.
     """
 
     is_open = models.BooleanField(default=True)
+    tryout_date_1 = models.DateField(null=True, blank=True)
+    tryout_date_2 = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Application settings"

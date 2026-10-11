@@ -7,8 +7,11 @@ this module from there) alongside the existing serializers.
 from rest_framework import serializers
 
 from api.models.application import (
+    ApplicationSettings,
     BallcrewApplication,
     FIRST_TIMER_AVAILABILITY_DAYS,
+    TRYOUT_CAPACITY_PER_SLOT,
+    TRYOUT_SLOT_CHOICES,
     TryoutReview,
     VETERAN_END_OF_TOURNAMENT_DAYS,
 )
@@ -27,6 +30,48 @@ def get_tournament_start_date():
     """
     tournament = Tournament.objects.order_by("-year").first()
     return tournament.start_date if tournament else None
+
+
+def get_tryout_slot_info():
+    """
+    Returns a list of dicts, one per tryout slot ("first"/"second"), each
+    with the slot's configured date (or None if not set yet), remaining
+    capacity, and whether it's full. Capacity is counted against this
+    season's first-timer applications only (submitted_at__year matches the
+    current Tournament's year) -- applications persist across seasons
+    (promoted ones are never purged), so counting all-time would wrongly
+    treat a slot as permanently full once last year's 50 people filled it.
+
+    Shared by the serializer (to reject a submission for an already-full
+    slot) and ApplicationSettingsView (so the public form knows what to
+    offer) -- one source of truth for both.
+    """
+    settings_obj = ApplicationSettings.get_solo()
+    tournament = Tournament.objects.order_by("-year").first()
+    year = tournament.year if tournament else None
+
+    slots = []
+    for value, label in TRYOUT_SLOT_CHOICES:
+        date = (
+            settings_obj.tryout_date_1
+            if value == "first"
+            else settings_obj.tryout_date_2
+        )
+        qs = BallcrewApplication.objects.filter(is_veteran=False, tryout_date=value)
+        if year is not None:
+            qs = qs.filter(submitted_at__year=year)
+        count = qs.count()
+        remaining = max(TRYOUT_CAPACITY_PER_SLOT - count, 0)
+        slots.append(
+            {
+                "value": value,
+                "label": label,
+                "date": date.isoformat() if date else None,
+                "remaining": remaining,
+                "full": remaining <= 0,
+            }
+        )
+    return slots
 
 
 class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
@@ -90,6 +135,20 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
                 {f: f"Required for {branch} applicants." for f in missing}
             )
 
+        # First-timers: re-check the chosen tryout slot still has room.
+        # The public form hides a full slot from the dropdown, but this is
+        # a second check server-side in case two people submit for the
+        # last spot at nearly the same moment.
+        if not is_veteran:
+            chosen_slot = data.get("tryout_date")
+            slot_info = next(
+                (s for s in get_tryout_slot_info() if s["value"] == chosen_slot), None
+            )
+            if slot_info and slot_info["full"]:
+                raise serializers.ValidationError(
+                    {"tryout_date": "That tryout date just filled up -- please pick the other one."}
+                )
+
         # availability_days means something different per branch -- make
         # sure whatever was submitted is actually a subset of the days that
         # branch was allowed to pick from.
@@ -104,6 +163,18 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"availability_days": f"Invalid day(s) for this branch: {invalid_days}"}
             )
+
+        # Veteran's optional "willing to help run tryouts" checkboxes --
+        # not required, not capacity-limited (unlike a rookie's actual
+        # tryout slot), just constrained to the two real slot values.
+        if is_veteran:
+            help_slots = data.get("tryout_help_availability") or []
+            valid_slots = [v for v, _ in TRYOUT_SLOT_CHOICES]
+            invalid_help_slots = [s for s in help_slots if s not in valid_slots]
+            if invalid_help_slots:
+                raise serializers.ValidationError(
+                    {"tryout_help_availability": f"Invalid value(s): {invalid_help_slots}"}
+                )
 
         # Waiver: either the applicant's own signature (18+) or a parent's.
         if not data.get("waiver_signature_name"):

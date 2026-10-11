@@ -122,6 +122,8 @@ const STEPS = ["Basic Info", "Availability & Experience", "Waiver"];
 export default function ApplicationPage() {
   const [applicationsOpen, setApplicationsOpen] = useState(null); // null = still checking
   const [tournamentStartDate, setTournamentStartDate] = useState(null);
+  const [tryoutSlots, setTryoutSlots] = useState([]);
+  const [rookieTryoutsAvailable, setRookieTryoutsAvailable] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
   const [form, setForm] = useState(emptyForm);
   const [submitted, setSubmitted] = useState(false);
@@ -134,6 +136,8 @@ export default function ApplicationPage() {
       .then((data) => {
         setApplicationsOpen(Boolean(data.is_open));
         setTournamentStartDate(data.tournament_start_date || null);
+        setTryoutSlots(data.tryout_slots || []);
+        setRookieTryoutsAvailable(data.rookie_tryouts_available !== false);
       })
       .catch(() => setApplicationsOpen(true)); // fail open on network hiccup rather than blocking real applicants
   }, []);
@@ -312,8 +316,18 @@ export default function ApplicationPage() {
             onChange={(e) => setForm((f) => ({ ...f, is_veteran: e.target.value === "true" }))}
           >
             <FormControlLabel value="true" control={<Radio />} label="I'm a Veteran" />
-            <FormControlLabel value="false" control={<Radio />} label="This is my first time" />
+            <FormControlLabel
+              value="false"
+              control={<Radio />}
+              label="This is my first time"
+              disabled={!rookieTryoutsAvailable}
+            />
           </RadioGroup>
+          {!rookieTryoutsAvailable ? (
+            <Typography variant="body2" color="text.secondary">
+              First-time applications are currently closed -- both tryout dates are full.
+            </Typography>
+          ) : null}
         </Stack>
       )}
 
@@ -344,6 +358,25 @@ export default function ApplicationPage() {
           </TextField>
           <Typography variant="body2">Updated headshot (optional)</Typography>
           <input type="file" accept="image/*" onChange={setFile("headshot_update")} />
+
+          <Typography variant="body2" sx={{ fontWeight: 500, mt: 1 }}>
+            Not required at all, but very much appreciated -- would you be able to help
+            out at either tryout date?
+          </Typography>
+          <FormGroup>
+            {tryoutSlots.map((slot) => (
+              <FormControlLabel
+                key={slot.value}
+                control={
+                  <Checkbox
+                    checked={form.tryout_help_availability.includes(slot.value)}
+                    onChange={() => toggleDay("tryout_help_availability")(slot.value)}
+                  />
+                }
+                label={`${slot.label}${slot.date ? ` (${new Date(slot.date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })})` : ""}`}
+              />
+            ))}
+          </FormGroup>
 
           <Typography variant="subtitle1" sx={{ mt: 2 }}>
             Availability
@@ -448,8 +481,23 @@ export default function ApplicationPage() {
             required
           />
           <TextField select label="Preferred tryout date" value={form.tryout_date} onChange={set("tryout_date")} required>
-            <MenuItem value="may_31">Sunday, May 31: 1pm-4pm at Banneker Tennis Courts</MenuItem>
+            {tryoutSlots
+              .filter((slot) => !slot.full)
+              .map((slot) => (
+                <MenuItem key={slot.value} value={slot.value}>
+                  {slot.label}
+                  {slot.date
+                    ? `: ${new Date(slot.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
+                    : ""}{" "}
+                  at Banneker Tennis Courts
+                </MenuItem>
+              ))}
           </TextField>
+          {tryoutSlots.length > 0 && tryoutSlots.every((s) => s.full) ? (
+            <Typography variant="body2" color="error">
+              Both tryout dates are currently full.
+            </Typography>
+          ) : null}
 
           <Typography variant="subtitle1" sx={{ mt: 2 }}>
             Availability

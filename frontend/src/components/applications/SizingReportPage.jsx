@@ -60,12 +60,21 @@ function buildEmailText(report) {
 // who's applied multiple years doesn't get counted more than once.
 export default function SizingReportPage() {
   const [report, setReport] = useState(null);
+  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/sizing-report", { headers: getAuthHeader() })
-      .then((res) => res.json())
-      .then(setReport);
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then(setReport)
+      .catch(async (res) => {
+        try {
+          const data = await res.json();
+          setError(data.detail || "Could not load the sizing report.");
+        } catch {
+          setError("Could not load the sizing report.");
+        }
+      });
   }, []);
 
   const copyForEmail = () => {
@@ -75,8 +84,20 @@ export default function SizingReportPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (error) {
+    return (
+      <Paper sx={{ p: 3, maxWidth: 900, mx: "auto", mt: 2 }}>
+        <Typography color="error">{error}</Typography>
+      </Paper>
+    );
+  }
+
   if (!report) {
-    return null;
+    return (
+      <Paper sx={{ p: 3, maxWidth: 900, mx: "auto", mt: 2 }}>
+        <Typography color="text.secondary">Loading…</Typography>
+      </Paper>
+    );
   }
 
   return (

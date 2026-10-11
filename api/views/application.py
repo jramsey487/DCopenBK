@@ -35,6 +35,7 @@ from api.serializers_application import (
     BallcrewApplicationReviewSerializer,
     BallcrewApplicationSubmitSerializer,
     get_tournament_start_date,
+    get_tryout_slot_info,
     TryoutReviewSerializer,
 )
 
@@ -60,6 +61,7 @@ class ApplicationSettingsView(APIView):
 
     def get(self, request):
         start_date = get_tournament_start_date()
+        tryout_slots = get_tryout_slot_info()
         return Response(
             {
                 "is_open": ApplicationSettings.get_solo().is_open,
@@ -67,6 +69,11 @@ class ApplicationSettingsView(APIView):
                 # dates (e.g. "Saturday, July 25") for each semantic day key
                 # without hardcoding a year -- see api/models/application.py
                 "tournament_start_date": start_date.isoformat() if start_date else None,
+                "tryout_slots": tryout_slots,
+                # First-timer applications auto-close once both tryout
+                # slots are full -- there'd be nowhere left to send a
+                # rookie for a tryout. Veterans are unaffected.
+                "rookie_tryouts_available": any(not s["full"] for s in tryout_slots),
             }
         )
 

@@ -24,7 +24,7 @@ class TryoutReviewInline(admin.TabularInline):
 
 @admin.register(ApplicationSettings)
 class ApplicationSettingsAdmin(admin.ModelAdmin):
-    list_display = ["is_open"]
+    list_display = ["is_open", "tryout_date_1", "tryout_date_2"]
 
     def has_add_permission(self, request):
         # Singleton row -- created automatically by get_solo(), never add more.

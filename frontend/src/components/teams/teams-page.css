@@ -784,8 +784,49 @@
   .teams-chairperson-page .teams-page-grid.teams-chairperson-teams-grid {
     width: 100%;
     min-width: 0;
-    /* Content-sized cards — wide enough for both action buttons, not half-viewport */
-    grid-template-columns: repeat(auto-fill, minmax(340px, 360px));
+    /* auto-fill + 1fr: as many columns as fit at the 310px minimum, then the
+       cards stretch evenly to use ALL the leftover width -- no dead space
+       after the last card (a fixed max like 300px just leaves it empty).
+       auto-fill (not auto-fit) keeps empty tracks, so with only a couple of
+       teams the cards stay a normal width instead of ballooning.
+       310px is the narrowest a card can be while still fitting both header
+       buttons (Unassign / Check out) side by side -- see below. */
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  }
+
+  /* Team-card rows: give a long name + role icons a little more room before
+     the minus/x buttons. ballkid-chip.css keeps the dense name and icon
+     group on one non-shrinking line (flex: 0 0 auto, overflow: visible), so
+     a row that doesn't fit overflows onto the buttons. The cards are now
+     wider (1fr above) and these small trims add a bit more headroom. The
+     row stays on ONE line -- no wrapping. Scoped to team cards only; the
+     Unassigned panel is unaffected. */
+  .teams-chairperson-page .teams-chairperson-teams-grid .ballkid-chip--dense .ballkid-chip__content {
+    column-gap: 4px; /* was 6px */
+    padding-right: 2px; /* was 6px */
+  }
+
+  .teams-chairperson-page .teams-chairperson-teams-grid .ballkid-row--dense .ballkid-row__actions .MuiIconButton-root {
+    padding: 3px; /* was 4px */
+  }
+
+  /* Header buttons: "Unassign team" + "Check out team" on ONE row. At 13px
+     they need ~320px but a 310-330px card only has ~280-296px of header
+     width, so they stacked. Slightly smaller type and tighter padding
+     brings the pair to roughly 270px. flex-wrap stays as a fallback so
+     they stack gracefully on any card too narrow for both. */
+  .teams-chairperson-page .teams-chairperson-head-secondary__buttons {
+    gap: 6px;
+  }
+
+  .teams-chairperson-page .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn.MuiButton-root {
+    font-size: 0.72rem; /* was 0.8125rem */
+    padding-left: 7px; /* was ~12px */
+    padding-right: 7px;
+  }
+
+  .teams-chairperson-page .teams-chairperson-head-secondary__buttons .teams-chairperson-team-btn .MuiButton-startIcon {
+    margin-right: 3px; /* was 8px */
   }
 
   .teams-chairperson-page .team-card.teams-chairperson-card {
