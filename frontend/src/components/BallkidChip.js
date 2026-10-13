@@ -171,7 +171,10 @@ export function DraggableBallkidRow({
       >
         <BallkidChipHandle />
         <Box className="ballkid-chip__content" sx={{ flex: 1, minWidth: 0 }}>
-          <Box className="ballkid-chip__name">
+          <Box
+            className="ballkid-chip__name"
+            title={`${ballkid.first_name} ${ballkid.last_name}`}
+          >
             <BallkidLink
               id={ballkid.id}
               name={`${ballkid.first_name} ${ballkid.last_name}`}

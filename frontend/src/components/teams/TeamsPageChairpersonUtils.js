@@ -18,6 +18,7 @@ import SwapVert from "@mui/icons-material/SwapVert";
 import HighlightOff from "@mui/icons-material/HighlightOff";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
 import Add from "@mui/icons-material/Add";
+import BedtimeOutlined from "@mui/icons-material/BedtimeOutlined";
 import Remove from "@mui/icons-material/Remove";
 import Check from "@mui/icons-material/Check";
 
@@ -28,7 +29,7 @@ import {
   Alerts,
   HideShowToggle,
   isCurrentHour,
-  CourtAssignment,
+  dayHourToStr,
   useIsMobile,
   ConfirmDialog,
   HovercardToggle,
@@ -185,6 +186,37 @@ export function renderBallkidsOnTeam(
   );
 }
 
+function CourtPill({ nextShifts, isCurrentlyOn }) {
+  if (nextShifts.length === 0) {
+    return (
+      <span className="team-card-court-pill is-none">
+        <BedtimeOutlined sx={{ fontSize: "0.9rem" }} />
+        <span className="team-card-court-pill__name">No more shifts</span>
+      </span>
+    );
+  }
+
+  const { court, start } = nextShifts[0];
+  const time = isCurrentlyOn ? "" : dayHourToStr(start);
+
+  return (
+    <span
+      className={`team-card-court-pill${isCurrentlyOn ? " is-live" : ""}`}
+      title={isCurrentlyOn ? `Currently on: ${court}` : `On at ${time}: ${court}`}
+    >
+      {isCurrentlyOn ? (
+        <>
+          <span className="team-card-court-pill__dot" />
+          <span className="team-card-court-pill__label">On now:</span>
+        </>
+      ) : (
+        <span className="team-card-court-pill__time">{time}</span>
+      )}
+      <span className="team-card-court-pill__name">{court}</span>
+    </span>
+  );
+}
+
 function Team({
   team,
   assigned,
@@ -278,10 +310,13 @@ function Team({
             <div className="team-card-title-group">
               <span className="team-card-title">{teamLabel}</span>
               <span className="team-card-count">({assigned.length})</span>
-              {isCurrentlyOn ? (
-                <span className="team-card-oncourt-badge">On court</span>
-              ) : null}
             </div>
+            {!mode.isFinals && assigned.length > 0 ? (
+              <CourtPill
+                nextShifts={nextShifts}
+                isCurrentlyOn={isCurrentlyOn}
+              />
+            ) : null}
             {mode.isFinals && assigned.length > 0 ? (
               <div className="teams-chairperson-head-actions">
                 <Button
@@ -298,9 +333,6 @@ function Team({
 
           {!mode.isFinals && assigned.length > 0 ? (
             <div className="teams-chairperson-head-secondary">
-              <div className="teams-chairperson-head-secondary__assignment">
-                <CourtAssignment nextShifts={nextShifts} showIcon />
-              </div>
               <div className="teams-chairperson-head-secondary__buttons">
                 <Button
                   size="small"

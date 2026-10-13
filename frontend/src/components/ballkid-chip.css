@@ -100,7 +100,7 @@
   }
   
   .ballkid-chip--dense {
-    min-height: 30px;
+    min-height: 28px;
     border-radius: 10px;
     align-items: stretch;
     overflow: visible;
@@ -146,17 +146,23 @@
     gap: 3px;
   }
 
+  /* Name shrinks and truncates (full name in the title tooltip); the meta
+     badges below never shrink, so they can no longer spill over the row actions. */
   .ballkid-chip--dense .ballkid-chip__name {
-    flex: 0 0 auto;
-    min-width: max-content;
+    flex: 0 1 auto;
+    min-width: 0;
     font-size: 0.78rem;
     white-space: nowrap;
-    overflow: visible;
+    overflow: hidden;
+    text-overflow: ellipsis;
     line-height: 1.25;
   }
 
   .ballkid-chip--dense .ballkid-chip__name a {
+    display: block;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .ballkid-chip--dense .ballkid-chip__meta {

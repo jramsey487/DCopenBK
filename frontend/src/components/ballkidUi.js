@@ -28,6 +28,7 @@ import RatingDialog from "./ratings/RatingDialog";
 import { CheckinHistoryChart } from "./ballkid/CheckinHistoryChart";
 import {
   ICON_DICT,
+  TOOLTIP_DICT,
   NUM_RATINGS_WARNING_THRESHOLD,
 } from "./Consts";
 import {
@@ -37,15 +38,33 @@ import {
 } from "./authStorage";
 import { dayHourToStr, isCurrentHour } from "./dateTime";
 
+// Wraps an ICON_DICT node in a tooltip using the labels in TOOLTIP_DICT.
+// Nodes that already carry their own tooltip/title are returned untouched.
+function iconWithTooltip(name) {
+  const node = ICON_DICT[name];
+  if (!node || node.type === Tooltip || node.props?.title) {
+    return node;
+  }
+  return (
+    <Tooltip key={name} title={TOOLTIP_DICT[name]} arrow enterDelay={200}>
+      <span
+        style={{ display: "inline-flex", alignItems: "center", lineHeight: 0 }}
+      >
+        {node}
+      </span>
+    </Tooltip>
+  );
+}
+
 export function ballkidIconNodes(ballkid, { isTeamsPage = false } = {}) {
   const group = getLocalStorage("group");
   const icons = [];
 
   if (ballkid.is_chairperson) {
-    icons.push(ICON_DICT.chairperson);
+    icons.push(iconWithTooltip("chairperson"));
   }
   if (ballkid.is_captain) {
-    icons.push(ICON_DICT.captain);
+    icons.push(iconWithTooltip("captain"));
   }
   if (
     group !== "ballkid" &&
@@ -53,17 +72,17 @@ export function ballkidIconNodes(ballkid, { isTeamsPage = false } = {}) {
     ballkid.is_out_of_town &&
     isTeamsPage
   ) {
-    icons.push(ICON_DICT.outOfTownRookie);
+    icons.push(iconWithTooltip("outOfTownRookie"));
   } else if (
     group !== "ballkid" &&
     ballkid.num_years_experience > 0 &&
     ballkid.is_out_of_town &&
     isTeamsPage
   ) {
-    icons.push(ICON_DICT.outOfTownBallkid);
+    icons.push(iconWithTooltip("outOfTownBallkid"));
   }
   if (group !== "ballkid" && ballkid.num_years_experience === 0) {
-    icons.push(ICON_DICT.rookie);
+    icons.push(iconWithTooltip("rookie"));
   }
 
   return icons;
@@ -592,20 +611,34 @@ export function BallkidCard({ ballkid, renderAdditional, renderNameTrailing }) {
     </Card>
   );
 }
+// Display-only shortening for compact badges: "11pm" -> "11p", "12am" -> "12a".
+// The stored value (CHECKOUT_OPTIONS / checkout_comments) is never changed.
+function shortCheckoutTime(value) {
+  return String(value).replace(
+    /^(\d{1,2})(am|pm)$/i,
+    (_, hour, meridiem) => `${hour}${meridiem[0].toLowerCase()}`
+  );
+}
+
 function CheckoutTimePill({ ballkid, hideWhenEnd = false }) {
   const value = ballkid?.checkout_comments ?? "End";
   if (hideWhenEnd && value === "End") {
     return null;
   }
   const isEnd = value === "End";
+  // hideWhenEnd is only set for compact chips (no "Today's Checkout Time:" label)
+  const label = hideWhenEnd ? shortCheckoutTime(value) : value;
   return (
-    <Tooltip title="Today's checkout time" arrow>
+    <Tooltip
+      title={isEnd ? "Today's checkout time" : `Today's checkout time: ${value}`}
+      arrow
+    >
       <span
         className={`ballkid-pill ballkid-pill--last${
           isEnd ? " ballkid-pill--muted" : ""
         }`}
       >
-        {value}
+        {label}
       </span>
     </Tooltip>
   );
@@ -658,9 +691,11 @@ function LastDayPill({ ballkid, showFull = false }) {
   ) {
     if (showFull) {
       return (
-        <span className="ballkid-pill ballkid-pill--last ballkid-pill--muted">
-          End
-        </span>
+        <Tooltip title="Last day" arrow>
+          <span className="ballkid-pill ballkid-pill--last ballkid-pill--muted">
+            End
+          </span>
+        </Tooltip>
       );
     }
     return null;

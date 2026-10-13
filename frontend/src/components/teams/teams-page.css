@@ -214,6 +214,52 @@
     background: #22c55e;
   }
   
+  .team-card-court-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    max-width: 55%;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--tp-border);
+    background: #fff;
+    color: var(--tp-text2);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .team-card-court-pill.is-live {
+    border-color: var(--tp-green);
+    color: #047857;
+  }
+
+  .team-card-court-pill__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+
+  .team-card-court-pill__label {
+    font-weight: 500;
+    opacity: 0.85;
+    margin-right: -2px;
+  }
+
+  .team-card-court-pill__time::after {
+    content: "\00b7";
+    margin-left: 6px;
+    opacity: 0.6;
+  }
+
+  .team-card-court-pill__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .team-card-assignment {
     font-size: 13px;
     color: var(--tp-text2);
@@ -747,20 +793,42 @@
   }
 
   .teams-chairperson-ballkid-action-icon {
-    font-size: 22px !important;
+    font-size: 20px !important;
+  }
+
+  /* Keep full-size touch targets on touch screens */
+  @media (pointer: coarse) {
+    .teams-chairperson-ballkid-action-icon {
+      font-size: 22px !important;
+    }
+  }
+
+  /* Row actions stay quiet until the row is hovered or focused, so ~80 icons
+     don't compete with the names. Touch devices (no hover) keep full strength. */
+  @media (hover: hover) {
+    .teams-chairperson-ballkid-actions .teams-chairperson-ballkid-action-icon {
+      opacity: 0.45;
+      transition: opacity 0.12s ease;
+    }
+
+    .ballkid-row:hover .teams-chairperson-ballkid-action-icon,
+    .ballkid-row:focus-within .teams-chairperson-ballkid-action-icon {
+      opacity: 1;
+    }
   }
 
   .teams-chairperson-ballkid-switch-slot {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    width: 30px;
     flex-shrink: 0;
   }
 
+  /* Rows with no position switch give the reserved space back to the name.
+     Minus/X stay aligned because the actions are right-aligned. */
   .teams-chairperson-ballkid-switch-slot.is-empty {
-    visibility: hidden;
-    pointer-events: none;
+    display: none;
   }
 
   .teams-chairperson-unassigned-title {
@@ -808,6 +876,21 @@
 
   .teams-chairperson-page .teams-chairperson-teams-grid .ballkid-row--dense .ballkid-row__actions .MuiIconButton-root {
     padding: 3px; /* was 4px */
+  }
+
+  /* Line the rows up with the card header: the right edge of the minus/X
+     icons matches the right edge of the court pill, and (desktop only, where
+     the drag handle exists) the left edge of the handle dots matches the
+     left edge of the BACKS / NETS labels. The row grows into the card's side
+     padding, which also gives the name ~15px more room. Team cards only. */
+  .teams-chairperson-page .teams-chairperson-teams-grid .team-card-body .ballkid-row--dense {
+    margin-right: -8px;
+  }
+
+  @media (min-width: 900px) {
+    .teams-chairperson-page .teams-chairperson-teams-grid .team-card-body .ballkid-row--dense {
+      margin-left: -7px;
+    }
   }
 
   /* Header buttons: "Unassign team" + "Check out team" on ONE row. At 13px
@@ -1251,6 +1334,10 @@
     .team-card.teams-chairperson-card .team-card-title-group {
       flex: 1;
       min-width: 0;
+    }
+
+    .team-card.teams-chairperson-card .team-card-court-pill {
+      max-width: 45%;
     }
 
     .teams-chairperson-head-actions {

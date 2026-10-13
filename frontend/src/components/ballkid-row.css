@@ -71,8 +71,8 @@
 
 .ballkid-row--dense {
   gap: 4px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
 .ballkid-row__actions {
