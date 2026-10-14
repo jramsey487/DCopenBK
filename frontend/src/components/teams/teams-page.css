@@ -249,12 +249,6 @@
     margin-right: -2px;
   }
 
-  .team-card-court-pill__time::after {
-    content: "\00b7";
-    margin-left: 6px;
-    opacity: 0.6;
-  }
-
   .team-card-court-pill__name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -724,7 +718,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between; /* Check out team sits flush right, under the court pill */
     gap: 8px;
     width: 100%;
     flex-shrink: 0;

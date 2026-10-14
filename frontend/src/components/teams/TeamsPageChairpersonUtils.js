@@ -210,7 +210,7 @@ function CourtPill({ nextShifts, isCurrentlyOn }) {
           <span className="team-card-court-pill__label">On now:</span>
         </>
       ) : (
-        <span className="team-card-court-pill__time">{time}</span>
+        <span className="team-card-court-pill__label">On at {time}:</span>
       )}
       <span className="team-card-court-pill__name">{court}</span>
     </span>

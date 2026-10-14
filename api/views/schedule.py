@@ -274,27 +274,9 @@ class CourtNotes(APIView):
             return [IsAuthenticated()]
         return [IsChairpersonOrCaptain()]
 
-    def _captain_may_edit_court(self, user, court, note_date):
-        """Captains may only edit notes for courts their team is scheduled on that day."""
-        if user.groups.filter(name="chairperson").exists():
-            return True
-        if not user.groups.filter(name="captain").exists():
-            return False
-
-        ballkid = Ballkid.objects.filter(user=user).first()
-        if ballkid is None or not ballkid.current_team:
-            return False
-
-        day_start = datetime(
-            note_date.year, note_date.month, note_date.day, hour=0
-        )
-        day_end = day_start + timedelta(days=1)
-        return Schedule.objects.filter(
-            team=ballkid.current_team,
-            court=court,
-            start__gte=day_start,
-            start__lt=day_end,
-        ).exists()
+    def _may_edit_court_notes(self, user):
+        """Any captain or chairperson may edit any court's note."""
+        return user.groups.filter(name__in=["chairperson", "captain"]).exists()
 
     def get(self, request, format=None):
         param = request.query_params.get("date", "")
@@ -326,11 +308,9 @@ class CourtNotes(APIView):
                 param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
             ).date()
 
-        if not self._captain_may_edit_court(request.user, court, note_date):
+        if not self._may_edit_court_notes(request.user):
             return Response(
-                {
-                    "Error": "Captains can only edit court notes for their own team's court"
-                },
+                {"Error": "Only captains and chairpersons can edit court notes"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 

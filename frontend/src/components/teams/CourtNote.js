@@ -49,6 +49,7 @@ export function CourtNoteBlock({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(note?.message || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   if (!court) {
     return null;
@@ -59,16 +60,19 @@ export function CourtNoteBlock({
   const startEdit = () => {
     if (readOnly) return;
     setDraft(message);
+    setError("");
     setEditing(true);
   };
 
   const cancelEdit = () => {
     setDraft(message);
+    setError("");
     setEditing(false);
   };
 
   const save = (nextMessage) => {
     setSaving(true);
+    setError("");
     fetch("/api/court-notes", {
       method: "PUT",
       headers: getAuthHeader(),
@@ -78,9 +82,23 @@ export function CourtNoteBlock({
         message: nextMessage,
       }),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
-          throw new Error("Failed to save court note");
+          // Prefer the server's own explanation (e.g. a 403 reason)
+          let reason = "";
+          try {
+            const body = await response.json();
+            reason = body.Error || body.detail || "";
+          } catch (e) {
+            // response had no JSON body
+          }
+          if (!reason) {
+            reason =
+              response.status === 401
+                ? "You're signed out. Please log in again."
+                : `Couldn't save the note (error ${response.status}).`;
+          }
+          throw new Error(reason);
         }
         return response.json();
       })
@@ -97,6 +115,14 @@ export function CourtNoteBlock({
             return next;
           });
         }
+      })
+      .catch((err) => {
+        // A TypeError from fetch means the request never reached the server
+        setError(
+          err instanceof TypeError
+            ? "Couldn't reach the server. Check your connection and try again."
+            : err.message || "Couldn't save the note."
+        );
       })
       .finally(() => setSaving(false));
   };
@@ -125,8 +151,20 @@ export function CourtNoteBlock({
           rows={2}
           placeholder="e.g. Wet surface — careful on changeovers"
           disabled={saving}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (error) setError("");
+          }}
         />
+        {error ? (
+          <div
+            className="court-note__error"
+            role="alert"
+            style={{ color: "#b91c1c", fontSize: 12, marginTop: 4 }}
+          >
+            {error}
+          </div>
+        ) : null}
         <div className="court-note__actions">
           <Tooltip title="Save">
             <span>
