@@ -544,6 +544,52 @@ Production-style frontend build into Django static (usually not needed for day-t
 cd frontend && npm run relocate
 ```
 
+Here’s the consolidated version, all PowerShell-safe (no &&, no source).
+
+One-time setup
+powershell
+cd C:\Users\Public\Documents\DCopenBK
+cp .env.example .env
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+Use Python 3.10, not 3.14. The pinned dependencies (Django 4.1.5, numpy 1.24.1, and so on) don’t build on 3.14. If activation is blocked by execution policy, run Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass first.
+
+Terminal 1: backend
+powershell
+cd C:\Users\Public\Documents\DCopenBK
+.\.venv\Scripts\Activate.ps1
+python manage.py migrate
+python manage.py bootstrap_dev
+python manage.py runserver
+Runs at http://127.0.0.1:8000/.
+Dev logins: local.chair / password, or alexis.tickets / password for Ticketing.
+The staticfiles.W004 warning about frontend\build\static is harmless. It goes away once you run a frontend build.
+After pulling new code, rerun pip install -r requirements.txt. That’s what fixes errors like No module named 'storages'.
+If Django says your models have changes not reflected in a migration, run python manage.py makemigrations then migrate. Don’t commit the generated migration until you know whether the team already has one for that change.
+Terminal 2: frontend
+powershell
+cd C:\Users\Public\Documents\DCopenBK\frontend
+npm install
+npm start
+This is a Create React App project, so the command is npm start, not npm run dev. It should serve at http://localhost:3000.
+Don’t run npm audit fix --force. It rewrote react-scripts to 0.0.0, which is an empty package, so the react-scripts command never existed afterward.
+
+If react-scripts is still missing, restore the original dependency versions and reinstall:
+
+powershell
+git checkout -- package.json package-lock.json
+Remove-Item -Recurse -Force node_modules
+npm install
+Test-Path node_modules\.bin\react-scripts.cmd   # should say True
+npm start
+
+If this folder isn’t tracked by git, set react-scripts in package.json back to a real version (likely ^5.0.1), then do the same delete and reinstall.
+
+I don’t know from this thread whether the frontend is running now. If it still fails, paste the output of Test-Path node_modules\.bin\react-scripts.cmd and the react-scripts line from package.json.
+
+
 ### Dev users (management commands)
 
 Dev management commands (`bootstrap_dev`, `create_dev_user`) only run when Django **`DEBUG` is `True`**. Settings load from a **`.env` file in the project root** (`citiopen/settings.py` uses `environs`).
