@@ -149,7 +149,7 @@ class TestCourtNotes(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.data))
 
-    def test_captain_cannot_edit_other_team_court(self):
+    def test_captain_can_edit_other_team_court(self):
         user = User.objects.create(username="captain_user")
         user.groups.add(Group.objects.create(name="captain"))
         Ballkid.objects.create(
@@ -178,12 +178,14 @@ class TestCourtNotes(APITestCase):
             {
                 "court": COURT.GRANDSTAND,
                 "date": self.date_str,
-                "message": "Nope",
+                "message": "Other court note",
             },
             format="json",
         )
-        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
-        self.assertEqual(0, CourtNote.objects.count())
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        note = CourtNote.objects.get()
+        self.assertEqual(COURT.GRANDSTAND, note.court)
+        self.assertEqual("Other court note", note.message)
 
     def test_court_rename_updates_note(self):
         CourtNote.objects.create(

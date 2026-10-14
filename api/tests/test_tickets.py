@@ -1397,7 +1397,7 @@ class TestTicketEmailTemplates(APITestCase):
         self.assertNotIn("DENIED", denied_html)
         self.assertIn("#fef2f2", denied_html)
         self.assertIn(
-            "You didn&apos;t receive tickets this time for your requested session.",
+            "You didn&apos;t receive tickets this time for your requested session:",
             denied_html,
         )
         self.assertIn("Sunday, August 2 · Session 1 (Day session)", denied_html)
@@ -1407,7 +1407,7 @@ class TestTicketEmailTemplates(APITestCase):
         self.assertNotIn("DENIED", denied_multi)
         self.assertIn("#fef2f2", denied_multi)
         self.assertIn(
-            "You didn&apos;t receive tickets this time for your requested sessions.",
+            "You didn&apos;t receive tickets this time for your requested sessions:",
             denied_multi,
         )
         self.assertIn("Sunday, August 2 · Session 2 (Night session)", denied_multi)
