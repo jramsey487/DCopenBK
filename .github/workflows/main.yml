@@ -29,14 +29,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
+        # rcal is installed here too: requirements.txt pins it to a commit over HTTPS
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Install rcal
-        run: |
-          eval `ssh-agent -s`
-          ssh-add - <<< '${{ secrets.RCAL_SECRET_KEY }}'
-          pip install git+ssh://git@github.com/jtiosue/rcal.git
       - name: Run migrations
         run: python manage.py migrate
       - name: Run tests
