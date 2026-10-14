@@ -748,10 +748,130 @@ function TournamentDates({
   );
 }
 
+// Tryout dates and where each is held. These feed the public application
+// form -- rookies pick a tryout to attend, veterans check the ones they can
+// help at -- so setting them here (per season, alongside the tournament's
+// own dates) is all it takes to update both forms for a new year.
+const TRYOUT_SLOTS = [
+  { n: 1, label: "First tryout" },
+  { n: 2, label: "Second tryout" },
+];
+
+function TournamentTryouts({
+  tournament,
+  setUpdated,
+  setSuccessMsg,
+  setErrorMsg,
+}) {
+  const fromTournament = () => ({
+    date1: parseIsoDateLocal(tournament.tryout_date_1),
+    date2: parseIsoDateLocal(tournament.tryout_date_2),
+    place1: tournament.tryout_location_1 || "",
+    place2: tournament.tryout_location_2 || "",
+  });
+  const [values, setValues] = useState(fromTournament);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setValues(fromTournament());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    tournament.tryout_date_1,
+    tournament.tryout_date_2,
+    tournament.tryout_location_1,
+    tournament.tryout_location_2,
+  ]);
+
+  const iso = (d) => (d ? localDateToIso(d) : "");
+  const setValue = (key) => (value) =>
+    setValues((v) => ({ ...v, [key]: value }));
+
+  const dirty =
+    iso(values.date1) !== (tournament.tryout_date_1 || "") ||
+    iso(values.date2) !== (tournament.tryout_date_2 || "") ||
+    values.place1.trim() !== (tournament.tryout_location_1 || "") ||
+    values.place2.trim() !== (tournament.tryout_location_2 || "");
+
+  const save = () => {
+    setSaving(true);
+    fetch("/api/get-tournament", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        tryout_date_1: iso(values.date1) || null,
+        tryout_date_2: iso(values.date2) || null,
+        tryout_location_1: values.place1.trim(),
+        tryout_location_2: values.place2.trim(),
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          setSuccessMsg("Tryout dates and places updated.");
+          setErrorMsg("");
+          setUpdated(true);
+        } else {
+          return response.json().then((data) => {
+            throw new Error(data.detail || "Error updating tryouts.");
+          });
+        }
+      })
+      .catch((err) => {
+        setSuccessMsg("");
+        setErrorMsg(err.message || "Error updating tryouts.");
+      })
+      .finally(() => setSaving(false));
+  };
+
+  return (
+    <section className="tournament-settings-card">
+      <h2 className="tournament-settings-section-title">Tryouts</h2>
+      <p className="tournament-settings-create-note">
+        Shown on the application form. Rookies pick one of these to attend;
+        veterans can check the ones they can help out at.
+      </p>
+      {TRYOUT_SLOTS.map(({ n, label }) => (
+        <div className="tournament-settings-date-row" key={n}>
+          <TournamentDateField
+            label={`${label} date`}
+            value={values[`date${n}`]}
+            onChange={setValue(`date${n}`)}
+          />
+          <TextField
+            label={`${label} place`}
+            variant="standard"
+            value={values[`place${n}`]}
+            onChange={(e) => setValue(`place${n}`)(e.target.value)}
+            inputProps={{ maxLength: 200 }}
+            sx={{ minWidth: 240, flex: 1 }}
+          />
+          {values[`date${n}`] ? (
+            <Button size="small" onClick={() => setValue(`date${n}`)(null)}>
+              Clear date
+            </Button>
+          ) : null}
+        </div>
+      ))}
+      <Button
+        color="primary"
+        variant="contained"
+        size="small"
+        disabled={!dirty || saving}
+        onClick={save}
+      >
+        {saving ? "Saving…" : "Save tryouts"}
+      </Button>
+    </section>
+  );
+}
+
 function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [year, setYear] = useState(getCurrentYear());
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
+  const [tryoutDate1, setTryoutDate1] = useState(null);
+  const [tryoutDate2, setTryoutDate2] = useState(null);
+  const [tryoutPlace1, setTryoutPlace1] = useState("");
+  const [tryoutPlace2, setTryoutPlace2] = useState("");
 
   return (
     <div className="tournament-settings-create-grid">
@@ -781,6 +901,40 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
           />
           <TournamentDateField label="End Date" value={end} onChange={setEnd} />
         </div>
+
+        <p className="tournament-settings-create-note">
+          Tryouts (optional -- you can also set these later).
+        </p>
+        <div className="tournament-settings-date-row">
+          <TournamentDateField
+            label="First tryout date"
+            value={tryoutDate1}
+            onChange={setTryoutDate1}
+          />
+          <TextField
+            label="First tryout place"
+            variant="standard"
+            value={tryoutPlace1}
+            onChange={(e) => setTryoutPlace1(e.target.value)}
+            inputProps={{ maxLength: 200 }}
+            sx={{ minWidth: 240, flex: 1 }}
+          />
+        </div>
+        <div className="tournament-settings-date-row">
+          <TournamentDateField
+            label="Second tryout date"
+            value={tryoutDate2}
+            onChange={setTryoutDate2}
+          />
+          <TextField
+            label="Second tryout place"
+            variant="standard"
+            value={tryoutPlace2}
+            onChange={(e) => setTryoutPlace2(e.target.value)}
+            inputProps={{ maxLength: 200 }}
+            sx={{ minWidth: 240, flex: 1 }}
+          />
+        </div>
       </div>
 
       <Button
@@ -801,6 +955,11 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
                 year: year,
                 start: localDateToIso(start),
                 end: localDateToIso(end),
+                // Optional; JSON.stringify drops the undefined ones.
+                tryout_date_1: tryoutDate1 ? localDateToIso(tryoutDate1) : undefined,
+                tryout_date_2: tryoutDate2 ? localDateToIso(tryoutDate2) : undefined,
+                tryout_location_1: tryoutPlace1.trim() || undefined,
+                tryout_location_2: tryoutPlace2.trim() || undefined,
               }),
             }).then((response) => {
               if (response.ok) {
@@ -814,6 +973,10 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
               setYear("");
               setStart(null);
               setEnd(null);
+              setTryoutDate1(null);
+              setTryoutDate2(null);
+              setTryoutPlace1("");
+              setTryoutPlace2("");
             });
           }
         }}
@@ -956,6 +1119,13 @@ export default function TournamentSettings(props) {
             </section>
 
             <TournamentDates
+              tournament={tournament}
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+
+            <TournamentTryouts
               tournament={tournament}
               setUpdated={setUpdated}
               setSuccessMsg={setSuccessMsg}

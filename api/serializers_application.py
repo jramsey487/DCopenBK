@@ -35,8 +35,12 @@ def get_tournament_start_date():
 def get_tryout_slot_info():
     """
     Returns a list of dicts, one per tryout slot ("first"/"second"), each
-    with the slot's configured date (or None if not set yet), remaining
-    capacity, and whether it's full. Capacity is counted against this
+    with the slot's date and place (set per season on the current
+    Tournament, from the Tournament Settings page), remaining capacity,
+    and whether it's full. A slot's date falls back to the legacy
+    ApplicationSettings date if the Tournament's isn't set yet, so a
+    season already configured through Django admin keeps working.
+    Capacity is counted against this
     season's first-timer applications only (submitted_at__year matches the
     current Tournament's year) -- applications persist across seasons
     (promoted ones are never purged), so counting all-time would wrongly
@@ -52,10 +56,12 @@ def get_tryout_slot_info():
 
     slots = []
     for value, label in TRYOUT_SLOT_CHOICES:
-        date = (
-            settings_obj.tryout_date_1
-            if value == "first"
-            else settings_obj.tryout_date_2
+        n = 1 if value == "first" else 2
+        date = getattr(tournament, f"tryout_date_{n}", None) if tournament else None
+        if date is None:
+            date = getattr(settings_obj, f"tryout_date_{n}")
+        location = (
+            getattr(tournament, f"tryout_location_{n}", "") if tournament else ""
         )
         qs = BallcrewApplication.objects.filter(is_veteran=False, tryout_date=value)
         if year is not None:
@@ -67,6 +73,7 @@ def get_tryout_slot_info():
                 "value": value,
                 "label": label,
                 "date": date.isoformat() if date else None,
+                "location": location,
                 "remaining": remaining,
                 "full": remaining <= 0,
             }

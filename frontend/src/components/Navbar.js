@@ -97,6 +97,7 @@ const chairpersonTabs = [
     label: "Admin Tools",
     url: "/database-query",
     subtabs: [
+      { label: "Tournament Settings", url: "/tournament-settings" },
       { label: "Database Query", url: "/database-query" },
       { label: "Debug", url: "/debug" },
     ],
@@ -130,7 +131,6 @@ const chairpersonAccountTab = {
   subtabs: [
     { label: "My Profile", url: "/me" },
     { label: "Account Settings", url: "/settings" },
-    { label: "Tournament Settings", url: "/tournament-settings" },
     { label: "Feedback", url: "/feedback" },
     { label: "Logout", url: "/login" },
   ],

@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
-import SportsTennisOutlinedIcon from "@mui/icons-material/SportsTennisOutlined";
 import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
 import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
@@ -170,6 +169,7 @@ function getNavSections(group) {
     label: "Admin Tools",
     Icon: () => <BugReportOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
     items: [
+      { label: "Tournament Settings", url: "/tournament-settings" },
       { label: "Database Query", url: "/database-query" },
       { label: "Debug", url: "/debug" },
     ],
@@ -195,11 +195,6 @@ function getAccountItems(group) {
   if (group === "chairperson") {
     return [
       ...base,
-      {
-        label: "Tournament Settings",
-        url: "/tournament-settings",
-        Icon: () => <SportsTennisOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
-      },
       {
         label: "Feedback",
         url: "/feedback",

@@ -76,6 +76,20 @@ function formatDayLabel(dayKey, startDateIso) {
   return `${weekday}, ${monthDay}`;
 }
 
+/** "First tryout date: Saturday, June 6 at Banneker Tennis Courts" -- date and
+ * place both come from the tryout settings chairpersons edit in the app, so
+ * nothing about a given year's tryouts is hardcoded here. */
+function formatTryoutSlot(slot) {
+  const date = slot.date
+    ? new Date(slot.date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+  return `${slot.label}${date ? `: ${date}` : ""}${slot.location ? ` at ${slot.location}` : ""}`;
+}
+
 const SIZES = ["XS", "S", "M", "L", "XL"];
 
 const emptyForm = {
@@ -88,7 +102,6 @@ const emptyForm = {
   phone: "",
   additional_email: "",
   emergency_contact_name: "",
-  emergency_contact_relationship: "",
   emergency_contact_phone: "",
   tshirt_size: "",
   shorts_size: "",
@@ -273,7 +286,6 @@ export default function ApplicationPage() {
           <TextField label="Phone Number" value={form.phone} onChange={set("phone")} placeholder="XXX-XXX-XXXX" required />
           <TextField label="Additional Email Contact (OPTIONAL - will be copied on all emails)" value={form.additional_email} onChange={set("additional_email")} />
           <TextField label="Emergency Contact Name" value={form.emergency_contact_name} onChange={set("emergency_contact_name")} required />
-          <TextField label="Emergency Contact Relationship" value={form.emergency_contact_relationship} onChange={set("emergency_contact_relationship")} required />
           <TextField label="Emergency Contact Phone" value={form.emergency_contact_phone} onChange={set("emergency_contact_phone")} required />
           <TextField select label="T-Shirt Size" value={form.tshirt_size} onChange={set("tshirt_size")} required>
             {SIZES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
@@ -360,8 +372,9 @@ export default function ApplicationPage() {
           <input type="file" accept="image/*" onChange={setFile("headshot_update")} />
 
           <Typography variant="body2" sx={{ fontWeight: 500, mt: 1 }}>
-            Not required at all, but very much appreciated -- would you be able to help
-            out at either tryout date?
+            Tryouts aren't required for returning ballcrew, but they're highly encouraged --
+            and if you can make it, we'd really appreciate your help running them. Check any
+            date you can attend and help out:
           </Typography>
           <FormGroup>
             {tryoutSlots.map((slot) => (
@@ -373,7 +386,7 @@ export default function ApplicationPage() {
                     onChange={() => toggleDay("tryout_help_availability")(slot.value)}
                   />
                 }
-                label={`${slot.label}${slot.date ? ` (${new Date(slot.date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })})` : ""}`}
+                label={formatTryoutSlot(slot)}
               />
             ))}
           </FormGroup>
@@ -485,11 +498,7 @@ export default function ApplicationPage() {
               .filter((slot) => !slot.full)
               .map((slot) => (
                 <MenuItem key={slot.value} value={slot.value}>
-                  {slot.label}
-                  {slot.date
-                    ? `: ${new Date(slot.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
-                    : ""}{" "}
-                  at Banneker Tennis Courts
+                  {formatTryoutSlot(slot)}
                 </MenuItem>
               ))}
           </TextField>

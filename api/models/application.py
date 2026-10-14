@@ -173,7 +173,7 @@ class BallcrewApplication(models.Model):
 
     # --- Emergency contact --------------------------------------------
     emergency_contact_name = models.CharField(max_length=100)
-    emergency_contact_relationship = models.CharField(max_length=50)
+    emergency_contact_relationship = models.CharField(max_length=50, blank=True)
     emergency_contact_phone = models.CharField(max_length=20)
 
     # --- Sizing ---------------------------------------------------------
@@ -321,10 +321,10 @@ class ApplicationSettings(models.Model):
     SubmitApplicationView checks it server-side so a closed toggle can't be
     bypassed by hitting the API directly.
 
-    Also holds the current season's two tryout dates. Editable from Django
-    admin. Storing the real dates here (rather than hardcoding them in code)
-    means a new season just needs these two fields updated, not a code
-    change -- same reasoning as the tournament's own dynamic date labeling.
+    The two tryout_date fields here are legacy: tryout dates and places now
+    live on Tournament (set from the Tournament Settings page, one set per
+    season). They're only used as a fallback by get_tryout_slot_info() when
+    the current Tournament has no tryout date set yet.
     """
 
     is_open = models.BooleanField(default=True)

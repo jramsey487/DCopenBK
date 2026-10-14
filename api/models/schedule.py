@@ -37,6 +37,13 @@ class Tournament(models.Model):
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
 
+    # Ballcrew tryouts for this season: when and where. Set from the
+    # Tournament Settings page; shown on the public application form.
+    tryout_date_1 = models.DateField(null=True, blank=True)
+    tryout_date_2 = models.DateField(null=True, blank=True)
+    tryout_location_1 = models.CharField(max_length=200, blank=True)
+    tryout_location_2 = models.CharField(max_length=200, blank=True)
+
     show_teams = models.BooleanField(default=False)
     show_finals_teams = models.BooleanField(default=False)
     on_rain_delay = models.BooleanField(default=False)

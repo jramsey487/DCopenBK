@@ -390,6 +390,37 @@ class GetNextShifts(APIView):
         return Response(ScheduleSerializer(shifts, many=True).data)
 
 
+TRYOUT_DATE_FIELDS = ("tryout_date_1", "tryout_date_2")
+TRYOUT_LOCATION_FIELDS = ("tryout_location_1", "tryout_location_2")
+
+
+def parse_tryout_fields(data):
+    """
+    Pulls whichever tryout date/place fields are present in a request,
+    validated and ready to set on a Tournament. Returns (values, error);
+    error is a message string, or None if everything parsed. A blank or
+    null date clears it, and fields missing from `data` are left alone.
+    """
+    values = {}
+    for field in TRYOUT_DATE_FIELDS:
+        if field in data:
+            raw = data[field]
+            if raw in (None, ""):
+                values[field] = None
+            else:
+                parsed = parse_tournament_date(raw)
+                if parsed is None:
+                    return {}, f"{field} is not a valid date."
+                values[field] = parsed
+    for field in TRYOUT_LOCATION_FIELDS:
+        if field in data:
+            value = (data[field] or "").strip()
+            if len(value) > 200:
+                return {}, "Tryout places must be 200 characters or fewer."
+            values[field] = value
+    return values, None
+
+
 class GetTournament(APIView):
     permission_classes = [IsChairpersonOrAuthenticatedReadOnly]
 
@@ -411,11 +442,18 @@ class GetTournament(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        tryout_values, tryout_error = parse_tryout_fields(request.data)
+        if tryout_error:
+            return Response(
+                {"detail": tryout_error}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         tournament, _ = Tournament.objects.update_or_create(
             year=request.data["year"],
             defaults={
                 "start_date": start,
                 "end_date": end,
+                **tryout_values,
             },
         )
         refresh_ballkid_ages(year=request.data["year"])
@@ -432,6 +470,16 @@ class GetTournament(APIView):
         current_year = get_current_year()
         tournament = Tournament.objects.get(year=current_year)
         previous_start = tournament.start_date
+
+        # Validate tryout dates/places up front so a bad value is rejected
+        # before any of the other updates below take effect.
+        tryout_values, tryout_error = parse_tryout_fields(request.data)
+        if tryout_error:
+            return Response(
+                {"detail": tryout_error}, status=status.HTTP_400_BAD_REQUEST
+            )
+        for field, value in tryout_values.items():
+            setattr(tournament, field, value)
 
         if "time" in request.data:
             timestamp = datetime.strptime(
