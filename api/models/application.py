@@ -328,6 +328,9 @@ class ApplicationSettings(models.Model):
     """
 
     is_open = models.BooleanField(default=True)
+    # Whether applicants get a confirmation email (with a copy of their
+    # answers) right after submitting. Toggled from the review dashboard.
+    send_confirmation_emails = models.BooleanField(default=True)
     tryout_date_1 = models.DateField(null=True, blank=True)
     tryout_date_2 = models.DateField(null=True, blank=True)
 

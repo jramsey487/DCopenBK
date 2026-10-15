@@ -12,6 +12,7 @@ Wire these into api/urls.py:
     path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view()),
 """
 
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
@@ -38,6 +39,7 @@ from api.serializers_application import (
     get_tryout_slot_info,
     TryoutReviewSerializer,
 )
+from api.utils.application_email import send_application_confirmation_async
 
 
 class ApplicationSubmitThrottle(AnonRateThrottle):
@@ -65,6 +67,7 @@ class ApplicationSettingsView(APIView):
         return Response(
             {
                 "is_open": ApplicationSettings.get_solo().is_open,
+                "send_confirmation_emails": ApplicationSettings.get_solo().send_confirmation_emails,
                 # Lets the public form compute and display real calendar
                 # dates (e.g. "Saturday, July 25") for each semantic day key
                 # without hardcoding a year -- see api/models/application.py
@@ -78,13 +81,26 @@ class ApplicationSettingsView(APIView):
         )
 
     def patch(self, request):
-        is_open = request.data.get("is_open")
-        if is_open is None:
-            raise ValidationError({"is_open": "This field is required."})
         settings_obj = ApplicationSettings.get_solo()
-        settings_obj.is_open = bool(is_open)
-        settings_obj.save(update_fields=["is_open"])
-        return Response({"is_open": settings_obj.is_open})
+        update_fields = []
+        for field in ("is_open", "send_confirmation_emails"):
+            if field in request.data:
+                value = request.data[field]
+                if value is None:
+                    raise ValidationError({field: "This field may not be null."})
+                setattr(settings_obj, field, bool(value))
+                update_fields.append(field)
+        if not update_fields:
+            raise ValidationError(
+                {"detail": "Provide is_open and/or send_confirmation_emails."}
+            )
+        settings_obj.save(update_fields=update_fields)
+        return Response(
+            {
+                "is_open": settings_obj.is_open,
+                "send_confirmation_emails": settings_obj.send_confirmation_emails,
+            }
+        )
 
 
 class SubmitApplicationView(generics.CreateAPIView):
@@ -102,6 +118,14 @@ class SubmitApplicationView(generics.CreateAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        application = serializer.save()
+        # Email a copy of their answers once the row is safely committed.
+        # Runs in a background thread and never affects the submission.
+        transaction.on_commit(
+            lambda: send_application_confirmation_async(application.pk)
+        )
 
 
 class ApplicationListView(generics.ListAPIView):

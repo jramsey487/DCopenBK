@@ -179,10 +179,21 @@ DJOSER = {
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = "mubadalacitiopenballcrew@gmail.com"
-EMAIL_HOST_PASSWORD = "dpihginhhvhpnrni"
+# The ballcrew's main shared Gmail account. The app logs in to SMTP with it
+# (this needs 2-step verification on the account + an app password), sends
+# all email from it, and replies land in its inbox.
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="mdetennis.ballcrew@gmail.com")
+# Set as an environment variable / Fly secret (and in your local .env) --
+# never commit it. See: fly secrets set EMAIL_HOST_PASSWORD=...
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+# Don't let a stuck mail server hang a request or background thread forever.
+EMAIL_TIMEOUT = 10
+# Where replies to application confirmations go (same account by default).
+SUPPORT_EMAIL = env.str("SUPPORT_EMAIL", default=EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = env.str(
+    "DEFAULT_FROM_EMAIL", default=f"{SITE_NAME} <{SUPPORT_EMAIL}>"
+)
 
 
 # Internationalization

@@ -38,6 +38,7 @@ export default function ApplicationsReviewPage() {
   const [statusFilter, setStatusFilter] = useState("pending");
   const [applicationsOpen, setApplicationsOpen] = useState(null);
   const [settingsError, setSettingsError] = useState(false);
+  const [confirmationEmailsOn, setConfirmationEmailsOn] = useState(null);
 
   const load = () => {
     const query = statusFilter ? `?status=${statusFilter}` : "";
@@ -52,7 +53,10 @@ export default function ApplicationsReviewPage() {
     setSettingsError(false);
     fetch("/api/application-settings", { headers: getAuthHeader() })
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => setApplicationsOpen(Boolean(data.is_open)))
+      .then((data) => {
+        setApplicationsOpen(Boolean(data.is_open));
+        setConfirmationEmailsOn(Boolean(data.send_confirmation_emails));
+      })
       .catch(() => setSettingsError(true));
   };
 
@@ -68,6 +72,19 @@ export default function ApplicationsReviewPage() {
     });
     if (!response.ok) {
       setApplicationsOpen(!next); // revert on failure
+    }
+  };
+
+  const toggleConfirmationEmails = async () => {
+    const next = !confirmationEmailsOn;
+    setConfirmationEmailsOn(next); // optimistic
+    const response = await fetch("/api/application-settings", {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({ send_confirmation_emails: next }),
+    });
+    if (!response.ok) {
+      setConfirmationEmailsOn(!next); // revert on failure
     }
   };
 
@@ -284,6 +301,26 @@ export default function ApplicationsReviewPage() {
             Retry
           </Button>
         ) : null}
+      </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={Boolean(confirmationEmailsOn)}
+              disabled={confirmationEmailsOn === null || settingsError}
+              onChange={toggleConfirmationEmails}
+              color="success"
+            />
+          }
+          label={
+            confirmationEmailsOn === null
+              ? "Loading confirmation emails…"
+              : confirmationEmailsOn
+              ? "Confirmation emails are ON — applicants get a copy of their answers"
+              : "Confirmation emails are OFF — nothing is sent after submission"
+          }
+        />
       </Box>
 
       <Table size="small">
