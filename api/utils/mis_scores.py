@@ -12,9 +12,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
-# MIS court status IDs seen in SMT feeds. The scoring feed can contain other
-# statuses too, so these are only used as hints rather than hard validation.
 MIS_STATUS_SCHEDULED = 1
 MIS_STATUS_IN_PROGRESS = 5
 MIS_STATUS_SUSPENDED = 6
@@ -22,11 +19,7 @@ MIS_STATUS_WINNER = 8
 MIS_STATUS_LOSER = 9
 MIS_STATUS_ON_COURT = 15
 
-LIVE_STATUSES = {
-    MIS_STATUS_IN_PROGRESS,
-    MIS_STATUS_SUSPENDED,
-    MIS_STATUS_ON_COURT,
-}
+LIVE_STATUSES = {MIS_STATUS_IN_PROGRESS, MIS_STATUS_ON_COURT}
 
 
 def _int(value: Any, default: int | None = None) -> int | None:
@@ -51,14 +44,11 @@ def _player_name(player: dict[str, Any]) -> str:
 
 
 def _players_by_side(match: dict[str, Any]) -> dict[str, list[str]]:
-    """Return player names grouped by MIS side (T1/T2).
-
-    MIS normally stores match sides in Ts, with each side containing Ps.
-    We also tolerate the occasional already-flattened player representation.
-    """
+    """Return player names grouped by MIS side (T1/T2)."""
     sides = {"T1": [], "T2": []}
     for side in match.get("Ts") or []:
-        side = side or {}
+        if not isinstance(side, dict):
+            continue
         position = _str(side.get("Pos"))
         target = "T1" if position in {"1", "T1"} else "T2" if position in {"2", "T2"} else None
         if not target:
@@ -109,23 +99,13 @@ def _match_status(match: dict[str, Any]) -> str:
     status = _int(match.get("Sta"))
     if status in LIVE_STATUSES:
         return "live"
-    if status == MIS_STATUS_WINNER or status == MIS_STATUS_LOSER:
+    if status == MIS_STATUS_SUSPENDED:
+        return "suspended"
+    if status in {MIS_STATUS_WINNER, MIS_STATUS_LOSER}:
         return "finished"
     if status == MIS_STATUS_SCHEDULED:
         return "scheduled"
-    if status == MIS_STATUS_SUSPENDED:
-        return "suspended"
     return "unknown"
-
-
-def _match_position(matches: list[dict[str, Any]], current_index: int) -> tuple[int, int]:
-    """Return (ordinal, total) using the MIS match order on a court.
-
-    We deliberately preserve the order supplied by MIS. The ballcrew schedule
-    is not involved because tournament matches can move courts after delays.
-    """
-    usable = [match for match in matches if isinstance(match, dict)]
-    return current_index + 1, len(usable)
 
 
 def normalize_mis_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -142,31 +122,23 @@ def normalize_mis_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
         normalized_matches = []
         for index, match in enumerate(matches):
-            status = _match_status(match)
-            players = _players_by_side(match)
-            sets = _sets(match)
             game = _current_game(match)
+            players = _players_by_side(match)
             normalized_matches.append(
                 {
                     "match_id": _str(match.get("ID")),
                     "court_id": court_id,
                     "court": court_name,
-                    "status": status,
+                    "status": _match_status(match),
                     "position": index + 1,
                     "total_matches": len(matches),
                     "event_id": _str(match.get("EID")),
                     "match_number": _int(match.get("Num")),
-                    "players": {
-                        "a": players["T1"],
-                        "b": players["T2"],
-                    },
-                    "sets": sets,
+                    "players": {"a": players["T1"], "b": players["T2"]},
+                    "sets": _sets(match),
                     "game": game,
-                    "point": {
-                        "a": _str(match.get("Gm", {}).get("T1S")) if isinstance(match.get("Gm"), dict) else "",
-                        "b": _str(match.get("Gm", {}).get("T2S")) if isinstance(match.get("Gm"), dict) else "",
-                    },
-                    "server": _str(match.get("Gm", {}).get("Srv")) if isinstance(match.get("Gm"), dict) else "",
+                    "point": {"a": game["a"], "b": game["b"]} if game else {"a": "", "b": ""},
+                    "server": game["server"] if game else "",
                     "score_type": _str(match.get("SoTy")),
                     "winner": _int(match.get("Win")),
                     "updated": _str(match.get("Ts")) or _str(payload.get("LMDt")),
@@ -193,10 +165,9 @@ def normalize_mis_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def live_matches(normalized: dict[str, Any]) -> list[dict[str, Any]]:
-    """Flatten the currently live/suspended matches for easy API consumption."""
-    matches = []
-    for court in normalized.get("courts", []):
-        match = court.get("live_match")
-        if match:
-            matches.append(match)
-    return matches
+    """Flatten currently live matches for easy API consumption."""
+    return [
+        court["live_match"]
+        for court in normalized.get("courts", [])
+        if court.get("live_match")
+    ]
