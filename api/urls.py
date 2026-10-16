@@ -8,6 +8,7 @@ from api.views.application import *
 from api.views.shift_group import *
 from api.views.database_query import *
 from api.views.sizing_report import *
+from api.views.live_scores import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -15,18 +16,12 @@ ballkid_urls = [
     path("list/<int:pk>", BallkidsList.as_view(), name="list-ratings"),
     path("emails-list", EmailsList.as_view(), name="emails-list"),
     path("sorted-list", BallkidsSortedList.as_view(), name="sorted-list"),
-    path(
-        "sorted-list/<int:pk>", BallkidsSortedList.as_view(), name="sorted-list-ratings"
-    ),
+    path("sorted-list/<int:pk>", BallkidsSortedList.as_view(), name="sorted-list-ratings"),
     path("inactive-list", BallkidsInactiveList.as_view(), name="inactive-list"),
     path("self-cut-list", SelfCutList.as_view(), name="self-cut-list"),
     path("create-ballkid", CreateBallkid.as_view(), name="create-ballkid"),
     path("get-ballkid/<int:pk>", GetBallkid.as_view(), name="get-ballkid"),
-    path(
-        "get-ballkid/<int:pk>/<int:me>",
-        GetBallkid.as_view(),
-        name="get-ballkid-ratings",
-    ),
+    path("get-ballkid/<int:pk>/<int:me>", GetBallkid.as_view(), name="get-ballkid-ratings"),
     path("update-ballkid", UpdateBallkid.as_view(), name="update-ballkid"),
     path("reorder-ballkids", ReorderBallkids.as_view(), name="reorder-ballkids"),
     path("checkout-all", CheckoutAll.as_view(), name="checkout-all"),
@@ -40,11 +35,7 @@ teams_urls = [
     path("clear-team", ClearTeam.as_view(), name="clear-team"),
     path("create-teams", CreateTeams.as_view(), name="create-teams"),
     path("team-pairs", TeamPairs.as_view(), name="team-pairs"),
-    path(
-        "get-past-finals/<int:year>",
-        GetPastFinals.as_view(),
-        name="get-past-finals",
-    ),
+    path("get-past-finals/<int:year>", GetPastFinals.as_view(), name="get-past-finals"),
 ]
 
 # Schedule URLs
@@ -55,7 +46,7 @@ schedule_urls = [
     path("shift-schedule", ShiftSchedule.as_view(), name="shift-schedule"),
     path("update-schedule", UpdateSchedule.as_view(), name="update-schedule"),
     path("add-hour", AddDeleteHour.as_view(), name="add-hour"),
-    path("delete-hour", AddDeleteHour.as_view(), name="delete-hour"),
+    path("delete-hour", AddDeleteHour.as_view(), name="add-hour-delete"),
     path("add-court", AddCourt.as_view(), name="add-court"),
     path("update-court-name", UpdateCourtName.as_view(), name="update-court-name"),
     path("end-court", EndCourt.as_view(), name="end-court"),
@@ -64,61 +55,26 @@ schedule_urls = [
     path("court-notes", CourtNotes.as_view(), name="court-notes"),
 ]
 
+# Live scoring URLs
+live_score_urls = [
+    path("live-scores", LiveScores.as_view(), name="live-scores"),
+]
+
 # Analytics URLs
 analytics_urls = [
-    path(
-        "get-average-checkin-leaderboard",
-        GetAverageCheckinLeaderboard.as_view(),
-        name="get-average-checkin-leaderboard",
-    ),
-    path(
-        "get-average-checkin-time/<int:pk>",
-        GetAverageCheckinTime.as_view(),
-        name="get-average-checkin-time",
-    ),
-    path(
-        "get-average-court-leaderboard",
-        GetAverageCourtLeaderboard.as_view(),
-        name="get-average-court-leaderboard",
-    ),
-    path(
-        "get-ballkid-leaderboard",
-        GetRatingsBallkidLeaderboard.as_view(),
-        name="get-ballkid-leaderboard",
-    ),
+    path("get-average-checkin-leaderboard", GetAverageCheckinLeaderboard.as_view(), name="get-average-checkin-leaderboard"),
+    path("get-average-checkin-time/<int:pk>", GetAverageCheckinTime.as_view(), name="get-average-checkin-time"),
+    path("get-average-court-leaderboard", GetAverageCourtLeaderboard.as_view(), name="get-average-court-leaderboard"),
+    path("get-ballkid-leaderboard", GetRatingsBallkidLeaderboard.as_view(), name="get-ballkid-leaderboard"),
     path("get-captains/<int:pk>", GetCaptainAnalytics.as_view(), name="get-captains"),
-    path(
-        "get-captain-leaderboard",
-        GetRatingsCaptainLeaderboard.as_view(),
-        name="get-captain-leaderboard",
-    ),
+    path("get-captain-leaderboard", GetRatingsCaptainLeaderboard.as_view(), name="get-captain-leaderboard"),
     path("get-checkins/<int:pk>", GetCheckinHistory.as_view(), name="get-checkins"),
-    path(
-        "get-checkin-court-analytics/<int:pk>",
-        GetCheckinCourtAnalytics.as_view(),
-        name="get-checkin-court-analytics",
-    ),
-    path(
-        "get-checkin-leaderboard",
-        GetCheckinLeaderboard.as_view(),
-        name="get-checkin-leaderboard",
-    ),
-    path(
-        "get-court-leaderboard",
-        GetCourtLeaderboard.as_view(),
-        name="get-court-leaderboard",
-    ),
+    path("get-checkin-court-analytics/<int:pk>", GetCheckinCourtAnalytics.as_view(), name="get-checkin-court-analytics"),
+    path("get-checkin-leaderboard", GetCheckinLeaderboard.as_view(), name="get-checkin-leaderboard"),
+    path("get-court-leaderboard", GetCourtLeaderboard.as_view(), name="get-court-leaderboard"),
     path("get-cut-history/<int:pk>", GetCutHistory.as_view(), name="get-cut-history"),
-    path(
-        "get-finals-history/<int:pk>",
-        GetFinalsHistory.as_view(),
-        name="get-finals-history",
-    ),
-    path(
-        "get-finals-analytics/<int:pk>",
-        GetFinalsAnalytics.as_view(),
-        name="get-finals-analytics",
-    ),
+    path("get-finals-history/<int:pk>", GetFinalsHistory.as_view(), name="get-finals-history"),
+    path("get-finals-analytics/<int:pk>", GetFinalsAnalytics.as_view(), name="get-finals-analytics"),
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
 ]
 
@@ -135,16 +91,8 @@ tournament_urls = [
     path("request-tickets", RequestTickets.as_view(), name="request-tickets"),
     path("confirm-tickets", ConfirmTickets.as_view(), name="confirm-tickets"),
     path("allocate-tickets", AllocateTickets.as_view(), name="allocate-tickets"),
-    path(
-        "run-ticket-lottery",
-        RunTicketLottery.as_view(),
-        name="run-ticket-lottery",
-    ),
-    path(
-        "run-ticket-waitlist",
-        RunTicketWaitlist.as_view(),
-        name="run-ticket-waitlist",
-    ),
+    path("run-ticket-lottery", RunTicketLottery.as_view(), name="run-ticket-lottery"),
+    path("run-ticket-waitlist", RunTicketWaitlist.as_view(), name="run-ticket-waitlist"),
     path("ticket-used", UpdateTicketUsed.as_view(), name="ticket-used"),
 ]
 
@@ -154,143 +102,50 @@ rating_urls = [
     path("save-draft-rating", SaveDraftRating.as_view(), name="save-draft-rating"),
     path("exclude-rating/<int:pk>", ExcludeRating.as_view(), name="exclude-rating"),
     path("delete-rating/<int:pk>", DeleteRating.as_view(), name="delete-rating"),
-    path(
-        "get-draft-rating/<int:pk>/<int:ballkid>",
-        GetDraftRating.as_view(),
-        name="get-draft-rating",
-    ),
+    path("get-draft-rating/<int:pk>/<int:ballkid>", GetDraftRating.as_view(), name="get-draft-rating"),
     path("ratings/<int:year>", RatingsList.as_view(), name="ratings"),
-    path(
-        "calibrated-ratings/<int:year>",
-        CalibratedRatings.as_view(),
-        name="calibrated-ratings",
-    ),
+    path("calibrated-ratings/<int:year>", CalibratedRatings.as_view(), name="calibrated-ratings"),
     path("my-ratings/<int:pk>", MyRatings.as_view(), name="my-ratings"),
-    path(
-        "calibration-parameters/<int:pk>",
-        GetCalibrationParamsBallkid.as_view(),
-        name="calibration-parameters-ballkid",
-    ),
-    path(
-        "calibration-parameters",
-        GetCalibrationParams.as_view(),
-        name="calibration-parameters",
-    ),
-    path(
-        "average-calibration-parameters",
-        GetAverageCalibrationParams.as_view(),
-        name="average-calibration-parameters",
-    ),
+    path("calibration-parameters/<int:pk>", GetCalibrationParamsBallkid.as_view(), name="calibration-parameters-ballkid"),
+    path("calibration-parameters", GetCalibrationParams.as_view(), name="calibration-parameters"),
+    path("average-calibration-parameters", GetAverageCalibrationParams.as_view(), name="average-calibration-parameters"),
 ]
-
 
 # Debug URLs
 debug_urls = [
-    path(
-        "create-checkin-history",
-        CreateCheckinHistory.as_view(),
-        name="create-checkin-history",
-    ),
-    path(
-        "create-team-history", CreateTeamHistory.as_view(), name="create-team-history"
-    ),
-    path(
-        "create-captain-history",
-        CreateCaptainHistory.as_view(),
-        name="create-captain-history",
-    ),
-    path(
-        "create-finals-history",
-        CreateFinalsHistory.as_view(),
-        name="create-finals-history",
-    ),
-    path(
-        "create-cut-history",
-        CreateCutHistory.as_view(),
-        name="create-cut-history",
-    ),
+    path("create-checkin-history", CreateCheckinHistory.as_view(), name="create-checkin-history"),
+    path("create-team-history", CreateTeamHistory.as_view(), name="create-team-history"),
+    path("create-captain-history", CreateCaptainHistory.as_view(), name="create-captain-history"),
+    path("create-finals-history", CreateFinalsHistory.as_view(), name="create-finals-history"),
+    path("create-cut-history", CreateCutHistory.as_view(), name="create-cut-history"),
     path("bulk-create-users", BulkCreateUsers.as_view(), name="bulk-create-users"),
-    path(
-        "bulk-create-ballkids",
-        BulkCreateBallkids.as_view(),
-        name="bulk-create-ballkids",
-    ),
-    path(
-        "bulk-create-signups", BulkCreateSignups.as_view(), name="bulk-create-signups"
-    ),
-    path(
-        "bulk-create-ratings", BulkCreateRatings.as_view(), name="bulk-create-ratings"
-    ),
+    path("bulk-create-ballkids", BulkCreateBallkids.as_view(), name="bulk-create-ballkids"),
+    path("bulk-create-signups", BulkCreateSignups.as_view(), name="bulk-create-signups"),
+    path("bulk-create-ratings", BulkCreateRatings.as_view(), name="bulk-create-ratings"),
     path("bulk-create-finals", BulkCreateFinals.as_view(), name="bulk-create-finals"),
     path("bulk-create-cuts", BulkCreateCuts.as_view(), name="bulk-create-cuts"),
-    path(
-        "bulk-create-checkins",
-        BulkCreateCheckins.as_view(),
-        name="bulk-create-checkins",
-    ),
-    path(
-        "bulk-checkin",
-        BulkCheckin.as_view(),
-        name="bulk-checkin",
-    ),
+    path("bulk-create-checkins", BulkCreateCheckins.as_view(), name="bulk-create-checkins"),
+    path("bulk-checkin", BulkCheckin.as_view(), name="bulk-checkin"),
 ]
 
 # Ballcrew application + tryout review URLs
 application_urls = [
-    path(
-        "application-settings",
-        ApplicationSettingsView.as_view(),
-        name="application-settings",
-    ),
-    path(
-        "submit-application",
-        SubmitApplicationView.as_view(),
-        name="submit-application",
-    ),
+    path("application-settings", ApplicationSettingsView.as_view(), name="application-settings"),
+    path("submit-application", SubmitApplicationView.as_view(), name="submit-application"),
     path("applications", ApplicationListView.as_view(), name="applications"),
-    path(
-        "applications/<int:pk>",
-        ApplicationDetailView.as_view(),
-        name="application-detail",
-    ),
-    path(
-        "applications/<int:pk>/status",
-        UpdateApplicationStatusView.as_view(),
-        name="update-application-status",
-    ),
-    path(
-        "promote-application/<int:pk>",
-        PromoteApplicationView.as_view(),
-        name="promote-application",
-    ),
-    path(
-        "tryout-reviews", TryoutReviewCreateView.as_view(), name="tryout-reviews"
-    ),
-    path(
-        "tryout-reviews/application/<int:application_id>",
-        TryoutReviewListView.as_view(),
-        name="tryout-reviews-application",
-    ),
-    path(
-        "purge-unpromoted-applications",
-        PurgeUnpromotedApplicationsView.as_view(),
-        name="purge-unpromoted-applications",
-    ),
-    path(
-        "applications/<int:pk>/apply-headshot-update",
-        ApplyHeadshotUpdateView.as_view(),
-        name="apply-headshot-update",
-    ),
+    path("applications/<int:pk>", ApplicationDetailView.as_view(), name="application-detail"),
+    path("applications/<int:pk>/status", UpdateApplicationStatusView.as_view(), name="update-application-status"),
+    path("promote-application/<int:pk>", PromoteApplicationView.as_view(), name="promote-application"),
+    path("tryout-reviews", TryoutReviewCreateView.as_view(), name="tryout-reviews"),
+    path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view(), name="tryout-reviews-application"),
+    path("purge-unpromoted-applications", PurgeUnpromotedApplicationsView.as_view(), name="purge-unpromoted-applications"),
+    path("applications/<int:pk>/apply-headshot-update", ApplyHeadshotUpdateView.as_view(), name="apply-headshot-update"),
 ]
 
 # Shift group URLs (keep certain ballkids on the same team/shift)
 shift_group_urls = [
     path("shift-groups", ShiftGroupListCreateView.as_view(), name="shift-groups"),
-    path(
-        "shift-groups/<int:pk>",
-        ShiftGroupDetailView.as_view(),
-        name="shift-group-detail",
-    ),
+    path("shift-groups/<int:pk>", ShiftGroupDetailView.as_view(), name="shift-group-detail"),
 ]
 
 # Read-only SQL console (chairperson-only, see api/views/database_query.py)
@@ -306,6 +161,7 @@ urlpatterns = (
     ballkid_urls
     + teams_urls
     + schedule_urls
+    + live_score_urls
     + analytics_urls
     + tournament_urls
     + rating_urls
