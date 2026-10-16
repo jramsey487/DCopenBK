@@ -1,10 +1,10 @@
 """API endpoint for normalized SMT/MIS live tennis scores."""
 
 import logging
+import os
 import time
 
 import requests
-from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,11 +19,10 @@ _CACHE = {"expires": 0.0, "data": None}
 def fetch_mis_scores():
     """Fetch and normalize MIS, with a short process-local cache.
 
-    A cache keeps multiple Teams page clients from independently polling the
-    tournament provider. The URL is deliberately configuration-driven because
-    the exact tournament MIS endpoint changes from event to event.
+    The exact tournament MIS URL is supplied as a Fly/environment variable.
+    Until it is configured, this endpoint makes no outbound request.
     """
-    url = getattr(settings, "MIS_LIVE_SCORE_URL", "")
+    url = os.environ.get("MIS_LIVE_SCORE_URL", "").strip()
     if not url:
         return {"configured": False, "matches": [], "courts": []}
 
@@ -31,8 +30,12 @@ def fetch_mis_scores():
     if _CACHE["data"] is not None and now < _CACHE["expires"]:
         return _CACHE["data"]
 
-    timeout = getattr(settings, "MIS_LIVE_SCORE_TIMEOUT", 5)
-    cache_seconds = getattr(settings, "MIS_LIVE_SCORE_CACHE_SECONDS", 5)
+    try:
+        timeout = float(os.environ.get("MIS_LIVE_SCORE_TIMEOUT", "5"))
+        cache_seconds = float(os.environ.get("MIS_LIVE_SCORE_CACHE_SECONDS", "5"))
+    except ValueError:
+        timeout = 5
+        cache_seconds = 5
 
     try:
         response = requests.get(
@@ -54,8 +57,6 @@ def fetch_mis_scores():
         return data
     except (requests.RequestException, ValueError) as exc:
         logger.warning("[MIS] live score fetch failed: %s", exc)
-        # Return the last good response, if there is one, rather than taking
-        # the Teams page down because the scoring provider is temporarily slow.
         if _CACHE["data"] is not None:
             return _CACHE["data"]
         return {
