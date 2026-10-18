@@ -248,8 +248,7 @@ export default function CaptainRatingDialog({
         <div className="rating-dialog-note">
           Your written feedback is required. The star rating is optional. Your
           feedback is anonymous to the chairpeople unless you check the box
-          above. Specific details in your comments could still reveal who you
-          are.
+          above.
         </div>
       </DialogContent>
 
