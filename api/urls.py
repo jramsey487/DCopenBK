@@ -1,4 +1,5 @@
 from django.urls import path
+
 from api.views.ballkid import *
 from api.views.schedule import *
 from api.views.rating import *
@@ -8,7 +9,9 @@ from api.views.application import *
 from api.views.shift_group import *
 from api.views.database_query import *
 from api.views.sizing_report import *
+from api.views.live_scores import *
 from api.views.captain_rating import *
+
 
 # Ballkid URLs
 ballkid_urls = [
@@ -17,7 +20,9 @@ ballkid_urls = [
     path("emails-list", EmailsList.as_view(), name="emails-list"),
     path("sorted-list", BallkidsSortedList.as_view(), name="sorted-list"),
     path(
-        "sorted-list/<int:pk>", BallkidsSortedList.as_view(), name="sorted-list-ratings"
+        "sorted-list/<int:pk>",
+        BallkidsSortedList.as_view(),
+        name="sorted-list-ratings",
     ),
     path("inactive-list", BallkidsInactiveList.as_view(), name="inactive-list"),
     path("self-cut-list", SelfCutList.as_view(), name="self-cut-list"),
@@ -35,6 +40,7 @@ ballkid_urls = [
     path("archive-all", ArchiveAll.as_view(), name="archive-all"),
 ]
 
+
 # Teams URLs
 teams_urls = [
     path("calc-num-teams", CalcNumTeams.as_view(), name="calc-num-teams"),
@@ -48,6 +54,7 @@ teams_urls = [
     ),
 ]
 
+
 # Schedule URLs
 schedule_urls = [
     path("get-schedule", GetSchedule.as_view(), name="get-schedule"),
@@ -56,7 +63,7 @@ schedule_urls = [
     path("shift-schedule", ShiftSchedule.as_view(), name="shift-schedule"),
     path("update-schedule", UpdateSchedule.as_view(), name="update-schedule"),
     path("add-hour", AddDeleteHour.as_view(), name="add-hour"),
-    path("delete-hour", AddDeleteHour.as_view(), name="delete-hour"),
+    path("delete-hour", AddDeleteHour.as_view(), name="add-hour-delete"),
     path("add-court", AddCourt.as_view(), name="add-court"),
     path("update-court-name", UpdateCourtName.as_view(), name="update-court-name"),
     path("end-court", EndCourt.as_view(), name="end-court"),
@@ -64,6 +71,13 @@ schedule_urls = [
     path("get-next-shifts", GetNextShifts.as_view(), name="get-next-shifts"),
     path("court-notes", CourtNotes.as_view(), name="court-notes"),
 ]
+
+
+# Live scoring URLs
+live_score_urls = [
+    path("live-scores", LiveScores.as_view(), name="live-scores"),
+]
+
 
 # Analytics URLs
 analytics_urls = [
@@ -123,6 +137,7 @@ analytics_urls = [
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
 ]
 
+
 # Tournament URLs
 tournament_urls = [
     path("get-tournament", GetTournament.as_view(), name="get-tournament"),
@@ -148,6 +163,7 @@ tournament_urls = [
     ),
     path("ticket-used", UpdateTicketUsed.as_view(), name="ticket-used"),
 ]
+
 
 # Rating URLs
 rating_urls = [
@@ -184,6 +200,8 @@ rating_urls = [
     ),
 ]
 
+
+# Captain/chairperson rating URLs
 captain_rating_urls = [
     path(
         "create-captain-rating",
@@ -191,7 +209,9 @@ captain_rating_urls = [
         name="create-captain-rating",
     ),
     path(
-        "my-captain-ratings", MyCaptainRatings.as_view(), name="my-captain-ratings"
+        "my-captain-ratings",
+        MyCaptainRatings.as_view(),
+        name="my-captain-ratings",
     ),
     path(
         "delete-captain-rating/<int:pk>",
@@ -219,7 +239,9 @@ debug_urls = [
         name="create-checkin-history",
     ),
     path(
-        "create-team-history", CreateTeamHistory.as_view(), name="create-team-history"
+        "create-team-history",
+        CreateTeamHistory.as_view(),
+        name="create-team-history",
     ),
     path(
         "create-captain-history",
@@ -243,10 +265,14 @@ debug_urls = [
         name="bulk-create-ballkids",
     ),
     path(
-        "bulk-create-signups", BulkCreateSignups.as_view(), name="bulk-create-signups"
+        "bulk-create-signups",
+        BulkCreateSignups.as_view(),
+        name="bulk-create-signups",
     ),
     path(
-        "bulk-create-ratings", BulkCreateRatings.as_view(), name="bulk-create-ratings"
+        "bulk-create-ratings",
+        BulkCreateRatings.as_view(),
+        name="bulk-create-ratings",
     ),
     path("bulk-create-finals", BulkCreateFinals.as_view(), name="bulk-create-finals"),
     path("bulk-create-cuts", BulkCreateCuts.as_view(), name="bulk-create-cuts"),
@@ -255,12 +281,9 @@ debug_urls = [
         BulkCreateCheckins.as_view(),
         name="bulk-create-checkins",
     ),
-    path(
-        "bulk-checkin",
-        BulkCheckin.as_view(),
-        name="bulk-checkin",
-    ),
+    path("bulk-checkin", BulkCheckin.as_view(), name="bulk-checkin"),
 ]
+
 
 # Ballcrew application + tryout review URLs
 application_urls = [
@@ -291,7 +314,9 @@ application_urls = [
         name="promote-application",
     ),
     path(
-        "tryout-reviews", TryoutReviewCreateView.as_view(), name="tryout-reviews"
+        "tryout-reviews",
+        TryoutReviewCreateView.as_view(),
+        name="tryout-reviews",
     ),
     path(
         "tryout-reviews/application/<int:application_id>",
@@ -331,6 +356,7 @@ application_urls = [
     ),
 ]
 
+
 # Shift group URLs (keep certain ballkids on the same team/shift)
 shift_group_urls = [
     path("shift-groups", ShiftGroupListCreateView.as_view(), name="shift-groups"),
@@ -341,26 +367,31 @@ shift_group_urls = [
     ),
 ]
 
+
 # Read-only SQL console (chairperson-only, see api/views/database_query.py)
 database_query_urls = [
     path("database-query", DatabaseQueryView.as_view(), name="database-query"),
 ]
 
+
+# Sizing report URLs
 sizing_report_urls = [
     path("sizing-report", SizingReportView.as_view(), name="sizing-report"),
 ]
+
 
 urlpatterns = (
     ballkid_urls
     + teams_urls
     + schedule_urls
+    + live_score_urls
     + analytics_urls
     + tournament_urls
     + rating_urls
+    + captain_rating_urls
     + debug_urls
     + application_urls
     + shift_group_urls
     + database_query_urls
     + sizing_report_urls
-    + captain_rating_urls
 )
