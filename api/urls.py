@@ -8,6 +8,7 @@ from api.views.application import *
 from api.views.shift_group import *
 from api.views.database_query import *
 from api.views.sizing_report import *
+from api.views.captain_rating import *
 
 # Ballkid URLs
 ballkid_urls = [
@@ -183,6 +184,32 @@ rating_urls = [
     ),
 ]
 
+captain_rating_urls = [
+    path(
+        "create-captain-rating",
+        CreateCaptainRating.as_view(),
+        name="create-captain-rating",
+    ),
+    path(
+        "my-captain-ratings", MyCaptainRatings.as_view(), name="my-captain-ratings"
+    ),
+    path(
+        "delete-captain-rating/<int:pk>",
+        DeleteMyCaptainRating.as_view(),
+        name="delete-captain-rating",
+    ),
+    path(
+        "captain-ratings/<int:year>",
+        CaptainRatingsList.as_view(),
+        name="captain-ratings",
+    ),
+    path(
+        "captain-ratings-summary/<int:year>",
+        CaptainRatingsSummary.as_view(),
+        name="captain-ratings-summary",
+    ),
+]
+
 
 # Debug URLs
 debug_urls = [
@@ -281,6 +308,27 @@ application_urls = [
         ApplyHeadshotUpdateView.as_view(),
         name="apply-headshot-update",
     ),
+    # Interest list ("email me when applications open")
+    path(
+        "application-interest",
+        ApplicationInterestSignupView.as_view(),
+        name="application-interest",
+    ),
+    path(
+        "application-interest/summary",
+        ApplicationInterestSummaryView.as_view(),
+        name="application-interest-summary",
+    ),
+    path(
+        "application-interest/import",
+        ApplicationInterestImportView.as_view(),
+        name="application-interest-import",
+    ),
+    path(
+        "application-interest/notify",
+        ApplicationInterestNotifyView.as_view(),
+        name="application-interest-notify",
+    ),
 ]
 
 # Shift group URLs (keep certain ballkids on the same team/shift)
@@ -314,4 +362,5 @@ urlpatterns = (
     + shift_group_urls
     + database_query_urls
     + sizing_report_urls
+    + captain_rating_urls
 )

@@ -9,6 +9,7 @@ whatever's already registered there, e.g. Ballkid, Rating, etc.)
 from django.contrib import admin
 
 from api.models.application import (
+    ApplicationInterest,
     ApplicationSettings,
     BallcrewApplication,
     BallkidAdditionalContact,
@@ -32,6 +33,16 @@ class ApplicationSettingsAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(ApplicationInterest)
+class ApplicationInterestAdmin(admin.ModelAdmin):
+    """People who asked to be emailed when applications open. Delete rows
+    here to take someone off the list."""
+
+    list_display = ["email", "first_name", "created_at", "last_notified_at"]
+    search_fields = ["email", "first_name"]
+    list_filter = [("last_notified_at", admin.EmptyFieldListFilter)]
 
 
 @admin.register(BallcrewApplication)

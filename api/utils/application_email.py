@@ -17,15 +17,18 @@ import threading
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.db import close_old_connections
+from django.utils import timezone
 from django.utils.html import escape
 
 from api.models.application import (
+    ApplicationInterest,
     ApplicationSettings,
     BallcrewApplication,
     TOURNAMENT_DAYS,
 )
+from api.models.schedule import Tournament
 from api.serializers_application import (
     get_tournament_start_date,
     get_tryout_slot_info,
@@ -301,4 +304,143 @@ def send_application_confirmation(application_id):
 def send_application_confirmation_async(application_id):
     threading.Thread(
         target=send_application_confirmation, args=(application_id,), daemon=True
+    ).start()
+
+
+# ---------------------------------------------------------------------------
+# Interest list: "email me when applications open"
+# ---------------------------------------------------------------------------
+
+# Gmail's SMTP limit is roughly 500 messages a day, shared with every other
+# email the app sends, so one click never sends more than this. Anyone left
+# over stays "not yet emailed" and goes out the next time the button is used.
+INTEREST_BATCH_LIMIT = 400
+_MAX_CONSECUTIVE_FAILURES = 5
+
+_interest_lock = threading.Lock()
+
+
+def interest_send_in_progress():
+    return _interest_lock.locked()
+
+
+def pending_interest_entries():
+    """Interest-list people who haven't been emailed yet, leaving out anyone
+    who has already submitted an application this season (they don't need
+    the link)."""
+    applications = BallcrewApplication.objects.all()
+    tournament = Tournament.objects.order_by("-year").first()
+    if tournament:
+        applications = applications.filter(submitted_at__year=tournament.year)
+    applied = {e.strip().lower() for e in applications.values_list("email", flat=True)}
+    return [
+        entry
+        for entry in ApplicationInterest.objects.filter(last_notified_at__isnull=True)
+        if entry.email.lower() not in applied
+    ]
+
+
+def build_interest_email(first_name, site_name, apply_url, handbook_url):
+    """Returns (subject, plain_text, html) for the "applications are open" email."""
+    greeting = f"Hi {first_name}," if first_name else "Hi,"
+    subject = f"Ball crew applications are open — {site_name}"
+    body = (
+        "You asked us to let you know when ball crew applications open -- "
+        "they're open now!"
+    )
+    text = "\n".join(
+        [
+            greeting,
+            "",
+            body,
+            "",
+            f"Apply here: {apply_url}",
+            f"Ball crew handbook: {handbook_url}",
+            "",
+            site_name,
+        ]
+    )
+    html = (
+        '<div style="font-family:Arial,Helvetica,sans-serif;color:#1a2233;max-width:560px">'
+        f"<p>{escape(greeting)}</p>"
+        f"<p>{escape(body)}</p>"
+        f'<p><a href="{escape(apply_url)}" style="display:inline-block;padding:10px 18px;'
+        'background:#0b1b3f;color:#fff;text-decoration:none;border-radius:4px">'
+        "Apply now</a></p>"
+        f'<p>New to ball crew? <a href="{escape(handbook_url)}">Read the handbook</a>.</p>'
+        f"<p>{escape(site_name)}</p></div>"
+    )
+    return subject, text, html
+
+
+def send_interest_notifications(limit=INTEREST_BATCH_LIMIT):
+    """Emails the application link to people on the interest list who haven't
+    been emailed yet, up to `limit`. Meant to run in a background thread;
+    never raises. Each person is marked as emailed *before* sending so two
+    overlapping runs can't double-send, and the mark is undone if their send
+    fails."""
+    if not _interest_lock.acquire(blocking=False):
+        return  # a run is already in progress on this machine
+    connection = None
+    try:
+        entries = pending_interest_entries()[:limit]
+        if not entries:
+            return
+
+        apply_url = f"{settings.SITE_BASE_URL}/apply"
+        handbook_url = f"{settings.SITE_BASE_URL}/handbook"
+        connection = get_connection(fail_silently=False)
+        connection.open()
+
+        sent = failures = consecutive = 0
+        for entry in entries:
+            claimed = ApplicationInterest.objects.filter(
+                pk=entry.pk, last_notified_at__isnull=True
+            ).update(last_notified_at=timezone.now())
+            if not claimed:
+                continue  # another run already handled this person
+            try:
+                subject, text, html = build_interest_email(
+                    entry.first_name, settings.SITE_NAME, apply_url, handbook_url
+                )
+                message = EmailMultiAlternatives(
+                    subject,
+                    text,
+                    to=[entry.email],
+                    reply_to=[settings.SUPPORT_EMAIL],
+                    connection=connection,
+                )
+                message.attach_alternative(html, "text/html")
+                message.send(fail_silently=False)
+                sent += 1
+                consecutive = 0
+            except Exception:
+                ApplicationInterest.objects.filter(pk=entry.pk).update(
+                    last_notified_at=None
+                )
+                failures += 1
+                consecutive += 1
+                logger.exception(f"Could not email interest-list entry {entry.pk}")
+                if consecutive >= _MAX_CONSECUTIVE_FAILURES:
+                    logger.error(
+                        "Stopping interest-list send after repeated failures "
+                        "(check the mail login or Gmail's daily limit)."
+                    )
+                    break
+        logger.info(f"Interest-list send finished: {sent} sent, {failures} failed")
+    except Exception:
+        logger.exception("Interest-list send failed")
+    finally:
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass
+        _interest_lock.release()
+        close_old_connections()
+
+
+def send_interest_notifications_async(limit=INTEREST_BATCH_LIMIT):
+    threading.Thread(
+        target=send_interest_notifications, args=(limit,), daemon=True
     ).start()

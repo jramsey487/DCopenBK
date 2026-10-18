@@ -38,6 +38,7 @@ import Done from "@mui/icons-material/Done";
 import Close from "@mui/icons-material/Close";
 import Edit from "@mui/icons-material/Edit";
 
+import CaptainFeedbackSection from "../ratings/CaptainFeedbackSection";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
@@ -1377,8 +1378,13 @@ export default function BallkidPageChairperson(props) {
     return <ProfileLoadingState />;
   }
 
+  const isCaptainOrChair = ballkid.is_captain || ballkid.is_chairperson;
   const visibleTabs = ballkid.is_active
-    ? CHAIR_TABS
+    ? CHAIR_TABS.flatMap((t) =>
+        t.id === "ratings" && isCaptainOrChair
+          ? [t, { id: "feedback", label: "Crew feedback" }]
+          : [t]
+      )
     : CHAIR_TABS.filter((t) => t.id === "info" || t.id === "cuts");
 
   return (
@@ -1544,6 +1550,14 @@ export default function BallkidPageChairperson(props) {
             <ProfilePanel id="ratings" active={tab}>
               <RatingSection ballkid={ballkid} />
             </ProfilePanel>
+
+            {isCaptainOrChair ? (
+              <ProfilePanel id="feedback" active={tab}>
+                <ProfileCard title="Crew feedback" padded>
+                  <CaptainFeedbackSection captainId={ballkid.id} />
+                </ProfileCard>
+              </ProfilePanel>
+            ) : null}
 
             <ProfilePanel id="analytics" active={tab}>
               <ProfileCard title="Season stats">

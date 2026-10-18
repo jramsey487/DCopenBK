@@ -12,6 +12,10 @@ Wire these into api/urls.py:
     path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view()),
 """
 
+import re
+
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import generics, status
@@ -22,6 +26,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from api.models.application import (
+    ApplicationInterest,
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
@@ -37,9 +42,16 @@ from api.serializers_application import (
     BallcrewApplicationSubmitSerializer,
     get_tournament_start_date,
     get_tryout_slot_info,
+    MINIMUM_AGE,
     TryoutReviewSerializer,
 )
-from api.utils.application_email import send_application_confirmation_async
+from api.utils.application_email import (
+    INTEREST_BATCH_LIMIT,
+    interest_send_in_progress,
+    pending_interest_entries,
+    send_application_confirmation_async,
+    send_interest_notifications_async,
+)
 
 
 class ApplicationSubmitThrottle(AnonRateThrottle):
@@ -72,6 +84,7 @@ class ApplicationSettingsView(APIView):
                 # dates (e.g. "Saturday, July 25") for each semantic day key
                 # without hardcoding a year -- see api/models/application.py
                 "tournament_start_date": start_date.isoformat() if start_date else None,
+                "minimum_age": MINIMUM_AGE,
                 "tryout_slots": tryout_slots,
                 # First-timer applications auto-close once both tryout
                 # slots are full -- there'd be nowhere left to send a
@@ -405,3 +418,155 @@ class ApplyHeadshotUpdateView(APIView):
         ballkid.save(update_fields=["image"])
 
         return Response({"updated_ballkid_id": ballkid.id, "image": ballkid.image})
+
+
+# ---------------------------------------------------------------------------
+# Interest list ("email me when applications open")
+# ---------------------------------------------------------------------------
+
+
+class ApplicationInterestThrottle(AnonRateThrottle):
+    # Needs "application-interest" in DEFAULT_THROTTLE_RATES in settings.py.
+    scope = "application-interest"
+
+
+class ApplicationInterestSignupView(APIView):
+    """
+    Public: join the interest list from the /apply page while applications
+    are closed. Always answers the same way for a valid email, whether or not
+    it was already on the list, so the form can't be used to find out who is.
+    """
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ApplicationInterestThrottle]
+
+    def post(self, request):
+        # Honeypot: real people never see or fill this hidden field.
+        if request.data.get("website"):
+            return Response({"detail": "ok"})
+
+        email = (request.data.get("email") or "").strip().lower()
+        try:
+            if not email or len(email) > 254:
+                raise DjangoValidationError("invalid")
+            validate_email(email)
+        except DjangoValidationError:
+            raise ValidationError({"email": "Enter a valid email address."})
+
+        first_name = (request.data.get("first_name") or "").strip()[:100]
+        ApplicationInterest.objects.get_or_create(
+            email=email, defaults={"first_name": first_name}
+        )
+        return Response({"detail": "ok"})
+
+
+class ApplicationInterestSummaryView(APIView):
+    """Chairperson: counts for the interest-list card on the review page."""
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        total = ApplicationInterest.objects.count()
+        emailed = ApplicationInterest.objects.filter(
+            last_notified_at__isnull=False
+        ).count()
+        not_emailed = total - emailed
+        pending = len(pending_interest_entries())
+        return Response(
+            {
+                "total": total,
+                "emailed": emailed,
+                "pending": pending,
+                # not emailed yet, but already applied this season, so skipped
+                "already_applied": not_emailed - pending,
+                "batch_limit": INTEREST_BATCH_LIMIT,
+                "sending": interest_send_in_progress(),
+            }
+        )
+
+
+class ApplicationInterestImportView(APIView):
+    """
+    Chairperson: add many emails at once (e.g. pasted from the existing
+    Google Sheet). Anything that looks like an email is added; names and other
+    text around them are ignored. If `already_emailed` is true, the new
+    people are marked as already notified so the button won't email them.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        raw = str(request.data.get("emails") or "")
+        if len(raw) > 200_000:
+            raise ValidationError({"emails": "That's too much text at once."})
+        already_emailed = bool(request.data.get("already_emailed"))
+
+        tokens = re.split(r"[\s,;]+", raw)
+        seen, invalid = set(), []
+        for token in tokens:
+            token = token.strip("<>\"'()[]")
+            if "@" not in token:
+                continue  # names, headers, and other text around the emails
+            email = token.lower()
+            if email in seen:
+                continue
+            seen.add(email)
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                invalid.append(token)
+
+        valid = [e for e in seen if e not in {t.lower() for t in invalid}]
+        if len(valid) > 5000:
+            raise ValidationError({"emails": "Please add 5,000 or fewer at a time."})
+
+        existing = set(
+            ApplicationInterest.objects.filter(email__in=valid).values_list(
+                "email", flat=True
+            )
+        )
+        now = timezone.now()
+        new_entries = [
+            ApplicationInterest(
+                email=e, last_notified_at=now if already_emailed else None
+            )
+            for e in valid
+            if e not in existing
+        ]
+        ApplicationInterest.objects.bulk_create(new_entries, ignore_conflicts=True)
+        return Response(
+            {
+                "added": len(new_entries),
+                "already_on_list": len(valid) - len(new_entries),
+                "invalid": invalid[:20],
+            }
+        )
+
+
+class ApplicationInterestNotifyView(APIView):
+    """
+    Chairperson: email the application link to everyone on the interest list
+    who hasn't been emailed yet. Only allowed while applications are open
+    (otherwise the link in the email wouldn't work). Sends in the background.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        if not ApplicationSettings.get_solo().is_open:
+            raise ValidationError(
+                {"detail": "Open applications first, so the link in the email works."}
+            )
+        if interest_send_in_progress():
+            return Response(
+                {"detail": "A send is already in progress. Give it a minute."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        pending = len(pending_interest_entries())
+        if pending == 0:
+            return Response({"queued": 0, "remaining_after": 0})
+
+        send_interest_notifications_async()
+        queued = min(pending, INTEREST_BATCH_LIMIT)
+        return Response({"queued": queued, "remaining_after": pending - queued})

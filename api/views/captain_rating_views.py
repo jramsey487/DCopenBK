@@ -1,0 +1,234 @@
+"""
+Place at: api/views/captain_rating.py (next to api/views/rating.py).
+
+Serializers and the permission class live in this file so nothing else has to
+change; move them into api/serializers.py / api/permissions.py if you prefer.
+Imports are explicit (no star imports) so nothing can be shadowed.
+"""
+import logging
+
+from django.db.models import Avg, Count, Q
+from rest_framework import generics, serializers, status
+from rest_framework.permissions import BasePermission
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.models.ballkid import Ballkid
+from api.models.captain_rating import CaptainRating
+from api.permissions import IsChairperson
+from api.utils.consts import MAX_RATING, MIN_RATING
+from api.utils.utils import get_current_year
+
+logger = logging.getLogger("api.rating")
+
+LOW_RATING_THRESHOLD = 2.0  # at or below this (scale is 0.5-5), a note is required
+MIN_RATINGS_FOR_AVG = 3  # hide a captain's average until this many ratings
+
+
+def rateable_captains():
+    """Active captains and chairpeople, identified by the Ballkid flags
+    (the flags are what the app updates when captains are assigned)."""
+    return Ballkid.objects.filter(is_active=True).filter(
+        Q(is_captain=True) | Q(is_chairperson=True)
+    )
+
+
+def get_my_ballkid(request):
+    """The logged-in user's active Ballkid (cached on the request).
+    Ballkid.objects already excludes ticketing accounts."""
+    if not hasattr(request, "_my_ballkid"):
+        user = request.user
+        request._my_ballkid = (
+            Ballkid.objects.filter(user=user, is_active=True).order_by("id").first()
+            if user and user.is_authenticated
+            else None
+        )
+    return request._my_ballkid
+
+
+# ---- permission ------------------------------------------------------------
+class IsRegularBallcrew(BasePermission):
+    """Active ballkid who is NOT a captain or chairperson. Checks both the
+    Ballkid flags and the auth groups, since the two aren't kept in sync
+    (Ballkid.update_field toggles is_captain without touching groups)."""
+
+    def has_permission(self, request, view):
+        me = get_my_ballkid(request)
+        if me is None or me.is_captain or me.is_chairperson:
+            return False
+        return not request.user.groups.filter(
+            name__in=["chairperson", "captain"]
+        ).exists()
+
+
+# ---- serializers -----------------------------------------------------------
+class CaptainRatingWriteSerializer(serializers.Serializer):
+    captain = serializers.PrimaryKeyRelatedField(queryset=rateable_captains())
+    rating = serializers.FloatField()
+    comments = serializers.CharField(required=False, allow_blank=True, default="")
+    context = serializers.ChoiceField(
+        choices=CaptainRating.Context.choices,
+        required=False,
+        allow_blank=True,
+        default="",
+    )
+    share_name = serializers.BooleanField(default=False)
+
+    def validate(self, attrs):
+        if not (MIN_RATING <= attrs["rating"] <= MAX_RATING):
+            raise serializers.ValidationError(
+                {"rating": f"Rating must be between {MIN_RATING} and {MAX_RATING}."}
+            )
+        attrs["comments"] = (attrs.get("comments") or "").strip()
+        if attrs["rating"] <= LOW_RATING_THRESHOLD and not attrs["comments"]:
+            raise serializers.ValidationError(
+                {"comments": "Please tell us what happened."}
+            )
+        return attrs
+
+
+class CaptainRatingChairSerializer(serializers.ModelSerializer):
+    """What chairs see: no rater id, rater_name only if that rating opted in,
+    and a date (not a timestamp) so timing can't help identify the rater."""
+
+    captain_name = serializers.SerializerMethodField()
+    rater_name = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CaptainRating
+        fields = (
+            "id",
+            "captain",
+            "captain_name",
+            "rating",
+            "comments",
+            "context",
+            "rater_name",
+            "date",
+        )
+
+    def get_captain_name(self, obj):
+        return obj.captain.get_name()
+
+    def get_rater_name(self, obj):
+        return obj.rater.get_name() if obj.share_name else None
+
+    def get_date(self, obj):
+        return obj.created_at.date().isoformat()
+
+
+class CaptainRatingMineSerializer(serializers.ModelSerializer):
+    """A rater's view of their own submissions (so they can edit/retract)."""
+
+    captain_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CaptainRating
+        fields = (
+            "id",
+            "captain",
+            "captain_name",
+            "rating",
+            "comments",
+            "context",
+            "share_name",
+            "updated_at",
+        )
+
+    def get_captain_name(self, obj):
+        return obj.captain.get_name()
+
+
+# ---- views: regular ballcrew -----------------------------------------------
+class CreateCaptainRating(APIView):
+    """Create or update (upsert) my rating of a captain/chairperson."""
+
+    permission_classes = [IsRegularBallcrew]
+
+    def post(self, request, format=None):
+        serializer = CaptainRatingWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        d = serializer.validated_data
+
+        # The rater always comes from the logged-in user, never the request body.
+        obj, created = CaptainRating.objects.update_or_create(
+            year=get_current_year(),
+            rater=get_my_ballkid(request),
+            captain=d["captain"],
+            defaults={
+                "rating": d["rating"],
+                "comments": d["comments"],
+                "context": d["context"],
+                "share_name": d["share_name"],
+            },
+        )
+        logger.info(f"[CreateCaptainRating] saved rating id={obj.id} created={created}")
+        return Response(
+            CaptainRatingMineSerializer(obj).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class MyCaptainRatings(generics.ListAPIView):
+    serializer_class = CaptainRatingMineSerializer
+    permission_classes = [IsRegularBallcrew]
+
+    def get_queryset(self):
+        return CaptainRating.objects.filter(
+            rater=get_my_ballkid(self.request), year=get_current_year()
+        ).select_related("captain")
+
+
+class DeleteMyCaptainRating(APIView):
+    permission_classes = [IsRegularBallcrew]
+
+    def delete(self, request, pk, format=None):
+        deleted, _ = CaptainRating.objects.filter(
+            pk=pk, rater=get_my_ballkid(request)
+        ).delete()
+        if not deleted:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ---- views: chairpeople ----------------------------------------------------
+class CaptainRatingsList(generics.ListAPIView):
+    """Every rating for a year, anonymized unless the rater opted in."""
+
+    serializer_class = CaptainRatingChairSerializer
+    permission_classes = [IsChairperson]
+
+    def get_queryset(self):
+        return (
+            CaptainRating.objects.filter(year=self.kwargs.get("year"))
+            .select_related("rater", "captain")
+            .order_by("captain__last_name", "captain__first_name", "-created_at")
+        )
+
+
+class CaptainRatingsSummary(APIView):
+    """Per-captain count and average (average hidden below the minimum count)."""
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request, year, format=None):
+        rows = (
+            CaptainRating.objects.filter(year=year)
+            .values("captain", "captain__first_name", "captain__last_name")
+            .annotate(avg=Avg("rating"), n=Count("id"))
+            .order_by("captain__last_name", "captain__first_name")
+        )
+        return Response(
+            [
+                {
+                    "captain": r["captain"],
+                    "captain_name": f"{r['captain__first_name']} {r['captain__last_name']}",
+                    "count": r["n"],
+                    "average": (
+                        round(r["avg"], 2) if r["n"] >= MIN_RATINGS_FOR_AVG else None
+                    ),
+                }
+                for r in rows
+            ]
+        )

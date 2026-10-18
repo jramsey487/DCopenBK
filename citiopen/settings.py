@@ -72,6 +72,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["api.permissions.IsChairperson"],
     "DEFAULT_THROTTLE_RATES": {
         "application-submit": "5/hour",
+        "application-interest": "10/hour",
     },
 }
 

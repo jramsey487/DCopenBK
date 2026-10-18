@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 
 import { ConfirmDialog, getAuthHeader } from "../Utils";
+import InterestListCard from "./InterestListCard";
 
 const STATUS_COLORS = {
   pending: "default",
@@ -322,6 +323,8 @@ export default function ApplicationsReviewPage() {
           }
         />
       </Box>
+
+      <InterestListCard applicationsOpen={Boolean(applicationsOpen)} />
 
       <Table size="small">
         <TableHead>

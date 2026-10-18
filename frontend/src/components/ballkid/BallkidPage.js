@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { getAuthHeader } from "../Utils";
+import { CaptainRatingButton } from "../ratings/CaptainRatingDialog";
 import {
   ProfilePageShell,
   ProfileLoadingState,
@@ -13,6 +14,7 @@ import {
   ProfilePositionPills,
   ProfileCurrentTournamentCard,
   fetchTournament,
+  isBallkidCut,
   shouldShowCurrentTournament,
   useProfileBackLink,
 } from "./BallkidProfileLayout";
@@ -68,12 +70,20 @@ export default function BallkidPage() {
     );
   }
 
+  // Regular ballcrew can rate any current captain or chairperson from their
+  // profile. The server enforces who may actually submit.
+  const canRate =
+    ballkid.is_active &&
+    !isBallkidCut(ballkid) &&
+    (ballkid.is_captain || ballkid.is_chairperson);
+
   return (
     <ProfilePageShell>
       <ProfileBrandedHero
         ballkid={ballkid}
         backTo={backTo}
         backLabel={backLabel}
+        actions={canRate ? <CaptainRatingButton ballkid={ballkid} /> : undefined}
       />
 
       <ProfileContent>

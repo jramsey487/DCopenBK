@@ -347,6 +347,33 @@ class ApplicationSettings(models.Model):
         return "Applications open" if self.is_open else "Applications closed"
 
 
+class ApplicationInterest(models.Model):
+    """
+    Someone who asked to be told when the application opens. People join
+    from the public /apply page while applications are closed (or a
+    chairperson imports an existing list). A chairperson can then email the
+    application link to everyone who hasn't been emailed yet from the review
+    dashboard -- last_notified_at records who has already been sent it, so
+    opening and closing the application several times never double-emails
+    anyone.
+    """
+
+    email = models.EmailField(unique=True)  # always stored lowercased
+    first_name = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def save(self, *args, **kwargs):
+        self.email = (self.email or "").strip().lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.email
+
+
 class BallkidAdditionalContact(models.Model):
     """
     An extra email address (a parent, spouse, etc.) to copy whenever the

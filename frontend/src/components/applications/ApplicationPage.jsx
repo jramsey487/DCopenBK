@@ -5,6 +5,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  Link,
   MenuItem,
   Paper,
   Radio,
@@ -132,9 +133,106 @@ const emptyForm = {
 
 const STEPS = ["Basic Info", "Availability & Experience", "Waiver"];
 
+// Shown on the closed page: lets people ask to be emailed the application
+// link when it opens. Same response for new and repeat emails, and a hidden
+// "website" field that only bots fill in.
+function InterestSignup() {
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done
+  const [error, setError] = useState("");
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setStatus("sending");
+    try {
+      const response = await fetch("/api/application-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, first_name: firstName, website }),
+      });
+      if (response.ok) {
+        setStatus("done");
+        return;
+      }
+      setError(
+        response.status === 429
+          ? "Too many attempts -- please try again in a little while."
+          : "Please enter a valid email address."
+      );
+    } catch (err) {
+      setError("Something went wrong -- please try again.");
+    }
+    setStatus("idle");
+  };
+
+  if (status === "done") {
+    return (
+      <Typography color="success.main">
+        You're on the list! We'll email you the application link when
+        applications open.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box component="form" onSubmit={submit}>
+      <Typography variant="subtitle1" gutterBottom>
+        Want a heads-up when applications open?
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Leave your email and we'll send you the application link. We'll only
+        use it for that.
+      </Typography>
+      <Stack spacing={2}>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <TextField
+          label="First name (optional)"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          inputProps={{ maxLength: 100 }}
+        />
+        {/* Honeypot -- hidden from people, tempting to bots. */}
+        <input
+          type="text"
+          name="website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", height: 0, width: 0 }}
+        />
+        {error ? (
+          <Typography color="error" variant="body2">
+            {error}
+          </Typography>
+        ) : null}
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={status === "sending" || email.trim() === ""}
+          sx={{ alignSelf: "flex-start" }}
+        >
+          Notify me
+        </Button>
+      </Stack>
+    </Box>
+  );
+}
+
 export default function ApplicationPage() {
   const [applicationsOpen, setApplicationsOpen] = useState(null); // null = still checking
   const [tournamentStartDate, setTournamentStartDate] = useState(null);
+  const [minimumAge, setMinimumAge] = useState(null);
   const [tryoutSlots, setTryoutSlots] = useState([]);
   const [rookieTryoutsAvailable, setRookieTryoutsAvailable] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
@@ -149,6 +247,7 @@ export default function ApplicationPage() {
       .then((data) => {
         setApplicationsOpen(Boolean(data.is_open));
         setTournamentStartDate(data.tournament_start_date || null);
+        setMinimumAge(data.minimum_age || null);
         setTryoutSlots(data.tryout_slots || []);
         setRookieTryoutsAvailable(data.rookie_tryouts_available !== false);
       })
@@ -211,16 +310,49 @@ export default function ApplicationPage() {
   }
 
   if (applicationsOpen === false) {
+    // Only show tryouts that are actually set and still ahead of us -- in the
+    // off-season the latest dates on file may be last year's.
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
+    const upcomingTryouts = tryoutSlots.filter(
+      (slot) => slot.date && slot.date >= today
+    );
     return (
       <Paper sx={{ p: 4, maxWidth: 600, mx: "auto", mt: 4 }}>
         <Typography variant="h5" gutterBottom>
+          Tryout Application
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2 }}>
           Applications are currently closed
         </Typography>
-        <Typography>
-          We're not accepting new ballcrew applications right now. Check
-          back later, or reach out to mdetennis.ballcrew@gmail.com with any
-          questions.
+        <Typography sx={{ mb: 2 }}>
+          Applications usually open in March or April. Questions? Reach out to
+          mdetennis.ballcrew@gmail.com.
         </Typography>
+
+        <Typography variant="subtitle2">Who can apply</Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          {minimumAge
+            ? `You must be ${minimumAge} or older by the start of the tournament. `
+            : ""}
+          First-time applicants must attend a tryout. Returning ball crew are
+          encouraged to come, but it isn't required.
+        </Typography>
+
+        {upcomingTryouts.length > 0 ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2">Tryouts</Typography>
+            {upcomingTryouts.map((slot) => (
+              <Typography key={slot.value} variant="body2">
+                {formatTryoutSlot(slot)}
+              </Typography>
+            ))}
+          </Box>
+        ) : null}
+
+        <Typography variant="body2" sx={{ mb: 3 }}>
+          New to ball crew? Read the <Link href="/handbook">handbook</Link>.
+        </Typography>
+        <InterestSignup />
       </Paper>
     );
   }
@@ -242,7 +374,8 @@ export default function ApplicationPage() {
   return (
     <Paper sx={{ p: 4, maxWidth: 700, mx: "auto", mt: 4 }}>
       <Typography variant="h5" gutterBottom>
-        Ballcrew Application &mdash; Mubadala DC Open 2026
+        Tryout Application &mdash; Mubadala DC Open
+        {tournamentStartDate ? ` ${tournamentStartDate.slice(0, 4)}` : ""}
       </Typography>
       <Typography variant="body2" sx={{ mb: 2 }}>
         New to ball crew, or just want a refresher before tryouts? Check out
