@@ -97,6 +97,7 @@ class CaptainRatingChairSerializer(serializers.ModelSerializer):
     and a date (not a timestamp) so timing can't help identify the rater."""
 
     captain_name = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
     rater_name = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
 
@@ -115,6 +116,9 @@ class CaptainRatingChairSerializer(serializers.ModelSerializer):
 
     def get_captain_name(self, obj):
         return obj.captain.get_name()
+
+    def get_rating(self, obj):
+        return obj.rating if obj.rating is not None else "—"
 
     def get_rater_name(self, obj):
         return obj.rater.get_name() if obj.share_name else None
