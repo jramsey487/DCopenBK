@@ -21,8 +21,7 @@ from api.utils.utils import get_current_year
 
 logger = logging.getLogger("api.rating")
 
-LOW_RATING_THRESHOLD = 2.0  # at or below this (scale is 0.5-5), a note is required
-MIN_RATINGS_FOR_AVG = 3  # hide a captain's average until this many ratings
+MIN_RATINGS_FOR_AVG = 3  # hide a captain's average until this many star ratings
 
 
 def rateable_captains():
@@ -64,8 +63,8 @@ class IsRegularBallcrew(BasePermission):
 # ---- serializers -----------------------------------------------------------
 class CaptainRatingWriteSerializer(serializers.Serializer):
     captain = serializers.PrimaryKeyRelatedField(queryset=rateable_captains())
-    rating = serializers.FloatField()
-    comments = serializers.CharField(required=False, allow_blank=True, default="")
+    rating = serializers.FloatField(required=False, allow_null=True, default=None)
+    comments = serializers.CharField(required=True, allow_blank=False)
     context = serializers.ChoiceField(
         choices=CaptainRating.Context.choices,
         required=False,
@@ -75,15 +74,21 @@ class CaptainRatingWriteSerializer(serializers.Serializer):
     share_name = serializers.BooleanField(default=False)
 
     def validate(self, attrs):
-        if not (MIN_RATING <= attrs["rating"] <= MAX_RATING):
+        rating = attrs.get("rating")
+        comments = (attrs.get("comments") or "").strip()
+
+        # Written feedback is the one required part of this feature.
+        if not comments:
+            raise serializers.ValidationError(
+                {"comments": "Please provide some feedback."}
+            )
+
+        if rating is not None and not (MIN_RATING <= rating <= MAX_RATING):
             raise serializers.ValidationError(
                 {"rating": f"Rating must be between {MIN_RATING} and {MAX_RATING}."}
             )
-        attrs["comments"] = (attrs.get("comments") or "").strip()
-        if attrs["rating"] <= LOW_RATING_THRESHOLD and not attrs["comments"]:
-            raise serializers.ValidationError(
-                {"comments": "Please tell us what happened."}
-            )
+
+        attrs["comments"] = comments
         return attrs
 
 
@@ -142,7 +147,7 @@ class CaptainRatingMineSerializer(serializers.ModelSerializer):
 
 # ---- views: regular ballcrew -----------------------------------------------
 class CreateCaptainRating(APIView):
-    """Create or update (upsert) my rating of a captain/chairperson."""
+    """Create or update (upsert) my feedback for a captain/chairperson."""
 
     permission_classes = [IsRegularBallcrew]
 
@@ -157,7 +162,7 @@ class CreateCaptainRating(APIView):
             rater=get_my_ballkid(request),
             captain=d["captain"],
             defaults={
-                "rating": d["rating"],
+                "rating": d.get("rating"),
                 "comments": d["comments"],
                 "context": d["context"],
                 "share_name": d["share_name"],
@@ -194,7 +199,7 @@ class DeleteMyCaptainRating(APIView):
 
 # ---- views: chairpeople ----------------------------------------------------
 class CaptainRatingsList(generics.ListAPIView):
-    """Every rating for a year, anonymized unless the rater opted in."""
+    """Every feedback entry for a year, anonymized unless the rater opted in."""
 
     serializer_class = CaptainRatingChairSerializer
     permission_classes = [IsChairperson]
@@ -208,7 +213,11 @@ class CaptainRatingsList(generics.ListAPIView):
 
 
 class CaptainRatingsSummary(APIView):
-    """Per-captain count and average (average hidden below the minimum count)."""
+    """Per-captain feedback count and star average.
+
+    The average stays hidden until there are at least three actual star
+    ratings. Written feedback without a star still counts as feedback.
+    """
 
     permission_classes = [IsChairperson]
 
@@ -216,7 +225,7 @@ class CaptainRatingsSummary(APIView):
         rows = (
             CaptainRating.objects.filter(year=year)
             .values("captain", "captain__first_name", "captain__last_name")
-            .annotate(avg=Avg("rating"), n=Count("id"))
+            .annotate(avg=Avg("rating"), feedback_count=Count("id"), star_count=Count("rating"))
             .order_by("captain__last_name", "captain__first_name")
         )
         return Response(
@@ -224,9 +233,10 @@ class CaptainRatingsSummary(APIView):
                 {
                     "captain": r["captain"],
                     "captain_name": f"{r['captain__first_name']} {r['captain__last_name']}",
-                    "count": r["n"],
+                    "count": r["feedback_count"],
+                    "star_count": r["star_count"],
                     "average": (
-                        round(r["avg"], 2) if r["n"] >= MIN_RATINGS_FOR_AVG else None
+                        round(r["avg"], 2) if r["star_count"] >= MIN_RATINGS_FOR_AVG else None
                     ),
                 }
                 for r in rows
