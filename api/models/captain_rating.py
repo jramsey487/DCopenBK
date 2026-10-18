@@ -26,7 +26,10 @@ class CaptainRating(models.Model):
     captain = models.ForeignKey(
         Ballkid, on_delete=models.CASCADE, related_name="captain_ratings_received"
     )
-    rating = models.FloatField()  # Overall; range checked in the serializer
+    # Optional: a ballkid may submit written feedback without giving a star rating.
+    rating = models.FloatField(null=True, blank=True)
+    # Written feedback is required by the API; keep the database field flexible
+    # so existing rows and direct database operations remain compatible.
     comments = models.TextField(default="", blank=True)
     context = models.CharField(
         max_length=20, choices=Context.choices, blank=True, default=""
