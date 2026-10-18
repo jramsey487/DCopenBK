@@ -17,10 +17,6 @@ import { Alerts } from "../dialogs";
 import { getAuthHeader } from "../authStorage";
 import "./rating-dialog.css";
 
-// Keep in sync with LOW_RATING_THRESHOLD in api/views/captain_rating.py.
-// At or below this, a note is required.
-export const LOW_RATING_THRESHOLD = 2;
-
 export const CONTEXT_OPTIONS = [
   { value: "", label: "Not specified" },
   { value: "shift", label: "Worked a shift with them" },
@@ -50,7 +46,7 @@ async function readError(response, fallback) {
  * Props:
  *   open, setOpen
  *   captain:  { id, name }   the captain/chairperson being rated
- *   existing: my current rating of them (from /api/my-captain-ratings) or null
+ *   existing: my current feedback for them (from /api/my-captain-ratings) or null
  *   onSaved:  called after the dialog has fully closed following a save/remove
  */
 export default function CaptainRatingDialog({
@@ -90,8 +86,7 @@ export default function CaptainRatingDialog({
   }, []);
 
   const busy = loading || removing || Boolean(success);
-  const noteRequired = rating != null && rating <= LOW_RATING_THRESHOLD;
-  const noteMissing = noteRequired && comments.trim() === "";
+  const commentsMissing = comments.trim() === "";
 
   const handleClose = (e) => {
     if (busy) return;
@@ -122,12 +117,8 @@ export default function CaptainRatingDialog({
 
   const submit = async () => {
     if (busy) return;
-    if (rating == null) {
-      setErrorMsg("An overall rating is required.");
-      return;
-    }
-    if (noteMissing) {
-      setErrorMsg("Please tell us what happened.");
+    if (commentsMissing) {
+      setErrorMsg("Please provide some feedback.");
       return;
     }
     setLoading(true);
@@ -147,11 +138,11 @@ export default function CaptainRatingDialog({
       if (response.ok) {
         finishSuccess("submit");
       } else {
-        setErrorMsg(await readError(response, "Error submitting rating."));
+        setErrorMsg(await readError(response, "Error submitting feedback."));
         setLoading(false);
       }
     } catch (e) {
-      setErrorMsg("Error submitting rating.");
+      setErrorMsg("Error submitting feedback.");
       setLoading(false);
     }
   };
@@ -168,11 +159,11 @@ export default function CaptainRatingDialog({
       if (response.ok) {
         finishSuccess("remove");
       } else {
-        setErrorMsg("Error removing rating.");
+        setErrorMsg("Error removing feedback.");
         setRemoving(false);
       }
     } catch (e) {
-      setErrorMsg("Error removing rating.");
+      setErrorMsg("Error removing feedback.");
       setRemoving(false);
     }
   };
@@ -196,7 +187,7 @@ export default function CaptainRatingDialog({
         />
 
         <Typography className="rating-dialog-title">
-          {existing ? "Edit Rating" : "Rate"}
+          {existing ? "Edit Feedback" : "Give Feedback"}
         </Typography>
 
         <div className="rating-dialog-fields-row">
@@ -210,7 +201,7 @@ export default function CaptainRatingDialog({
 
         <div className="rating-dialog-grades">
           <RatingAndLabel
-            label={"Overall*"}
+            label={"Overall (optional)"}
             rating={rating}
             setRating={setRating}
           />
@@ -234,18 +225,14 @@ export default function CaptainRatingDialog({
 
         <TextField
           className="rating-dialog-comments"
-          label={noteRequired ? "What happened? *" : "Comments"}
+          label="Comments *"
           variant="standard"
           fullWidth
           multiline
           value={comments}
           onChange={(e) => setComments(e.target.value)}
-          error={noteMissing}
-          helperText={
-            noteMissing
-              ? "A note is required for ratings of 2 or lower."
-              : undefined
-          }
+          error={commentsMissing}
+          helperText={commentsMissing ? "Written feedback is required." : undefined}
         />
 
         <FormControlLabel
@@ -259,10 +246,10 @@ export default function CaptainRatingDialog({
         />
 
         <div className="rating-dialog-note">
-          Your rating is anonymous. Only chairpeople can see it, and your name
-          is shown only if you check the box above. Specific details in your
-          comments could still reveal who you are. Rating scale is 0.5 to 5
-          stars; zero is considered empty.
+          Your written feedback is required. The star rating is optional. Your
+          feedback is anonymous to the chairpeople unless you check the box
+          above. Specific details in your comments could still reveal who you
+          are.
         </div>
       </DialogContent>
 
@@ -301,7 +288,7 @@ export default function CaptainRatingDialog({
 }
 
 /**
- * "Give Rating" button for a captain's/chairperson's profile page. Same markup
+ * "Give Feedback" button for a captain's/chairperson's profile page. Same markup
  * and classes as RatingButton in ballkidUi.js so it picks up the profile styles.
  * Props: ballkid  the captain/chairperson whose profile is being viewed.
  */
@@ -340,7 +327,7 @@ export function CaptainRatingButton({ ballkid }) {
           endIcon={rated ? <Check /> : undefined}
           onClick={() => setOpen(true)}
         >
-          {rated ? "Edit Rating" : "Give Rating"}
+          {rated ? "Edit Feedback" : "Give Feedback"}
         </Button>
       </div>
       <CaptainRatingDialog
