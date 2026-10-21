@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
   FormControlLabel,
   FormGroup,
-  Link,
   MenuItem,
   Paper,
   Radio,
@@ -133,106 +133,86 @@ const emptyForm = {
 
 const STEPS = ["Basic Info", "Availability & Experience", "Waiver"];
 
-// Shown on the closed page: lets people ask to be emailed the application
-// link when it opens. Same response for new and repeat emails, and a hidden
-// "website" field that only bots fill in.
-function InterestSignup() {
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | sending | done
-  const [error, setError] = useState("");
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setStatus("sending");
-    try {
-      const response = await fetch("/api/application-interest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, first_name: firstName, website }),
-      });
-      if (response.ok) {
-        setStatus("done");
-        return;
-      }
-      setError(
-        response.status === 429
-          ? "Too many attempts -- please try again in a little while."
-          : "Please enter a valid email address."
-      );
-    } catch (err) {
-      setError("Something went wrong -- please try again.");
+// Required-field rules per step. Mirrors what the backend serializer
+// enforces (api/serializers_application.py) so people find out here
+// instead of at the very end. Returns { fieldName: "message" }.
+function validateStep(step, form) {
+  const errors = {};
+  const need = (field, msg = "Required") => {
+    const v = form[field];
+    if (v === null || v === undefined || String(v).trim() === "") {
+      errors[field] = msg;
     }
-    setStatus("idle");
   };
 
-  if (status === "done") {
-    return (
-      <Typography color="success.main">
-        You're on the list! We'll email you the application link when
-        applications open.
-      </Typography>
-    );
+  if (step === 0) {
+    [
+      "email",
+      "first_name",
+      "last_name",
+      "gender",
+      "date_of_birth",
+      "state",
+      "phone",
+      "emergency_contact_name",
+      "emergency_contact_phone",
+      "tshirt_size",
+      "shorts_size",
+      "shoe_size",
+      "motivation",
+    ].forEach((f) => need(f));
+
+    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      errors.email = "Enter a valid email address";
+    }
+    if (form.state && form.state.trim().length !== 2) {
+      errors.state = "Use the 2-letter state code";
+    }
+    if (form.is_veteran === null) {
+      errors.is_veteran = "Please choose one";
+    }
   }
 
-  return (
-    <Box component="form" onSubmit={submit}>
-      <Typography variant="subtitle1" gutterBottom>
-        Want a heads-up when applications open?
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Leave your email and we'll send you the application link. We'll only
-        use it for that.
-      </Typography>
-      <Stack spacing={2}>
-        <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <TextField
-          label="First name (optional)"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          inputProps={{ maxLength: 100 }}
-        />
-        {/* Honeypot -- hidden from people, tempting to bots. */}
-        <input
-          type="text"
-          name="website"
-          value={website}
-          onChange={(e) => setWebsite(e.target.value)}
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          style={{ position: "absolute", left: "-9999px", height: 0, width: 0 }}
-        />
-        {error ? (
-          <Typography color="error" variant="body2">
-            {error}
-          </Typography>
-        ) : null}
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={status === "sending" || email.trim() === ""}
-          sx={{ alignSelf: "flex-start" }}
-        >
-          Notify me
-        </Button>
-      </Stack>
-    </Box>
-  );
+  if (step === 1) {
+    if (form.is_veteran) {
+      [
+        "years_experience",
+        "position",
+        "likelihood",
+        "veteran_sunday_or_monday",
+        "veteran_wed_thu_choice",
+      ].forEach((f) => need(f));
+    } else if (form.is_veteran === false) {
+      need("headshot", "A headshot is required");
+      need("prior_experience");
+      need("tryout_date", "Pick a tryout date");
+    }
+  }
+
+  if (step === 2) {
+    need("waiver_signature_name");
+    if (
+      form.waiver_signature_name.trim().toUpperCase() === "N/A" &&
+      !form.parent_signature_name.trim()
+    ) {
+      errors.parent_signature_name = "Required when the applicant is a minor";
+    }
+  }
+
+  return errors;
+}
+
+function FieldError({ message }) {
+  return message ? (
+    <Typography variant="caption" color="error">
+      {message}
+    </Typography>
+  ) : null;
 }
 
 export default function ApplicationPage() {
   const [applicationsOpen, setApplicationsOpen] = useState(null); // null = still checking
   const [tournamentStartDate, setTournamentStartDate] = useState(null);
-  const [minimumAge, setMinimumAge] = useState(null);
   const [tryoutSlots, setTryoutSlots] = useState([]);
   const [rookieTryoutsAvailable, setRookieTryoutsAvailable] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
@@ -240,6 +220,21 @@ export default function ApplicationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
+  // Recomputed live, so a red field clears itself as soon as it's filled in.
+  const stepErrors = showErrors ? validateStep(activeStep, form) : {};
+  const hasStepErrors = Object.keys(stepErrors).length > 0;
+  // Spread onto a TextField: {...fp("email")}
+  const fp = (field) =>
+    stepErrors[field] ? { error: true, helperText: stepErrors[field] } : {};
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Land at the top of every new page (Next or Back).
+  useEffect(() => {
+    scrollToTop();
+  }, [activeStep]);
 
   useEffect(() => {
     fetch("/api/application-settings")
@@ -247,7 +242,6 @@ export default function ApplicationPage() {
       .then((data) => {
         setApplicationsOpen(Boolean(data.is_open));
         setTournamentStartDate(data.tournament_start_date || null);
-        setMinimumAge(data.minimum_age || null);
         setTryoutSlots(data.tryout_slots || []);
         setRookieTryoutsAvailable(data.rookie_tryouts_available !== false);
       })
@@ -274,7 +268,31 @@ export default function ApplicationPage() {
     });
   };
 
+  const handleNext = () => {
+    if (Object.keys(validateStep(activeStep, form)).length > 0) {
+      setShowErrors(true);
+      scrollToTop();
+      return;
+    }
+    setShowErrors(false);
+    setActiveStep((s) => s + 1);
+  };
+
+  const handleBack = () => {
+    setShowErrors(false);
+    setActiveStep((s) => s - 1);
+  };
+
   const handleSubmit = async () => {
+    // Re-check every page so nobody can skip one.
+    for (let step = 0; step < STEPS.length; step++) {
+      if (Object.keys(validateStep(step, form)).length > 0) {
+        setActiveStep(step);
+        setShowErrors(true);
+        return;
+      }
+    }
+
     setSubmitting(true);
     setErrors({});
     const body = new FormData();
@@ -310,49 +328,16 @@ export default function ApplicationPage() {
   }
 
   if (applicationsOpen === false) {
-    // Only show tryouts that are actually set and still ahead of us -- in the
-    // off-season the latest dates on file may be last year's.
-    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
-    const upcomingTryouts = tryoutSlots.filter(
-      (slot) => slot.date && slot.date >= today
-    );
     return (
       <Paper sx={{ p: 4, maxWidth: 600, mx: "auto", mt: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Tryout Application
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2 }}>
           Applications are currently closed
         </Typography>
-        <Typography sx={{ mb: 2 }}>
-          Applications usually open in March or April. Questions? Reach out to
-          mdetennis.ballcrew@gmail.com.
+        <Typography>
+          We're not accepting new ballcrew applications right now. Check
+          back later, or reach out to mdetennis.ballcrew@gmail.com with any
+          questions.
         </Typography>
-
-        <Typography variant="subtitle2">Who can apply</Typography>
-        <Typography variant="body2" sx={{ mb: 2 }}>
-          {minimumAge
-            ? `You must be ${minimumAge} or older by the start of the tournament. `
-            : ""}
-          First-time applicants must attend a tryout. Returning ball crew are
-          encouraged to come, but it isn't required.
-        </Typography>
-
-        {upcomingTryouts.length > 0 ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2">Tryouts</Typography>
-            {upcomingTryouts.map((slot) => (
-              <Typography key={slot.value} variant="body2">
-                {formatTryoutSlot(slot)}
-              </Typography>
-            ))}
-          </Box>
-        ) : null}
-
-        <Typography variant="body2" sx={{ mb: 3 }}>
-          New to ball crew? Read the <Link href="/handbook">handbook</Link>.
-        </Typography>
-        <InterestSignup />
       </Paper>
     );
   }
@@ -374,8 +359,7 @@ export default function ApplicationPage() {
   return (
     <Paper sx={{ p: 4, maxWidth: 700, mx: "auto", mt: 4 }}>
       <Typography variant="h5" gutterBottom>
-        Tryout Application &mdash; Mubadala DC Open
-        {tournamentStartDate ? ` ${tournamentStartDate.slice(0, 4)}` : ""}
+        Ballcrew Application &mdash; Mubadala DC Open 2026
       </Typography>
       <Typography variant="body2" sx={{ mb: 2 }}>
         New to ball crew, or just want a refresher before tryouts? Check out
@@ -393,12 +377,18 @@ export default function ApplicationPage() {
         ))}
       </Stepper>
 
+      {hasStepErrors ? (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Please fill in the highlighted required fields to continue.
+        </Alert>
+      ) : null}
+
       {activeStep === 0 && (
         <Stack spacing={2}>
-          <TextField label="Email" value={form.email} onChange={set("email")} required />
-          <TextField label="First Name" value={form.first_name} onChange={set("first_name")} required />
-          <TextField label="Last Name" value={form.last_name} onChange={set("last_name")} required />
-          <TextField select label="Gender (used for clothing sizing)" value={form.gender} onChange={set("gender")} required>
+          <TextField label="Email" value={form.email} onChange={set("email")} required {...fp("email")} />
+          <TextField label="First Name" value={form.first_name} onChange={set("first_name")} required {...fp("first_name")} />
+          <TextField label="Last Name" value={form.last_name} onChange={set("last_name")} required {...fp("last_name")} />
+          <TextField select label="Gender (used for clothing sizing)" value={form.gender} onChange={set("gender")} required {...fp("gender")}>
             <MenuItem value="M">Male</MenuItem>
             <MenuItem value="F">Female</MenuItem>
           </TextField>
@@ -408,25 +398,27 @@ export default function ApplicationPage() {
             value={form.date_of_birth}
             onChange={set("date_of_birth")}
             InputLabelProps={{ shrink: true }}
-            helperText={
-              tournamentStartDate
-                ? `Must be 14 years old by ${formatDayLabel(DAY_SAT_1, tournamentStartDate)}`
-                : "Must be 14 years old by the start of the tournament"
-            }
             required
+            {...fp("date_of_birth")}
+            helperText={
+              stepErrors.date_of_birth ||
+              (tournamentStartDate
+                ? `Must be 14 years old by ${formatDayLabel(DAY_SAT_1, tournamentStartDate)}`
+                : "Must be 14 years old by the start of the tournament")
+            }
           />
-          <TextField label="State of Residence (2-letter)" value={form.state} onChange={set("state")} inputProps={{ maxLength: 2 }} required />
-          <TextField label="Phone Number" value={form.phone} onChange={set("phone")} placeholder="XXX-XXX-XXXX" required />
+          <TextField label="State of Residence (2-letter)" value={form.state} onChange={set("state")} inputProps={{ maxLength: 2 }} required {...fp("state")} />
+          <TextField label="Phone Number" value={form.phone} onChange={set("phone")} placeholder="XXX-XXX-XXXX" required {...fp("phone")} />
           <TextField label="Additional Email Contact (OPTIONAL - will be copied on all emails)" value={form.additional_email} onChange={set("additional_email")} />
-          <TextField label="Emergency Contact Name" value={form.emergency_contact_name} onChange={set("emergency_contact_name")} required />
-          <TextField label="Emergency Contact Phone" value={form.emergency_contact_phone} onChange={set("emergency_contact_phone")} required />
-          <TextField select label="T-Shirt Size" value={form.tshirt_size} onChange={set("tshirt_size")} required>
+          <TextField label="Emergency Contact Name" value={form.emergency_contact_name} onChange={set("emergency_contact_name")} required {...fp("emergency_contact_name")} />
+          <TextField label="Emergency Contact Phone" value={form.emergency_contact_phone} onChange={set("emergency_contact_phone")} required {...fp("emergency_contact_phone")} />
+          <TextField select label="T-Shirt Size" value={form.tshirt_size} onChange={set("tshirt_size")} required {...fp("tshirt_size")}>
             {SIZES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
           </TextField>
-          <TextField select label="Shorts Size" value={form.shorts_size} onChange={set("shorts_size")} required>
+          <TextField select label="Shorts Size" value={form.shorts_size} onChange={set("shorts_size")} required {...fp("shorts_size")}>
             {SIZES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
           </TextField>
-          <TextField label="Shoe Size" value={form.shoe_size} onChange={set("shoe_size")} required />
+          <TextField label="Shoe Size" value={form.shoe_size} onChange={set("shoe_size")} required {...fp("shoe_size")} />
           <TextField
             label="Why do you want to be a Ballperson? (3 sentences max)"
             value={form.motivation}
@@ -434,6 +426,7 @@ export default function ApplicationPage() {
             multiline
             rows={3}
             required
+            {...fp("motivation")}
           />
           <FormControlLabel
             control={<Checkbox checked={form.is_vegetarian} onChange={set("is_vegetarian")} />}
@@ -468,6 +461,7 @@ export default function ApplicationPage() {
               disabled={!rookieTryoutsAvailable}
             />
           </RadioGroup>
+          <FieldError message={stepErrors.is_veteran} />
           {!rookieTryoutsAvailable ? (
             <Typography variant="body2" color="text.secondary">
               First-time applications are currently closed -- both tryout dates are full.
@@ -485,8 +479,9 @@ export default function ApplicationPage() {
             value={form.years_experience}
             onChange={set("years_experience")}
             required
+            {...fp("years_experience")}
           />
-          <TextField select label="Position" value={form.position} onChange={set("position")} required>
+          <TextField select label="Position" value={form.position} onChange={set("position")} required {...fp("position")}>
             <MenuItem value="Net">Net</MenuItem>
             <MenuItem value="Back">Back</MenuItem>
             {/* Enum order is Back-then-Net vs Net-then-Back; mapped here by
@@ -496,7 +491,7 @@ export default function ApplicationPage() {
             <MenuItem value="Net/Back">Switch (Prefer Net)</MenuItem>
             <MenuItem value="Back/Net">Switch (Prefer Back)</MenuItem>
           </TextField>
-          <TextField select label="Likelihood you'll volunteer this year" value={form.likelihood} onChange={set("likelihood")} required>
+          <TextField select label="Likelihood you'll volunteer this year" value={form.likelihood} onChange={set("likelihood")} required {...fp("likelihood")}>
             <MenuItem value="certain">Absolutely Certain</MenuItem>
             <MenuItem value="moderate">Moderately Likely</MenuItem>
             <MenuItem value="unsure">Unsure, But Submitting Just In Case</MenuItem>
@@ -562,6 +557,7 @@ export default function ApplicationPage() {
               label={`Available for start of ${formatDayLabel(DAY_SUN_1, tournamentStartDate)} & ${formatDayLabel(DAY_MON, tournamentStartDate)}`}
             />
           </RadioGroup>
+          <FieldError message={stepErrors.veteran_sunday_or_monday} />
 
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
             Round of 16 ({formatDayLabel(DAY_WED, tournamentStartDate)} /{" "}
@@ -588,6 +584,7 @@ export default function ApplicationPage() {
               label={`Available for start of ${formatDayLabel(DAY_WED, tournamentStartDate)} & ${formatDayLabel(DAY_THU, tournamentStartDate)}`}
             />
           </RadioGroup>
+          <FieldError message={stepErrors.veteran_wed_thu_choice} />
 
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
             Can you work the end of the tournament?
@@ -614,6 +611,7 @@ export default function ApplicationPage() {
           <Typography variant="h6">First-Time Ballperson</Typography>
           <Typography variant="body2">Headshot (required)</Typography>
           <input type="file" accept="image/*" onChange={setFile("headshot")} />
+          <FieldError message={stepErrors.headshot} />
           <FormControlLabel
             control={<Checkbox checked={form.has_tried_out_before} onChange={set("has_tried_out_before")} />}
             label="Have you previously tried out with us?"
@@ -625,8 +623,9 @@ export default function ApplicationPage() {
             multiline
             rows={2}
             required
+            {...fp("prior_experience")}
           />
-          <TextField select label="Preferred tryout date" value={form.tryout_date} onChange={set("tryout_date")} required>
+          <TextField select label="Preferred tryout date" value={form.tryout_date} onChange={set("tryout_date")} required {...fp("tryout_date")}>
             {tryoutSlots
               .filter((slot) => !slot.full)
               .map((slot) => (
@@ -687,11 +686,13 @@ export default function ApplicationPage() {
             value={form.waiver_signature_name}
             onChange={set("waiver_signature_name")}
             required
+            {...fp("waiver_signature_name")}
           />
           <TextField
             label="Parent signature (required if under 18)"
             value={form.parent_signature_name}
             onChange={set("parent_signature_name")}
+            {...fp("parent_signature_name")}
           />
           {errors && Object.keys(errors).length > 0 && (
             <Typography color="error" variant="body2">
@@ -702,15 +703,11 @@ export default function ApplicationPage() {
       )}
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-        <Button disabled={activeStep === 0} onClick={() => setActiveStep((s) => s - 1)}>
+        <Button disabled={activeStep === 0} onClick={handleBack}>
           Back
         </Button>
         {activeStep < STEPS.length - 1 ? (
-          <Button
-            variant="contained"
-            disabled={activeStep === 0 && form.is_veteran === null}
-            onClick={() => setActiveStep((s) => s + 1)}
-          >
+          <Button variant="contained" onClick={handleNext}>
             Next
           </Button>
         ) : (

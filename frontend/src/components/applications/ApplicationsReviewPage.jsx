@@ -12,7 +12,6 @@ import {
   DialogTitle,
   Divider,
   FormControlLabel,
-  MenuItem,
   Paper,
   Switch,
   Table,
@@ -21,11 +20,12 @@ import {
   TableHead,
   TableRow,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 
 import { ConfirmDialog, getAuthHeader } from "../Utils";
-import InterestListCard from "./InterestListCard";
 
 const STATUS_COLORS = {
   pending: "default",
@@ -244,22 +244,34 @@ export default function ApplicationsReviewPage() {
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 1.5,
+          mb: 2,
+        }}
+      >
         <Typography variant="h6">Ballcrew Applications</Typography>
-        <TextField
-          select
+        <ToggleButtonGroup
+          exclusive
           size="small"
-          label="Filter"
+          color="primary"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          sx={{ width: 180 }}
+          onChange={(_, value) => {
+            // Clicking the active button returns null; keep the current filter.
+            if (value !== null) setStatusFilter(value);
+          }}
+          aria-label="Filter applications by status"
         >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="pending">Pending</MenuItem>
-          <MenuItem value="accepted">Accepted</MenuItem>
-          <MenuItem value="rejected">Rejected</MenuItem>
-          <MenuItem value="waitlisted">Waitlisted</MenuItem>
-        </TextField>
+          <ToggleButton value="pending">Pending</ToggleButton>
+          <ToggleButton value="accepted">Accepted</ToggleButton>
+          <ToggleButton value="waitlisted">Waitlisted</ToggleButton>
+          <ToggleButton value="rejected">Rejected</ToggleButton>
+          <ToggleButton value="">All</ToggleButton>
+        </ToggleButtonGroup>
       </Box>
 
       <ConfirmDialog
@@ -323,8 +335,6 @@ export default function ApplicationsReviewPage() {
           }
         />
       </Box>
-
-      <InterestListCard applicationsOpen={Boolean(applicationsOpen)} />
 
       <Table size="small">
         <TableHead>
