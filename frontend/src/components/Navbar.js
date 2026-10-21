@@ -97,6 +97,7 @@ const chairpersonTabs = [
     label: "Admin Tools",
     url: "/database-query",
     subtabs: [
+      { label: "Morning Trivia", url: "/trivia" },
       { label: "Tournament Settings", url: "/tournament-settings" },
       { label: "Database Query", url: "/database-query" },
       { label: "Debug", url: "/debug" },

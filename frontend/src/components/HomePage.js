@@ -50,6 +50,7 @@ import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
 import ShiftGroupsPage from "./applications/ShiftGroupsPage";
 import HandbookPage from "./applications/HandbookPage";
+import TriviaPage from "./applications/TriviaPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
 
@@ -112,6 +113,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/shift-groups" element={<ShiftGroupsPage />} />
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/sizing-report" element={<SizingReportPage />} />
+      <Route path="/trivia" element={<TriviaPage />} />
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />

@@ -169,6 +169,7 @@ function getNavSections(group) {
     label: "Admin Tools",
     Icon: () => <BugReportOutlinedIcon sx={{ fontSize: 21, strokeWidth: 1.3, transform: "scale(0.9)" }} />,
     items: [
+      { label: "Morning Trivia", url: "/trivia" },
       { label: "Tournament Settings", url: "/tournament-settings" },
       { label: "Database Query", url: "/database-query" },
       { label: "Debug", url: "/debug" },
