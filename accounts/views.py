@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from accounts.serializers import *
 from api.permissions import IsChairperson
@@ -34,10 +34,21 @@ class GetTokenView(ObtainAuthToken):
         ballkid = Ballkid.objects.filter(user=user).first()
         token, created = Token.objects.get_or_create(user=user)
 
+        # Superusers sit above the chairperson role.
+        #
+        # We intentionally do NOT add superusers to the chairperson
+        # Django group. Instead, the frontend receives "chairperson"
+        # as the application role so that superusers get chairperson-
+        # level navigation and application behavior.
+        if user.is_superuser:
+            group = "chairperson"
+        else:
+            group = user.groups.first().name if user.groups.first() else ""
+
         return Response(
             {
                 "token": token.key,
-                "group": user.groups.first().name if user.groups.first() else "",
+                "group": group,
                 "ballkid_id": ballkid.id if ballkid is not None else "",
             },
             status=status.HTTP_200_OK,
@@ -53,8 +64,14 @@ class UpdateCaptainStatus(APIView):
 
         first_name = request.data["first_name"]
         last_name = request.data["last_name"]
-        ballkid = Ballkid.objects.get(first_name=first_name, last_name=last_name)
-        user = User.objects.get(first_name=first_name, last_name=last_name)
+        ballkid = Ballkid.objects.get(
+            first_name=first_name,
+            last_name=last_name,
+        )
+        user = User.objects.get(
+            first_name=first_name,
+            last_name=last_name,
+        )
 
         logger.info(f"[UpdateCaptainStatus] ballkid {ballkid}; user {user}")
 
@@ -63,13 +80,15 @@ class UpdateCaptainStatus(APIView):
 
         # If promoting to captain, then remove ballkid and add captain as a group
         if request.data["is_captain"]:
-            logger.info(f"[UpdateCaptainStatus] Promoting ballkid {ballkid} to captain")
+            logger.info(
+                f"[UpdateCaptainStatus] Promoting ballkid {ballkid} to captain"
+            )
             user.groups.clear()
 
             captain_group = Group.objects.get(name="captain")
             user.groups.add(captain_group)
 
-        # If demoting from captain, then add ballkid and remove captain asa group
+        # If demoting from captain, then add ballkid and remove captain as a group
         else:
             logger.info(
                 f"[UpdateCaptainStatus] Demoting captain {ballkid} from captain"
@@ -102,28 +121,39 @@ class RegisterUserView(APIView):
 
         first_name = request.data.get("first_name", "")
         last_name = request.data.get("last_name", "")
+
         if first_name != "" and last_name != "":
-            request.data["username"] = f"{first_name.lower()}.{last_name.lower()}"
+            request.data["username"] = (
+                f"{first_name.lower()}.{last_name.lower()}"
+            )
 
         serializer = self.serializer_class(data=request.data)
+
         if serializer.is_valid():
             user = serializer.save()
+
             if user:
                 group_name = request.data.get("group", None)
+
                 if group_name:
                     logger.info(
-                        f"[RegisterUserView] Assigning group {group_name} to user {user}"
+                        f"[RegisterUserView] Assigning group "
+                        f"{group_name} to user {user}"
                     )
                     group = Group.objects.get(name=group_name)
                     user.groups.add(group)
 
                 if group_name != "ticketing":
                     ballkid = Ballkid.objects.filter(
-                        is_active=True, first_name=first_name, last_name=last_name
+                        is_active=True,
+                        first_name=first_name,
+                        last_name=last_name,
                     ).first()
+
                     if ballkid:
                         logger.info(
-                            f"[RegisterUserView] Assigning user {user} to ballkid {ballkid}"
+                            f"[RegisterUserView] Assigning user "
+                            f"{user} to ballkid {ballkid}"
                         )
                         ballkid.user = user
                         ballkid.save()
@@ -132,10 +162,19 @@ class RegisterUserView(APIView):
                 json = serializer.data
                 json["token"] = token.key
 
-                return Response(json, status=status.HTTP_201_CREATED)
+                return Response(
+                    json,
+                    status=status.HTTP_201_CREATED,
+                )
 
-        logger.warn(f"[RegisterUser] serializer errors: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        logger.warning(
+            f"[RegisterUser] serializer errors: {serializer.errors}"
+        )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class UserList(generics.ListAPIView):
