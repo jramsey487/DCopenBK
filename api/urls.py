@@ -154,6 +154,7 @@ debug_urls = [
 application_urls = [
     path("application-settings", ApplicationSettingsView.as_view(), name="application-settings"),
     path("submit-application", SubmitApplicationView.as_view(), name="submit-application"),
+    path("application-edit/<uuid:token>", ApplicationEditView.as_view(), name="application-edit"),
     path("applications", ApplicationListView.as_view(), name="applications"),
     path("applications/<int:pk>", ApplicationDetailView.as_view(), name="application-detail"),
     path("applications/<int:pk>/status", UpdateApplicationStatusView.as_view(), name="update-application-status"),

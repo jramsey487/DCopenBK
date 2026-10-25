@@ -215,7 +215,7 @@ USE_I18N = True
 # writes hashed/compressed output to staticfiles/ — do not commit that folder.
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [FRONTEND_DIR / "build/static"]
+STATICFILES_DIRS = [FRONTEND_DIR / "build/root/static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_ROOT = FRONTEND_DIR / "build/root"

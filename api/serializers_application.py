@@ -19,6 +19,16 @@ from api.models.schedule import Tournament
 
 MINIMUM_AGE = 14
 
+# Fields that are never applicant-settable, on either submit or edit.
+_REVIEW_WORKFLOW_FIELDS = [
+    "status",
+    "reviewed_by",
+    "reviewed_at",
+    "promoted_ballkid",
+    "submitted_at",
+    "edited_at",
+]
+
 
 def get_tournament_start_date():
     """
@@ -32,7 +42,7 @@ def get_tournament_start_date():
     return tournament.start_date if tournament else None
 
 
-def get_tryout_slot_info():
+def get_tryout_slot_info(exclude_application_id=None):
     """
     Returns a list of dicts, one per tryout slot ("first"/"second"), each
     with the slot's date and place (set per season on the current
@@ -45,6 +55,10 @@ def get_tryout_slot_info():
     current Tournament's year) -- applications persist across seasons
     (promoted ones are never purged), so counting all-time would wrongly
     treat a slot as permanently full once last year's 50 people filled it.
+
+    exclude_application_id: when an applicant is editing their own
+    application, pass its id so they don't count against their own slot
+    (otherwise someone already holding the last spot couldn't re-save).
 
     Shared by the serializer (to reject a submission for an already-full
     slot) and ApplicationSettingsView (so the public form knows what to
@@ -66,6 +80,8 @@ def get_tryout_slot_info():
         qs = BallcrewApplication.objects.filter(is_veteran=False, tryout_date=value)
         if year is not None:
             qs = qs.filter(submitted_at__year=year)
+        if exclude_application_id is not None:
+            qs = qs.exclude(pk=exclude_application_id)
         count = qs.count()
         remaining = max(TRYOUT_CAPACITY_PER_SLOT - count, 0)
         slots.append(
@@ -81,22 +97,20 @@ def get_tryout_slot_info():
     return slots
 
 
-class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
+class ApplicationValidationMixin:
     """
-    Used by the public, unauthenticated submit-application endpoint.
-    Excludes the review-workflow fields entirely -- those are never
-    applicant-settable.
+    Validation shared by the public submit serializer and the applicant
+    self-edit serializer. When `self.instance` is set (edit), any field
+    missing from the incoming data falls back to the stored value, so a
+    partial update is validated against the full resulting application.
     """
 
-    class Meta:
-        model = BallcrewApplication
-        exclude = [
-            "status",
-            "reviewed_by",
-            "reviewed_at",
-            "promoted_ballkid",
-            "submitted_at",
-        ]
+    def _value(self, data, field):
+        if field in data:
+            return data[field]
+        if self.instance is not None:
+            return getattr(self.instance, field, None)
+        return None
 
     def validate_date_of_birth(self, value):
         start_date = get_tournament_start_date()
@@ -118,7 +132,12 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        is_veteran = data.get("is_veteran")
+        editing = self.instance is not None
+        # The veteran/first-timer branch can't change on edit (is_veteran is
+        # read-only there), so always trust the stored value when editing.
+        is_veteran = (
+            self.instance.is_veteran if editing else data.get("is_veteran")
+        )
 
         if is_veteran:
             required = [
@@ -130,12 +149,15 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
             ]
         else:
             required = ["has_tried_out_before", "tryout_date"]
-            if not data.get("headshot"):
+            has_headshot = bool(data.get("headshot")) or (
+                editing and bool(self.instance.headshot)
+            )
+            if not has_headshot:
                 raise serializers.ValidationError(
                     {"headshot": "A headshot is required for first-time applicants."}
                 )
 
-        missing = [f for f in required if data.get(f) in (None, "")]
+        missing = [f for f in required if self._value(data, f) in (None, "")]
         if missing:
             branch = "veteran" if is_veteran else "first-time"
             raise serializers.ValidationError(
@@ -145,11 +167,19 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         # First-timers: re-check the chosen tryout slot still has room.
         # The public form hides a full slot from the dropdown, but this is
         # a second check server-side in case two people submit for the
-        # last spot at nearly the same moment.
+        # last spot at nearly the same moment. On edit, the applicant's own
+        # current application doesn't count against the slot.
         if not is_veteran:
-            chosen_slot = data.get("tryout_date")
+            chosen_slot = self._value(data, "tryout_date")
             slot_info = next(
-                (s for s in get_tryout_slot_info() if s["value"] == chosen_slot), None
+                (
+                    s
+                    for s in get_tryout_slot_info(
+                        exclude_application_id=self.instance.pk if editing else None
+                    )
+                    if s["value"] == chosen_slot
+                ),
+                None,
             )
             if slot_info and slot_info["full"]:
                 raise serializers.ValidationError(
@@ -164,7 +194,7 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
             if is_veteran
             else FIRST_TIMER_AVAILABILITY_DAYS
         )
-        submitted_days = data.get("availability_days") or []
+        submitted_days = self._value(data, "availability_days") or []
         invalid_days = [d for d in submitted_days if d not in allowed_days]
         if invalid_days:
             raise serializers.ValidationError(
@@ -175,7 +205,7 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
         # not required, not capacity-limited (unlike a rookie's actual
         # tryout slot), just constrained to the two real slot values.
         if is_veteran:
-            help_slots = data.get("tryout_help_availability") or []
+            help_slots = self._value(data, "tryout_help_availability") or []
             valid_slots = [v for v, _ in TRYOUT_SLOT_CHOICES]
             invalid_help_slots = [s for s in help_slots if s not in valid_slots]
             if invalid_help_slots:
@@ -184,18 +214,53 @@ class BallcrewApplicationSubmitSerializer(serializers.ModelSerializer):
                 )
 
         # Waiver: either the applicant's own signature (18+) or a parent's.
-        if not data.get("waiver_signature_name"):
+        waiver = self._value(data, "waiver_signature_name")
+        parent = self._value(data, "parent_signature_name")
+        if not waiver:
             raise serializers.ValidationError(
                 {"waiver_signature_name": "A signature (or 'N/A' if a minor) is required."}
             )
-        if data["waiver_signature_name"].strip().upper() == "N/A" and not data.get(
-            "parent_signature_name"
-        ):
+        if waiver.strip().upper() == "N/A" and not parent:
             raise serializers.ValidationError(
                 {"parent_signature_name": "Required when the applicant is a minor."}
             )
 
         return data
+
+
+class BallcrewApplicationSubmitSerializer(
+    ApplicationValidationMixin, serializers.ModelSerializer
+):
+    """
+    Used by the public, unauthenticated submit-application endpoint.
+    Excludes the review-workflow fields entirely -- those are never
+    applicant-settable.
+
+    edit_token is included as a read-only field so the response to a
+    successful submit can hand the applicant their personal edit link.
+    """
+
+    class Meta:
+        model = BallcrewApplication
+        exclude = _REVIEW_WORKFLOW_FIELDS
+
+
+class BallcrewApplicationEditSerializer(
+    ApplicationValidationMixin, serializers.ModelSerializer
+):
+    """
+    Used by the token-based applicant self-edit endpoint. Same fields and
+    validation as submitting, except:
+    - is_veteran is read-only (switching branches would invalidate the
+      branch-specific answers; applicants who picked the wrong one should
+      email the chairpersons)
+    - edit_token is never echoed back
+    """
+
+    class Meta:
+        model = BallcrewApplication
+        exclude = _REVIEW_WORKFLOW_FIELDS + ["edit_token"]
+        read_only_fields = ["is_veteran"]
 
 
 class TryoutReviewSerializer(serializers.ModelSerializer):
@@ -217,7 +282,8 @@ class TryoutReviewSerializer(serializers.ModelSerializer):
 class BallcrewApplicationReviewSerializer(serializers.ModelSerializer):
     """
     Used on the chairperson-facing review dashboard: read-only application
-    data plus the aggregated tryout review scores.
+    data plus the aggregated tryout review scores. The applicant's private
+    edit_token is deliberately not exposed here.
     """
 
     tryout_reviews = TryoutReviewSerializer(many=True, read_only=True)
@@ -226,7 +292,7 @@ class BallcrewApplicationReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BallcrewApplication
-        fields = "__all__"
+        exclude = ["edit_token"]
 
     def get_average_overall_rating(self, obj):
         reviews = obj.tryout_reviews.all()

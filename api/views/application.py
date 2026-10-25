@@ -4,6 +4,7 @@ Views for the ballcrew application + tryout review workflow.
 Wire these into api/urls.py:
 
     path("submit-application", SubmitApplicationView.as_view()),
+    path("application-edit/<uuid:token>", ApplicationEditView.as_view()),
     path("applications", ApplicationListView.as_view()),
     path("applications/<int:pk>", ApplicationDetailView.as_view()),
     path("applications/<int:pk>/status", UpdateApplicationStatusView.as_view()),
@@ -12,11 +13,14 @@ Wire these into api/urls.py:
     path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view()),
 """
 
+from datetime import date
 import re
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
@@ -38,11 +42,11 @@ from api.models.ballkid import Ballkid
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
     ApplicationStatusUpdateSerializer,
+    BallcrewApplicationEditSerializer,
     BallcrewApplicationReviewSerializer,
     BallcrewApplicationSubmitSerializer,
     get_tournament_start_date,
     get_tryout_slot_info,
-    MINIMUM_AGE,
     TryoutReviewSerializer,
 )
 from api.utils.application_email import (
@@ -60,6 +64,15 @@ class ApplicationSubmitThrottle(AnonRateThrottle):
     #       "DEFAULT_THROTTLE_RATES": {"application-submit": "5/hour"},
     #   }
     scope = "application-submit"
+
+
+class ApplicationEditThrottle(AnonRateThrottle):
+    # Sets its own rate (instead of a settings.py entry) so this feature
+    # doesn't require touching settings. Per-IP; generous enough for an
+    # applicant to load the page and save a few times. The edit token is a
+    # random UUID, so guessing is infeasible regardless.
+    scope = "application-edit"
+    rate = "60/hour"
 
 
 class ApplicationSettingsView(APIView):
@@ -84,7 +97,6 @@ class ApplicationSettingsView(APIView):
                 # dates (e.g. "Saturday, July 25") for each semantic day key
                 # without hardcoding a year -- see api/models/application.py
                 "tournament_start_date": start_date.isoformat() if start_date else None,
-                "minimum_age": MINIMUM_AGE,
                 "tryout_slots": tryout_slots,
                 # First-timer applications auto-close once both tryout
                 # slots are full -- there'd be nowhere left to send a
@@ -139,6 +151,98 @@ class SubmitApplicationView(generics.CreateAPIView):
         transaction.on_commit(
             lambda: send_application_confirmation_async(application.pk)
         )
+
+
+def _edit_lock_reason(application):
+    """
+    Returns a human-readable reason an application can't be edited by its
+    applicant right now, or None if editing is allowed. Enforced server-side
+    on every PATCH -- the frontend just mirrors it.
+    """
+    contact = settings.SUPPORT_EMAIL
+    if application.promoted_ballkid_id or application.status != "pending":
+        return (
+            "This application has already been reviewed, so it can't be edited "
+            f"here anymore. Email {contact} if something needs to change."
+        )
+    # Edits stay open after applications close (the is_open toggle only
+    # gates brand-new submissions) but end once the tournament starts. If no
+    # Tournament/start date exists yet, there's nothing to lock on.
+    start_date = get_tournament_start_date()
+    if start_date is not None and date.today() >= start_date:
+        return (
+            "The tournament has started, so applications can no longer be "
+            f"edited here. Email {contact} if something needs to change."
+        )
+    return None
+
+
+class ApplicationEditView(APIView):
+    """
+    Public, token-authenticated endpoint letting an applicant view and edit
+    their own submitted application. The token is the UUID in their
+    confirmation email / thank-you page link (/apply?edit=<token>).
+
+    GET   -> {application, editable, locked_reason}
+    PATCH -> updates the application (multipart/form-data, same shape as
+             submitting); 403 if locked. The veteran/first-timer branch
+             can't be changed.
+
+    Editing is allowed while the application is still pending, including
+    after applications close, until the tournament's start date. See
+    _edit_lock_reason.
+    """
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ApplicationEditThrottle]
+
+    def get(self, request, token):
+        application = get_object_or_404(BallcrewApplication, edit_token=token)
+        reason = _edit_lock_reason(application)
+        data = BallcrewApplicationEditSerializer(
+            application, context={"request": request}
+        ).data
+        return Response(
+            {
+                "application": data,
+                "editable": reason is None,
+                "locked_reason": reason,
+            }
+        )
+
+    def patch(self, request, token):
+        application = get_object_or_404(BallcrewApplication, edit_token=token)
+        reason = _edit_lock_reason(application)
+        if reason:
+            return Response({"detail": reason}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = BallcrewApplicationEditSerializer(
+            application,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        # Remember the files currently stored so any that get replaced can be
+        # deleted afterward (otherwise the old photo is orphaned in R2).
+        old_files = [
+            (name, getattr(application, name))
+            for name in ("headshot", "headshot_update")
+            if getattr(application, name)
+        ]
+
+        application = serializer.save(edited_at=timezone.now())
+
+        for name, old_file in old_files:
+            new_file = getattr(application, name)
+            if not new_file or new_file.name != old_file.name:
+                old_file.storage.delete(old_file.name)
+
+        transaction.on_commit(
+            lambda: send_application_confirmation_async(application.pk, updated=True)
+        )
+        return Response(serializer.data)
 
 
 class ApplicationListView(generics.ListAPIView):
@@ -419,7 +523,6 @@ class ApplyHeadshotUpdateView(APIView):
 
         return Response({"updated_ballkid_id": ballkid.id, "image": ballkid.image})
 
-
 # ---------------------------------------------------------------------------
 # Interest list ("email me when applications open")
 # ---------------------------------------------------------------------------
@@ -506,7 +609,7 @@ class ApplicationInterestImportView(APIView):
         for token in tokens:
             token = token.strip("<>\"'()[]")
             if "@" not in token:
-                continue  # names, headers, and other text around the emails
+                continue
             email = token.lower()
             if email in seen:
                 continue
@@ -570,3 +673,4 @@ class ApplicationInterestNotifyView(APIView):
         send_interest_notifications_async()
         queued = min(pending, INTEREST_BATCH_LIMIT)
         return Response({"queued": queued, "remaining_after": pending - queued})
+

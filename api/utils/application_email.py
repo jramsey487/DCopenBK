@@ -1,6 +1,7 @@
 """
 Confirmation email sent to an applicant right after they submit the public
-ballcrew application form, containing a copy of what they submitted.
+ballcrew application form (and again after they edit it), containing a copy
+of what they submitted and their personal edit link.
 
 Design notes:
 - Sent from a background thread after the response is already on its way, so
@@ -185,8 +186,21 @@ def build_sections(application, start_date, slots):
     return cleaned
 
 
-def build_confirmation(application, start_date, slots, site_name, handbook_url):
-    """Returns (subject, plain_text, html) for the confirmation email."""
+def build_confirmation(
+    application,
+    start_date,
+    slots,
+    site_name,
+    handbook_url,
+    edit_url=None,
+    updated=False,
+):
+    """Returns (subject, plain_text, html) for the confirmation email.
+
+    edit_url: the applicant's personal edit link; included when provided.
+    updated: True for the email sent after an applicant edits, which
+    changes the wording but otherwise sends the same copy of their answers.
+    """
     a = application
     sections = build_sections(a, start_date, slots)
     slot_by_value = {s["value"]: s for s in slots}
@@ -205,16 +219,31 @@ def build_confirmation(application, start_date, slots, site_name, handbook_url):
             else "Tryouts are required for first-time ball crew."
         )
 
-    intro = (
-        f"Hi {a.first_name}, thanks for applying to the {site_name}! "
-        "We've received your application. Here's a copy of what you submitted."
+    if updated:
+        intro = (
+            f"Hi {a.first_name}, your {site_name} application has been "
+            "updated. Here's a copy of what we have on file now."
+        )
+        subject = f"Your application was updated — {site_name}"
+    else:
+        intro = (
+            f"Hi {a.first_name}, thanks for applying to the {site_name}! "
+            "We've received your application. Here's a copy of what you submitted."
+        )
+        subject = f"We received your application — {site_name}"
+
+    edit_line = (
+        f"Need to change something? You can edit your application until it's "
+        f"reviewed or the tournament starts, using your personal link (keep it "
+        f"private): {edit_url}\n"
+        if edit_url
+        else ""
     )
     outro = (
         f"New to ball crew, or want a refresher? The handbook is here: {handbook_url}\n"
-        "If anything above is wrong or you have questions, just reply to this email."
+        f"{edit_line}"
+        "If anything else comes up, just reply to this email."
     )
-
-    subject = f"We received your application — {site_name}"
 
     # Plain text
     lines = [intro, "", note, ""]
@@ -239,6 +268,16 @@ def build_confirmation(application, start_date, slots, site_name, handbook_url):
         f"<p>{escape(intro)}</p>",
         f"<p><strong>{escape(note)}</strong></p>",
     ]
+    if edit_url:
+        html_parts.append(
+            '<p style="margin:16px 0">'
+            f'<a href="{escape(edit_url)}" style="display:inline-block;padding:10px 16px;'
+            'background:#0d1b3e;color:#ffffff;text-decoration:none;border-radius:6px;'
+            'font-weight:600">Edit your application</a><br>'
+            '<span style="font-size:12px;color:#556">Available until your application '
+            "is reviewed or the tournament starts. This link is personal to you -- "
+            "please don't share it.</span></p>"
+        )
     for title, rows in sections:
         html_parts.append(
             f'<h3 style="margin:20px 0 6px;font-size:15px;color:#0b1b3f">{escape(title)}</h3>'
@@ -255,14 +294,14 @@ def build_confirmation(application, start_date, slots, site_name, handbook_url):
     html_parts.append(
         f'<p style="margin-top:24px">New to ball crew, or want a refresher? '
         f'<a href="{escape(handbook_url)}">Read the handbook</a>.<br>'
-        "If anything above is wrong or you have questions, just reply to this email.</p>"
+        "If anything else comes up, just reply to this email.</p>"
     )
     html_parts.append("</div>")
 
     return subject, text, "".join(html_parts)
 
 
-def send_application_confirmation(application_id):
+def send_application_confirmation(application_id, updated=False):
     """Builds and sends the confirmation for one application. Never raises."""
     try:
         if not ApplicationSettings.get_solo().send_confirmation_emails:
@@ -275,6 +314,8 @@ def send_application_confirmation(application_id):
             get_tryout_slot_info(),
             settings.SITE_NAME,
             f"{settings.SITE_BASE_URL}/handbook",
+            edit_url=f"{settings.SITE_BASE_URL}/apply?edit={application.edit_token}",
+            updated=updated,
         )
 
         cc = []
@@ -291,7 +332,10 @@ def send_application_confirmation(application_id):
         )
         message.attach_alternative(html, "text/html")
         message.send(fail_silently=False)
-        logger.info(f"Sent application confirmation for application {application_id}")
+        logger.info(
+            f"Sent application {'update ' if updated else ''}confirmation "
+            f"for application {application_id}"
+        )
     except Exception:
         logger.exception(
             f"Could not send application confirmation for application {application_id}"
@@ -301,11 +345,12 @@ def send_application_confirmation(application_id):
         close_old_connections()
 
 
-def send_application_confirmation_async(application_id):
+def send_application_confirmation_async(application_id, updated=False):
     threading.Thread(
-        target=send_application_confirmation, args=(application_id,), daemon=True
+        target=send_application_confirmation,
+        args=(application_id, updated),
+        daemon=True,
     ).start()
-
 
 # ---------------------------------------------------------------------------
 # Interest list: "email me when applications open"
@@ -444,3 +489,4 @@ def send_interest_notifications_async(limit=INTEREST_BATCH_LIMIT):
     threading.Thread(
         target=send_interest_notifications, args=(limit,), daemon=True
     ).start()
+

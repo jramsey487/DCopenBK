@@ -11,7 +11,16 @@ Applications are reviewed by chairpersons (and, per tryout day, captains
 submitting TryoutReview rows). Accepting an application promotes it into a
 real Ballkid record via the promote-application endpoint -- applications are
 never written directly into Ballkid.
+
+Applicants can edit their own application after submitting via a secret,
+unguessable link (BallcrewApplication.edit_token) that is shown on the
+thank-you page and included in the confirmation email. Editing is only
+allowed while the application is still pending and the tournament hasn't
+started yet -- it stays open after applications close (enforced server-side
+in ApplicationEditView).
 """
+
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -258,6 +267,15 @@ class BallcrewApplication(models.Model):
         related_name="source_application",
     )
 
+    # --- Self-service editing ---------------------------------------------
+    # Secret, unguessable token that acts as the applicant's "login" for
+    # editing their own application (/apply?edit=<token>). Never exposed to
+    # chairpersons or listed anywhere except the submit response and the
+    # applicant's own confirmation email.
+    edit_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    # Set each time the applicant edits after the initial submission.
+    edited_at = models.DateTimeField(null=True, blank=True)
+
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -319,7 +337,8 @@ class ApplicationSettings(models.Model):
     Singleton row controlling whether the public application form (/apply)
     accepts submissions. Chairpersons toggle this from the review dashboard;
     SubmitApplicationView checks it server-side so a closed toggle can't be
-    bypassed by hitting the API directly.
+    bypassed by hitting the API directly. This only gates new submissions --
+    applicants can still edit their existing application after it closes.
 
     The two tryout_date fields here are legacy: tryout dates and places now
     live on Tournament (set from the Tournament Settings page, one set per
