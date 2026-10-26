@@ -12,6 +12,7 @@ from api.views.sizing_report import *
 from api.views.live_scores import *
 from api.views.captain_rating import *
 from api.views.trivia import *
+from api.views.notifications import *
 
 
 # Ballkid URLs
@@ -33,8 +34,6 @@ ballkid_urls = [
     path("archive-all", ArchiveAll.as_view(), name="archive-all"),
 ]
 
-
-# Teams URLs
 teams_urls = [
     path("calc-num-teams", CalcNumTeams.as_view(), name="calc-num-teams"),
     path("clear-team", ClearTeam.as_view(), name="clear-team"),
@@ -43,8 +42,6 @@ teams_urls = [
     path("get-past-finals/<int:year>", GetPastFinals.as_view(), name="get-past-finals"),
 ]
 
-
-# Schedule URLs
 schedule_urls = [
     path("get-schedule", GetSchedule.as_view(), name="get-schedule"),
     path("delete-schedule", DeleteSchedule.as_view(), name="delete-schedule"),
@@ -61,14 +58,15 @@ schedule_urls = [
     path("court-notes", CourtNotes.as_view(), name="court-notes"),
 ]
 
+notification_urls = [
+    path("notification-settings", NotificationSettingsView.as_view(), name="notification-settings"),
+    path("notification-subscribe", NotificationSubscribeView.as_view(), name="notification-subscribe"),
+]
 
-# Live scoring URLs
 live_score_urls = [
     path("live-scores", LiveScores.as_view(), name="live-scores"),
 ]
 
-
-# Analytics URLs
 analytics_urls = [
     path("get-average-checkin-leaderboard", GetAverageCheckinLeaderboard.as_view(), name="get-average-checkin-leaderboard"),
     path("get-average-checkin-time/<int:pk>", GetAverageCheckinTime.as_view(), name="get-average-checkin-time"),
@@ -86,8 +84,6 @@ analytics_urls = [
     path("get-past-teams/<int:pk>", GetPastTeams.as_view(), name="get-past-teams"),
 ]
 
-
-# Tournament URLs
 tournament_urls = [
     path("get-tournament", GetTournament.as_view(), name="get-tournament"),
     path("download", DownloadData.as_view(), name="download"),
@@ -105,8 +101,6 @@ tournament_urls = [
     path("ticket-used", UpdateTicketUsed.as_view(), name="ticket-used"),
 ]
 
-
-# Rating URLs
 rating_urls = [
     path("create-rating", CreateRating.as_view(), name="create-rating"),
     path("save-draft-rating", SaveDraftRating.as_view(), name="save-draft-rating"),
@@ -121,8 +115,6 @@ rating_urls = [
     path("average-calibration-parameters", GetAverageCalibrationParams.as_view(), name="average-calibration-parameters"),
 ]
 
-
-# Captain/chairperson rating URLs
 captain_rating_urls = [
     path("create-captain-rating", CreateCaptainRating.as_view(), name="create-captain-rating"),
     path("my-captain-ratings", MyCaptainRatings.as_view(), name="my-captain-ratings"),
@@ -131,8 +123,6 @@ captain_rating_urls = [
     path("captain-ratings-summary/<int:year>", CaptainRatingsSummary.as_view(), name="captain-ratings-summary"),
 ]
 
-
-# Debug URLs
 debug_urls = [
     path("create-checkin-history", CreateCheckinHistory.as_view(), name="create-checkin-history"),
     path("create-team-history", CreateTeamHistory.as_view(), name="create-team-history"),
@@ -149,8 +139,6 @@ debug_urls = [
     path("bulk-checkin", BulkCheckin.as_view(), name="bulk-checkin"),
 ]
 
-
-# Ballcrew application + tryout review URLs
 application_urls = [
     path("application-settings", ApplicationSettingsView.as_view(), name="application-settings"),
     path("submit-application", SubmitApplicationView.as_view(), name="submit-application"),
@@ -163,44 +151,35 @@ application_urls = [
     path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view(), name="tryout-reviews-application"),
     path("purge-unpromoted-applications", PurgeUnpromotedApplicationsView.as_view(), name="purge-unpromoted-applications"),
     path("applications/<int:pk>/apply-headshot-update", ApplyHeadshotUpdateView.as_view(), name="apply-headshot-update"),
-    # Interest list ("email me when applications open")
     path("application-interest", ApplicationInterestSignupView.as_view(), name="application-interest"),
     path("application-interest/summary", ApplicationInterestSummaryView.as_view(), name="application-interest-summary"),
     path("application-interest/import", ApplicationInterestImportView.as_view(), name="application-interest-import"),
     path("application-interest/notify", ApplicationInterestNotifyView.as_view(), name="application-interest-notify"),
 ]
 
-
-# Shift group URLs (keep certain ballkids on the same team/shift)
 shift_group_urls = [
     path("shift-groups", ShiftGroupListCreateView.as_view(), name="shift-groups"),
     path("shift-groups/<int:pk>", ShiftGroupDetailView.as_view(), name="shift-group-detail"),
 ]
 
-
-# Read-only SQL console (chairperson-only, see api/views/database_query.py)
 database_query_urls = [
     path("database-query", DatabaseQueryView.as_view(), name="database-query"),
 ]
 
-
-# Sizing report URLs
 sizing_report_urls = [
     path("sizing-report", SizingReportView.as_view(), name="sizing-report"),
 ]
 
-
-# Morning-meeting trivia (chairperson-only, see api/views/trivia.py)
 trivia_urls = [
     path("trivia", TriviaOptions.as_view(), name="trivia"),
     path("trivia-used", TriviaUsed.as_view(), name="trivia-used"),
 ]
 
-
 urlpatterns = (
     ballkid_urls
     + teams_urls
     + schedule_urls
+    + notification_urls
     + live_score_urls
     + analytics_urls
     + tournament_urls
