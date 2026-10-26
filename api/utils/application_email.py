@@ -208,7 +208,7 @@ def build_confirmation(
     if a.is_veteran:
         note = (
             "Tryouts aren't required for returning ball crew, but they're "
-            "highly encouraged."
+            "highly encouraged to teach the next generation."
         )
     else:
         slot = slot_by_value.get(a.tryout_date)
