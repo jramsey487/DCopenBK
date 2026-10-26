@@ -1,0 +1,62 @@
+.push-settings-card {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #d9dce3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.push-settings-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.push-settings-description {
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.push-settings-message,
+.push-settings-error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+}
+
+.push-settings-message {
+  background: #edf8ef;
+}
+
+.push-settings-error {
+  background: #fff0f0;
+}
+
+.push-settings-button {
+  border: 0;
+  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+}
+
+.push-settings-button.secondary {
+  background: transparent;
+  border: 1px solid #c9ccd3;
+}
+
+.push-settings-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.push-settings-preferences {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.push-settings-preferences label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  line-height: 1.4;
+}
