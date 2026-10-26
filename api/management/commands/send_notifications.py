@@ -78,10 +78,11 @@ class Command(BaseCommand):
         if not first_shift or now < first_shift.start:
             return 0
 
-        # A team assignment must remain the current assignment for 5 full minutes.
+        # A team change must occur after matches begin and remain current for 5 full minutes.
         histories = TeamHistory.objects.filter(
             team__gt=0,
             end__isnull=True,
+            start__gte=first_shift.start,
             start__lte=now - timedelta(minutes=5),
             ballkid__current_team__gt=0,
             ballkid__user__isnull=False,
