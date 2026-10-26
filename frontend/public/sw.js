@@ -9,7 +9,7 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "DC Open Ballcrew";
   const options = {
     body: payload.body || "You have a new DC Open Ballcrew update.",
-    icon: "/favicon-192.png",
+    icon: "/favicon.png",
     badge: "/favicon-32.png",
     tag: payload.tag || "dcopenbk-notification",
     renotify: true,
@@ -21,10 +21,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = new URL(
-    event.notification.data?.url || "/",
-    self.location.origin
-  ).href;
+  const targetUrl = new URL(event.notification.data?.url || "/", self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
