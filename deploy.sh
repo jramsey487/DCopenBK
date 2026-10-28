@@ -1,13 +1,38 @@
-# 1. Build the frontend
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+echo "==> Installing frontend dependencies..."
 cd frontend
-npm i
+npm install
+
+echo "==> Building frontend..."
 npm run build
 
-# 2. Move files at the build root inside a root subdirectory
+echo "==> Arranging build files for Django..."
 mkdir -p build/root
-for file in $(ls build | grep -E -v '^(index\.html|static|root)$'); do
-    mv "build/$file" build/root;
+
+# Move all build items except index.html and root into root.
+# This includes static/, which Django expects at build/root/static.
+for item in build/* build/.[!.]* build/..?*; do
+    [ -e "$item" ] || continue
+
+    name="${item##*/}"
+
+    case "$name" in
+        index.html|root)
+            continue
+            ;;
+    esac
+
+    mv "$item" build/root/
 done
 
 cd ..
 
+echo "==> Verifying expected directories..."
+test -d frontend/build/root/static
+
+echo "==> Frontend preparation complete."

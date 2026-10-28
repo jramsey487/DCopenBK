@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { Banners, getAuthHeader } from "../Utils";
+import PushNotificationSettings from "./PushNotificationSettings";
 import "./account-settings.css";
 
 function ChangePassword() {
@@ -152,6 +153,7 @@ export default function AccountSettings() {
           </p>
         </header>
         <ChangePassword />
+        <PushNotificationSettings />
       </div>
     </div>
   );

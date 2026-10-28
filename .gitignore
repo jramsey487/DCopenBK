@@ -121,3 +121,5 @@ dist
 
 #src
 src/
+# Local Python virtual environments
+.venv312/
