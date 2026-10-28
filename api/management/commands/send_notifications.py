@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
@@ -11,7 +10,7 @@ from api.models.notifications import (
     NotificationSettings,
     PushSubscription,
 )
-from api.models.schedule import Schedule
+from api.models.schedule import Schedule, Tournament
 from api.utils.push_notifications import send_push_to_user
 
 
@@ -27,6 +26,12 @@ class Command(BaseCommand):
         # This project currently has USE_TZ disabled, so use naive local datetimes.
         now = datetime.now()
 
+        if not self.tournament_is_active(now):
+            self.stdout.write(
+                "Notification check skipped: tournament is not active."
+            )
+            return
+
         shift_count = self.send_shift_reminders(now)
         team_count = self.send_team_change_notifications(now)
 
@@ -37,6 +42,23 @@ class Command(BaseCommand):
                 f"{team_count} team changes."
             )
         )
+
+    def tournament_is_active(self, now):
+        """
+        Return True only when today's date falls within the current year's
+        configured tournament start and end dates.
+        """
+        try:
+            tournament = Tournament.objects.get(year=now.year)
+        except Tournament.DoesNotExist:
+            return False
+
+        if tournament.start_date is None or tournament.end_date is None:
+            return False
+
+        today = now.date()
+
+        return tournament.start_date <= today <= tournament.end_date
 
     def send_shift_reminders(self, now):
         """Notify active ballkids approximately 10 minutes before their shifts."""
