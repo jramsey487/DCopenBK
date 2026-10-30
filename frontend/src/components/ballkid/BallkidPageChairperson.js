@@ -48,6 +48,7 @@ import { BallkidParamsChart } from "./BallkidParamsChart";
 import {
   getAuthHeader,
   getBallkidId,
+  getIsSuperuser,
   getLocalStorage,
   useIsMobile,
   getTimeFloat,
@@ -1290,6 +1291,7 @@ export default function BallkidPageChairperson(props) {
   const { backTo, backLabel } = useProfileBackLink();
   const { pk: pkParam } = useParams();
   const myBallkidId = getBallkidId();
+  const isSuperuser = getIsSuperuser();
   const onMeRoute =
     location.pathname === "/me" || location.pathname.endsWith("/me");
   const pk = onMeRoute
@@ -1356,6 +1358,17 @@ export default function BallkidPageChairperson(props) {
   }, [updated, pk, myBallkidId]);
 
   if (loadState === "no_link") {
+    if (onMeRoute && isSuperuser) {
+      return (
+        <ProfileErrorState>
+          This superuser account is not linked to a personal Ballkid profile.
+          You can still use your chairperson and administration features; a
+          Ballkid profile is only available when an account is linked to a
+          Ballkid record.
+        </ProfileErrorState>
+      );
+    }
+
     return (
       <ProfileErrorState>
         No ballkid is linked to this login. For local dev, run{" "}
