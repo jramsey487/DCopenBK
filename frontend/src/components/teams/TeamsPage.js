@@ -31,6 +31,11 @@ const SHOW_TEAMS_CACHE = "teams:show";
 const NEXT_SHIFTS_CACHE = "teams:next-shifts";
 const UI_TOGGLES_CACHE = "teams:ui-toggles";
 
+// Team pairings are collaborative UI state, but they do not need sub-second
+// synchronization. A five-second refresh keeps changes reasonably current
+// while substantially reducing API traffic during busy tournament periods.
+const TEAM_PAIRS_POLL_INTERVAL = 5000;
+
 const DEFAULT_UI_TOGGLES = {
   showPhotos: false,
   showYoe: false,
@@ -253,59 +258,74 @@ export default function TeamsPage() {
     };
   }, [hadCache]);
 
-  // Keep pairings in sync for everyone on the page (multi-captain / viewers).
+  // Keep pairings synchronized across captains and viewers. Poll at a
+  // moderate interval while visible, stop completely in background tabs,
+  // and refresh immediately when the user returns to the page.
   useEffect(() => {
     let cancelled = false;
     let timer = null;
+    let requestInFlight = false;
 
-    const schedule = (delay = 2000) => {
-      if (cancelled) {
-        return;
+    const clearScheduledPoll = () => {
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
       }
-      timer = window.setTimeout(poll, delay);
     };
 
-    const poll = () => {
-      if (cancelled) {
+    const scheduleNextPoll = () => {
+      clearScheduledPoll();
+
+      if (cancelled || document.hidden) {
         return;
       }
-      if (typeof document !== "undefined" && document.hidden) {
-        schedule();
+
+      timer = window.setTimeout(poll, TEAM_PAIRS_POLL_INTERVAL);
+    };
+
+    const poll = async () => {
+      if (cancelled || document.hidden || requestInFlight) {
         return;
       }
-      fetchTeamPairs()
-        .then((data) => {
-          if (cancelled || !Array.isArray(data)) {
-            return;
-          }
+
+      requestInFlight = true;
+
+      try {
+        const data = await fetchTeamPairs();
+
+        if (!cancelled && Array.isArray(data)) {
           setPairs((prev) =>
             mergePairsFromServer(prev, data, pendingDeleteIdsRef.current)
           );
-        })
-        .catch(() => {})
-        .finally(() => {
-          schedule();
-        });
-    };
-
-    schedule(1500);
-
-    const onVisibility = () => {
-      if (typeof document !== "undefined" && !document.hidden) {
-        if (timer) {
-          window.clearTimeout(timer);
         }
-        poll();
+      } catch {
+        // Keep the last known pairings if a refresh temporarily fails.
+      } finally {
+        requestInFlight = false;
+        scheduleNextPoll();
       }
     };
-    document.addEventListener("visibilitychange", onVisibility);
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        clearScheduledPoll();
+        return;
+      }
+
+      // Do not wait for the next interval after returning to the tab.
+      clearScheduledPoll();
+      poll();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    // Fetch once shortly after mount; subsequent requests use the 5s interval.
+    scheduleNextPoll();
 
     return () => {
       cancelled = true;
-      if (timer) {
-        window.clearTimeout(timer);
-      }
-      document.removeEventListener("visibilitychange", onVisibility);
+      clearScheduledPoll();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
