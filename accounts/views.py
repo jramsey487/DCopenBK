@@ -49,6 +49,7 @@ class GetTokenView(ObtainAuthToken):
             {
                 "token": token.key,
                 "group": group,
+                "is_superuser": user.is_superuser,
                 "ballkid_id": ballkid.id if ballkid is not None else "",
             },
             status=status.HTTP_200_OK,
