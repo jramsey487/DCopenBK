@@ -16,6 +16,11 @@ from rest_framework.views import APIView
 from api.models.ballkid import Ballkid
 from api.models.captain_rating import CaptainRating
 from api.permissions import IsChairperson
+from api.utils.captain_feedback_emails import (
+    feedback_email_status,
+    feedback_send_in_progress,
+    send_feedback_emails_async,
+)
 from api.utils.consts import MAX_RATING, MIN_RATING
 from api.utils.utils import get_current_year
 
@@ -246,3 +251,31 @@ class CaptainRatingsSummary(APIView):
                 for r in rows
             ]
         )
+
+
+class CaptainFeedbackEmails(APIView):
+    """
+    GET  -> who would be emailed (ready / already sent / held back / no email).
+    POST -> email everyone who is ready, in the background. Safe to click more
+            than once: anyone already emailed this year is skipped.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request, year, format=None):
+        return Response(feedback_email_status(year))
+
+    def post(self, request, year, format=None):
+        if feedback_send_in_progress():
+            return Response(
+                {"detail": "A send is already in progress. Give it a minute."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        ready = feedback_email_status(year)["ready"]
+        if ready == 0:
+            return Response({"queued": 0})
+
+        send_feedback_emails_async(year)
+        logger.info(f"[CaptainFeedbackEmails] queued {ready} email(s) for {year}")
+        return Response({"queued": ready})

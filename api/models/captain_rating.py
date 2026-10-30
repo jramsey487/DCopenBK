@@ -50,3 +50,30 @@ class CaptainRating(models.Model):
 
     def __str__(self):
         return f"{self.year}: {self.rater.get_name()} rated captain {self.captain.get_name()} {self.rating}"
+
+
+class CaptainFeedbackEmail(models.Model):
+    """
+    One row per captain/chairperson per year once their crew-feedback email
+    has been sent. The row is created *before* sending (and removed again if
+    the send fails), which is what stops anyone being emailed twice. Delete a
+    row to allow that person to be emailed again.
+    """
+
+    year = models.IntegerField(db_index=True)
+    captain = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, related_name="captain_feedback_emails"
+    )
+    rating_count = models.IntegerField(default=0)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["year", "captain"],
+                name="one_captain_feedback_email_per_year",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.year}: feedback emailed to {self.captain.get_name()}"

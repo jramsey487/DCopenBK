@@ -121,6 +121,7 @@ captain_rating_urls = [
     path("delete-captain-rating/<int:pk>", DeleteMyCaptainRating.as_view(), name="delete-captain-rating"),
     path("captain-ratings/<int:year>", CaptainRatingsList.as_view(), name="captain-ratings"),
     path("captain-ratings-summary/<int:year>", CaptainRatingsSummary.as_view(), name="captain-ratings-summary"),
+    path("captain-feedback-emails/<int:year>", CaptainFeedbackEmails.as_view(), name="captain-feedback-emails"),
 ]
 
 debug_urls = [

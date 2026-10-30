@@ -1,0 +1,42 @@
+{% extends "email/tickets/base.html" %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:22px;font-weight:600;line-height:1.3;color:#0d1b3e;letter-spacing:-0.02em;">
+  Your crew feedback
+</h1>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Hi {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;color:#0d1b3e;">
+  Thank you for leading this year. Here is the feedback ballcrew members shared about you at the {{ year }} tournament. It is anonymous unless someone chose to add their name.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border:1px solid #dbeafe;border-radius:8px;margin-bottom:20px;overflow:hidden;">
+  <tr>
+    <td bgcolor="#eff6ff" style="padding:12px 14px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.45;color:#1e3a8a;background-color:#eff6ff;border-left:4px solid #1d4ed8;">
+      <strong style="display:block;color:#1e3a8a;">{{ feedback_count }} piece{{ feedback_count|pluralize }} of feedback</strong>
+      {% if average_display %}
+      Average star rating: {{ average_display }} out of 5 ({{ star_count }} star rating{{ star_count|pluralize }})
+      {% else %}
+      A star average appears once at least {{ min_stars }} star ratings have been given.
+      {% endif %}
+    </td>
+  </tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-bottom:20px;">
+  {% for entry in entries %}
+  <tr>
+    <td style="padding:12px 0;border-top:1px solid #e2e8f0;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.5;color:#0d1b3e;">
+      <div style="margin-bottom:4px;font-size:12px;color:#64748b;">
+        {% if entry.rating_display %}<strong style="color:#0d1b3e;">{{ entry.rating_display }} / 5</strong>{% else %}No star rating{% endif %}
+        {% if entry.context %} &middot; {{ entry.context }}{% endif %}
+        &middot; {% if entry.rater_name %}{{ entry.rater_name }}{% else %}Anonymous{% endif %}
+      </div>
+      {{ entry.comments|linebreaksbr }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<p style="margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.5;color:#64748b;">
+  Please keep this feedback to yourself and don&apos;t try to work out who wrote what. It&apos;s meant to help, not to put anyone on the spot.
+</p>
+{% endblock %}
