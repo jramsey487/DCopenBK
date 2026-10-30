@@ -31,6 +31,11 @@ export function getBallkidId() {
   return Number.isFinite(id) ? id : null;
 }
 
+/** Whether the current session belongs to a Django superuser. */
+export function getIsSuperuser() {
+  return getLocalStorage("is_superuser") === true;
+}
+
 /** Persist login response before navigation so /me and API calls see ballkid_id. */
 export function setSessionFromLogin(setToken, username, data) {
   setToken(data?.token ?? "");
@@ -42,6 +47,7 @@ export function setSessionFromLogin(setToken, username, data) {
   setLocalStorage("username", (username ?? "").toLowerCase());
   setLocalStorage("ballkid_id", Number.isFinite(ballkidId) ? ballkidId : null);
   setLocalStorage("group", data?.group ?? "");
+  setLocalStorage("is_superuser", data?.is_superuser === true);
 }
 
 /** Resolve ballkid image for CRA dev (proxied to Django static). */
