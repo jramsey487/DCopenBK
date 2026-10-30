@@ -10,6 +10,7 @@ export {
   getToken,
   getAuthHeader,
   getBallkidId,
+  getIsSuperuser,
   setSessionFromLogin,
   ballkidImageSrc,
   useToken,
