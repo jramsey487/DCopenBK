@@ -12,6 +12,7 @@ $ProjectRoot = "C:\Users\Public\Documents\DCopenBK"
 $FrontendDir = Join-Path $ProjectRoot "frontend"
 $BuildDir = Join-Path $FrontendDir "build"
 $BuildRootDir = Join-Path $BuildDir "root"
+$PinnedNpmVersion = "10.8.2"
 
 # ------------------------------------------------------------
 # Start
@@ -26,23 +27,33 @@ Write-Host ""
 Set-Location $ProjectRoot
 
 # ------------------------------------------------------------
-# Verify required commands
+# Verify required commands and files
 # ------------------------------------------------------------
 
-Write-Host "Checking required commands..." -ForegroundColor Cyan
+Write-Host "Checking required commands and files..." -ForegroundColor Cyan
 
-if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
-    Write-Host "ERROR: npm was not found." -ForegroundColor Red
+foreach ($CommandName in @("node", "npm", "npx", "fly")) {
+    if (-not (Get-Command $CommandName -ErrorAction SilentlyContinue)) {
+        Write-Host "ERROR: $CommandName was not found." -ForegroundColor Red
+        exit 1
+    }
+}
+
+$PackageJson = Join-Path $FrontendDir "package.json"
+$PackageLock = Join-Path $FrontendDir "package-lock.json"
+
+if (-not (Test-Path $PackageJson)) {
+    Write-Host "ERROR: frontend/package.json was not found." -ForegroundColor Red
     exit 1
 }
 
-if (-not (Get-Command fly -ErrorAction SilentlyContinue)) {
-    Write-Host "ERROR: fly CLI was not found." -ForegroundColor Red
+if (-not (Test-Path $PackageLock)) {
+    Write-Host "ERROR: frontend/package-lock.json was not found." -ForegroundColor Red
     exit 1
 }
 
-Write-Host "npm found." -ForegroundColor Green
-Write-Host "fly CLI found." -ForegroundColor Green
+Write-Host "node, npm, npx, and fly found." -ForegroundColor Green
+Write-Host "Using npm $PinnedNpmVersion for the frontend install and build." -ForegroundColor Green
 Write-Host ""
 
 # ------------------------------------------------------------
@@ -56,23 +67,26 @@ Write-Host ""
 
 Set-Location $FrontendDir
 
-Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
-npm install
+Write-Host "Installing dependencies from package-lock.json with npm $PinnedNpmVersion..." -ForegroundColor Yellow
+Write-Host "This uses 'npm ci', which does not rewrite package-lock.json." -ForegroundColor DarkGray
+
+npx --yes "npm@$PinnedNpmVersion" ci
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
-    Write-Host "ERROR: npm install failed." -ForegroundColor Red
-    Write-Host "Deployment stopped." -ForegroundColor Red
+    Write-Host "ERROR: npm $PinnedNpmVersion ci failed." -ForegroundColor Red
+    Write-Host "Deployment stopped. The existing lockfile was not intentionally regenerated." -ForegroundColor Red
     exit 1
 }
 
 Write-Host ""
-Write-Host "Building production frontend..." -ForegroundColor Yellow
-npm run build
+Write-Host "Building production frontend with npm $PinnedNpmVersion..." -ForegroundColor Yellow
+
+npx --yes "npm@$PinnedNpmVersion" run build
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
-    Write-Host "ERROR: npm run build failed." -ForegroundColor Red
+    Write-Host "ERROR: frontend production build failed." -ForegroundColor Red
     Write-Host "Deployment stopped." -ForegroundColor Red
     exit 1
 }
@@ -96,15 +110,11 @@ if (-not (Test-Path $BuildDir)) {
     exit 1
 }
 
-# Create build/root if it doesn't exist
+# Create build/root if it doesn't exist.
 New-Item -ItemType Directory -Force -Path $BuildRootDir | Out-Null
 
-# Move everything except:
-#   index.html
-#   static
-#   root
-#
-# This matches the behavior of the existing deploy.sh script.
+# Move everything except index.html, static, and root into build/root.
+# This preserves the behavior of the previous deployment script.
 
 Get-ChildItem $BuildDir -Force |
     Where-Object {
