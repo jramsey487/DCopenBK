@@ -3,7 +3,8 @@ import statistics
 
 from django.db.models import Avg, Count, F, Min, StdDev
 
-from api.models.ballkid import Ballkid, CalibrationParams
+from api.models.ballkid import Ballkid
+from api.models.rating import CalibrationParams
 from api.utils.consts import MAX_RATING, MIN_RATING
 
 logger = logging.getLogger("api.rating")
