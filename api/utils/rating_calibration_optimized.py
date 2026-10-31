@@ -1,10 +1,10 @@
 import logging
 import statistics
 
-from django.db.models import Avg, Count, StdDev, Min
+from django.db.models import Avg, Count, F, Min, StdDev
 
 from api.models.ballkid import Ballkid, CalibrationParams
-from api.utils.consts import RATING_STATUS, MIN_RATING, MAX_RATING
+from api.utils.consts import MAX_RATING, MIN_RATING
 
 logger = logging.getLogger("api.rating")
 
@@ -13,10 +13,9 @@ def get_min_dates(ratings):
     """Return the earliest rating date for each year with one query."""
     return {
         row["year"]: row["min_date"]
-        for row in ratings.values("date__year").annotate(
-            year=__import__("django.db.models", fromlist=["F"]).F("date__year"),
-            min_date=Min("date"),
-        ).values("year", "min_date")
+        for row in ratings.values("date__year")
+        .annotate(year=F("date__year"), min_date=Min("date"))
+        .values("year", "min_date")
     }
 
 
@@ -47,18 +46,17 @@ def save_rater_params(cp, year_ratings, year):
                 37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
             )
 
-        defaults = {
-            "num_rater_ratings": row["num_rater_ratings"],
-            "rater_raw_avg": row["rater_raw_avg"],
-            "rater_raw_stdev": row["rater_raw_stdev"],
-            "rater_scale": a,
-            "rater_offset": b,
-            "rater_distance_to_ideal": distance,
-        }
         params, _ = CalibrationParams.objects.update_or_create(
             ballkid_id=rater_id,
             year=year,
-            defaults=defaults,
+            defaults={
+                "num_rater_ratings": row["num_rater_ratings"],
+                "rater_raw_avg": row["rater_raw_avg"],
+                "rater_raw_stdev": row["rater_raw_stdev"],
+                "rater_scale": a,
+                "rater_offset": b,
+                "rater_distance_to_ideal": distance,
+            },
         )
         logger.info(
             f"[save_rater_params] Saved params for {name} with params {params}"
@@ -105,8 +103,8 @@ def save_ratee_params(cp, year_ratings_wo_excluded, year):
         if cp is not None:
             calibrated = [
                 cp.calibrate_rating(
-                    name=row["rater_name"],
-                    rating=float(row["rating"]),
+                    row["rater_name"],
+                    float(row["rating"]),
                     clip_endpoints=(MIN_RATING, MAX_RATING),
                 )
                 for row in ratee_ratings
