@@ -148,7 +148,19 @@ class Command(BaseCommand):
     def send_shift_reminders(self, now):
         """Remind checked-in ballkids when their team's shift is about 10 minutes away."""
         upper = now + timedelta(minutes=10, seconds=30)
-        schedules = Schedule.objects.filter(start__gt=now, start__lte=upper).exclude(team=0)
+        schedules = list(
+            Schedule.objects.filter(start__gt=now, start__lte=upper).exclude(team=0)
+        )
+
+        # Load all eligible ballkids once instead of querying once per schedule.
+        teams = {schedule.team for schedule in schedules}
+        ballkids_by_team = {}
+        if teams:
+            ballkids = self.eligible_ballkids(
+                "shift_reminders_enabled", current_team__in=teams
+            )
+            for ballkid in ballkids:
+                ballkids_by_team.setdefault(ballkid.current_team, []).append(ballkid)
 
         sent = 0
         for schedule in schedules:
@@ -164,9 +176,7 @@ class Command(BaseCommand):
                 "url": "/schedule",
                 "tag": f"shift-{schedule.id}",
             }
-            for ballkid in self.eligible_ballkids(
-                "shift_reminders_enabled", current_team=schedule.team
-            ):
+            for ballkid in ballkids_by_team.get(schedule.team, []):
                 if self.deliver(ballkid.user, "shift_reminder", str(schedule.id), payload):
                     sent += 1
         return sent
@@ -208,27 +218,32 @@ class Command(BaseCommand):
             .distinct()
         )
 
+        # Load today's schedules once and choose the same schedule we previously
+        # selected per history: prefer the latest active shift, otherwise the
+        # earliest upcoming shift for that team.
+        schedules_by_team = {}
+        schedules = Schedule.objects.filter(start__date=today).exclude(team=0).order_by("start")
+        for schedule in schedules:
+            schedules_by_team.setdefault(schedule.team, []).append(schedule)
+
+        schedule_by_team = {}
+        for team, team_schedules in schedules_by_team.items():
+            active = [
+                schedule
+                for schedule in team_schedules
+                if schedule.start <= now and (schedule.end is None or schedule.end > now)
+            ]
+            if active:
+                schedule_by_team[team] = active[-1]
+            else:
+                upcoming = [schedule for schedule in team_schedules if schedule.start >= now]
+                if upcoming:
+                    schedule_by_team[team] = upcoming[0]
+
         sent = 0
         for history in histories:
             ballkid = history.ballkid
-
-            # Prefer a shift in progress for the assigned team...
-            schedule = (
-                Schedule.objects.filter(team=history.team, start__lte=now)
-                .filter(Q(end__isnull=True) | Q(end__gt=now))
-                .filter(start__date=today)
-                .order_by("-start")
-                .first()
-            )
-            # ...otherwise the next upcoming shift today.
-            if schedule is None:
-                schedule = (
-                    Schedule.objects.filter(
-                        team=history.team, start__date=today, start__gte=now
-                    )
-                    .order_by("start")
-                    .first()
-                )
+            schedule = schedule_by_team.get(history.team)
 
             court = f" — {schedule.court}" if schedule and schedule.court else ""
             body = f"You are now on Team {history.team}{court}."
