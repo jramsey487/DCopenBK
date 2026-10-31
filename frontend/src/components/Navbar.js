@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import BallcrewLogo from "./BallcrewLogo";
 import MobileNavDrawer from "./MobileNavDrawer";
 import { getLocalStorage, useIsMobile } from "./Utils";
+import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
 import "./navbar.css";
 
 const ballkidTabs = [
@@ -110,6 +111,7 @@ const ballkidAccountTab = {
   url: "/me",
   subtabs: [
     { label: "My Profile", url: "/me" },
+    { label: "Account Settings", url: "/settings" },
     { label: "Feedback", url: "/feedback" },
     { label: "Logout", url: "/login" },
   ],
@@ -169,6 +171,10 @@ function DesktopNavbarItem({ tab, useIconButton, setToken }) {
 
   const handleLogout = () => {
     handleClose();
+    // Must run before localStorage.clear(): it reads the auth token first.
+    if (getLocalStorage("group") !== "ticketing") {
+      removeDeviceSubscriptionOnLogout();
+    }
     setToken("");
     localStorage.clear();
   };

@@ -8,6 +8,7 @@ import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
 import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
 import { getAuthHeader, getLocalStorage } from "./Utils";
+import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
 import {
   NavIconRoster,
   NavIconTeams,
@@ -272,6 +273,10 @@ export default function MobileNavDrawer({ group, setToken }) {
 
   const handleLogout = () => {
     setOpen(false);
+    // Must run before localStorage.clear(): it reads the auth token first.
+    if (group !== "ticketing") {
+      removeDeviceSubscriptionOnLogout();
+    }
     setToken("");
     localStorage.clear();
   };

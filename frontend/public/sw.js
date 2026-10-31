@@ -1,3 +1,11 @@
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener("push", (event) => {
   let payload = {};
   try {
@@ -24,17 +32,26 @@ self.addEventListener("notificationclick", (event) => {
   const targetUrl = new URL(event.notification.data?.url || "/", self.location.origin).href;
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    (async () => {
+      const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
+
       for (const client of clientList) {
-        if (client.url.startsWith(self.location.origin) && "focus" in client) {
-          client.navigate(targetUrl);
-          return client.focus();
+        if (client.url.startsWith(self.location.origin)) {
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(targetUrl);
+            } catch (error) {
+              // Some browsers can't navigate an existing window; focusing is enough.
+            }
+          }
+          return;
         }
       }
+
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        await clients.openWindow(targetUrl);
       }
-      return undefined;
-    })
+    })()
   );
 });
