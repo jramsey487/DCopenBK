@@ -119,9 +119,14 @@ class AddDeleteHour(APIView):
     def post(self, request, format=None):
         date = request.data["date"]
         shifts = get_days_shifts(date)
-        courts = shifts.values_list("court", flat=True).distinct()
+        courts = list(shifts.values_list("court", flat=True).distinct())
 
         max_hour = shifts.aggregate(max=Max("start"))["max"]
+        if max_hour is None:
+            return Response(
+                {"detail": "No schedule exists for this date."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         next_hour = max_hour + timedelta(hours=1)
 
         logger.info(f"[AddHour] for date {date}, max_hour was {max_hour}")
@@ -140,6 +145,11 @@ class AddDeleteHour(APIView):
     def delete(self, request, format=None):
         date = request.data["date"]
         max_hour = get_days_shifts(date).aggregate(max=Max("start"))["max"]
+        if max_hour is None:
+            return Response(
+                {"detail": "No schedule exists for this date."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         logger.info(f"[DeleteHour] for date {date}, max_hour was {max_hour}")
 
@@ -181,7 +191,8 @@ class UpdateSchedule(APIView):
             start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
 
             court = request.data["court"].strip()
-            team = 0 if request.data["team"] == "" else int(request.data["team"])
+            raw_team = request.data["team"]
+            team = 0 if raw_team in ("", None) else int(raw_team)
 
             shift = Schedule.objects.get(start=start, court=court)
             shift.team = team
@@ -197,15 +208,14 @@ class UpdateSchedule(APIView):
             )
 
         except Exception as e:
-            logger.warn(
-                f"[UpdateSchedule] start {start}, court {court}, team {team}; error: {e} "
-            )
+            # Don't reference start/court/team here: any of them may not exist
+            # yet if the failure happened while parsing the request.
+            logger.warning(f"[UpdateSchedule] request {request.data}; error: {e}")
 
             return Response(
                 {"Invalid schedule update": f"Error: {e}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
 class UpdateCourtName(APIView):
     permission_classes = [IsChairperson]

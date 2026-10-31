@@ -571,7 +571,7 @@ class CalibratedRatings(APIView):
         # If a non-zero number of reviewers had no overlap in the overall rating category
         elif len(excluded) > 0:
             logger.warning(
-                f"[CalibratedRatings] overall rating category had excluded reviewers {excluded['overall']}"
+                f"[CalibratedRatings] overall rating category had excluded reviewers {excluded}"
             )
             s = status.HTTP_206_PARTIAL_CONTENT
 

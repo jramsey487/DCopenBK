@@ -696,6 +696,36 @@ class DownloadData(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request, format=None):
+        today = datetime.strftime(datetime.now(), "%Y%m%d")
+
+        resource_list = [
+            BallkidResource(),
+            CalibrationParamsResource(),
+            CaptainAnalyticsResource(),
+            CaptainHistoryResource(),
+            CheckinAnalyticsResource(),
+            CheckinHistoryResource(),
+            CourtAnalyticsResource(),
+            CutHistoryResource(),
+            FinalsHistoryResource(),
+            RatingResource(),
+            ScheduleResource(),
+            TeamHistoryResource(),
+            TournamentResource(),
+        ]
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for resource in resource_list:
+                filename = resource._meta.model.__name__ + today
+                zf.writestr(f"{filename}.csv", resource.export().csv)
+
+        response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+        response["Content-Disposition"] = f'attachment; filename="{today}_data.zip"'
+        return response
+    permission_classes = [IsChairperson]
+
+    def get(self, request, format=None):
         filename_to_data = {}
         today = datetime.strftime(datetime.now(), "%Y%m%d")
         zip_filename = f"{today}_data.zip"

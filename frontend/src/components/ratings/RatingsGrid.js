@@ -137,7 +137,8 @@ export default function RatingsGrid({ ratings, setUpdated }) {
                 })
               }
             >
-              {rowData.row.status === "Exclude" ? (
+              {/* FIX: was === "Exclude", which never matched the real status */}
+              {rowData.row.status === "Excluded" ? (
                 <Cancel className="teams-chairperson-ballkid-action-icon" />
               ) : (
                 <HighlightOff className="teams-chairperson-ballkid-action-icon" />

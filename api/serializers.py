@@ -2,6 +2,7 @@ from rest_framework import serializers
 from api.models.ballkid import *
 from api.models.schedule import *
 from api.models.rating import *
+from api.permissions import is_chairperson_or_superuser
 from api.utils.tickets import as_et, option_label, winner_confirm_by
 from api.utils.utils import calculate_ballkid_age
 
@@ -42,6 +43,17 @@ BALLKID_LIST_DEFER_FIELDS = (
     "emergency_phone",
     "comments",
 )
+
+
+def viewer_can_see_age(request):
+    """Captains and chairpersons may see ages; regular ballcrew may not.
+    With no request in the serializer context (nested/internal use), hide it."""
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
+        return False
+    if is_chairperson_or_superuser(user):
+        return True
+    return user.groups.filter(name="captain").exists()
 
 
 class BallkidSerializer(serializers.ModelSerializer):
@@ -108,6 +120,12 @@ class BallkidListSerializer(serializers.ModelSerializer):
             "rank",
         )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not viewer_can_see_age(self.context.get("request")):
+            data.pop("age", None)
+        return data
+
 
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -164,7 +182,9 @@ class CourtAnalyticsSerializer(serializers.ModelSerializer):
 
 
 class CaptainAnalyticsSerializer(serializers.ModelSerializer):
-    captain = BallkidSerializer()
+    # Lean list serializer: the full BallkidSerializer would nest phone,
+    # emergency contact, DOB and private comments for every captain.
+    captain = BallkidListSerializer()
 
     class Meta:
         model = CaptainAnalytics

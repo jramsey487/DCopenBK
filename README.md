@@ -544,50 +544,14 @@ Production-style frontend build into Django static (usually not needed for day-t
 cd frontend && npm run relocate
 ```
 
-Here’s the consolidated version, all PowerShell-safe (no &&, no source).
+#### Windows troubleshooting (PowerShell)
 
-One-time setup
-powershell
-cd C:\Users\Public\Documents\DCopenBK
-cp .env.example .env
-py -3.10 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-
-Use Python 3.10, not 3.14. The pinned dependencies (Django 4.1.5, numpy 1.24.1, and so on) don’t build on 3.14. If activation is blocked by execution policy, run Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass first.
-
-Terminal 1: backend
-powershell
-cd C:\Users\Public\Documents\DCopenBK
-.\.venv\Scripts\Activate.ps1
-python manage.py migrate
-python manage.py bootstrap_dev
-python manage.py runserver
-Runs at http://127.0.0.1:8000/.
-Dev logins: local.chair / password, or alexis.tickets / password for Ticketing.
-The staticfiles.W004 warning about frontend\build\static is harmless. It goes away once you run a frontend build.
-After pulling new code, rerun pip install -r requirements.txt. That’s what fixes errors like No module named 'storages'.
-If Django says your models have changes not reflected in a migration, run python manage.py makemigrations then migrate. Don’t commit the generated migration until you know whether the team already has one for that change.
-Terminal 2: frontend
-powershell
-cd C:\Users\Public\Documents\DCopenBK\frontend
-npm install
-npm start
-This is a Create React App project, so the command is npm start, not npm run dev. It should serve at http://localhost:3000.
-Don’t run npm audit fix --force. It rewrote react-scripts to 0.0.0, which is an empty package, so the react-scripts command never existed afterward.
-
-If react-scripts is still missing, restore the original dependency versions and reinstall:
-
-powershell
-git checkout -- package.json package-lock.json
-Remove-Item -Recurse -Force node_modules
-npm install
-Test-Path node_modules\.bin\react-scripts.cmd   # should say True
-npm start
-
-If this folder isn’t tracked by git, set react-scripts in package.json back to a real version (likely ^5.0.1), then do the same delete and reinstall.
-
-I don’t know from this thread whether the frontend is running now. If it still fails, paste the output of Test-Path node_modules\.bin\react-scripts.cmd and the react-scripts line from package.json.
+- **Use Python 3.10, not 3.14.** The pinned dependencies (Django 4.1.5, numpy, etc.) don't build on 3.14. Create the venv with `py -3.10 -m venv .venv`.
+- If activating the venv is blocked, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` first.
+- After pulling new code, rerun `pip install -r requirements.txt`. That fixes errors like `No module named 'storages'`.
+- If Django says your models have changes not reflected in a migration, run `python manage.py makemigrations`, then `migrate`. Don't commit the generated migration until you've checked whether the team already has one for that change.
+- The `staticfiles.W004` warning about `frontend\build\static` is harmless; it goes away after a frontend build.
+- The frontend is Create React App, so the command is `npm start` (not `npm run dev`). **Don't run `npm audit fix --force`**: it can rewrite `react-scripts` to `0.0.0`. If `node_modules\.bin\react-scripts.cmd` is missing, restore `package.json` / `package-lock.json` from git (or set `react-scripts` back to `^5.0.1`), delete `node_modules`, and run `npm install` again.
 
 
 ### Dev users (management commands)
@@ -676,7 +640,9 @@ fly apps list
 fly status -a dcopenbk
 ```
 
-Secrets (Django `SECRET_KEY`, `DATABASE_URL`, etc.) are already configured on the Fly app. List them with:
+Secrets (Django `SECRET_KEY`, `DATABASE_URL`, email password, R2 credentials,
+`ANTHROPIC_API_KEY`, `WEB_PUSH_VAPID_*`, etc.) are already configured on the Fly
+app. List them with:
 
 ```bash
 fly secrets list -a dcopenbk
@@ -684,39 +650,48 @@ fly secrets list -a dcopenbk
 
 ### Deploy from your machine
 
-From the **repo root**:
+From the **repo root**, just run:
 
 ```bash
-# 1. Build the React app and stage files for WhiteNoise / Django templates
-./deploy.sh
-
-# 2. Build the Docker image and ship it to Fly
 fly deploy -a dcopenbk
 ```
 
-`./deploy.sh` builds `frontend/`, then moves non-`index.html` / non-`static` build artifacts into `frontend/build/root/` so the Django image can serve them. `fly deploy` builds the [`Dockerfile`](Dockerfile) (Python deps including `rcal`, `collectstatic`, Gunicorn) and rolls out a new release.
+You do **not** need to build the frontend first: the [`Dockerfile`](Dockerfile)
+has a Node stage that runs `npm ci && npm run build` and arranges the output for
+Django, then a Python stage that installs dependencies (including `rcal` from
+GitHub), runs `collectstatic`, and serves with Gunicorn on port 8000 (2 workers).
+Static files are served by WhiteNoise.
 
-On each deploy, Fly runs:
+On each deploy, Fly runs `python manage.py migrate` as the release command
+(`fly.toml` → `[deploy].release_command`).
 
-```text
-python manage.py migrate
+`./deploy.sh` is only for building the frontend locally (e.g. to test the
+production bundle with Django); it isn't part of the Fly deploy.
+
+### Deploy from GitHub
+
+Creating a GitHub **release** triggers `.github/workflows/fly.yml`, which runs
+`flyctl deploy --remote-only` using the `FLY_API_TOKEN` repository secret.
+
+### Processes
+
+`fly.toml` defines two processes:
+
+| Process | Command | Purpose |
+|---|---|---|
+| `app` | `gunicorn ... citiopen.wsgi` | The web app |
+| `scheduler` | `python manage.py send_notifications --loop` | Sends Web Push shift reminders and team-change notifications |
+
+The scheduler has no HTTP service, so it needs its own machine. Enable it once with:
+
+```bash
+fly scale count app=1 scheduler=1 -a dcopenbk
 ```
 
-as the release command (`fly.toml` → `[deploy].release_command`).
-
-Useful checks after deploy:
+### Useful checks after deploy
 
 ```bash
 fly status -a dcopenbk
 fly logs -a dcopenbk
 fly open -a dcopenbk
 ```
-
-### What the Docker image does
-
-1. Builds a Python 3.10 image  
-2. Installs all Python dependencies (including `rcal` from GitHub)  
-3. Runs `collectstatic`  
-4. Serves with Gunicorn on port 8000 (2 workers)
-
-Static files are served by WhiteNoise directly from Django.

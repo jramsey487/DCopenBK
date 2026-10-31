@@ -45,9 +45,7 @@ class IsChairpersonOrTicketing(BasePermission):
         if is_chairperson_or_superuser(request.user):
             return True
 
-        return request.user.groups.filter(
-            Q(name="ticketing")
-        ).exists()
+        return request.user.groups.filter(Q(name="ticketing")).exists()
 
 
 class IsChairpersonOrCaptain(BasePermission):
@@ -61,6 +59,26 @@ class IsChairpersonOrCaptain(BasePermission):
 
 
 class IsChairpersonOrSelf(BasePermission):
+    """
+    Chairpersons can access any ballkid's data; everyone else only their own.
+
+    Most views using this are plain APIViews / overridden get_object(), which
+    never trigger has_object_permission, so the check has to happen here, by
+    comparing the URL's <pk> to the requesting user's own ballkid.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if is_chairperson_or_superuser(user):
+            return True
+        if not user or not user.is_authenticated:
+            return False
+
+        pk = view.kwargs.get("pk")
+        if pk is None:
+            return True  # nothing to compare; object-level check still applies
+        return user.ballkid.filter(pk=pk).exists()
+
     def has_object_permission(self, request, view, obj):
         if is_chairperson_or_superuser(request.user):
             return True

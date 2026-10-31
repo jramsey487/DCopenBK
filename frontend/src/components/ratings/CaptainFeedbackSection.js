@@ -11,8 +11,15 @@ import { contextLabel } from "./CaptainRatingDialog";
 // Must match api.utils.utils.get_current_year (assumed to be the calendar year).
 const currentYear = () => new Date().getFullYear();
 
+/** "4" / "4.5", or "" when there is no numeric star rating. */
 function formatRating(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
   const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return "";
+  }
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
@@ -78,6 +85,7 @@ export default function CaptainFeedbackSection({ captainId }) {
   }
 
   const count = summary?.count ?? 0;
+  const starCount = summary?.star_count ?? 0;
 
   return (
     <Box>
@@ -86,9 +94,9 @@ export default function CaptainFeedbackSection({ captainId }) {
           {summary?.average != null ? formatRating(summary.average) : "—"}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {count} {count === 1 ? "rating" : "ratings"} this year
-          {summary && summary.average == null && count > 0
-            ? " (average shown once there are 3 or more)"
+          {count} {count === 1 ? "piece" : "pieces"} of feedback this year
+          {summary && summary.average == null && starCount > 0
+            ? ` (average shown once there are 3 or more star ratings; ${starCount} so far)`
             : ""}
         </Typography>
       </Box>
@@ -98,41 +106,57 @@ export default function CaptainFeedbackSection({ captainId }) {
           No crew feedback yet.
         </Typography>
       ) : (
-        ratings.map((r) => (
-          <Box
-            key={r.id}
-            sx={{
-              py: 1.25,
-              borderTop: "1px solid",
-              borderColor: "divider",
-            }}
-          >
+        ratings.map((r) => {
+          const stars = formatRating(r.rating);
+          return (
             <Box
+              key={r.id}
               sx={{
-                display: "flex",
-                gap: 0.75,
-                alignItems: "center",
-                flexWrap: "wrap",
+                py: 1.25,
+                borderTop: "1px solid",
+                borderColor: "divider",
               }}
             >
-              <Typography fontWeight="700">{formatRating(r.rating)}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {formatDate(r.date)}
-              </Typography>
-              {contextLabel(r.context) ? (
-                <Chip size="small" variant="outlined" label={contextLabel(r.context)} />
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 0.75,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {stars ? (
+                  <Typography fontWeight="700">{stars}</Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No star rating
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {formatDate(r.date)}
+                </Typography>
+                {contextLabel(r.context) ? (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={contextLabel(r.context)}
+                  />
+                ) : null}
+                <Typography variant="body2" color="text.secondary">
+                  {r.rater_name ? `· ${r.rater_name}` : "· Anonymous"}
+                </Typography>
+              </Box>
+              {r.comments ? (
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}
+                >
+                  {r.comments}
+                </Typography>
               ) : null}
-              <Typography variant="body2" color="text.secondary">
-                {r.rater_name ? `· ${r.rater_name}` : "· Anonymous"}
-              </Typography>
             </Box>
-            {r.comments ? (
-              <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
-                {r.comments}
-              </Typography>
-            ) : null}
-          </Box>
-        ))
+          );
+        })
       )}
     </Box>
   );

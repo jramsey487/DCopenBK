@@ -9,14 +9,18 @@ this view should never gain write capability.
 
 Layers of protection, in case any one of them has a bug:
 1. Regex validation: must start with SELECT, no semicolons in the body
-   (blocks statement stacking), no forbidden keywords (INSERT, DROP,
-   ALTER, INTO, COPY, etc.) appearing anywhere in the query.
-2. Runs inside a transaction that is ALWAYS rolled back, never committed --
-   even a validated, "safe" SELECT never has a chance to write anything.
+   (blocks statement stacking), no SQL comments, no forbidden keywords
+   (INSERT, DROP, ALTER, INTO, COPY, etc.), and no references to
+   credential-bearing tables or dangerous Postgres functions.
+2. Runs inside a READ ONLY transaction that is ALWAYS rolled back, never
+   committed -- even a validated, "safe" SELECT never has a chance to write.
 3. A Postgres statement timeout, so a slow/expensive query can't hang the
    database for everyone else.
 4. A hard cap on rows returned, so a huge accidental query can't blow up
    the page or the response size.
+
+The sensitive-name list is a denylist and so a speed bump, not a perfect
+wall; the real guarantee is that this endpoint is chairperson-only.
 """
 
 import re
@@ -37,6 +41,19 @@ _FORBIDDEN_KEYWORDS = [
     "attach", "detach", "pragma", "exec", "execute",
 ]
 
+# Tables/columns/functions that hold credentials or let a query escape the
+# "just look at app data" intent.
+_FORBIDDEN_NAMES = re.compile(
+    r"\b("
+    r"auth_user\w*|auth_group\w*|auth_permission|authtoken_\w*|"
+    r"django_session|django_admin_log|"
+    r"api_pushsubscription|api_notification\w*|"
+    r"edit_token|"
+    r"information_schema|pg_\w+|set_config|lo_\w+|dblink\w*"
+    r")\b",
+    re.IGNORECASE,
+)
+
 
 def _validate_select_only(query):
     stripped = (query or "").strip()
@@ -54,6 +71,9 @@ def _validate_select_only(query):
             "other than one at the very end."
         )
 
+    if "--" in body or "/*" in body:
+        raise ValidationError("SQL comments are not allowed.")
+
     if not re.match(r"^\s*select\b", body, re.IGNORECASE):
         raise ValidationError("Only SELECT queries are allowed.")
 
@@ -61,6 +81,12 @@ def _validate_select_only(query):
     for word in _FORBIDDEN_KEYWORDS:
         if re.search(rf"\b{word}\b", lowered):
             raise ValidationError(f"Query contains a disallowed keyword: {word}")
+
+    match = _FORBIDDEN_NAMES.search(body)
+    if match:
+        raise ValidationError(
+            f"Query references a restricted table or function: {match.group(0)}"
+        )
 
     return body
 
@@ -78,6 +104,7 @@ class DatabaseQueryView(APIView):
                         cursor.execute(
                             "SET LOCAL statement_timeout = %s", [QUERY_TIMEOUT_MS]
                         )
+                        cursor.execute("SET LOCAL transaction_read_only = on")
                     cursor.execute(validated_query)
                     columns = (
                         [col[0] for col in cursor.description]

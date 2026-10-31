@@ -535,10 +535,14 @@ def annotate_rank(ballkids, include_num_ratings=True):
 
 
 def unassign_future_shifts(team, now=None):
+    # Team 0 means "unassigned", not a real team, so there is nothing to clear.
+    if not team:
+        return
+
     if now is None:
         now = datetime.now()
 
-    # Delete all future shifts for this team
+    # Unassign all future shifts for this team
     remaining_shifts = Schedule.objects.filter(
         start__gte=now, start__lt=now + timedelta(hours=12), team=team
     )
@@ -547,11 +551,12 @@ def unassign_future_shifts(team, now=None):
         shift.team = 0
         shift.save()
 
-    # Update end of current shift
-    current_shift = Schedule.objects.filter(
-        start__lte=now, start__gt=now - timedelta(hours=1)
-    ).first()
-    if current_shift:
+    # End this team's current shift(s) now (previously this ended whichever
+    # shift happened to be first, on any court, for any team)
+    current_shifts = Schedule.objects.filter(
+        team=team, start__lte=now, start__gt=now - timedelta(hours=1)
+    )
+    for current_shift in current_shifts:
         current_shift.end = now
         current_shift.save()
         logger.info(
@@ -749,8 +754,26 @@ class CreateBallkid(APIView):
 
 
 class GetBallkid(generics.RetrieveAPIView):
+    """
+    Full profile for one ballkid, trimmed to what the viewer may see:
+    - chairpersons: everything
+    - the ballkid themself: everything except chairperson comments
+    - captains: age and phone, but no DOB / emergency contact / comments
+    - everyone else: none of the private fields (including age)
+    """
+
     serializer_class = BallkidSerializer
     permission_classes = [IsAuthenticated]
+
+    PRIVATE_FIELDS = (
+        "user",
+        "age",
+        "date_of_birth",
+        "phone",
+        "emergency_name",
+        "emergency_phone",
+    )
+    CAPTAIN_VISIBLE_FIELDS = ("age", "phone")
 
     def get_queryset(self):
         me = self.kwargs.get("me")
@@ -759,6 +782,25 @@ class GetBallkid(generics.RetrieveAPIView):
         queryset = ballkids if not me else annotate_ratings(ballkids, me)
         return queryset
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = dict(self.get_serializer(instance).data)
+        user = request.user
+
+        if is_chairperson_or_superuser(user):
+            return Response(data)
+
+        # Chairperson-only notes, hidden even from the ballkid they're about
+        data.pop("comments", None)
+
+        if instance.user_id != user.id:
+            viewer_is_captain = user.groups.filter(name="captain").exists()
+            for field in self.PRIVATE_FIELDS:
+                if viewer_is_captain and field in self.CAPTAIN_VISIBLE_FIELDS:
+                    continue
+                data.pop(field, None)
+
+        return Response(data)
 
 class UpdateBallkid(APIView):
     serializer_class = BallkidSerializer
@@ -931,14 +973,17 @@ class CheckoutAll(APIView):
         else:
             try:
                 team = int(group)
-                queryset = Ballkid.objects.filter(current_team=team)
-                logger.info(
-                    f"[CheckoutAll] checking out team {group} ballkids: {queryset}"
+            except (TypeError, ValueError):
+                logger.warning(f"[CheckoutAll] Unrecognized checkout group {group}")
+                return Response(
+                    {"detail": f"Unrecognized checkout group {group}"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-                unassign_future_shifts(team)
-
-            except Exception:
-                logger.warn(f"[CheckoutAll] Unrecognized checkout group {group}")
+            queryset = Ballkid.objects.filter(current_team=team)
+            logger.info(
+                f"[CheckoutAll] checking out team {group} ballkids: {queryset}"
+            )
+            unassign_future_shifts(team)
 
         for ballkid in queryset:
             ballkid.set_field("is_checked_in", False)
@@ -949,7 +994,6 @@ class CheckoutAll(APIView):
             {"Success": "All ballkids checked out"},
             status=status.HTTP_200_OK,
         )
-
 
 class CutAll(APIView):
     permission_classes = [IsChairperson]
