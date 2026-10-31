@@ -23,7 +23,8 @@ def get_min_dates(ratings):
 def save_rater_params(cp, year_ratings, year):
     """Save rater parameters without querying the ratings queryset per rater."""
     grouped = list(
-        year_ratings.values("rater", "rater_name")
+        year_ratings.order_by()
+        .values("rater", "rater_name")
         .annotate(
             num_rater_ratings=Count("id"),
             rater_raw_avg=Avg("rating"),
@@ -98,7 +99,8 @@ def save_ratee_params(cp, year_ratings_wo_excluded, year):
             "num_raters": len(unexcluded_raters),
             "num_ratee_ratings": len(ratee_ratings),
             "ratee_raw_avg": statistics.mean(raw_values) if raw_values else None,
-            "ratee_raw_stdev": statistics.stdev(raw_values) if len(raw_values) > 1 else None,
+            # Match Django's StdDev default (population standard deviation).
+            "ratee_raw_stdev": statistics.pstdev(raw_values) if len(raw_values) > 1 else None,
         }
 
         if cp is not None:
