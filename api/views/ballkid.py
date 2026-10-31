@@ -175,7 +175,7 @@ def recalc_court_analytics(ballkid=None, now=None, year=None):
     # If not updating a specific ballkid, get all histories and create analytics for
     # all active ballkids
     if ballkid is None:
-        histories = TeamHistory.objects.filter(start__year=year)
+        histories = list(TeamHistory.objects.filter(start__year=year))
 
         # Dict mapping ballkid_id to [count, duration]
         analytics = {
@@ -187,25 +187,38 @@ def recalc_court_analytics(ballkid=None, now=None, year=None):
     # If updating a specific ballkid, only get that ballkid's histories and only
     # create 1 analytic
     else:
-        histories = TeamHistory.objects.filter(ballkid_id=ballkid.id, start__year=year)
+        histories = list(
+            TeamHistory.objects.filter(ballkid_id=ballkid.id, start__year=year)
+        )
         analytics = {
-            (ballkid.id, court): [0, timedelta()] for court in NUM_COURTS_TO_COURTS[5]
+            (ballkid.id, court): [0, timedelta()]
+            for court in NUM_COURTS_TO_COURTS[5]
         }
 
     logger.info(
         f"[recalc-court-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
     )
 
+    # Load all schedules needed by these histories with one database query,
+    # then reuse them for each history instead of querying Schedule once per
+    # history.
+    team_ids = {history.team for history in histories}
+    shifts_by_team = {}
+
+    if team_ids:
+        shifts = Schedule.objects.filter(
+            team__in=team_ids,
+            start__year=year,
+        )
+
+        for shift in shifts:
+            shifts_by_team.setdefault(shift.team, []).append(shift)
+
     for history in histories:
         # Find all associated shifts of the ballkid's team, filtered to only shifts which have
         # overlap with the history. Note that this should theoretically improve performance but
         # for some reason does not so extra filters are commented out.
-        shifts = Schedule.objects.filter(
-            team=history.team,
-            start__year=year,
-            # start__gte=history.start - timedelta(hours=1),
-            # start__lte=history.end if history.end else now,
-        )
+        shifts = shifts_by_team.get(history.team, [])
 
         for shift in shifts:
             overlapping = calc_overlapping_time(
@@ -250,6 +263,7 @@ def recalc_court_analytics(ballkid=None, now=None, year=None):
     logger.info(f"[recalc-court-analytics] Completed bulk create")
 
 
+
 def recalc_captain_analytics(ballkid, now=None, year=None):
     """
     Recalculates captain counts and durations BIDIRECTIONALLY. This means that
@@ -266,20 +280,40 @@ def recalc_captain_analytics(ballkid, now=None, year=None):
     if year is None:
         year = get_current_year()
 
-    for updateAsCaptain in [True, False]:
-        # If ballkid is not a captain, then don't update as captain
-        if updateAsCaptain and not ballkid.is_captain:
-            continue
+    # Load both directions of CaptainHistory first so all required team schedules
+    # can be fetched with one database query.
+    history_sets = []
 
+    if ballkid.is_captain:
+        captain_histories = list(
+            CaptainHistory.objects.filter(captain=ballkid, start__year=year)
+        )
+        history_sets.append((True, captain_histories))
+
+    ballkid_histories = list(
+        CaptainHistory.objects.filter(ballkid=ballkid, start__year=year)
+    )
+    history_sets.append((False, ballkid_histories))
+
+    team_ids = {
+        history.team
+        for _, histories in history_sets
+        for history in histories
+    }
+
+    shifts_by_team = {}
+
+    if team_ids:
+        # Preserve the original behavior exactly: captain analytics queried
+        # Schedule by team with no year restriction.
+        shifts = Schedule.objects.filter(team__in=team_ids)
+
+        for shift in shifts:
+            shifts_by_team.setdefault(shift.team, []).append(shift)
+
+    for updateAsCaptain, histories in history_sets:
         durations = {}
         counts = {}
-
-        # If updating as captain, then treat self as the captain
-        if updateAsCaptain:
-            histories = CaptainHistory.objects.filter(captain=ballkid, start__year=year)
-        # If not updating as captain, then treat self as the ballkid
-        else:
-            histories = CaptainHistory.objects.filter(ballkid=ballkid, start__year=year)
 
         logger.info(
             f"[recalc-captain-analytics] # histories: {len(histories)}, first 10: {histories[:10]}"
@@ -299,7 +333,8 @@ def recalc_captain_analytics(ballkid, now=None, year=None):
             # ballkid and captain
             overlapping = False
 
-            shifts = Schedule.objects.filter(team=history.team)
+            shifts = shifts_by_team.get(history.team, [])
+
             # For each shift, check if there is any overlapping time between the
             # start and end of the CaptainHistory and the start and end of a shift
             for shift in shifts:
