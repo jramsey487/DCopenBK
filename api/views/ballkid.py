@@ -853,58 +853,7 @@ class UpdateBallkid(APIView):
         return Response(
             {"Invalid serializer": f"Errors: {serializer.errors}"},
             status=status.HTTP_400_BAD_REQUEST,
-        )    serializer_class = BallkidSerializer
-    permission_classes = [IsChairperson]
-
-    def patch(self, request, format=None):
-        # I have absolutely no idea why, but the following line is necessary to
-        # prevent a RawPostDataException: You cannot access body after reading
-        # from request's data stream
-        request.body
-
-        serializer = self.serializer_class(data=request.data, partial=True)
-
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            logger.info(f"[UpdateBallkid] serializer data: {serializer.data}")
-
-            # Get ballkid with the corresponding first and last names
-            first_name = serializer.data["first_name"]
-            last_name = serializer.data["last_name"]
-            ballkid = get_object_or_404(
-                Ballkid, first_name=first_name, last_name=last_name
-            )
-
-            for field in serializer.data:
-                if field in ["first_name", "last_name", "user", "self_cut"]:
-                    continue
-
-                # Update the ballkid's field per the patch request
-                if serializer.data[field] is not None:
-                    self_cut = (
-                        serializer.data["self_cut"]
-                        if "self_cut" in serializer.data
-                        else False
-                    )
-                    ballkid.set_field(field, serializer.data[field], self_cut=self_cut)
-
-                # If updating whether or not the ballkid is a captain, also update
-                # account permissions for that ballkid
-                if field == "is_captain":
-                    view = UpdateCaptainStatus.as_view()
-                    response = view(request._request)
-
-            ballkid.validate()
-            ballkid.save()
-
-            return Response(BallkidSerializer(ballkid).data)
-
-        logger.warning(f"[UpdateBallkid] serializer errors: {serializer.errors}")
-        return Response(
-            {"Invalid serializer": "Errors: {serializer.errors}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
+        )    
 
 ASSIGN_FIELDS = (
     "current_team",
