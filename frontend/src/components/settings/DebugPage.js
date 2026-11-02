@@ -336,18 +336,23 @@ function CreateUser() {
     fetch("/accounts/register", {
       method: "POST",
       headers: getAuthHeader(),
+      // No password: the server sets a random one and emails the new user a
+      // link to choose their own.
       body: JSON.stringify({
         first_name: firstName,
         last_name: lastName,
         group: group,
         email: email,
-        password: "password",
-        password2: "password",
       }),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.ok) {
-          setSuccessMsg("User created successfully!");
+          const data = await response.json().catch(() => ({}));
+          setSuccessMsg(
+            data.set_password_email_queued
+              ? `User created. A link to set their password was emailed to ${email}.`
+              : "User created, but no set-password email was sent. Have them use “Forgot password” on the login page."
+          );
           setFirstName("");
           setLastName("");
           setGroup("ballkid");

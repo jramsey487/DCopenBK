@@ -1,3 +1,5 @@
+import secrets
+
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,8 +8,16 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
 from django.contrib.auth.models import User, Group
+from djoser.views import UserViewSet
 
+from accounts.emails import send_set_password_emails_async
 from accounts.serializers import *
+from accounts.throttles import (
+    LoginIPThrottle,
+    LoginUsernameThrottle,
+    PasswordResetEmailThrottle,
+    PasswordResetIPThrottle,
+)
 from api.permissions import IsChairperson
 from api.models.ballkid import Ballkid
 
@@ -18,9 +28,14 @@ logger = logging.getLogger("accounts")
 
 class GetTokenView(ObtainAuthToken):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginIPThrottle, LoginUsernameThrottle]
 
     def post(self, request, *args, **kwargs):
-        logger.info(f"[GetTokenView] request data: {request.data}")
+        # Never log request.data: it contains the password.
+        logger.info(
+            f"[GetTokenView] login attempt for username "
+            f"{str(request.data.get('username', '')).lower()!r}"
+        )
 
         serializer = self.serializer_class(
             data={
@@ -54,6 +69,16 @@ class GetTokenView(ObtainAuthToken):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class ThrottledUserViewSet(UserViewSet):
+    """Djoser's UserViewSet with throttling on the reset-password action.
+    Only routed for POST users/reset_password/ (see accounts/urls.py)."""
+
+    def get_throttles(self):
+        if self.action == "reset_password":
+            return [PasswordResetIPThrottle(), PasswordResetEmailThrottle()]
+        return super().get_throttles()
 
 
 class UpdateCaptainStatus(APIView):
@@ -110,6 +135,10 @@ class UpdateCaptainStatus(APIView):
 class RegisterUserView(APIView):
     """
     Registers the user.
+
+    If no password is supplied, a random one nobody knows is set and the new
+    user is emailed a link to choose their own (the same link as "Forgot
+    password"). Supplying a password explicitly still works.
     """
 
     # TODO: Consider opening this up to anyone
@@ -118,23 +147,33 @@ class RegisterUserView(APIView):
     model = User
 
     def post(self, request, format="json"):
-        logger.info(f"[RegisterUserView] request data: {request.data}")
+        data = request.data.copy()
 
-        first_name = request.data.get("first_name", "")
-        last_name = request.data.get("last_name", "")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+        # Never log the whole body: it can contain a password.
+        logger.info(
+            f"[RegisterUserView] first_name={first_name!r} "
+            f"last_name={last_name!r} email={data.get('email')!r} "
+            f"group={data.get('group')!r}"
+        )
 
         if first_name != "" and last_name != "":
-            request.data["username"] = (
-                f"{first_name.lower()}.{last_name.lower()}"
-            )
+            data["username"] = f"{first_name.lower()}.{last_name.lower()}"
 
-        serializer = self.serializer_class(data=request.data)
+        generated_password = "password" not in data
+        if generated_password:
+            temporary = secrets.token_urlsafe(18)  # 24 chars, under the 32 limit
+            data["password"] = temporary
+            data["password2"] = temporary
+
+        serializer = self.serializer_class(data=data)
 
         if serializer.is_valid():
             user = serializer.save()
 
             if user:
-                group_name = request.data.get("group", None)
+                group_name = data.get("group", None)
 
                 if group_name:
                     logger.info(
@@ -160,11 +199,17 @@ class RegisterUserView(APIView):
                         ballkid.save()
 
                 token = Token.objects.create(user=user)
-                json = serializer.data
-                json["token"] = token.key
+                payload = serializer.data
+                payload["token"] = token.key
+
+                email_queued = False
+                if generated_password and user.email:
+                    send_set_password_emails_async([user.id])
+                    email_queued = True
+                payload["set_password_email_queued"] = email_queued
 
                 return Response(
-                    json,
+                    payload,
                     status=status.HTTP_201_CREATED,
                 )
 

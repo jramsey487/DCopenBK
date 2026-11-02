@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from accounts.emails import send_set_password_emails_async
 from api.admin import *
 from api.serializers import *
 from api.utils.utils import *
@@ -174,6 +175,8 @@ class BulkCreateUsers(APIView):
         file = request.FILES["file"]
         reader = csv.DictReader(io.StringIO(file.read().decode("utf-8")))
 
+        new_user_ids = []
+
         for line in reader:
             first_name = line["first_name"]
             last_name = line["last_name"]
@@ -183,9 +186,12 @@ class BulkCreateUsers(APIView):
                 first_name=first_name,
                 last_name=last_name,
                 email=line["email"].lower(),
-                password=make_password("password"),
+                # No usable password: each person chooses their own through
+                # the emailed set-password link (or "Forgot password").
+                password=make_password(None),
             )
             user.save()
+            new_user_ids.append(user.id)
 
             group = Group.objects.get(name=line["group"])
             user.groups.add(group)
@@ -198,8 +204,15 @@ class BulkCreateUsers(APIView):
                     ballkid.user = user
                     ballkid.save()
 
+        # Sent in the background over one connection; users with no email
+        # are skipped.
+        send_set_password_emails_async(new_user_ids)
+
         return Response(
-            {"Success": f"Bulk created users"},
+            {
+                "Success": f"Bulk created users",
+                "set_password_emails_queued": len(new_user_ids),
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -722,45 +735,4 @@ class DownloadData(APIView):
 
         response = HttpResponse(buffer.getvalue(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{today}_data.zip"'
-        return response
-    permission_classes = [IsChairperson]
-
-    def get(self, request, format=None):
-        filename_to_data = {}
-        today = datetime.strftime(datetime.now(), "%Y%m%d")
-        zip_filename = f"{today}_data.zip"
-
-        resource_list = [
-            BallkidResource(),
-            CalibrationParamsResource(),
-            CaptainAnalyticsResource(),
-            CaptainHistoryResource(),
-            CheckinAnalyticsResource(),
-            CheckinHistoryResource(),
-            CourtAnalyticsResource(),
-            CutHistoryResource(),
-            FinalsHistoryResource(),
-            RatingResource(),
-            ScheduleResource(),
-            TeamHistoryResource(),
-            TournamentResource(),
-        ]
-        for resource in resource_list:
-            csv_data = resource.export().csv
-            filename = resource._meta.model.__name__ + today
-            filename_to_data[filename] = csv_data
-
-            # Code to return a single CSV file
-            # response = Response(csv_data, content_type="text/csv")
-            # response["Content-Disposition"] = 'attachment; filename="test.csv"'
-            # return response
-
-        with zipfile.ZipFile(zip_filename, "a", zipfile.ZIP_DEFLATED) as zf:
-            for filename, data in filename_to_data.items():
-                zf.writestr(f"{filename}.csv", data)
-
-        response = HttpResponse(
-            open(zip_filename, "rb"), content_type="application/zip"
-        )
-        response["Content-Disposition"] = "attachment; filename=name.zip"
         return response

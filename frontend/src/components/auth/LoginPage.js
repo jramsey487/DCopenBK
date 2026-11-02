@@ -25,6 +25,12 @@ async function submitPassword(
         password: state.password,
       }),
     });
+    if (response.status === 429) {
+      setErrorMsg(
+        "Too many login attempts. Please wait a while and try again, or use “Forgot password?”."
+      );
+      return;
+    }
     const data = await response.json();
     if (!response.ok) {
       setErrorMsg("Incorrect username or password.");

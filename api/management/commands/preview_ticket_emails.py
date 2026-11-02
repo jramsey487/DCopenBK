@@ -4,7 +4,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 
-from accounts.emails import PasswordChangedConfirmationEmail, PasswordResetEmail
+from accounts.emails import (
+    PasswordChangedConfirmationEmail,
+    PasswordResetEmail,
+    WelcomeSetPasswordEmail,
+)
 from api.utils.ticket_emails import (
     render_ticket_email,
     sample_contexts,
@@ -24,7 +28,17 @@ SEND_TEMPLATES = (
     "denied_digest",
 )
 
-AUTH_TEMPLATES = ("password_reset", "password_changed")
+# name -> (email class, extra context)
+AUTH_EMAILS = {
+    "password_reset": (PasswordResetEmail, {}),
+    "password_changed": (PasswordChangedConfirmationEmail, {}),
+    "welcome_set_password": (WelcomeSetPasswordEmail, {}),
+    "welcome_existing_account": (
+        WelcomeSetPasswordEmail,
+        {"existing_account": True},
+    ),
+}
+AUTH_TEMPLATES = tuple(AUTH_EMAILS)
 
 
 class Command(BaseCommand):
@@ -95,12 +109,9 @@ class Command(BaseCommand):
             path.write_text(html, encoding="utf-8")
             self.stdout.write(self.style.SUCCESS(f"Wrote {path}"))
 
-        for name, email_cls in (
-            ("password_reset.html", PasswordResetEmail),
-            ("password_changed.html", PasswordChangedConfirmationEmail),
-        ):
-            html = self._render_auth_preview(email_cls, logo_url)
-            path = out_dir / name
+        for name, (email_cls, extra) in AUTH_EMAILS.items():
+            html = self._render_auth_preview(email_cls, logo_url, extra)
+            path = out_dir / f"{name}.html"
             path.write_text(html, encoding="utf-8")
             self.stdout.write(self.style.SUCCESS(f"Wrote {path}"))
 
@@ -116,8 +127,10 @@ class Command(BaseCommand):
             pk=1,
         )
 
-    def _render_auth_preview(self, email_cls, logo_url):
-        message = email_cls(context={"user": self._preview_user()})
+    def _render_auth_preview(self, email_cls, logo_url, extra=None):
+        message = email_cls(
+            context={"user": self._preview_user(), **(extra or {})}
+        )
         message.render()
         html = message.html or ""
         if logo_url and "cid:crest-logo" in html:
@@ -153,13 +166,11 @@ class Command(BaseCommand):
             raise CommandError(str(exc)) from exc
 
     def _send_auth(self, recipient, template_choice):
-        email_cls = (
-            PasswordResetEmail
-            if template_choice == "password_reset"
-            else PasswordChangedConfirmationEmail
-        )
+        email_cls, extra = AUTH_EMAILS[template_choice]
         try:
-            message = email_cls(context={"user": self._preview_user()})
+            message = email_cls(
+                context={"user": self._preview_user(), **extra}
+            )
             message.send(to=[recipient])
         except Exception as exc:
             raise CommandError(str(exc)) from exc

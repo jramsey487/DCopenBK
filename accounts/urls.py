@@ -14,5 +14,12 @@ urlpatterns = [
         UpdateCaptainStatus.as_view(),
         name="update-captain-status",
     ),
+    # Throttled version of Djoser's reset-password. It must come BEFORE the
+    # djoser include so it wins the match for this exact URL.
+    path(
+        "users/reset_password/",
+        ThrottledUserViewSet.as_view({"post": "reset_password"}),
+        name="throttled-reset-password",
+    ),
     path("", include("djoser.urls")),
 ]

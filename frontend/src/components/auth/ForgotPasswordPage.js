@@ -17,6 +17,12 @@ async function handleSubmit(email, navigate, setErrorMsg, setLoading) {
       navigate("/reset-email-sent");
       return;
     }
+    if (response.status === 429) {
+      setErrorMsg(
+        "Too many reset requests. Please wait a while and try again, or contact a chairperson."
+      );
+      return;
+    }
     setErrorMsg(
       "No account found for that email. Try another address or contact a chairperson."
     );
