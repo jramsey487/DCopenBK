@@ -66,7 +66,7 @@ if (-not (Test-Path $PackageLock)) {
 }
 
 Write-Host "node, npm, npx, and fly found." -ForegroundColor Green
-Write-Host "Using npm $PinnedNpmVersion for the frontend build." -ForegroundColor Green
+Write-Host "Using the installed npm for the frontend build." -ForegroundColor Green
 Write-Host ""
 
 # ------------------------------------------------------------
@@ -113,10 +113,13 @@ if ($InstallDependencies -or -not (Test-Path $NodeModulesDir)) {
 }
 
 Write-Host ""
-Write-Host "Building production frontend with npm $PinnedNpmVersion..." -ForegroundColor Yellow
+Write-Host "Building production frontend with the installed npm..." -ForegroundColor Yellow
 Write-Host ""
 
-npx --yes "npm@$PinnedNpmVersion" run build
+# Use the normal local npm here. Calling `npx npm@10.8.2 run build` can create
+# an isolated npx execution environment in which local node_modules/.bin is
+# not resolved correctly, causing 'react-scripts is not recognized'.
+npm run build
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
@@ -144,8 +147,8 @@ if (-not (Test-Path $BuildDir)) {
     exit 1
 }
 
-# The React build creates a fresh build directory, but make sure the root
-# staging directory exists before moving the non-standard root files into it.
+# The React build creates the production build directory. Make sure the
+# root staging directory exists before moving the non-standard root files into it.
 New-Item -ItemType Directory -Force -Path $BuildRootDir | Out-Null
 
 # Move everything except index.html, static, and root into build/root.
