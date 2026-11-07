@@ -1,7 +1,5 @@
 """
 Serializers for the ballcrew application + tryout review workflow.
-Add these classes into the repo's existing api/serializers.py (or import
-this module from there) alongside the existing serializers.
 """
 
 from rest_framework import serializers
@@ -10,6 +8,7 @@ from api.models.application import (
     ApplicationSettings,
     BallcrewApplication,
     FIRST_TIMER_AVAILABILITY_DAYS,
+    RECOMMENDATION_CHOICES,
     TRYOUT_CAPACITY_PER_SLOT,
     TRYOUT_SLOT_CHOICES,
     TryoutReview,
@@ -95,6 +94,16 @@ def get_tryout_slot_info(exclude_application_id=None):
             }
         )
     return slots
+
+
+def recommendation_counts(application):
+    """{"strong_yes": n, "yes": n, "no": n, "strong_no": n} from the
+    application's tryout reviews (uses the prefetch cache when present)."""
+    counts = {value: 0 for value, _ in RECOMMENDATION_CHOICES}
+    for review in application.tryout_reviews.all():
+        if review.recommendation in counts:
+            counts[review.recommendation] += 1
+    return counts
 
 
 class ApplicationValidationMixin:
@@ -281,14 +290,17 @@ class TryoutReviewSerializer(serializers.ModelSerializer):
 
 class BallcrewApplicationReviewSerializer(serializers.ModelSerializer):
     """
-    Used on the chairperson-facing review dashboard: read-only application
-    data plus the aggregated tryout review scores. The applicant's private
-    edit_token is deliberately not exposed here.
+    Used on the chairperson-facing review dashboard: application data plus
+    the aggregated tryout review scores, the recommendation breakdown, and
+    which applicant emails have gone out. The applicant's private edit_token
+    is deliberately not exposed here.
     """
 
     tryout_reviews = TryoutReviewSerializer(many=True, read_only=True)
     average_overall_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
+    recommendation_counts = serializers.SerializerMethodField()
+    emails_sent = serializers.SerializerMethodField()
 
     class Meta:
         model = BallcrewApplication
@@ -301,7 +313,16 @@ class BallcrewApplicationReviewSerializer(serializers.ModelSerializer):
         return round(sum(r.overall_rating for r in reviews) / len(reviews), 2)
 
     def get_review_count(self, obj):
-        return obj.tryout_reviews.count()
+        return len(obj.tryout_reviews.all())
+
+    def get_recommendation_counts(self, obj):
+        return recommendation_counts(obj)
+
+    def get_emails_sent(self, obj):
+        return [
+            {"kind": log.kind, "sent_at": log.sent_at.isoformat()}
+            for log in obj.email_logs.all()
+        ]
 
 
 class ApplicationStatusUpdateSerializer(serializers.ModelSerializer):

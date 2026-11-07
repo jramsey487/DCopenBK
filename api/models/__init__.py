@@ -7,6 +7,7 @@ from api.models import schedule  # noqa: F401
 from api.models import ballkid  # noqa: F401
 from api.models import rating  # noqa: F401
 from api.models import application  # noqa: F401
+from api.models import application_email_log  # noqa: F401
 from api.models import shift_group  # noqa: F401
 from api.models import captain_rating  # noqa: F401
 from api.models import trivia  # noqa: F401

@@ -1,34 +1,43 @@
 """
 Views for the ballcrew application + tryout review workflow.
 
-Wire these into api/urls.py:
+URLs (see api/urls.py):
 
-    path("submit-application", SubmitApplicationView.as_view()),
-    path("application-edit/<uuid:token>", ApplicationEditView.as_view()),
-    path("applications", ApplicationListView.as_view()),
-    path("applications/<int:pk>", ApplicationDetailView.as_view()),
-    path("applications/<int:pk>/status", UpdateApplicationStatusView.as_view()),
-    path("promote-application/<int:pk>", PromoteApplicationView.as_view()),
-    path("tryout-reviews", TryoutReviewCreateView.as_view()),
-    path("tryout-reviews/application/<int:application_id>", TryoutReviewListView.as_view()),
+    submit-application                      public submit
+    application-edit/<uuid:token>           applicant self-edit
+    applications                            review list (chairperson)
+    applications/export                     CSV export (chairperson)
+    applications/tryout-reminders           GET preview / POST send reminders
+    applications/waitlist-promote           POST promote from the waitlist
+    applications/<int:pk>                   review detail
+    applications/<int:pk>/status            PATCH {"status", "notify"}
+    applications/<int:pk>/apply-headshot-update
+    promote-application/<int:pk>            POST {"ballkid_id"?, "create_login"?}
+    ...
 """
 
-from datetime import date
+import csv
 import re
+from datetime import date
 
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models import Avg, F, Prefetch
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from accounts.emails import send_set_password_emails_async
 from api.models.application import (
     ApplicationInterest,
     ApplicationSettings,
@@ -39,6 +48,7 @@ from api.models.application import (
     TryoutReview,
 )
 from api.models.ballkid import Ballkid
+from api.models.schedule import Tournament
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
     ApplicationStatusUpdateSerializer,
@@ -47,7 +57,16 @@ from api.serializers_application import (
     BallcrewApplicationSubmitSerializer,
     get_tournament_start_date,
     get_tryout_slot_info,
+    recommendation_counts,
     TryoutReviewSerializer,
+)
+from api.utils.application_decision_email import (
+    applicant_emails_enabled,
+    reminders_in_progress,
+    send_application_email_async,
+    send_tryout_reminders_async,
+    STATUS_TO_KIND,
+    tryout_reminder_candidates,
 )
 from api.utils.application_email import (
     INTEREST_BATCH_LIMIT,
@@ -56,6 +75,26 @@ from api.utils.application_email import (
     send_application_confirmation_async,
     send_interest_notifications_async,
 )
+
+
+def _as_bool(value, default=True):
+    """Request values may be real booleans or strings like "false"."""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in ("false", "0", "no", "off", "")
+    return bool(value)
+
+
+def review_queryset():
+    """Applications with everything the review serializer touches prefetched."""
+    return BallcrewApplication.objects.all().prefetch_related(
+        Prefetch(
+            "tryout_reviews",
+            queryset=TryoutReview.objects.select_related("reviewer"),
+        ),
+        "email_logs",
+    )
 
 
 class ApplicationSubmitThrottle(AnonRateThrottle):
@@ -255,7 +294,7 @@ class ApplicationListView(generics.ListAPIView):
     permission_classes = [IsChairperson]
 
     def get_queryset(self):
-        qs = BallcrewApplication.objects.all().prefetch_related("tryout_reviews")
+        qs = review_queryset()
         status_filter = self.request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
@@ -263,30 +302,163 @@ class ApplicationListView(generics.ListAPIView):
 
 
 class ApplicationDetailView(generics.RetrieveAPIView):
-    queryset = BallcrewApplication.objects.all().prefetch_related("tryout_reviews")
+    queryset = review_queryset()
     serializer_class = BallcrewApplicationReviewSerializer
     permission_classes = [IsChairperson]
 
 
 class UpdateApplicationStatusView(generics.UpdateAPIView):
-    """PATCH {"status": "accepted" | "rejected" | "waitlisted"}"""
+    """
+    PATCH {"status": "accepted" | "rejected" | "waitlisted" | "pending",
+           "notify": true}
+
+    When the status actually changes to accepted / waitlisted / rejected and
+    notify is true (the default), the applicant is emailed in the background.
+    Each kind of email is only ever sent once per applicant.
+    """
 
     queryset = BallcrewApplication.objects.all()
     serializer_class = ApplicationStatusUpdateSerializer
     permission_classes = [IsChairperson]
 
     def perform_update(self, serializer):
-        serializer.save(reviewed_by=self.request.user, reviewed_at=timezone.now())
+        previous = serializer.instance.status
+        application = serializer.save(
+            reviewed_by=self.request.user, reviewed_at=timezone.now()
+        )
+
+        notify = _as_bool(self.request.data.get("notify"), default=True)
+        kind = STATUS_TO_KIND.get(application.status)
+        if notify and kind and application.status != previous:
+            transaction.on_commit(
+                lambda: send_application_email_async(application.pk, kind)
+            )
+
+
+class PromoteFromWaitlistView(APIView):
+    """
+    POST {"application_id"?: int, "notify"?: bool}
+
+    Accepts a waitlisted applicant when a spot opens up. Without an
+    application_id, picks the best waitlisted applicant from this season:
+    highest average overall tryout rating first (unrated last), then
+    whoever applied earliest. Sends the "a spot opened up" email by default.
+    Promoting them to a Ballkid is still the separate Promote step.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        waitlisted = BallcrewApplication.objects.filter(
+            status="waitlisted", promoted_ballkid__isnull=True
+        )
+        tournament = Tournament.objects.order_by("-year").first()
+        if tournament:
+            waitlisted = waitlisted.filter(submitted_at__year=tournament.year)
+
+        application_id = request.data.get("application_id")
+        if application_id:
+            application = get_object_or_404(waitlisted, pk=application_id)
+        else:
+            application = (
+                waitlisted.annotate(avg_overall=Avg("tryout_reviews__overall_rating"))
+                .order_by(F("avg_overall").desc(nulls_last=True), "submitted_at", "id")
+                .first()
+            )
+            if application is None:
+                return Response(
+                    {"detail": "There are no waitlisted applicants."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        application.status = "accepted"
+        application.reviewed_by = request.user
+        application.reviewed_at = timezone.now()
+        application.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+
+        if _as_bool(request.data.get("notify"), default=True):
+            application_pk = application.pk
+            transaction.on_commit(
+                lambda: send_application_email_async(application_pk, "waitlist_promoted")
+            )
+
+        fresh = review_queryset().get(pk=application.pk)
+        return Response(
+            BallcrewApplicationReviewSerializer(
+                fresh, context={"request": request}
+            ).data
+        )
+
+
+def _ensure_login(ballkid, application):
+    """
+    Makes sure the ballkid has a login. Returns (user, created).
+
+    - Already linked to a user: nothing to do.
+    - Otherwise creates User "first.last" (numbered if taken) with no usable
+      password, in the ballkid / captain / chairperson group matching the
+      profile. If a free-standing account with that username and the same
+      email already exists, it is linked instead of creating a duplicate.
+    """
+    if ballkid.user_id:
+        return ballkid.user, False
+
+    first = ballkid.first_name.strip()
+    last = ballkid.last_name.strip()
+    base = f"{first.lower()}.{last.lower()}"
+    email = (application.email or "").strip().lower()
+
+    username = base
+    number = 1
+    while True:
+        existing = User.objects.filter(username=username).first()
+        if existing is None:
+            break
+        if (
+            email
+            and (existing.email or "").strip().lower() == email
+            and not Ballkid.all_objects.filter(user=existing).exists()
+        ):
+            ballkid.user = existing
+            ballkid.save(update_fields=["user"])
+            return existing, False
+        number += 1
+        username = f"{base}{number}"
+
+    user = User(username=username, first_name=first, last_name=last, email=email)
+    user.set_unusable_password()
+    user.save()
+
+    if ballkid.is_chairperson:
+        group_name = "chairperson"
+    elif ballkid.is_captain:
+        group_name = "captain"
+    else:
+        group_name = "ballkid"
+    group, _ = Group.objects.get_or_create(name=group_name)
+    user.groups.add(group)
+    Token.objects.get_or_create(user=user)
+
+    ballkid.user = user
+    ballkid.save(update_fields=["user"])
+    return user, True
 
 
 class PromoteApplicationView(APIView):
     """
     Creates a real Ballkid record from an accepted application. Application
     rows are never written directly into Ballkid -- this is the one path.
+
+    Body (all optional): {"ballkid_id": int, "create_login": bool}
+
+    create_login (default true): if the ballkid has no login yet, creates
+    one and emails them a link to choose their password. The response
+    includes a "login" object describing what happened.
     """
 
     permission_classes = [IsChairperson]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
             application = BallcrewApplication.objects.get(pk=pk)
@@ -382,13 +554,30 @@ class PromoteApplicationView(APIView):
                 defaults={"email": application.additional_email},
             )
 
+        # Login: create one (and email an invite) if they don't have one yet.
+        login = {"created": False, "username": None, "invite_queued": False}
+        if _as_bool(request.data.get("create_login"), default=True):
+            user, created = _ensure_login(ballkid, application)
+            login["username"] = user.username if user else None
+            login["created"] = created
+            if created and user.email:
+                login["invite_queued"] = True
+                user_id = user.id
+                transaction.on_commit(
+                    lambda: send_set_password_emails_async([user_id])
+                )
+
         application.promoted_ballkid = ballkid
         application.save(update_fields=["promoted_ballkid"])
 
-        return Response(
-            BallcrewApplicationReviewSerializer(application).data,
-            status=status.HTTP_201_CREATED,
+        fresh = review_queryset().get(pk=application.pk)
+        payload = dict(
+            BallcrewApplicationReviewSerializer(
+                fresh, context={"request": request}
+            ).data
         )
+        payload["login"] = login
+        return Response(payload, status=status.HTTP_201_CREATED)
 
     @staticmethod
     def _resolve_headshot_url(application):
@@ -448,6 +637,158 @@ class TryoutReviewListView(generics.ListAPIView):
         return TryoutReview.objects.filter(
             application_id=self.kwargs["application_id"]
         )
+
+
+# ---------------------------------------------------------------------------
+# CSV export
+# ---------------------------------------------------------------------------
+
+
+def _csv_safe(value):
+    """Stops spreadsheet apps treating a cell as a formula (CSV injection)."""
+    if value is None:
+        return ""
+    text = str(value)
+    if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + text
+    return text
+
+
+class ApplicationExportView(APIView):
+    """GET ?status=pending (optional) -> CSV of applications + review scores."""
+
+    permission_classes = [IsChairperson]
+
+    COLUMNS = [
+        "First name",
+        "Last name",
+        "Email",
+        "Additional email",
+        "Phone",
+        "State",
+        "Gender",
+        "Date of birth",
+        "Type",
+        "Status",
+        "Years experience",
+        "Position",
+        "Likelihood",
+        "Tryout",
+        "Availability",
+        "Traveling with",
+        "Vegetarian",
+        "T-shirt",
+        "Shorts",
+        "Shoe",
+        "Reviews",
+        "Avg overall",
+        "Strong yes",
+        "Yes",
+        "No",
+        "Strong no",
+        "Motivation",
+        "Fun fact",
+        "Submitted",
+    ]
+
+    def get(self, request):
+        applications = review_queryset()
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            applications = applications.filter(status=status_filter)
+        applications = applications.order_by("last_name", "first_name")
+
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = (
+            'attachment; filename="ballcrew-applications.csv"'
+        )
+        response.write("\ufeff")  # byte-order mark so Excel reads UTF-8
+        writer = csv.writer(response)
+        writer.writerow(self.COLUMNS)
+
+        for a in applications:
+            reviews = list(a.tryout_reviews.all())
+            average = (
+                round(sum(r.overall_rating for r in reviews) / len(reviews), 2)
+                if reviews
+                else ""
+            )
+            counts = recommendation_counts(a)
+            row = [
+                a.first_name,
+                a.last_name,
+                a.email,
+                a.additional_email,
+                a.phone,
+                a.state,
+                a.get_gender_display(),
+                a.date_of_birth.isoformat() if a.date_of_birth else "",
+                "Veteran" if a.is_veteran else "First-time",
+                a.status,
+                a.years_experience if a.years_experience is not None else "",
+                a.position or "",
+                a.get_likelihood_display() if a.likelihood else "",
+                a.tryout_date or "",
+                ", ".join(a.availability_days or []),
+                a.traveling_with_names,
+                "Yes" if a.is_vegetarian else "No",
+                a.tshirt_size,
+                a.shorts_size,
+                a.shoe_size,
+                len(reviews),
+                average,
+                counts["strong_yes"],
+                counts["yes"],
+                counts["no"],
+                counts["strong_no"],
+                a.motivation,
+                a.fun_fact,
+                a.submitted_at.strftime("%Y-%m-%d %H:%M") if a.submitted_at else "",
+            ]
+            writer.writerow([_csv_safe(value) for value in row])
+        return response
+
+
+# ---------------------------------------------------------------------------
+# Tryout reminders
+# ---------------------------------------------------------------------------
+
+
+class TryoutRemindersView(APIView):
+    """
+    GET  -> {"pending": n, "sending": bool}: how many reminders would go out
+            now (first-timers whose tryout is within the next 2 days).
+    POST -> sends them in the background. Safe to click again: anyone already
+            reminded is skipped.
+    """
+
+    permission_classes = [IsChairperson]
+    DAYS_AHEAD = 2
+
+    def get(self, request):
+        return Response(
+            {
+                "pending": len(tryout_reminder_candidates(self.DAYS_AHEAD)),
+                "sending": reminders_in_progress(),
+                "emails_enabled": applicant_emails_enabled(),
+            }
+        )
+
+    def post(self, request):
+        if not applicant_emails_enabled():
+            raise ValidationError(
+                {"detail": "Applicant emails are switched off. Turn them on first."}
+            )
+        if reminders_in_progress():
+            return Response(
+                {"detail": "A send is already in progress. Give it a minute."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        pending = len(tryout_reminder_candidates(self.DAYS_AHEAD))
+        if pending == 0:
+            return Response({"queued": 0})
+        send_tryout_reminders_async(self.DAYS_AHEAD)
+        return Response({"queued": pending})
 
 
 class PurgeUnpromotedApplicationsView(APIView):
@@ -522,6 +863,7 @@ class ApplyHeadshotUpdateView(APIView):
         ballkid.save(update_fields=["image"])
 
         return Response({"updated_ballkid_id": ballkid.id, "image": ballkid.image})
+
 
 # ---------------------------------------------------------------------------
 # Interest list ("email me when applications open")
@@ -673,4 +1015,3 @@ class ApplicationInterestNotifyView(APIView):
         send_interest_notifications_async()
         queued = min(pending, INTEREST_BATCH_LIMIT)
         return Response({"queued": queued, "remaining_after": pending - queued})
-

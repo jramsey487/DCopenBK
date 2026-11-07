@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Autocomplete,
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   Dialog,
   DialogActions,
@@ -19,13 +21,16 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TableSortLabel,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
 import { ConfirmDialog, getAuthHeader } from "../Utils";
+import ApplicationDetailDrawer from "./ApplicationDetailDrawer";
 
 const STATUS_COLORS = {
   pending: "default",
@@ -34,21 +39,86 @@ const STATUS_COLORS = {
   waitlisted: "warning",
 };
 
+const STATUS_VERB = {
+  accepted: "Accept",
+  waitlisted: "Waitlist",
+  rejected: "Reject",
+  pending: "Move back to pending",
+};
+
+// What each decision emails the applicant (shown in the confirm dialog).
+const STATUS_EMAIL_BLURB = {
+  accepted: "a congratulations email",
+  waitlisted: "a waitlist email",
+  rejected: "a polite decline email",
+  pending: null,
+};
+
+function RecBreakdown({ counts }) {
+  const c = counts || {};
+  return (
+    <Tooltip title="Strong yes / Yes / No / Strong no">
+      <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+        {c.strong_yes || 0} · {c.yes || 0} · {c.no || 0} · {c.strong_no || 0}
+      </Typography>
+    </Tooltip>
+  );
+}
+
+function sortValue(app, key) {
+  switch (key) {
+    case "name":
+      return `${app.last_name} ${app.first_name}`.toLowerCase();
+    case "type":
+      return app.is_veteran ? 1 : 0;
+    case "reviews":
+      return app.review_count;
+    case "avg":
+      return app.average_overall_rating;
+    case "status":
+      return app.status;
+    case "submitted":
+      return app.submitted_at;
+    default:
+      return null;
+  }
+}
+
 export default function ApplicationsReviewPage() {
   const [applications, setApplications] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState({ key: "avg", dir: "desc" });
+  const [notice, setNotice] = useState(null);
+
   const [applicationsOpen, setApplicationsOpen] = useState(null);
   const [settingsError, setSettingsError] = useState(false);
   const [confirmationEmailsOn, setConfirmationEmailsOn] = useState(null);
 
+  const [selected, setSelected] = useState(null);
+
   const load = () => {
     const query = statusFilter ? `?status=${statusFilter}` : "";
-    fetch(`/api/applications${query}`, { headers: getAuthHeader() })
+    return fetch(`/api/applications${query}`, { headers: getAuthHeader() })
       .then((res) => res.json())
-      .then((data) => setApplications(data));
+      .then((data) => setApplications(Array.isArray(data) ? data : []));
   };
 
-  useEffect(load, [statusFilter]);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  const refreshSelected = (id) =>
+    fetch(`/api/applications/${id}`, { headers: getAuthHeader() })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setSelected(data);
+      });
+
+  const reloadAll = (id) => Promise.all([load(), id ? refreshSelected(id) : null]);
+
+  // --- Settings toggles --------------------------------------------------
 
   const loadApplicationSettings = () => {
     setSettingsError(false);
@@ -63,70 +133,172 @@ export default function ApplicationsReviewPage() {
 
   useEffect(loadApplicationSettings, []);
 
-  const toggleApplicationsOpen = async () => {
-    const next = !applicationsOpen;
-    setApplicationsOpen(next); // optimistic
+  const patchSetting = async (field, next, setter) => {
+    setter(next); // optimistic
     const response = await fetch("/api/application-settings", {
       method: "PATCH",
       headers: getAuthHeader(),
-      body: JSON.stringify({ is_open: next }),
+      body: JSON.stringify({ [field]: next }),
     });
     if (!response.ok) {
-      setApplicationsOpen(!next); // revert on failure
+      setter(!next); // revert on failure
     }
   };
 
-  const toggleConfirmationEmails = async () => {
-    const next = !confirmationEmailsOn;
-    setConfirmationEmailsOn(next); // optimistic
-    const response = await fetch("/api/application-settings", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({ send_confirmation_emails: next }),
-    });
-    if (!response.ok) {
-      setConfirmationEmailsOn(!next); // revert on failure
+  const toggleApplicationsOpen = () =>
+    patchSetting("is_open", !applicationsOpen, setApplicationsOpen);
+
+  const toggleConfirmationEmails = () =>
+    patchSetting(
+      "send_confirmation_emails",
+      !confirmationEmailsOn,
+      setConfirmationEmailsOn
+    );
+
+  // --- Status changes + waitlist (shared "decision" dialog) ---------------
+
+  // decision: { type: "status", app, status } | { type: "waitlist", app|null }
+  const [decision, setDecision] = useState(null);
+  const [decisionNotify, setDecisionNotify] = useState(true);
+  const [decisionBusy, setDecisionBusy] = useState(false);
+  const [decisionError, setDecisionError] = useState("");
+
+  const openDecision = (next) => {
+    setDecision(next);
+    setDecisionNotify(true);
+    setDecisionError("");
+  };
+
+  const requestStatus = (app, status) =>
+    openDecision({ type: "status", app, status });
+
+  const requestWaitlistMove = (app) => openDecision({ type: "waitlist", app });
+
+  const confirmDecision = async () => {
+    if (!decision) return;
+    setDecisionBusy(true);
+    setDecisionError("");
+    const notify = Boolean(confirmationEmailsOn) && decisionNotify;
+
+    try {
+      let response;
+      if (decision.type === "status") {
+        response = await fetch(`/api/applications/${decision.app.id}/status`, {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: JSON.stringify({ status: decision.status, notify }),
+        });
+      } else {
+        response = await fetch("/api/applications/waitlist-promote", {
+          method: "POST",
+          headers: getAuthHeader(),
+          body: JSON.stringify({
+            application_id: decision.app ? decision.app.id : undefined,
+            notify,
+          }),
+        });
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setDecisionError(data.detail || "Something went wrong.");
+        return;
+      }
+
+      const name =
+        decision.type === "waitlist"
+          ? `${data.first_name} ${data.last_name}`
+          : `${decision.app.first_name} ${decision.app.last_name}`;
+      setNotice({
+        severity: "success",
+        text:
+          decision.type === "waitlist"
+            ? `${name} was moved up from the waitlist to accepted${notify ? " and emailed" : ""}.`
+            : `${name} was set to ${decision.status}${
+                notify && STATUS_EMAIL_BLURB[decision.status] ? " and emailed" : ""
+              }.`,
+      });
+      setDecision(null);
+      const touchedId =
+        decision.type === "waitlist" ? data.id : decision.app.id;
+      await reloadAll(selected && selected.id === touchedId ? touchedId : null);
+    } catch (err) {
+      setDecisionError("Something went wrong.");
+    } finally {
+      setDecisionBusy(false);
     }
   };
 
-  const updateStatus = async (id, status) => {
-    await fetch(`/api/applications/${id}/status`, {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({ status }),
-    });
-    load();
-  };
+  // --- Promote -------------------------------------------------------------
 
-  const promote = async (id, ballkidId) => {
-    await fetch(`/api/promote-application/${id}`, {
-      method: "POST",
-      headers: getAuthHeader(),
-      body: JSON.stringify(ballkidId ? { ballkid_id: ballkidId } : {}),
-    });
-    load();
-  };
-
-  // --- Promotion matching (veterans: match to their existing record
-  // rather than creating a duplicate every season) ---
+  const [ballkids, setBallkids] = useState([]);
   const [promoteDialogApp, setPromoteDialogApp] = useState(null);
   const [promoteDialogBallkid, setPromoteDialogBallkid] = useState(null);
   const [promoteAsNew, setPromoteAsNew] = useState(false);
+  const [promoteCreateLogin, setPromoteCreateLogin] = useState(true);
   const [promoteError, setPromoteError] = useState("");
 
-  const openPromoteDialog = (app) => {
+  useEffect(() => {
+    fetch("/api/list", { headers: getAuthHeader() })
+      .then((res) => res.json())
+      .then((data) => setBallkids(Array.isArray(data) ? data : []));
+  }, []);
+
+  const describeLogin = (login, name) => {
+    if (!login) return `${name} was promoted to ballkid.`;
+    if (login.created && login.invite_queued) {
+      return `${name} was promoted. Login "${login.username}" was created and an email to set a password is on its way.`;
+    }
+    if (login.created) {
+      return `${name} was promoted and login "${login.username}" was created, but they have no email on file, so no invite was sent.`;
+    }
+    if (login.username) {
+      return `${name} was promoted and linked to their existing login "${login.username}".`;
+    }
+    return `${name} was promoted to ballkid.`;
+  };
+
+  const promote = async (app, ballkidId, createLogin) => {
+    const response = await fetch(`/api/promote-application/${app.id}`, {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify({
+        ...(ballkidId ? { ballkid_id: ballkidId } : {}),
+        create_login: createLogin,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    return { ok: response.ok, data };
+  };
+
+  const finishPromote = async (app, data) => {
+    setNotice({
+      severity: "success",
+      text: describeLogin(data.login, `${app.first_name} ${app.last_name}`),
+    });
+    await reloadAll(selected && selected.id === app.id ? app.id : null);
+  };
+
+  const openPromoteDialog = async (app) => {
     if (!app.is_veteran) {
       // First-timers have no existing record to match -- promote directly.
-      promote(app.id);
+      const { ok, data } = await promote(app, null, true);
+      if (ok) {
+        await finishPromote(app, data);
+      } else {
+        setNotice({
+          severity: "error",
+          text: (Array.isArray(data) ? data.join(" ") : data.detail) || "Could not promote.",
+        });
+      }
       return;
     }
     setPromoteError("");
     setPromoteAsNew(false);
+    setPromoteCreateLogin(true);
     // Convenience default only -- covers the common case (name unchanged).
     // The chairperson can search for anyone, by any name, which is what
-    // actually handles a legal name change (e.g. after marriage): search
-    // for them under whatever name they're currently listed as, regardless
-    // of what name this year's application used.
+    // actually handles a legal name change (e.g. after marriage).
     const exactMatch = ballkids.find(
       (b) =>
         b.first_name.toLowerCase() === app.first_name.toLowerCase() &&
@@ -139,41 +311,36 @@ export default function ApplicationsReviewPage() {
   const confirmPromote = async () => {
     if (!promoteDialogApp) return;
     if (!promoteAsNew && !promoteDialogBallkid) {
-      setPromoteError("Select their existing record, or choose \"not currently in our system\" below.");
+      setPromoteError(
+        'Select their existing record, or choose "not currently in our system" below.'
+      );
       return;
     }
     setPromoteError("");
-    const response = await fetch(
-      `/api/promote-application/${promoteDialogApp.id}`,
-      {
-        method: "POST",
-        headers: getAuthHeader(),
-        body: JSON.stringify(
-          promoteAsNew ? {} : { ballkid_id: promoteDialogBallkid.id }
-        ),
-      }
+    const app = promoteDialogApp;
+    const { ok, data } = await promote(
+      app,
+      promoteAsNew ? null : promoteDialogBallkid.id,
+      promoteCreateLogin
     );
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setPromoteError(data.ballkid_id?.[0] || data.detail || "Could not promote.");
+    if (!ok) {
+      setPromoteError(
+        data.ballkid_id?.[0] ||
+          data.detail ||
+          (Array.isArray(data) ? data.join(" ") : "Could not promote.")
+      );
       return;
     }
     setPromoteDialogApp(null);
     setPromoteDialogBallkid(null);
-    load();
+    await finishPromote(app, data);
   };
 
-  // --- Headshot update matching (veterans updating their photo) ---
-  const [ballkids, setBallkids] = useState([]);
+  // --- Headshot update -----------------------------------------------------
+
   const [headshotDialogApp, setHeadshotDialogApp] = useState(null);
   const [headshotDialogBallkid, setHeadshotDialogBallkid] = useState(null);
   const [headshotError, setHeadshotError] = useState("");
-
-  useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((res) => res.json())
-      .then((data) => setBallkids(Array.isArray(data) ? data : []));
-  }, []);
 
   const openHeadshotDialog = (app) => {
     setHeadshotError("");
@@ -210,6 +377,60 @@ export default function ApplicationsReviewPage() {
     setHeadshotDialogBallkid(null);
   };
 
+  // --- CSV export ------------------------------------------------------------
+
+  const [exporting, setExporting] = useState(false);
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const query = statusFilter ? `?status=${statusFilter}` : "";
+      const response = await fetch(`/api/applications/export${query}`, {
+        headers: getAuthHeader(),
+      });
+      if (!response.ok) throw new Error();
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ballcrew-applications${statusFilter ? `-${statusFilter}` : ""}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setNotice({ severity: "error", text: "Could not export the CSV." });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // --- Tryout reminders ------------------------------------------------------
+
+  const [reminderInfo, setReminderInfo] = useState(null);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+
+  const openReminderDialog = async () => {
+    const response = await fetch("/api/applications/tryout-reminders", {
+      headers: getAuthHeader(),
+    });
+    const data = await response.json().catch(() => ({}));
+    setReminderInfo(data);
+    setReminderDialogOpen(true);
+  };
+
+  const reminderMessage = reminderInfo
+    ? !reminderInfo.emails_enabled
+      ? "Applicant emails are switched off, so nothing can be sent. Turn them on first."
+      : reminderInfo.pending > 0
+      ? `This emails a tryout reminder to ${reminderInfo.pending} first-time applicant${
+          reminderInfo.pending === 1 ? "" : "s"
+        } whose tryout is within the next 2 days. Anyone already reminded is skipped.`
+      : "No one is due a tryout reminder right now (tryouts within the next 2 days, not yet reminded)."
+    : "";
+
+  // --- Purge -----------------------------------------------------------------
+
   const [purgeDialogOpen, setPurgeDialogOpen] = useState(false);
   const [purgePreview, setPurgePreview] = useState(null);
   const [purgeResult, setPurgeResult] = useState("");
@@ -223,24 +444,89 @@ export default function ApplicationsReviewPage() {
     setPurgeDialogOpen(true);
   };
 
-  const purgeMessage = purgePreview && (
-    purgePreview.count > 0 ? (
+  const purgeMessage =
+    purgePreview &&
+    (purgePreview.count > 0 ? (
       <>
         This will permanently delete <strong>{purgePreview.count}</strong>{" "}
-        application(s) that were never promoted to a ballkid, along with
-        their uploaded headshots. This cannot be undone.
+        application(s) that were never promoted to a ballkid, along with their
+        uploaded headshots. This cannot be undone.
         <Box component="ul" sx={{ mt: 1 }}>
           {Object.entries(purgePreview.by_status)
             .filter(([, n]) => n > 0)
             .map(([status, n]) => (
-              <li key={status}>{status}: {n}</li>
+              <li key={status}>
+                {status}: {n}
+              </li>
             ))}
         </Box>
       </>
     ) : (
       "There are no unpromoted applications to delete right now."
-    )
+    ));
+
+  // --- Table data ------------------------------------------------------------
+
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = applications.filter(
+      (a) =>
+        !q ||
+        `${a.first_name} ${a.last_name} ${a.email}`.toLowerCase().includes(q)
+    );
+    const dir = sort.dir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const av = sortValue(a, sort.key);
+      const bv = sortValue(b, sort.key);
+      const aNull = av === null || av === undefined;
+      const bNull = bv === null || bv === undefined;
+      if (aNull && bNull) return 0;
+      if (aNull) return 1; // blanks always last, whichever direction
+      if (bNull) return -1;
+      if (typeof av === "string") return av.localeCompare(bv) * dir;
+      return (av - bv) * dir;
+    });
+  }, [applications, search, sort]);
+
+  const handleSort = (key) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: key === "name" || key === "status" || key === "type" ? "asc" : "desc" }
+    );
+
+  const sortHeader = (key, label) => (
+    <TableSortLabel
+      active={sort.key === key}
+      direction={sort.key === key ? sort.dir : "asc"}
+      onClick={() => handleSort(key)}
+    >
+      {label}
+    </TableSortLabel>
   );
+
+  const decisionTitle = decision
+    ? decision.type === "waitlist"
+      ? "Move up from the waitlist"
+      : STATUS_VERB[decision.status]
+    : "";
+
+  const decisionBody = () => {
+    if (!decision) return "";
+    if (decision.type === "waitlist") {
+      return decision.app
+        ? `${decision.app.first_name} ${decision.app.last_name} will be set to accepted and (optionally) emailed that a spot opened up.`
+        : "The best waitlisted applicant this season (highest average overall tryout rating, then earliest application) will be set to accepted and (optionally) emailed that a spot opened up.";
+    }
+    return `${decision.app.first_name} ${decision.app.last_name} will be set to ${decision.status}.`;
+  };
+
+  const decisionEmailBlurb =
+    decision && decision.type === "waitlist"
+      ? "an email saying a spot opened up"
+      : decision
+      ? STATUS_EMAIL_BLURB[decision.status]
+      : null;
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -274,22 +560,17 @@ export default function ApplicationsReviewPage() {
         </ToggleButtonGroup>
       </Box>
 
-      <ConfirmDialog
-        open={purgeDialogOpen}
-        setOpen={setPurgeDialogOpen}
-        message={purgeMessage}
-        url="/api/purge-unpromoted-applications"
-        method="POST"
-        body={{}}
-        setUpdated={(didUpdate) => {
-          if (didUpdate && purgePreview) {
-            setPurgeResult(`Deleted ${purgePreview.count} unpromoted application(s).`);
-            load();
-          }
-        }}
-      />
+      {notice ? (
+        <Alert
+          severity={notice.severity}
+          sx={{ mb: 2 }}
+          onClose={() => setNotice(null)}
+        >
+          {notice.text}
+        </Alert>
+      ) : null}
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
         <FormControlLabel
           control={
             <Switch
@@ -328,62 +609,237 @@ export default function ApplicationsReviewPage() {
           }
           label={
             confirmationEmailsOn === null
-              ? "Loading confirmation emails…"
+              ? "Loading applicant emails…"
               : confirmationEmailsOn
-              ? "Confirmation emails are ON — applicants get a copy of their answers"
-              : "Confirmation emails are OFF — nothing is sent after submission"
+              ? "Applicant emails are ON — confirmations, decisions and tryout reminders are sent"
+              : "Applicant emails are OFF — nothing is emailed to applicants"
           }
         />
       </Box>
 
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Veteran?</TableCell>
-            <TableCell>Traveling With</TableCell>
-            <TableCell># Reviews</TableCell>
-            <TableCell>Avg Overall</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {applications.map((app) => (
-            <TableRow key={app.id}>
-              <TableCell>{app.first_name} {app.last_name}</TableCell>
-              <TableCell>{app.is_veteran ? "Veteran" : "First-time"}</TableCell>
-              <TableCell>{app.traveling_with_names || "—"}</TableCell>
-              <TableCell>{app.review_count}</TableCell>
-              <TableCell>{app.average_overall_rating ?? "—"}</TableCell>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexWrap: "wrap",
+          mb: 2,
+        }}
+      >
+        <TextField
+          size="small"
+          label="Search name or email"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ minWidth: 240 }}
+        />
+        <Button variant="outlined" size="small" onClick={exportCsv} disabled={exporting}>
+          {exporting ? "Exporting…" : "Export CSV"}
+        </Button>
+        <Button variant="outlined" size="small" onClick={openReminderDialog}>
+          Send tryout reminders
+        </Button>
+        {statusFilter === "waitlisted" ? (
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => requestWaitlistMove(null)}
+            disabled={applications.length === 0}
+          >
+            Promote next from waitlist
+          </Button>
+        ) : null}
+        <Typography variant="body2" color="text.secondary" sx={{ ml: "auto" }}>
+          {visible.length} shown
+        </Typography>
+      </Box>
+
+      <Box sx={{ overflowX: "auto" }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>{sortHeader("name", "Name")}</TableCell>
+              <TableCell>{sortHeader("type", "Veteran?")}</TableCell>
+              <TableCell>Traveling With</TableCell>
+              <TableCell>{sortHeader("reviews", "# Reviews")}</TableCell>
+              <TableCell>{sortHeader("avg", "Avg Overall")}</TableCell>
               <TableCell>
-                <Chip label={app.status} color={STATUS_COLORS[app.status]} size="small" />
+                <Tooltip title="Strong yes · Yes · No · Strong no">
+                  <span>Recs</span>
+                </Tooltip>
               </TableCell>
-              <TableCell>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  <Button size="small" onClick={() => updateStatus(app.id, "accepted")}>Accept</Button>
-                  <Button size="small" onClick={() => updateStatus(app.id, "waitlisted")}>Waitlist</Button>
-                  <Button size="small" color="error" onClick={() => updateStatus(app.id, "rejected")}>Reject</Button>
-                  {app.status === "accepted" && !app.promoted_ballkid && (
-                    <Button size="small" variant="contained" onClick={() => openPromoteDialog(app)}>
-                      Promote to Ballkid
-                    </Button>
-                  )}
-                  {app.promoted_ballkid && <Chip label="Promoted" size="small" color="info" />}
-                  {app.headshot_update ? (
-                    <Button size="small" onClick={() => openHeadshotDialog(app)}>
-                      Apply Headshot Update
-                    </Button>
-                  ) : null}
-                </Box>
-              </TableCell>
+              <TableCell>{sortHeader("status", "Status")}</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {visible.map((app) => (
+              <TableRow
+                key={app.id}
+                hover
+                sx={{ cursor: "pointer" }}
+                onClick={() => setSelected(app)}
+              >
+                <TableCell>
+                  {app.first_name} {app.last_name}
+                </TableCell>
+                <TableCell>{app.is_veteran ? "Veteran" : "First-time"}</TableCell>
+                <TableCell>{app.traveling_with_names || "—"}</TableCell>
+                <TableCell>{app.review_count}</TableCell>
+                <TableCell>{app.average_overall_rating ?? "—"}</TableCell>
+                <TableCell>
+                  <RecBreakdown counts={app.recommendation_counts} />
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={app.status}
+                    color={STATUS_COLORS[app.status]}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Button size="small" onClick={() => setSelected(app)}>
+                      View
+                    </Button>
+                    <Button
+                      size="small"
+                      disabled={app.status === "accepted"}
+                      onClick={() => requestStatus(app, "accepted")}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="small"
+                      disabled={app.status === "waitlisted"}
+                      onClick={() => requestStatus(app, "waitlisted")}
+                    >
+                      Waitlist
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      disabled={app.status === "rejected"}
+                      onClick={() => requestStatus(app, "rejected")}
+                    >
+                      Reject
+                    </Button>
+                    {app.status === "waitlisted" ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => requestWaitlistMove(app)}
+                      >
+                        Move up
+                      </Button>
+                    ) : null}
+                    {app.status === "accepted" && !app.promoted_ballkid && (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => openPromoteDialog(app)}
+                      >
+                        Promote to Ballkid
+                      </Button>
+                    )}
+                    {app.promoted_ballkid && (
+                      <Chip label="Promoted" size="small" color="info" />
+                    )}
+                    {app.headshot_update ? (
+                      <Button size="small" onClick={() => openHeadshotDialog(app)}>
+                        Apply Headshot Update
+                      </Button>
+                    ) : null}
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+            {visible.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8}>
+                  <Typography variant="body2" color="text.secondary">
+                    No applications to show.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : null}
+          </TableBody>
+        </Table>
+      </Box>
+
+      <ApplicationDetailDrawer
+        app={selected}
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        onStatus={requestStatus}
+        onPromote={openPromoteDialog}
+        onWaitlistMove={requestWaitlistMove}
+      />
+
+      {/* Accept / waitlist / reject / move up from waitlist */}
+      <Dialog
+        open={Boolean(decision)}
+        onClose={() => (decisionBusy ? null : setDecision(null))}
+      >
+        <DialogTitle>{decisionTitle}</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>{decisionBody()}</DialogContentText>
+          {decisionEmailBlurb ? (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={Boolean(confirmationEmailsOn) && decisionNotify}
+                  disabled={!confirmationEmailsOn}
+                  onChange={(e) => setDecisionNotify(e.target.checked)}
+                />
+              }
+              label={
+                confirmationEmailsOn
+                  ? `Email the applicant ${decisionEmailBlurb}`
+                  : "Applicant emails are switched off, so no email will be sent"
+              }
+            />
+          ) : null}
+          {decisionError ? (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {decisionError}
+            </Typography>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDecision(null)} disabled={decisionBusy}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={confirmDecision} disabled={decisionBusy}>
+            {decisionBusy ? "Working…" : "Confirm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Tryout reminders */}
+      <ConfirmDialog
+        open={reminderDialogOpen}
+        setOpen={setReminderDialogOpen}
+        message={reminderMessage}
+        url="/api/applications/tryout-reminders"
+        method="POST"
+        body={{}}
+        setUpdated={(didUpdate) => {
+          if (didUpdate) {
+            setNotice({
+              severity: "success",
+              text: "Tryout reminders are being sent.",
+            });
+            load();
+          }
+        }}
+      />
 
       {/* Apply a veteran's updated headshot onto their existing Ballkid */}
-      <Dialog open={Boolean(headshotDialogApp)} onClose={() => setHeadshotDialogApp(null)}>
+      <Dialog
+        open={Boolean(headshotDialogApp)}
+        onClose={() => setHeadshotDialogApp(null)}
+      >
         <DialogTitle>Apply Updated Headshot</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
@@ -429,7 +885,10 @@ export default function ApplicationsReviewPage() {
 
       {/* Promote a veteran: match to their existing record, or confirm
           they're genuinely not in the system yet */}
-      <Dialog open={Boolean(promoteDialogApp)} onClose={() => setPromoteDialogApp(null)}>
+      <Dialog
+        open={Boolean(promoteDialogApp)}
+        onClose={() => setPromoteDialogApp(null)}
+      >
         <DialogTitle>Promote Returning Veteran</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
@@ -448,7 +907,7 @@ export default function ApplicationsReviewPage() {
             )}
           />
           <FormControlLabel
-            sx={{ mt: 1 }}
+            sx={{ mt: 1, display: "flex" }}
             control={
               <Switch
                 checked={promoteAsNew}
@@ -456,6 +915,16 @@ export default function ApplicationsReviewPage() {
               />
             }
             label="Not currently in our system — create a new record"
+          />
+          <FormControlLabel
+            sx={{ display: "flex" }}
+            control={
+              <Checkbox
+                checked={promoteCreateLogin}
+                onChange={(e) => setPromoteCreateLogin(e.target.checked)}
+              />
+            }
+            label="Create a login and email an invite if they don't have one"
           />
           {promoteError ? (
             <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -471,9 +940,31 @@ export default function ApplicationsReviewPage() {
         </DialogActions>
       </Dialog>
 
+      <ConfirmDialog
+        open={purgeDialogOpen}
+        setOpen={setPurgeDialogOpen}
+        message={purgeMessage}
+        url="/api/purge-unpromoted-applications"
+        method="POST"
+        body={{}}
+        setUpdated={(didUpdate) => {
+          if (didUpdate && purgePreview) {
+            setPurgeResult(`Deleted ${purgePreview.count} unpromoted application(s).`);
+            load();
+          }
+        }}
+      />
+
       <Divider sx={{ mt: 4, mb: 2 }} />
 
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
         <Typography variant="caption" color="text.secondary">
           End-of-season cleanup
         </Typography>
