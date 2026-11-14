@@ -48,7 +48,7 @@ DCopenBK is used by tournament staff (chairpersons) and team captains to run the
 | Backend | Django 4.1, Django REST Framework |
 | Database | PostgreSQL (psycopg2) |
 | Auth | DRF Token Auth, Djoser, JWT (simplejwt) |
-| Rating calibration | [`rcal`](https://github.com/jtiosue/rcal) (custom git dependency) |
+| Rating calibration | Vendored `rcal` review-calibration library (`api/calibration/`) |
 | Frontend | React 18, Material UI (MUI v5), Chart.js |
 | Drag & Drop | react-dnd |
 | Routing | react-router-dom v6 |
@@ -266,9 +266,9 @@ Captains and chairpersons rate ballkids on a numeric scale with an overall ratin
 4. **Auto-excluded** — excluded by calibration algorithm (rater's bias > threshold)
 5. **Deleted** — soft-deleted by chairperson
 
-**Rating Calibration (`rcal`):**
+**Rating Calibration:**
 
-The system uses the [`rcal`](https://github.com/jtiosue/rcal) library to correct for rater bias. The calibration pipeline:
+The system uses its vendored `rcal` review-calibration library (`api/calibration/`) to correct for rater bias. The original library was authored by Joseph T. Iosue; attribution, source revision, and the Apache 2.0 license are retained in that directory. The calibration pipeline:
 
 1. Collects all Complete + Auto-excluded ratings since a configurable year threshold
 2. Groups ratings into date buckets (configurable bucket size in days)
@@ -426,7 +426,7 @@ You need **two terminals** once setup is done: Django on `:8000` and the React a
 |------|--------|
 | **Python 3.10** | See `.python-version` |
 | **Node.js 18+** | https://nodejs.org/ |
-| **Git** | Required to install the `rcal` dependency from GitHub |
+| **Git** | Required for cloning and updating the DCopenBK repository |
 | **PostgreSQL** | Local DB used when `DEBUG=True` |
 
 Create a Postgres database that matches `DATABASE_URL` in your `.env` (see [`.env.example`](.env.example)). The settings default (if unset) is:
