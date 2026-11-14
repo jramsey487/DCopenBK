@@ -33,13 +33,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Build production Docker image
+        run: docker build --tag dcopenbk:ci .
       - name: Run migrations
         run: python manage.py migrate
       - name: Run tests
         # PYTHONHASHSEED=0 pins Python's hash randomization so that set
-        # iteration order is deterministic. rcal's _calibrate.py enumerates
-        # unordered sets to decide which rater's offset is pinned to zero when
-        # solving the calibration linear system, which makes
+        # iteration order is deterministic. The vendored calibration algorithm
+        # enumerates unordered sets when building its linear system, which makes
         # TestCalibratedRatingsView flaky under the default random seed.
         env:
           PYTHONHASHSEED: "0"
