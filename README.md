@@ -658,8 +658,9 @@ fly deploy -a dcopenbk
 
 You do **not** need to build the frontend first: the [`Dockerfile`](Dockerfile)
 has a Node stage that runs `npm ci && npm run build` and arranges the output for
-Django, then a Python stage that installs dependencies (including `rcal` from
-GitHub), runs `collectstatic`, and serves with Gunicorn on port 8000 (2 workers).
+Django, then a Python stage that installs the pinned requirements (including the
+vendored calibration library from `api/calibration/`), runs `collectstatic`,
+and serves with Gunicorn on port 8000 (2 workers).
 Static files are served by WhiteNoise.
 
 On each deploy, Fly runs `python manage.py migrate` as the release command
