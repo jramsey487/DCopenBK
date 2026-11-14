@@ -31,6 +31,15 @@ class AuditLogTests(APITestCase):
         self.assertEqual(log.target_name, "Ann Lee")
         self.assertEqual(log.category, "checkin")
 
+        # A later model save outside an API request must not inherit the
+        # previous request's actor through the audit context variable.
+        Ballkid.objects.create(first_name="Grace", last_name="Hopper")
+        outside_request_log = ActionLog.objects.get(
+            action="roster.add", target_name="Grace Hopper"
+        )
+        self.assertIsNone(outside_request_log.actor_id)
+        self.assertEqual(outside_request_log.actor_name, "system")
+
     def test_bulk_checkout_collapses_into_one_row(self):
         for name in ("A", "B", "C"):
             Ballkid.objects.create(
