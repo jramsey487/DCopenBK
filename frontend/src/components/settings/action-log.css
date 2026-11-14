@@ -1,0 +1,233 @@
+.actionlog-shell {
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  width: 100%;
+  min-height: calc(100vh - var(--navbar-inner-height) - 3px);
+  min-height: calc(100dvh - var(--navbar-inner-height) - 3px);
+  background: var(--bg0);
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+
+.actionlog-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  box-sizing: border-box;
+}
+
+.actionlog-header {
+  margin-bottom: 16px;
+}
+
+.actionlog-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text1);
+}
+
+.actionlog-subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.actionlog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.actionlog-search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.actionlog-search,
+.actionlog-select {
+  height: 38px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg1);
+  box-sizing: border-box;
+}
+
+.actionlog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.actionlog-chip {
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg1);
+  cursor: pointer;
+}
+
+.actionlog-chip:hover {
+  border-color: #cbd5e1;
+  color: var(--text1);
+}
+
+.actionlog-chip.is-active {
+  background: var(--nav);
+  border-color: var(--nav);
+  color: #fff;
+}
+
+.actionlog-error {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #fff1f2;
+  color: #9f1239;
+  border: 0.5px solid #fecdd3;
+}
+
+.actionlog-empty {
+  padding: 40px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text2);
+}
+
+.actionlog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--bg1);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.actionlog-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.actionlog-row:last-child {
+  border-bottom: none;
+}
+
+.actionlog-row__when {
+  flex: 0 0 104px;
+  font-size: 12.5px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+.actionlog-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionlog-row__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 14px;
+  color: var(--text1);
+}
+
+.actionlog-row__detail {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.actionlog-row__by {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text3);
+}
+
+.actionlog-row__items {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.actionlog-row__items summary {
+  cursor: pointer;
+  color: var(--blue-text);
+  font-weight: 500;
+}
+
+.actionlog-row__items ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.actionlog-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--bg2);
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.actionlog-tag--cuts {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+
+.actionlog-tag--teams {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+
+.actionlog-tag--checkin {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.actionlog-tag--ratings {
+  background: var(--purple-bg);
+  color: var(--purple-text);
+}
+
+.actionlog-tag--season {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.actionlog-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  min-height: 32px;
+}
+
+@media (max-width: 600px) {
+  .actionlog-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .actionlog-row__when {
+    flex-basis: auto;
+  }
+}

@@ -1,0 +1,247 @@
+.rollover-shell {
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  width: 100%;
+  min-height: calc(100vh - var(--navbar-inner-height) - 3px);
+  min-height: calc(100dvh - var(--navbar-inner-height) - 3px);
+  background: var(--bg0);
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+
+.rollover-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  box-sizing: border-box;
+}
+
+.rollover-loading {
+  display: flex;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.rollover-header {
+  margin-bottom: 20px;
+}
+
+.rollover-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text1);
+  line-height: 1.25;
+}
+
+.rollover-subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.rollover-alert {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.rollover-alert--success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 0.5px solid #a7f3d0;
+}
+
+.rollover-alert--error {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 0.5px solid #fecdd3;
+}
+
+.rollover-step {
+  background: var(--bg1);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(13, 27, 62, 0.04);
+}
+
+.rollover-step--locked {
+  opacity: 0.6;
+}
+
+.rollover-step--done {
+  border-color: var(--green-border);
+  background: #fbfefc;
+}
+
+.rollover-step__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rollover-step__num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nav);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rollover-step--done .rollover-step__num {
+  background: var(--success);
+}
+
+.rollover-step__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text1);
+  letter-spacing: -0.01em;
+}
+
+.rollover-chip {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text2);
+}
+
+.rollover-chip--done {
+  color: var(--green-text);
+  border-color: var(--green-border);
+  background: var(--green-bg);
+}
+
+.rollover-chip--ready {
+  color: var(--blue-text);
+  border-color: var(--blue-border);
+  background: var(--blue-bg);
+}
+
+.rollover-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+.rollover-text a {
+  color: var(--blue-text);
+  font-weight: 600;
+}
+
+.rollover-meta {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--text3);
+}
+
+.rollover-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.rollover-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rollover-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.rollover-field input {
+  height: 38px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--text1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg0);
+  box-sizing: border-box;
+}
+
+.rollover-counts {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rollover-counts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text2);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.rollover-counts li:last-child {
+  border-bottom: none;
+}
+
+.rollover-counts strong {
+  color: var(--text1);
+  font-variant-numeric: tabular-nums;
+}
+
+.rollover-finish {
+  margin-top: 8px;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--success);
+  background: var(--green-bg);
+}
+
+.rollover-finish__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--green-text);
+}
+
+.rollover-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rollover-shell .MuiButton-root,
+.rollover-shell .MuiLoadingButton-root {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: none;
+  font-family: inherit;
+}
