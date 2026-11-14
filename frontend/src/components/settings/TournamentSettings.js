@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link as RouterLink } from "react-router-dom";
 
 import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
@@ -15,14 +16,12 @@ import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
 import Close from "@mui/icons-material/Close";
 import AddCircle from "@mui/icons-material/AddCircle";
-import Warning from "@mui/icons-material/Warning";
 
 import {
   HelpIcon,
   HideShowToggle,
   getAuthHeader,
   Banners,
-  ConfirmDialog,
   getCurrentYear,
 } from "../Utils";
 import { localDateToIso, parseIsoDateLocal } from "../dateTime";
@@ -73,32 +72,6 @@ function DownloadButton({ setSuccessMsg, setErrorMsg }) {
     >
       Download
     </LoadingButton>
-  );
-}
-
-function ArchiveButton() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Box>
-      <ConfirmDialog
-        message={"You are about to archive all active ballkids."}
-        url={"/api/archive-all"}
-        body={{}}
-        open={open}
-        setOpen={setOpen}
-        setUpdated={null}
-      />
-
-      <Button
-        variant="contained"
-        size="small"
-        color="warning"
-        onClick={() => setOpen(true)}
-      >
-        Archive All
-      </Button>
-    </Box>
   );
 }
 
@@ -877,7 +850,9 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
     <div className="tournament-settings-create-grid">
       <p className="tournament-settings-create-note">
         No tournament currently exists for this year. Create one to configure
-        dates and settings.
+        dates and settings. Starting a new season? The{" "}
+        <RouterLink to="/season-rollover">season checklist</RouterLink> walks
+        through every step in order.
       </p>
 
       <div className="tournament-settings-create-fields">
@@ -984,34 +959,6 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
         Create Tournament
       </Button>
     </div>
-  );
-}
-
-function ResetDataButton() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Box>
-      <ConfirmDialog
-        message={
-          "You are about to reset ALL data for this year. This includes archiving all ballkids AND deleting this year's check-in history and analytics, team history, captain analytics, court analytics, schedules, ratings, and calibration parameters."
-        }
-        url={"/api/reset-data"}
-        body={{}}
-        open={open}
-        setOpen={setOpen}
-        setUpdated={null}
-      />
-
-      <Button
-        variant="contained"
-        size="small"
-        color="error"
-        onClick={() => setOpen(true)}
-      >
-        Reset Data
-      </Button>
-    </Box>
   );
 }
 
@@ -1178,12 +1125,10 @@ export default function TournamentSettings(props) {
               </div>
             </section>
 
-            <section className="tournament-settings-card danger">
-              <div className="tournament-settings-caution-head">
-                <Warning fontSize="small" />
-                <h2>Proceed with Caution</h2>
-                <Warning fontSize="small" />
-              </div>
+            <section className="tournament-settings-card">
+              <h2 className="tournament-settings-section-title">
+                Season &amp; records
+              </h2>
               <div className="tournament-settings-row">
                 <span className="tournament-settings-row-label">
                   Export and download all data from the database
@@ -1195,15 +1140,31 @@ export default function TournamentSettings(props) {
               </div>
               <div className="tournament-settings-row">
                 <span className="tournament-settings-row-label">
-                  Archive all ballkids
+                  Start a new season: guided checklist to back up, create the
+                  tournament, archive the roster, clear test data and open
+                  applications
                 </span>
-                <ArchiveButton />
+                <Button
+                  component={RouterLink}
+                  to="/season-rollover"
+                  variant="contained"
+                  size="small"
+                >
+                  Open checklist
+                </Button>
               </div>
               <div className="tournament-settings-row">
                 <span className="tournament-settings-row-label">
-                  Reset all data for this year
+                  Audit log: who cut, moved, checked out or deleted what
                 </span>
-                <ResetDataButton />
+                <Button
+                  component={RouterLink}
+                  to="/action-log"
+                  variant="contained"
+                  size="small"
+                >
+                  View log
+                </Button>
               </div>
             </section>
           </div>

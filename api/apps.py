@@ -16,3 +16,9 @@ class ApiConfig(AppConfig):
         rating.get_min_dates = rating_calibration_optimized.get_min_dates
         rating.save_rater_params = rating_calibration_optimized.save_rater_params
         rating.save_ratee_params = rating_calibration_optimized.save_ratee_params
+
+        # Audit log: Ballkid change signals + request/response hooks that
+        # record who did what into ActionLog (see api/utils/audit.py).
+        from api.utils import audit
+
+        audit.install()

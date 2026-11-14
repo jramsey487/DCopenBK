@@ -34,6 +34,8 @@ import CaptainLeaderboard from "./leaderboards/CaptainLeaderboard";
 import CourtLeaderboard from "./leaderboards/CourtLeaderboard";
 import BallkidLeaderboard from "./leaderboards/BallkidLeaderboard";
 import TournamentSettings from "./settings/TournamentSettings";
+import SeasonRolloverPage from "./settings/SeasonRolloverPage";
+import ActionLogPage from "./settings/ActionLogPage";
 import FinalsTeamsPageChairpersonMobile from "./teams/FinalsTeamsPageChairpersonMobile";
 import FinalsTeamsPageChairpersonDesktop from "./teams/FinalsTeamsPageChairpersonDesktop";
 import InactiveBallkidList from "./lists/InactiveBallkidList";
@@ -61,6 +63,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageChairperson />} />
       <Route path="/applications" element={<ApplicationsReviewPage />} />
+      <Route path="/action-log" element={<ActionLogPage />} />
       <Route path="/checkin" element={<CheckinPage />} />
       <Route
         path="/cut"
@@ -94,6 +97,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/rate-by-past-team" element={<RateByPastTeamPage />} />
       <Route path="/ratings" element={<RatingsPage />} />
       <Route path="/schedule" element={<SchedulePageChairperson />} />
+      <Route path="/season-rollover" element={<SeasonRolloverPage />} />
       <Route path="/settings" element={<AccountSettings />} />
       <Route
         path="/teams"

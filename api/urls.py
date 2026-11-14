@@ -13,6 +13,8 @@ from api.views.live_scores import *
 from api.views.captain_rating import *
 from api.views.trivia import *
 from api.views.notifications import *
+from api.views.action_log import *
+from api.views.season_rollover import *
 
 
 # Ballkid URLs
@@ -181,6 +183,11 @@ trivia_urls = [
     path("trivia-used", TriviaUsed.as_view(), name="trivia-used"),
 ]
 
+season_urls = [
+    path("action-log", ActionLogList.as_view(), name="action-log"),
+    path("season-rollover", SeasonRolloverStatus.as_view(), name="season-rollover"),
+]
+
 urlpatterns = (
     ballkid_urls
     + teams_urls
@@ -197,4 +204,5 @@ urlpatterns = (
     + database_query_urls
     + sizing_report_urls
     + trivia_urls
+    + season_urls
 )
