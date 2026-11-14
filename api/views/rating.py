@@ -11,7 +11,7 @@ from api.utils.utils import *
 from api.utils.consts import *
 
 from datetime import datetime
-from rcal import calibrate_parameters
+from api.calibration import calibrate_parameters
 import networkx as nx
 import statistics
 import logging
