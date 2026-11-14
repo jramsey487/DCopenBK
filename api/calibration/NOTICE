@@ -1,0 +1,13 @@
+# rcal attribution and provenance
+
+DCopenBK vendors the `rcal` review-calibration library in this directory.
+
+- Original project: https://github.com/jtiosue/rcal
+- Original author: Joseph T. Iosue
+- Source revision: `e777ac959007e846a17e2756e42892509e1eefcf`
+- Original license: Apache License 2.0 (see LICENSE)
+- Vendored into DCopenBK without intentional algorithm changes.
+
+The vendored Python modules retain their original copyright and license headers.
+Future modifications to those files must be clearly marked in the affected files,
+as required by the Apache License 2.0.
