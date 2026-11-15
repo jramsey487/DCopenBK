@@ -170,14 +170,16 @@ def save_rater_params(cp, year_ratings, year):
 
         # Update all non-calibration related parameters
         rater_ratings = year_ratings.filter(rater__id=rater_id)
-        params, _ = CalibrationParams.objects.update_or_create(
+        # Use get_or_create + a targeted UPDATE so refreshing raw aggregates
+        # cannot overwrite existing calibration fields on this shared row.
+        params, _ = CalibrationParams.objects.get_or_create(
             ballkid_id=rater_id,
             year=year,
-            defaults={
-                "num_rater_ratings": rater_ratings.count(),
-                "rater_raw_avg": rater_ratings.aggregate(val=Avg("rating"))["val"],
-                "rater_raw_stdev": rater_ratings.aggregate(val=StdDev("rating"))["val"],
-            },
+        )
+        CalibrationParams.objects.filter(pk=params.pk).update(
+            num_rater_ratings=rater_ratings.count(),
+            rater_raw_avg=rater_ratings.aggregate(val=Avg("rating"))["val"],
+            rater_raw_stdev=rater_ratings.aggregate(val=StdDev("rating"))["val"],
         )
         logger.info(
             f"[save_rater_params] Saved non-calibration params for {name} with params {params}"
@@ -262,15 +264,18 @@ def save_ratee_params(cp, year_ratings_wo_excluded, year):
         ratee_ratings = year_ratings_wo_excluded.filter(ratee__id=ballkid_id)
         unexcluded_raters = set(ratee_ratings.values_list("rater", flat=True))
 
-        params, _ = CalibrationParams.objects.update_or_create(
+        # Reviewer and ratee statistics share CalibrationParams rows.
+        # A targeted UPDATE keeps reviewer calibration values intact when
+        # only the ratee's raw aggregates are being refreshed.
+        params, _ = CalibrationParams.objects.get_or_create(
             ballkid_id=ballkid_id,
             year=year,
-            defaults={
-                "num_raters": len(unexcluded_raters),
-                "num_ratee_ratings": ratee_ratings.count(),
-                "ratee_raw_avg": ratee_ratings.aggregate(val=Avg("rating"))["val"],
-                "ratee_raw_stdev": ratee_ratings.aggregate(val=StdDev("rating"))["val"],
-            },
+        )
+        CalibrationParams.objects.filter(pk=params.pk).update(
+            num_raters=len(unexcluded_raters),
+            num_ratee_ratings=ratee_ratings.count(),
+            ratee_raw_avg=ratee_ratings.aggregate(val=Avg("rating"))["val"],
+            ratee_raw_stdev=ratee_ratings.aggregate(val=StdDev("rating"))["val"],
         )
         logger.info(
             f"[save_ratee_params] Saved non-calibration params for {name} with params {params}"
