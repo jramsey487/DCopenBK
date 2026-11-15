@@ -358,14 +358,21 @@ def run_calibration_and_save_params(year):
         f"[run_calibration_and_save] failed rating categories {failed_categories}"
     )
 
-    # A failed fit must never drive rating-status changes. In particular,
-    # do not let stale CalibrationParams from an earlier run/season trigger
-    # auto-exclusion. Leave all existing rating statuses and saved calibration
-    # results untouched so the chairperson can see the failure and retry.
+    # A failed fit must never drive rating-status changes or overwrite
+    # reviewer calibration parameters. In particular, do not let stale
+    # CalibrationParams trigger auto-exclusion. We still save raw ratee
+    # statistics because leaderboards depend on them; cp=None makes
+    # save_ratee_params skip all calibrated fields.
     if cp is None:
         logger.error(
-            "[run_calibration_and_save] Calibration failed; skipping parameter "
-            "updates and automatic rating exclusions for year %s",
+            "[run_calibration_and_save] Calibration failed; preserving reviewer "
+            "parameters and rating statuses while refreshing raw ratee statistics "
+            "for year %s",
+            year,
+        )
+        save_ratee_params(
+            None,
+            year_ratings.filter(status=RATING_STATUS.COMPLETE),
             year,
         )
         return cp, excluded, failed_categories, year_ratings
