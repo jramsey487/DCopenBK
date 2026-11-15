@@ -1,53 +1,42 @@
-import { getAuthHeader } from "./Utils";
+import { getAuthHeader } from "./authStorage";
 
 /**
- * Best-effort removal of this browser's push subscription during logout.
+ * Called on logout: removes THIS device's push subscription from the server so
+ * the next person to use the device doesn't receive the previous user's
+ * shift reminders / team changes.
  *
- * Capture the auth headers before the caller clears localStorage. Only send a
- * DELETE when this browser has an endpoint; an empty endpoint would remove
- * every device registered to the account.
+ * Only the server record is removed. The browser keeps its own subscription
+ * and notification permission, so the same person can re-enable on their next
+ * login with one tap (no new permission prompt).
+ *
+ * Call this BEFORE localStorage.clear(): the auth header is read
+ * synchronously here, then the request finishes in the background. Never
+ * throws and never blocks logout.
  */
 export function removeDeviceSubscriptionOnLogout() {
   try {
-    if (
-      typeof navigator === "undefined" ||
-      !("serviceWorker" in navigator)
-    ) {
-      return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      return Promise.resolve();
     }
 
-    // getAuthHeader reads the current token synchronously. The caller clears
-    // localStorage immediately after invoking this function.
+    // Read the token now, before the caller clears storage.
     const headers = getAuthHeader();
 
-    void (async () => {
-      let subscription = null;
-
-      try {
-        const registration = await navigator.serviceWorker.getRegistration("/");
-        subscription =
-          (await registration?.pushManager?.getSubscription()) || null;
-
-        if (!subscription?.endpoint) {
-          return;
-        }
-
-        try {
-          await fetch("/api/notification-subscribe", {
-            method: "DELETE",
-            headers,
-            body: JSON.stringify({ endpoint: subscription.endpoint }),
-          });
-        } finally {
-          // Always remove the browser-side subscription, even if the server
-          // request fails. A stale server record will be cleaned up on send.
-          await subscription.unsubscribe();
-        }
-      } catch {
-        // Logout must never be blocked by push cleanup or browser support.
+    return (async () => {
+      const registration = await navigator.serviceWorker.getRegistration("/");
+      const subscription = await registration?.pushManager?.getSubscription();
+      if (!subscription) {
+        return;
       }
-    })();
+      await fetch("/api/notification-subscribe", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      });
+    })().catch(() => {
+      // Best effort only; logout must always succeed.
+    });
   } catch {
-    // Logout must never be blocked by push cleanup or missing auth state.
+    return Promise.resolve();
   }
 }
