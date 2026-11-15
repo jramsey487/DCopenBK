@@ -38,10 +38,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-# Install system dependencies.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
+# No OS-level build dependencies are needed for the pinned Python wheels.
 
 # Install Python dependencies.
 COPY requirements.txt /tmp/requirements.txt

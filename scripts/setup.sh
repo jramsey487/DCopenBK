@@ -39,11 +39,6 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v git >/dev/null 2>&1; then
-  echo "ERROR: git not found (needed to install the rcal dependency)."
-  exit 1
-fi
-
 # --- .env -------------------------------------------------------------------
 if [[ ! -f .env ]]; then
   if [[ -f .env.example ]]; then
