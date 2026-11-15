@@ -350,6 +350,8 @@ class TestViewsRatingHelpers(TestCase):
             ballkid=self.rater1,
             year=current_year,
             rater_distance_to_ideal=100,
+            rater_scale=1.25,
+            rater_offset=0.5,
         )
 
         cp, excluded, error, year_ratings = run_calibration_and_save_params(
@@ -369,6 +371,10 @@ class TestViewsRatingHelpers(TestCase):
             year=current_year,
         )
         self.assertEqual(100, stale_rater_params.rater_distance_to_ideal)
+        self.assertEqual(1.25, stale_rater_params.rater_scale)
+        self.assertEqual(0.5, stale_rater_params.rater_offset)
+        self.assertEqual(1, stale_rater_params.num_rater_ratings)
+        self.assertEqual(5, stale_rater_params.rater_raw_avg)
 
         raw_ratee_params = CalibrationParams.objects.get(
             ballkid=self.ratee1,
