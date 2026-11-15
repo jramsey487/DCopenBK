@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, date
 from rest_framework.test import APITestCase, APIClient
 
 from api.views.rating import *
-from api.models.rating import Rating
+from api.models.rating import CalibrationParams, Rating
+from api.models.enums import RATING_STATUS
 from api.models.ballkid import Ballkid
 from api.serializers import BallkidSerializer
 from api.utils.utils import *
@@ -279,6 +280,109 @@ class TestViewsRatingHelpers(TestCase):
 
         self.assertEqual(1, len(excluded))
         self.assertEqual(self.rater3.get_name(), excluded.pop())
+
+
+    def test_autoexclude_ignores_prior_year_calibration(self):
+        current_year = get_current_year()
+        prior_year = current_year - 1
+        rating = Rating.objects.create(
+            ratee=self.ratee1,
+            rater=self.rater1,
+            date=date(current_year, 7, 1),
+            rating=4,
+        )
+        CalibrationParams.objects.create(
+            ballkid=self.rater1,
+            year=prior_year,
+            rater_distance_to_ideal=10,
+        )
+
+        current_year_ratings = Rating.objects.filter(date__year=current_year)
+        autoexclude(current_year_ratings, 1.0, current_year)
+
+        rating.refresh_from_db()
+        self.assertEqual(RATING_STATUS.COMPLETE, rating.status)
+
+    def test_autoexclude_uses_current_year_calibration(self):
+        current_year = get_current_year()
+        rating = Rating.objects.create(
+            ratee=self.ratee1,
+            rater=self.rater1,
+            date=date(current_year, 7, 1),
+            rating=4,
+        )
+        CalibrationParams.objects.create(
+            ballkid=self.rater1,
+            year=current_year,
+            rater_distance_to_ideal=10,
+        )
+
+        current_year_ratings = Rating.objects.filter(date__year=current_year)
+        autoexclude(current_year_ratings, 1.0, current_year)
+
+        rating.refresh_from_db()
+        self.assertEqual(RATING_STATUS.AUTO_EXCLUDED, rating.status)
+
+    def test_failed_calibration_does_not_apply_stale_auto_exclusions(self):
+        current_year = get_current_year()
+        ratings = [
+            Rating.objects.create(
+                ratee=self.ratee1,
+                rater=self.rater1,
+                date=date.today(),
+                rating=5,
+            ),
+            Rating.objects.create(
+                ratee=self.ratee2,
+                rater=self.rater2,
+                date=date.today(),
+                rating=3,
+            ),
+            Rating.objects.create(
+                ratee=self.ratee3,
+                rater=self.rater3,
+                date=date.today(),
+                rating=4,
+            ),
+        ]
+        # Simulate a stale, high bias score left by an earlier successful run.
+        CalibrationParams.objects.create(
+            ballkid=self.rater1,
+            year=current_year,
+            rater_distance_to_ideal=100,
+            rater_scale=1.25,
+            rater_offset=0.5,
+        )
+
+        cp, excluded, error, year_ratings = run_calibration_and_save_params(
+            current_year
+        )
+
+        self.assertIsNone(cp)
+        self.assertIsNotNone(error)
+        for rating in ratings:
+            rating.refresh_from_db()
+            self.assertEqual(RATING_STATUS.COMPLETE, rating.status)
+
+        # Failed calibration must not overwrite stale reviewer parameters,
+        # but raw ratee statistics must still be refreshed for leaderboards.
+        stale_rater_params = CalibrationParams.objects.get(
+            ballkid=self.rater1,
+            year=current_year,
+        )
+        self.assertEqual(100, stale_rater_params.rater_distance_to_ideal)
+        self.assertEqual(1.25, stale_rater_params.rater_scale)
+        self.assertEqual(0.5, stale_rater_params.rater_offset)
+        self.assertEqual(1, stale_rater_params.num_rater_ratings)
+        self.assertEqual(5, stale_rater_params.rater_raw_avg)
+
+        raw_ratee_params = CalibrationParams.objects.get(
+            ballkid=self.ratee1,
+            year=current_year,
+        )
+        self.assertEqual(5, raw_ratee_params.ratee_raw_avg)
+        self.assertEqual(1, raw_ratee_params.num_ratee_ratings)
+        self.assertIsNone(raw_ratee_params.ratee_calibrated_avg)
 
     def test_calibrate_fail(self):
         Rating.objects.create(

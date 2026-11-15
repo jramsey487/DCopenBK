@@ -48,17 +48,28 @@ def save_rater_params(cp, year_ratings, year):
                 37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
             )
 
+        defaults = {
+            "num_rater_ratings": row["num_rater_ratings"],
+            "rater_raw_avg": row["rater_raw_avg"],
+            "rater_raw_stdev": row["rater_raw_stdev"],
+        }
+
+        # A failed calibration (cp=None) must refresh raw reviewer statistics
+        # without clearing previously saved calibration values. These fields
+        # share the same CalibrationParams row as the ratee aggregates.
+        if cp is not None:
+            defaults.update(
+                {
+                    "rater_scale": a,
+                    "rater_offset": b,
+                    "rater_distance_to_ideal": distance,
+                }
+            )
+
         params, _ = CalibrationParams.objects.update_or_create(
             ballkid_id=rater_id,
             year=year,
-            defaults={
-                "num_rater_ratings": row["num_rater_ratings"],
-                "rater_raw_avg": row["rater_raw_avg"],
-                "rater_raw_stdev": row["rater_raw_stdev"],
-                "rater_scale": a,
-                "rater_offset": b,
-                "rater_distance_to_ideal": distance,
-            },
+            defaults=defaults,
         )
         logger.info(
             f"[save_rater_params] Saved params for {name} with params {params}"

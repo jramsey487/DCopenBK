@@ -170,14 +170,16 @@ def save_rater_params(cp, year_ratings, year):
 
         # Update all non-calibration related parameters
         rater_ratings = year_ratings.filter(rater__id=rater_id)
-        params, _ = CalibrationParams.objects.update_or_create(
+        # Use get_or_create + a targeted UPDATE so refreshing raw aggregates
+        # cannot overwrite existing calibration fields on this shared row.
+        params, _ = CalibrationParams.objects.get_or_create(
             ballkid_id=rater_id,
             year=year,
-            defaults={
-                "num_rater_ratings": rater_ratings.count(),
-                "rater_raw_avg": rater_ratings.aggregate(val=Avg("rating"))["val"],
-                "rater_raw_stdev": rater_ratings.aggregate(val=StdDev("rating"))["val"],
-            },
+        )
+        CalibrationParams.objects.filter(pk=params.pk).update(
+            num_rater_ratings=rater_ratings.count(),
+            rater_raw_avg=rater_ratings.aggregate(val=Avg("rating"))["val"],
+            rater_raw_stdev=rater_ratings.aggregate(val=StdDev("rating"))["val"],
         )
         logger.info(
             f"[save_rater_params] Saved non-calibration params for {name} with params {params}"
@@ -209,14 +211,20 @@ def save_rater_params(cp, year_ratings, year):
             )
 
 
-def autoexclude(year_ratings, autoexclude_threshold):
+def autoexclude(year_ratings, autoexclude_threshold, year):
     """
-    Set ratings of raters with distance to ideal > threshold to be auto-exclude
+    Set ratings of raters with a current-season distance to ideal above the
+    threshold to be auto-excluded.
+
+    CalibrationParams is stored per ballkid and year, so the lookup must be
+    scoped to the season being recalculated. Otherwise a reviewer's result
+    from a prior season can incorrectly exclude their ratings this season.
     """
 
-    # Exclude all raters whose distance to ideal is greater than threshold
+    # Only use reviewer calibration parameters calculated for this season.
     raters_to_autoexclude = CalibrationParams.objects.filter(
-        rater_distance_to_ideal__gt=autoexclude_threshold
+        year=year,
+        rater_distance_to_ideal__gt=autoexclude_threshold,
     ).values_list("ballkid", flat=True)
 
     # Auto-exclude ratings of raters with dist > threshold
@@ -256,15 +264,18 @@ def save_ratee_params(cp, year_ratings_wo_excluded, year):
         ratee_ratings = year_ratings_wo_excluded.filter(ratee__id=ballkid_id)
         unexcluded_raters = set(ratee_ratings.values_list("rater", flat=True))
 
-        params, _ = CalibrationParams.objects.update_or_create(
+        # Reviewer and ratee statistics share CalibrationParams rows.
+        # A targeted UPDATE keeps reviewer calibration values intact when
+        # only the ratee's raw aggregates are being refreshed.
+        params, _ = CalibrationParams.objects.get_or_create(
             ballkid_id=ballkid_id,
             year=year,
-            defaults={
-                "num_raters": len(unexcluded_raters),
-                "num_ratee_ratings": ratee_ratings.count(),
-                "ratee_raw_avg": ratee_ratings.aggregate(val=Avg("rating"))["val"],
-                "ratee_raw_stdev": ratee_ratings.aggregate(val=StdDev("rating"))["val"],
-            },
+        )
+        CalibrationParams.objects.filter(pk=params.pk).update(
+            num_raters=len(unexcluded_raters),
+            num_ratee_ratings=ratee_ratings.count(),
+            ratee_raw_avg=ratee_ratings.aggregate(val=Avg("rating"))["val"],
+            ratee_raw_stdev=ratee_ratings.aggregate(val=StdDev("rating"))["val"],
         )
         logger.info(
             f"[save_ratee_params] Saved non-calibration params for {name} with params {params}"
@@ -352,11 +363,34 @@ def run_calibration_and_save_params(year):
         f"[run_calibration_and_save] failed rating categories {failed_categories}"
     )
 
+    # A failed fit must never drive rating-status changes or overwrite
+    # reviewer calibration parameters. In particular, do not let stale
+    # CalibrationParams trigger auto-exclusion. We still save raw ratee
+    # statistics because leaderboards depend on them; cp=None makes
+    # save_ratee_params skip all calibrated fields.
+    if cp is None:
+        logger.error(
+            "[run_calibration_and_save] Calibration failed; preserving reviewer "
+            "parameters and rating statuses while refreshing raw ratee statistics "
+            "for year %s",
+            year,
+        )
+        # Keep the raw reviewer aggregates current for the captain leaderboard.
+        # Passing cp=None updates only non-calibration fields and preserves any
+        # prior scale, offset, and distance-to-ideal values.
+        save_rater_params(None, year_ratings, year)
+        save_ratee_params(
+            None,
+            year_ratings.filter(status=RATING_STATUS.COMPLETE),
+            year,
+        )
+        return cp, excluded, failed_categories, year_ratings
+
     ## STEP 3: Save rater params (based on all non-manually excluded ratings)
     save_rater_params(cp, year_ratings, year)
 
     ## STEP 4: Auto-exclude ratings for raters with distance to ideal > threshold
-    autoexclude(year_ratings, tournament.rcal_calibration_threshold)
+    autoexclude(year_ratings, tournament.rcal_calibration_threshold, year)
 
     ## STEP 5: Save ratee params, filtering to only complete (non auto-excluded) ratings
     save_ratee_params(cp, year_ratings.filter(status=RATING_STATUS.COMPLETE), year)
