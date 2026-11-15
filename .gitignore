@@ -119,7 +119,7 @@ dist
 # TernJS port file
 .tern-port
 
-#src
-src/
+# Ignore only a root-level src directory; frontend/src must remain trackable.
+/src/
 # Local Python virtual environments
 .venv312/
