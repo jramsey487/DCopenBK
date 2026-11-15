@@ -28,7 +28,6 @@ function Assert-Command($Name, $Hint) {
 
 Assert-Command "python" "Install Python 3.10 and ensure it is on PATH."
 Assert-Command "npm" "Install Node.js from https://nodejs.org/ and retry."
-Assert-Command "git" "Install Git (needed to install the rcal dependency)."
 
 $pyVer = & python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
 if ($pyVer -ne "3.10") {

@@ -467,10 +467,12 @@ def install():
 
     original_initialize = APIView.initialize_request
     original_finalize = APIView.finalize_response
+    original_dispatch = APIView.dispatch
 
     def initialize_request(self, request, *args, **kwargs):
         drf_request = original_initialize(self, request, *args, **kwargs)
-        # Overwrites whatever a previous request on this thread left behind.
+        # The dispatch wrapper below guarantees this context is cleared even
+        # when request handling raises before finalize_response completes.
         _current_request.set(drf_request)
         return drf_request
 
@@ -482,9 +484,17 @@ def install():
                 builder(self, request, response)
         except Exception:
             logger.exception("Audit view-event hook failed")
-        finally:
-            _current_request.set(None)
         return response
+
+    def dispatch(self, request, *args, **kwargs):
+        # A request context must never leak into later requests or model saves
+        # performed outside a request (including subsequent Django tests).
+        token = _current_request.set(None)
+        try:
+            return original_dispatch(self, request, *args, **kwargs)
+        finally:
+            _current_request.reset(token)
 
     APIView.initialize_request = initialize_request
     APIView.finalize_response = finalize_response
+    APIView.dispatch = dispatch

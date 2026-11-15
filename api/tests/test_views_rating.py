@@ -8,7 +8,7 @@ from api.models.rating import Rating
 from api.models.ballkid import Ballkid
 from api.serializers import BallkidSerializer
 from api.utils.utils import *
-from rcal import CalibrationParameters
+from api.calibration import CalibrationParameters
 
 
 class TestViewsRatingHelpers(TestCase):
