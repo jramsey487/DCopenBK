@@ -5,6 +5,7 @@ from rest_framework.test import APITestCase, APIClient
 
 from api.views.rating import *
 from api.models.rating import CalibrationParams, Rating
+from api.models.enums import RATING_STATUS
 from api.models.ballkid import Ballkid
 from api.serializers import BallkidSerializer
 from api.utils.utils import *
