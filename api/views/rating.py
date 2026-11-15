@@ -370,6 +370,10 @@ def run_calibration_and_save_params(year):
             "for year %s",
             year,
         )
+        # Keep the raw reviewer aggregates current for the captain leaderboard.
+        # Passing cp=None updates only non-calibration fields and preserves any
+        # prior scale, offset, and distance-to-ideal values.
+        save_rater_params(None, year_ratings, year)
         save_ratee_params(
             None,
             year_ratings.filter(status=RATING_STATUS.COMPLETE),
