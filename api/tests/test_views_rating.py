@@ -362,6 +362,22 @@ class TestViewsRatingHelpers(TestCase):
             rating.refresh_from_db()
             self.assertEqual(RATING_STATUS.COMPLETE, rating.status)
 
+        # Failed calibration must not overwrite stale reviewer parameters,
+        # but raw ratee statistics must still be refreshed for leaderboards.
+        stale_rater_params = CalibrationParams.objects.get(
+            ballkid=self.rater1,
+            year=current_year,
+        )
+        self.assertEqual(100, stale_rater_params.rater_distance_to_ideal)
+
+        raw_ratee_params = CalibrationParams.objects.get(
+            ballkid=self.ratee1,
+            year=current_year,
+        )
+        self.assertEqual(5, raw_ratee_params.ratee_raw_avg)
+        self.assertEqual(1, raw_ratee_params.num_ratee_ratings)
+        self.assertIsNone(raw_ratee_params.ratee_calibrated_avg)
+
     def test_calibrate_fail(self):
         Rating.objects.create(
             ratee=self.ratee1,
