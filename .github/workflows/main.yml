@@ -1,6 +1,9 @@
 name: main
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -61,3 +64,22 @@ jobs:
         # Keep this after the backend and frontend test suites so a frontend
         # build failure does not prevent backend migrations and tests from running.
         run: docker build --tag dcopenbk:ci .
+
+  deploy:
+    name: Deploy dcopenbk to Fly.io
+    # The first production deployment is deliberately manual. This job only
+    # runs when a workflow_dispatch run has completed the full build job.
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fly-production-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only --app dcopenbk
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
