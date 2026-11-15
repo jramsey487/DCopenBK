@@ -1,11 +1,19 @@
 import json
 import logging
 import os
+import threading
 from urllib.parse import urlparse
 
+from django.db import IntegrityError, close_old_connections
+from django.db.models import Q
 from pywebpush import WebPushException, webpush
 
-from api.models.notifications import PushSubscription
+from api.models.notifications import (
+    NotificationDelivery,
+    NotificationSettings,
+    PushSubscription,
+)
+from api.utils.consts import TICKET_LIMIT
 
 logger = logging.getLogger("api.notifications")
 
@@ -84,3 +92,66 @@ def send_push_to_user(user, payload):
             )
 
     return sent
+
+
+def run_in_background(fn, *args, **kwargs):
+    """Run fn in a daemon thread so a slow push service never delays a request."""
+
+    def runner():
+        try:
+            fn(*args, **kwargs)
+        except Exception:
+            logger.exception("Background push task failed")
+        finally:
+            close_old_connections()
+
+    threading.Thread(target=runner, daemon=True).start()
+
+
+def deliver_push(user, notification_type, key, payload, pref_field=None):
+    """
+    Send one notification at most once per (user, type, key). The delivery row
+    is claimed *before* sending so overlapping runs can't double-send, and is
+    released if nothing could be delivered (so a retry is possible).
+    """
+    if pref_field and NotificationSettings.objects.filter(
+        user=user, **{pref_field: False}
+    ).exists():
+        return False
+
+    try:
+        NotificationDelivery.objects.create(
+            user=user, notification_type=notification_type, reference_key=key
+        )
+    except IntegrityError:
+        return False
+
+    if send_push_to_user(user, payload):
+        return True
+
+    NotificationDelivery.objects.filter(
+        user=user, notification_type=notification_type, reference_key=key
+    ).delete()
+    return False
+
+
+def push_recipients(*, pref_field=None, captains_only=False, tickets_left=False):
+    """
+    Active, non-cut ballcrew with a login and at least one active device,
+    skipping anyone who turned `pref_field` off.
+    """
+    from api.models.ballkid import Ballkid
+
+    qs = Ballkid.objects.filter(
+        is_active=True,
+        is_cut=False,
+        user__isnull=False,
+        user__push_subscriptions__active=True,
+    )
+    if pref_field:
+        qs = qs.exclude(**{f"user__notification_settings__{pref_field}": False})
+    if captains_only:
+        qs = qs.filter(Q(is_captain=True) | Q(is_chairperson=True))
+    if tickets_left:
+        qs = qs.filter(Q(num_tickets__lt=TICKET_LIMIT) | Q(num_tickets__isnull=True))
+    return list(qs.select_related("user").distinct())

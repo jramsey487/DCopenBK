@@ -53,6 +53,26 @@ async function loadSettings() {
   return response.json();
 }
 
+const PREFERENCES = [
+  {
+    field: "shift_reminders_enabled",
+    label: "Shift reminders — 10 minutes before your shift",
+  },
+  {
+    field: "team_changes_enabled",
+    label: "Team assignment changes — after the assignment is stable for 5 minutes",
+  },
+  {
+    field: "ticket_updates_enabled",
+    label:
+      "Tickets — when a request round opens, results are in, or a waitlist spot opens up",
+  },
+  {
+    field: "announcements_enabled",
+    label: "Announcements from the chairpeople",
+  },
+];
+
 export default function PushNotificationSettings() {
   const [settings, setSettings] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -184,7 +204,8 @@ export default function PushNotificationSettings() {
     <div className="push-settings-card">
       <h2 className="push-settings-title">Notifications</h2>
       <p className="push-settings-description">
-        Get a reminder 10 minutes before your shift and a notification when your team assignment changes.
+        Shift reminders, team changes, ticket updates, and announcements from the
+        chairpeople. Pick which ones you want below.
       </p>
 
       {message ? <div className="push-settings-message">{message}</div> : null}
@@ -225,28 +246,17 @@ export default function PushNotificationSettings() {
       )}
 
       <div className="push-settings-preferences">
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.shift_reminders_enabled}
-            onChange={(event) =>
-              updatePreference("shift_reminders_enabled", event.target.checked)
-            }
-            disabled={!settings.subscribed || busy}
-          />
-          Shift reminders — 10 minutes before your shift
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.team_changes_enabled}
-            onChange={(event) =>
-              updatePreference("team_changes_enabled", event.target.checked)
-            }
-            disabled={!settings.subscribed || busy}
-          />
-          Team assignment changes — after the assignment is stable for 5 minutes
-        </label>
+        {PREFERENCES.map(({ field, label }) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              checked={Boolean(settings[field])}
+              onChange={(event) => updatePreference(field, event.target.checked)}
+              disabled={!settings.subscribed || busy}
+            />
+            {label}
+          </label>
+        ))}
       </div>
     </div>
   );

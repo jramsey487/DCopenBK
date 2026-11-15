@@ -22,3 +22,9 @@ class ApiConfig(AppConfig):
         from api.utils import audit
 
         audit.install()
+
+        # Ticket push notifications (round live, lottery results, waitlist
+        # spots) hooked in via signals (see api/utils/push_events.py).
+        from api.utils import push_events
+
+        push_events.install()

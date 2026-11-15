@@ -102,6 +102,7 @@ const chairpersonTabs = [
       { label: "Tournament Settings", url: "/tournament-settings" },
       { label: "Database Query", url: "/database-query" },
       { label: "Debug", url: "/debug" },
+      { label: "Announcements", url: "/announcements" },
     ],
   },
 ];

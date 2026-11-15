@@ -63,6 +63,7 @@ schedule_urls = [
 notification_urls = [
     path("notification-settings", NotificationSettingsView.as_view(), name="notification-settings"),
     path("notification-subscribe", NotificationSubscribeView.as_view(), name="notification-subscribe"),
+    path("push-announcement", PushAnnouncementView.as_view(), name="push-announcement"),
 ]
 
 live_score_urls = [

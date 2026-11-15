@@ -8,6 +8,7 @@ import Close from "@mui/icons-material/Close";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 
 import { getAuthHeader, getToday } from "../Utils";
+import CourtLiveScore from "./CourtLiveScore";
 
 function notesByCourt(notes) {
   const map = {};
@@ -35,11 +36,7 @@ export function fetchCourtNotes(date = getToday()) {
   );
 }
 
-/**
- * Court note for Teams cards.
- * Captains/chairs: edit in place. Ballkids: read-only when a note exists.
- */
-export function CourtNoteBlock({
+function CourtNoteInner({
   court,
   note,
   date = getToday(),
@@ -229,5 +226,19 @@ export function CourtNoteBlock({
         </IconButton>
       </Tooltip>
     </div>
+  );
+}
+
+/**
+ * Court note for Teams cards, with the court's live score (when the MIS feed
+ * is configured and a match is in progress) shown just above it.
+ * Captains/chairs: edit in place. Ballkids: read-only when a note exists.
+ */
+export function CourtNoteBlock(props) {
+  return (
+    <>
+      <CourtLiveScore court={props.court} />
+      <CourtNoteInner {...props} />
+    </>
   );
 }

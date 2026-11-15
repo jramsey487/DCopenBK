@@ -17,12 +17,18 @@ class NotificationSettings(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="notification_settings")
     shift_reminders_enabled = models.BooleanField(default=True)
     team_changes_enabled = models.BooleanField(default=True)
+    ticket_updates_enabled = models.BooleanField(default=True)
+    announcements_enabled = models.BooleanField(default=True)
 
 
 class NotificationDelivery(models.Model):
     NOTIFICATION_TYPES = (
         ("shift_reminder", "Shift reminder"),
         ("team_change", "Team change"),
+        ("ticket_round", "Ticket round live"),
+        ("ticket_results", "Ticket results"),
+        ("waitlist_spot", "Waitlist spot opened"),
+        ("announcement", "Announcement"),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

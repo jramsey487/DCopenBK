@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMediaQuery } from "react-responsive";
 
+import { clearOfflineCache } from "./offlineCache";
+
 export function getLocalStorage(key) {
   const valString = localStorage.getItem(key);
   return JSON.parse(valString);
@@ -38,6 +40,8 @@ export function getIsSuperuser() {
 
 /** Persist login response before navigation so /me and API calls see ballkid_id. */
 export function setSessionFromLogin(setToken, username, data) {
+  // Never let a previous user's offline data bleed into this session.
+  clearOfflineCache();
   setToken(data?.token ?? "");
   const rawId = data?.ballkid_id;
   const ballkidId =

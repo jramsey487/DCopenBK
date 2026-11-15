@@ -44,6 +44,7 @@ import FeedbackPage from "./settings/FeedbackPage";
 import AccountSettings from "./settings/AccountSettings";
 import TicketsPage from "./lists/TicketsPage";
 import PastFinalsTeamsPage from "./teams/PastFinalsTeamsPage";
+import AnnouncementsPage from "./settings/AnnouncementsPage";
 
 // -- Ballcrew application feature --
 import ApplicationPage from "./applications/ApplicationPage";
@@ -121,6 +122,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route path="/tryout-review" element={<TryoutReviewPage />} />
       <Route path="/apply" element={<ApplicationPage />} />
       <Route path="*" element={<RouteNotFound />} />
+      <Route path="/announcements" element={<AnnouncementsPage />} />
     </Routes>
   );
 }
