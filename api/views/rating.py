@@ -209,14 +209,20 @@ def save_rater_params(cp, year_ratings, year):
             )
 
 
-def autoexclude(year_ratings, autoexclude_threshold):
+def autoexclude(year_ratings, autoexclude_threshold, year):
     """
-    Set ratings of raters with distance to ideal > threshold to be auto-exclude
+    Set ratings of raters with a current-season distance to ideal above the
+    threshold to be auto-excluded.
+
+    CalibrationParams is stored per ballkid and year, so the lookup must be
+    scoped to the season being recalculated. Otherwise a reviewer's result
+    from a prior season can incorrectly exclude their ratings this season.
     """
 
-    # Exclude all raters whose distance to ideal is greater than threshold
+    # Only use reviewer calibration parameters calculated for this season.
     raters_to_autoexclude = CalibrationParams.objects.filter(
-        rater_distance_to_ideal__gt=autoexclude_threshold
+        year=year,
+        rater_distance_to_ideal__gt=autoexclude_threshold,
     ).values_list("ballkid", flat=True)
 
     # Auto-exclude ratings of raters with dist > threshold
@@ -352,11 +358,23 @@ def run_calibration_and_save_params(year):
         f"[run_calibration_and_save] failed rating categories {failed_categories}"
     )
 
+    # A failed fit must never drive rating-status changes. In particular,
+    # do not let stale CalibrationParams from an earlier run/season trigger
+    # auto-exclusion. Leave all existing rating statuses and saved calibration
+    # results untouched so the chairperson can see the failure and retry.
+    if cp is None:
+        logger.error(
+            "[run_calibration_and_save] Calibration failed; skipping parameter "
+            "updates and automatic rating exclusions for year %s",
+            year,
+        )
+        return cp, excluded, failed_categories, year_ratings
+
     ## STEP 3: Save rater params (based on all non-manually excluded ratings)
     save_rater_params(cp, year_ratings, year)
 
     ## STEP 4: Auto-exclude ratings for raters with distance to ideal > threshold
-    autoexclude(year_ratings, tournament.rcal_calibration_threshold)
+    autoexclude(year_ratings, tournament.rcal_calibration_threshold, year)
 
     ## STEP 5: Save ratee params, filtering to only complete (non auto-excluded) ratings
     save_ratee_params(cp, year_ratings.filter(status=RATING_STATUS.COMPLETE), year)
