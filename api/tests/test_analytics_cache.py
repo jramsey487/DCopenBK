@@ -1,11 +1,12 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 from api.utils import analytics_cache
 
 
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
 class AnalyticsCacheTests(SimpleTestCase):
     def setUp(self):
         cache.clear()
@@ -89,6 +90,7 @@ class AnalyticsCacheTests(SimpleTestCase):
         self.assertTrue(cache.get(analytics_cache._k("court", "dirty")))
 
 
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
 class CalibrationCacheTests(SimpleTestCase):
     def setUp(self):
         cache.clear()
