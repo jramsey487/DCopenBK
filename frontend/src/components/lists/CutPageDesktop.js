@@ -231,16 +231,16 @@ export function CutStatusSection({
                 setOpen(true);
                 return;
               }
-              fetch("/api/cut-all", {
+              api("/api/cut-all", {
                 method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  cut_status: section,
-                  should_cut: false,
-                }),
+                body: { cut_status: section, should_cut: false },
+                invalidates: ["/api/list", "/api/sorted-list"],
               })
-                .then((response) => response.json())
-                .then(() => refetchActive());
+                .then(() => refetchActive())
+                .catch((error) => {
+                  refetchActive();
+                  window.alert(error.message);
+                });
             }}
           />
         )
