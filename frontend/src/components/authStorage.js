@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMediaQuery } from "react-responsive";
 
 import { clearOfflineCache } from "./offlineCache";
+import { clearApiCache } from "./api";
 
 export function getLocalStorage(key) {
   const valString = localStorage.getItem(key);
@@ -42,6 +43,7 @@ export function getIsSuperuser() {
 export function setSessionFromLogin(setToken, username, data) {
   // Never let a previous user's offline data bleed into this session.
   clearOfflineCache();
+  clearApiCache();
   setToken(data?.token ?? "");
   const rawId = data?.ballkid_id;
   const ballkidId =
