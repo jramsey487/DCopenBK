@@ -33,14 +33,17 @@ export default function TeamsPageChairpersonMobile(props) {
               ballkid.is_checked_in === true && ballkid.current_team === 0
           )
         );
-      });
+      })
+      .catch((error) => window.alert(error.message));
 
     api("/api/calc-num-teams")
-      .then((data) => setTeams(data["teams"]));
+      .then((data) => setTeams(data["teams"]))
+      .catch((error) => window.alert(error.message));
 
     api("/api/get-next-shifts")
       .then((data) => setNextShifts(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
 
     fetchCourtNotes(getToday())
       .then((data) => setCourtNotes(courtNotesToMap(data)))
