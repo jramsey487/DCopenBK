@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import {
   BallkidLink,
   Banners,
-  getAuthHeader,
   getCurrentYear,
 } from "../Utils";
 import { MATCH_TYPES, POSITIONS } from "../Consts";
 import { pastFinalsTeams } from "../HelpMessages";
+import { api } from "../api";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import "./teams-page.css";
 
@@ -71,8 +71,7 @@ export default function PastFinalsTeamsPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/get-past-finals/${year}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/get-past-finals/${year}`)
       .then((data) => setBallkids(Array.isArray(data) ? data : []))
       .catch(() => setBallkids([]))
       .finally(() => setLoading(false));
