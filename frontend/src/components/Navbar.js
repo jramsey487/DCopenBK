@@ -10,6 +10,7 @@ import BallcrewLogo from "./BallcrewLogo";
 import MobileNavDrawer from "./MobileNavDrawer";
 import { getLocalStorage, useIsMobile } from "./Utils";
 import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
+import { clearApiCache } from "./api";
 import "./navbar.css";
 
 const ballkidTabs = [
@@ -176,6 +177,7 @@ function DesktopNavbarItem({ tab, useIconButton, setToken }) {
     if (getLocalStorage("group") !== "ticketing") {
       removeDeviceSubscriptionOnLogout();
     }
+    clearApiCache();
     setToken("");
     localStorage.clear();
   };

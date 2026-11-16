@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getAuthHeader } from "../authStorage";
+import { api } from "../api";
 import { getTimeFloat, useTournamentDays } from "../dateTime";
 import { CHART_COLORS } from "../Consts";
 
@@ -63,9 +63,9 @@ export function CheckinHistoryChart({ pk }) {
   const days = useTournamentDays();
 
   useEffect(() => {
-    fetch(`/api/get-checkins/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setHistories(data));
+    api(`/api/get-checkins/${pk}`)
+      .then((data) => setHistories(data))
+      .catch((error) => window.alert(error.message));
   }, [pk]);
 
   const labels = days.map((day) => day.toDateString());

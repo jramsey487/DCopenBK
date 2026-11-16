@@ -6,7 +6,6 @@ import { ScheduleTable } from "./ScheduleTable";
 import ScheduleMobileView from "./ScheduleMobileView";
 import ScheduleDateControls from "./ScheduleDateControls";
 import {
-  getAuthHeader,
   getToday,
   ConfirmDialog,
   Banners,
@@ -14,6 +13,7 @@ import {
 import { schedule } from "../HelpMessages";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { cacheGet, cacheSet } from "../apiCache";
+import { api } from "../api";
 import "./schedule-mobile.css";
 import "./schedule-table.css";
 import "../teams/teams-page.css";
@@ -45,19 +45,19 @@ function CreateSchedule({ date, setUpdated }) {
       return;
     }
     setSubmitting(true);
-    fetch("/api/create-schedule", {
+    api("/api/create-schedule", {
       method: "POST",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        date: date,
+      body: {
+        date,
         start_hour: startHour,
         num_courts: numCourts,
         num_hours: numHours,
         num_teams: numTeams,
-      }),
+      },
+      invalidates: ["/api/get-schedule"],
     })
-      .then((response) => response.json())
       .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message))
       .finally(() => setSubmitting(false));
   };
 
@@ -190,8 +190,7 @@ export default function SchedulePageChairperson() {
       setShifts(null);
     }
 
-    fetch(`/api/get-schedule?date=${date}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/get-schedule?date=${date}`)
       .then((data) => {
         const next = Array.isArray(data) ? data : [];
         cacheSet(scheduleCacheKey(date), next);
@@ -200,8 +199,9 @@ export default function SchedulePageChairperson() {
           setUpdated(false);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!cancelled) {
+          window.alert(error.message);
           setShifts((prev) => (prev == null ? [] : prev));
           setUpdated(false);
         }

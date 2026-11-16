@@ -15,7 +15,6 @@ import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 
 import {
   filterBallkids,
-  getAuthHeader,
   SearchAndFilter,
   ConfirmDialog,
   Banners,
@@ -27,6 +26,7 @@ import {
   POSITIONS,
 } from "../Consts";
 import { cut } from "../HelpMessages";
+import { api } from "../api";
 import { DraggableBallkidRow, DraggableBallkidRowTwoColumns, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "../teams/teams-page.css";
@@ -104,18 +104,13 @@ export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch)
     );
   });
 
-  fetch("/api/update-ballkid", {
+  api("/api/update-ballkid", {
     method: "PATCH",
-    headers: getAuthHeader(),
-    body: JSON.stringify({
-      first_name: ballkid.first_name,
-      last_name: ballkid.last_name,
-      ...patch,
-    }),
-  }).then((response) => {
-    if (!response.ok) {
-      refetchActive();
-    }
+    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...patch },
+    invalidates: ["/api/list", "/api/sorted-list"],
+  }).catch((error) => {
+    refetchActive();
+    window.alert(error.message);
   });
 }
 
@@ -235,16 +230,16 @@ export function CutStatusSection({
                 setOpen(true);
                 return;
               }
-              fetch("/api/cut-all", {
+              api("/api/cut-all", {
                 method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  cut_status: section,
-                  should_cut: false,
-                }),
+                body: { cut_status: section, should_cut: false },
+                invalidates: ["/api/list", "/api/sorted-list"],
               })
-                .then((response) => response.json())
-                .then(() => refetchActive());
+                .then(() => refetchActive())
+                .catch((error) => {
+                  refetchActive();
+                  window.alert(error.message);
+                });
             }}
           />
         )
@@ -552,20 +547,20 @@ export default function CutPageDesktop(props) {
   );
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list")
       .then((data) =>
         setActive(
           data.filter((ballkid) => !ballkid.is_cut && !ballkid.is_chairperson)
         )
-      );
+      )
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/emails-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/emails-list")
       .then((data) => {
         setEmails(data["emails"]);
         setMissingEmails(data["missing"] || []);
-      });
+      })
+      .catch((error) => window.alert(error.message));
   }, [refreshKey]);
 
   return (

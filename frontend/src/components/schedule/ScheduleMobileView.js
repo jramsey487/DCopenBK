@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import {
-  getAuthHeader,
   getLocalStorage,
   getToday,
   dayHourToStr,
@@ -10,6 +9,7 @@ import {
   ConfirmDialog,
 } from "../Utils";
 import { ICON_DICT } from "../Consts";
+import { api } from "../api";
 import ScheduleDateControls from "./ScheduleDateControls";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import { schedule, scheduleNonchairperson } from "../HelpMessages";
@@ -228,13 +228,13 @@ function EndCourtButton({ court, setUpdated }) {
 
 function ShiftHourButtons({ hour, setUpdated }) {
   const shift = (direction) => {
-    fetch("/api/shift-schedule", {
+    api("/api/shift-schedule", {
       method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({ direction, hour }),
+      body: { direction, hour },
+      invalidates: ["/api/get-schedule"],
     })
-      .then((response) => response.json())
-      .then(() => setUpdated(true));
+      .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message));
   };
 
   return (
@@ -293,8 +293,7 @@ export default function ScheduleMobileView({
   const isToday = date === getToday();
 
   useEffect(() => {
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) =>
         setTeamRoster(
           buildTeamRoster(
@@ -304,17 +303,18 @@ export default function ScheduleMobileView({
             )
           )
         )
-      );
+      )
+      .catch((error) => window.alert(error.message));
 
     const pk = getLocalStorage("ballkid_id");
     if (!pk) {
       return;
     }
-    fetch(`/api/get-ballkid/${pk}/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/get-ballkid/${pk}/${pk}`)
       .then((ballkid) =>
         setMyName(`${ballkid.first_name} ${ballkid.last_name}`)
-      );
+      )
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const { hours, courts, hourCourtToTeam } = useMemo(() => {

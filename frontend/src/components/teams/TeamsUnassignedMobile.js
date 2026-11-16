@@ -56,6 +56,7 @@ export function UnassignedMobilePanel({
     setAssigningId(ballkid.id);
     assignBallkidToTeam(ballkid, team, mode)
       .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message))
       .finally(() => setAssigningId(null));
   };
 

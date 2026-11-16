@@ -6,6 +6,7 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { getAuthHeader, getCurrentYear } from "../Utils";
+import { api } from "../api";
 import { viewRatings } from "../HelpMessages";
 import RatingsGrid from "./RatingsGrid";
 import {
@@ -29,8 +30,7 @@ export default function RatingsPage() {
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/ratings/${year}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/ratings/${year}`)
       .then((data) => {
         setRatings(data);
         if (updated) {
@@ -38,7 +38,8 @@ export default function RatingsPage() {
           setCalibratedForYear(null);
           setUpdated(false);
         }
-      });
+      })
+      .catch((error) => window.alert(error.message));
   }, [year, updated]);
 
   // Only run the expensive calibration when viewing calibrated ratings.

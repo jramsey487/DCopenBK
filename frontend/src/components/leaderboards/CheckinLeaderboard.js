@@ -11,12 +11,12 @@ import Box from "@mui/material/Box";
 import { DataGrid } from "@mui/x-data-grid";
 
 import {
-  getAuthHeader,
   getTimeFloat,
   BallkidAndIcon,
   getTimeStr,
 } from "../Utils";
 import { checkinLeaderboard } from "../HelpMessages";
+import { api } from "../api";
 import {
   LeaderboardShell,
   LeaderboardGridPanel,
@@ -90,14 +90,14 @@ export default function CheckinLeaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/get-checkin-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setBallkids(data));
+    api("/api/get-checkin-leaderboard")
+      .then((data) => setBallkids(data))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-average-checkin-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-average-checkin-leaderboard")
       .then((data) => setAverages(data))
-      .then(() => setLoading(false));
+      .catch((error) => window.alert(error.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const columns = [

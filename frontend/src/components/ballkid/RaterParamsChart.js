@@ -11,7 +11,7 @@ import {
 } from "chart.js";
 import { Scatter } from "react-chartjs-2";
 import { CHART_GRAY } from "../Consts";
-import { getAuthHeader } from "../Utils";
+import { api } from "../api";
 
 ChartJS.register(
   CategoryScale,
@@ -27,11 +27,9 @@ export function RaterParamsChart({ captainData }) {
   const [average, setAverage] = useState({});
 
   useEffect(() => {
-    fetch("/api/average-calibration-parameters", {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setAverage(data));
+    api("/api/average-calibration-parameters")
+      .then((data) => setAverage(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const options = {

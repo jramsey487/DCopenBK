@@ -38,6 +38,7 @@ import {
   ballkidImageSrc,
 } from "./authStorage";
 import { dayHourToStr, isCurrentHour } from "./dateTime";
+import { api } from "./api";
 
 // Wraps an ICON_DICT node in a tooltip using the labels in TOOLTIP_DICT.
 // Nodes that already carry their own tooltip/title are returned untouched.
@@ -260,12 +261,9 @@ export function Banners() {
   const [banners, setBanners] = useState([]);
 
   useEffect(() => {
-    fetch("/api/banner-list", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setBanners(data));
+    api("/api/banner-list")
+      .then((data) => setBanners(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   if (!banners?.length) {

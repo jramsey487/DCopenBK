@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 
 import {
-  getAuthHeader,
   RatingButton,
   DraftRatingButton,
   getBallkidId,
@@ -24,6 +23,7 @@ import {
   shouldShowCurrentTournament,
   useProfileBackLink,
 } from "./BallkidProfileLayout";
+import { api } from "../api";
 
 export default function BallkidPageCaptain() {
   const [ballkid, setBallkid] = useState(null);
@@ -38,9 +38,7 @@ export default function BallkidPageCaptain() {
     let cancelled = false;
 
     Promise.all([
-      fetch(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`, {
-        headers: getAuthHeader(),
-      }).then((response) => response.json()),
+      api(`/api/get-ballkid/${pk}/${getLocalStorage("ballkid_id")}`),
       fetchTournament(),
     ])
       .then(([ballkidData, tournamentData]) => {

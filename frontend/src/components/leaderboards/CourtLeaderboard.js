@@ -11,13 +11,13 @@ import Box from "@mui/material/Box";
 import { DataGrid } from "@mui/x-data-grid";
 
 import {
-  getAuthHeader,
   getDurationStr,
   getTimeFloat,
   BallkidAndIcon,
   toPercent,
 } from "../Utils";
 import { courtLeaderboard } from "../HelpMessages";
+import { api } from "../api";
 import {
   LeaderboardShell,
   LeaderboardGridPanel,
@@ -84,14 +84,14 @@ export default function CourtLeaderboard() {
   const timeColWidth = 100;
 
   useEffect(() => {
-    fetch("/api/get-court-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-court-leaderboard")
       .then((data) => setBallkids(data))
-      .then(() => setLoading(false));
+      .catch((error) => window.alert(error.message))
+      .finally(() => setLoading(false));
 
-    fetch("/api/get-average-court-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setAverages(data));
+    api("/api/get-average-court-leaderboard")
+      .then((data) => setAverages(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const columns = [

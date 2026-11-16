@@ -40,11 +40,24 @@ import {
   TARGET_NUM_BALLKIDS_PER_TEAM,
 } from "../Consts";
 import { TeamsChairpersonPageHeader } from "./TeamsChairpersonShared";
+import { api } from "../api";
 import { CURRENT_TEAMS_MODE } from "./TeamsChairpersonMode";
 import { DraggableBallkidRow, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { CourtNoteBlock } from "./CourtNote";
 import "../ballkid-row.css";
 import "../confirm-dialog.css";
+
+async function saveBallkid(ballkid, fields) {
+  return api("/api/update-ballkid", {
+    method: "PATCH",
+    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...fields },
+    invalidates: ["/api/list", "/api/sorted-list"],
+  });
+}
+
+function reportMutationError(error) {
+  window.alert(error.message);
+}
 
 export function renderSwitchButton(ballkid, setUpdated, mode = CURRENT_TEAMS_MODE) {
   const field = mode.positionField;
@@ -55,17 +68,11 @@ export function renderSwitchButton(ballkid, setUpdated, mode = CURRENT_TEAMS_MOD
         size="small"
         sx={{ p: 0.5 }}
         onClick={() =>
-          fetch("/api/update-ballkid", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              first_name: ballkid.first_name,
-              last_name: ballkid.last_name,
-              [field]: ballkid[field] === "Back" ? "Net" : "Back",
-            }),
+          saveBallkid(ballkid, {
+            [field]: ballkid[field] === "Back" ? "Net" : "Back",
           })
-            .then((response) => response.json())
             .then(() => setUpdated(true))
+            .catch(reportMutationError)
         }
       >
         <SwapVert className="teams-chairperson-ballkid-action-icon" sx={{ color: "#7c5ce0" }} />
@@ -83,17 +90,9 @@ function renderUnassignButton(ballkid, setUpdated, mode = CURRENT_TEAMS_MODE) {
         size="small"
         sx={{ p: 0.5 }}
         onClick={() => {
-          fetch("/api/update-ballkid", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              first_name: ballkid.first_name,
-              last_name: ballkid.last_name,
-              ...patch,
-            }),
-          })
-            .then((response) => response.json())
-            .then(() => setUpdated(true));
+          saveBallkid(ballkid, patch)
+            .then(() => setUpdated(true))
+            .catch(reportMutationError);
         }}
       >
         <RemoveCircleOutline className="teams-chairperson-ballkid-action-icon" color="primary" />
@@ -109,17 +108,9 @@ function renderCheckoutButton(ballkid, setUpdated) {
         size="small"
         sx={{ p: 0.5 }}
         onClick={() => {
-          fetch("/api/update-ballkid", {
-            method: "PATCH",
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-              first_name: ballkid.first_name,
-              last_name: ballkid.last_name,
-              is_checked_in: false,
-            }),
-          })
-            .then((response) => response.json())
-            .then(() => setUpdated(true));
+          saveBallkid(ballkid, { is_checked_in: false })
+            .then(() => setUpdated(true))
+            .catch(reportMutationError);
         }}
       >
         <HighlightOff className="teams-chairperson-ballkid-action-icon" color="error" />
@@ -247,17 +238,9 @@ function Team({
       if (monitor.didDrop()) {
         return;
       }
-      return fetch("/api/update-ballkid", {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          first_name: ballkid.first_name,
-          last_name: ballkid.last_name,
-          ...mode.assignPatch(team),
-        }),
-      })
-        .then((response) => response.json())
-        .then(() => setUpdated(true));
+      return saveBallkid(ballkid, mode.assignPatch(team))
+        .then(() => setUpdated(true))
+        .catch(reportMutationError);
     },
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
@@ -409,15 +392,7 @@ function Team({
 }
 
 export function assignBallkidToTeam(ballkid, team, mode = CURRENT_TEAMS_MODE) {
-  return fetch("/api/update-ballkid", {
-    method: "PATCH",
-    headers: getAuthHeader(),
-    body: JSON.stringify({
-      first_name: ballkid.first_name,
-      last_name: ballkid.last_name,
-      ...mode.assignPatch(team),
-    }),
-  });
+  return saveBallkid(ballkid, mode.assignPatch(team));
 }
 
 export function renderCheckoutUnassignedButton(setOpen) {
@@ -517,9 +492,9 @@ export function Header({
     if (!mode.showVisibilityToggle) {
       return;
     }
-    fetch("/api/get-tournament", { method: "GET", headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTournament(data));
+    api("/api/get-tournament")
+      .then((data) => setTournament(data))
+      .catch((error) => setErrorMsg(error.message));
   }, [mode.showVisibilityToggle]);
 
   if (mode.showVisibilityToggle && (tournament === null || tournament === undefined)) {
@@ -601,8 +576,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
     setSucceeded(false);
     pendingRefreshRef.current = false;
 
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) => {
         const checkedIn = (Array.isArray(data) ? data : []).filter(
           (ballkid) => ballkid.is_checked_in === true
@@ -616,7 +590,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
           )
         );
       })
-      .catch(() => {});
+      .catch((error) => setErrorMsg(error.message));
   }, [open]);
 
   const handleClose = () => {

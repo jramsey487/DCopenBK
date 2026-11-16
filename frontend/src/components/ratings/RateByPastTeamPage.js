@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 
 import {
   LayoutButtons,
-  getAuthHeader,
   getLocalStorage,
   BallkidCard,
   getDay,
 } from "../Utils";
 import { rateByPastTeam } from "../HelpMessages";
+import { api } from "../api";
 import {
   RatingsPageShell,
   RateBallkidMeta,
@@ -51,14 +51,14 @@ export default function RateByPastTeamPage() {
   const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
-    fetch("/api/list/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setBallkids(data));
+    api("/api/list/" + pk)
+      .then((data) => setBallkids(data))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-past-teams/" + pk, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-past-teams/" + pk)
       .then((data) => setPastTeams(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [pk, updated]);
 
   const dates = Object.keys(pastTeams);

@@ -26,6 +26,7 @@ import {
 } from "../Utils";
 import { localDateToIso, parseIsoDateLocal } from "../dateTime";
 import { tournamentSettings } from "../HelpMessages";
+import { api } from "../api";
 import "./tournament-settings.css";
 import ScheduleCalendar from "../schedule/ScheduleCalendar";
 
@@ -101,8 +102,7 @@ function Banner({
   const [ballkidsList, setBallkidsList] = useState([]);
 
   useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/list")
       .then((data) =>
         setBallkidsList(
           data.map((ballkid) => ({
@@ -110,7 +110,8 @@ function Banner({
             id: ballkid.id,
           }))
         )
-      );
+      )
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const chipClass =
@@ -311,15 +312,12 @@ function BannerSection({ audience, setSuccessMsg, setErrorMsg }) {
   const bannerInput = useRef(null);
 
   useEffect(() => {
-    fetch("/api/banner-list", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
+    api("/api/banner-list")
       .then((data) =>
         setBanners(data.filter((banner) => banner.audience === audience))
       )
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => setErrorMsg(error.message));
   }, [audience, updated]);
 
   return (
@@ -970,13 +968,10 @@ export default function TournamentSettings(props) {
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
+    api("/api/get-tournament")
       .then((data) => setTournament(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => setErrorMsg(error.message));
   }, [updated]);
 
   return tournament === null || tournament === undefined ? (

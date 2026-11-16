@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import BallkidList from "./lists/BallkidList";
@@ -56,6 +56,7 @@ import HandbookPage from "./applications/HandbookPage";
 import TriviaPage from "./applications/TriviaPage";
 
 import { useToken, getLocalStorage, useIsMobile } from "./Utils";
+import { setUnauthorizedHandler } from "./api";
 
 function chairpersonRoutes(isMobile, setToken) {
   return (
@@ -205,6 +206,10 @@ function loggedOutRoutes(setToken) {
 export default function HomePage(props) {
   const { token, setToken } = useToken();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => setToken(""));
+  }, [setToken]);
 
   const group = getLocalStorage("group");
 

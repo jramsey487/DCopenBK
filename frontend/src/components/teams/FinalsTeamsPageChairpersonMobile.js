@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-import { Banners, getAuthHeader } from "../Utils";
+import { Banners } from "../Utils";
+import { api } from "../api";
 import { MATCH_TYPES } from "../Consts";
 import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import { Header, renderTeams } from "./TeamsPageChairpersonUtils";
@@ -14,8 +15,7 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
   const teams = Object.keys(MATCH_TYPES).map((key) => MATCH_TYPES[key]);
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list")
       .then((data) => {
         setAssigned(
           data.filter(
@@ -28,7 +28,8 @@ export default function FinalsTeamsPageChairpersonMobile(props) {
           )
         );
       })
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [updated]);
 
   return (

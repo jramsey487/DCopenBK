@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-import { getAuthHeader, Banners, getToday } from "../Utils";
+import { Banners, getToday } from "../Utils";
+import { api } from "../api";
 import { UnassignedMobilePanel } from "./TeamsUnassignedMobile";
 import {
   Teams,
@@ -18,8 +19,7 @@ export default function TeamsPageChairpersonMobile(props) {
   const [courtNotes, setCourtNotes] = useState({});
 
   useEffect(() => {
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) => {
         setAssigned(
           data.filter(
@@ -33,16 +33,17 @@ export default function TeamsPageChairpersonMobile(props) {
               ballkid.is_checked_in === true && ballkid.current_team === 0
           )
         );
-      });
+      })
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]));
+    api("/api/calc-num-teams")
+      .then((data) => setTeams(data["teams"]))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-next-shifts")
       .then((data) => setNextShifts(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
 
     fetchCourtNotes(getToday())
       .then((data) => setCourtNotes(courtNotesToMap(data)))

@@ -7,7 +7,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
 import {
-  getAuthHeader,
   SearchAndFilter,
   filterBallkids,
   ConfirmDialog,
@@ -15,6 +14,7 @@ import {
   getToday,
 } from "../Utils";
 import { POSITIONS } from "../Consts";
+import { api } from "../api";
 import {
   Teams,
   Header,
@@ -48,17 +48,17 @@ export function UnassignedPanel({
       if (monitor.didDrop()) {
         return;
       }
-      fetch("/api/update-ballkid", {
+      api("/api/update-ballkid", {
         method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
+        body: {
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
           ...mode.unassignPatch(),
-        }),
+        },
+        invalidates: ["/api/list", "/api/sorted-list"],
       })
-        .then((response) => response.json())
-        .then(() => setUpdated(true));
+        .then(() => setUpdated(true))
+        .catch((err) => window.alert(err.message));
     },
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
@@ -211,8 +211,7 @@ export default function TeamsPageChairpersonDesktop() {
   const [courtNotes, setCourtNotes] = useState({});
 
   useEffect(() => {
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) => {
         setAssigned(
           data.filter(
@@ -226,16 +225,17 @@ export default function TeamsPageChairpersonDesktop() {
               ballkid.is_checked_in === true && ballkid.current_team === 0
           )
         );
-      });
+      })
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]));
+    api("/api/calc-num-teams")
+      .then((data) => setTeams(data["teams"]))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-next-shifts")
       .then((data) => setNextShifts(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
 
     fetchCourtNotes(getToday())
       .then((data) => setCourtNotes(courtNotesToMap(data)))

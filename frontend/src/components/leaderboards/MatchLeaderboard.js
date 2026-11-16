@@ -5,20 +5,20 @@ import Typography from "@mui/material/Typography";
 import { DataGrid } from "@mui/x-data-grid";
 
 import {
-  getAuthHeader,
   getDurationStr,
   getLocalStorage,
   BallkidAndIcon,
 } from "../Utils";
 import { LEADERBOARD_BALLKID_COL_WIDTH_WIDE } from "./LeaderboardsShared";
+import { api } from "../api";
 
 export default function MatchLeaderboard(props) {
   const [checkinTimes, setCheckinTimes] = useState([]);
 
   useEffect(() => {
-    fetch("/api/get-checkin-times", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCheckinTimes(data));
+    api("/api/get-checkin-times")
+      .then((data) => setCheckinTimes(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const columns = [

@@ -15,7 +15,7 @@ import Check from "@mui/icons-material/Check";
 import Help from "@mui/icons-material/Help";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
-import { getAuthHeader } from "./authStorage";
+import { api } from "./api";
 import "./confirm-dialog.css";
 
 export function Alerts({ successMsg, errorMsg, setSuccessMsg, setErrorMsg }) {
@@ -158,34 +158,10 @@ export function ConfirmDialog({
             if (succeeded || loading) return;
             setLoading(true);
             setErrorMsg("");
-            fetch(url, {
-              method: method,
-              headers: getAuthHeader(),
-              body: JSON.stringify(body),
-            })
-              .then((response) => {
-                if (response.ok) {
-                  finishSuccess();
-                  return;
-                }
-                return response.json().then(
-                  (data) => {
-                    const detail = data?.detail;
-                    setErrorMsg(
-                      typeof detail === "string" && detail
-                        ? detail
-                        : "Something went wrong. Please try again."
-                    );
-                    setLoading(false);
-                  },
-                  () => {
-                    setErrorMsg("Something went wrong. Please try again.");
-                    setLoading(false);
-                  }
-                );
-              })
-              .catch(() => {
-                setErrorMsg("Something went wrong. Please try again.");
+            api(url, { method: method, body })
+              .then(() => finishSuccess())
+              .catch((e) => {
+                setErrorMsg(e.message);
                 setLoading(false);
               });
           }}
@@ -341,34 +317,10 @@ export function MakeLiveDialog({
             if (succeeded || loading || !acked) return;
             setLoading(true);
             setErrorMsg("");
-            fetch(url, {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify(body),
-            })
-              .then((response) => {
-                if (response.ok) {
-                  finishSuccess();
-                  return;
-                }
-                return response.json().then(
-                  (data) => {
-                    const detail = data?.detail;
-                    setErrorMsg(
-                      typeof detail === "string" && detail
-                        ? detail
-                        : "Something went wrong. Please try again."
-                    );
-                    setLoading(false);
-                  },
-                  () => {
-                    setErrorMsg("Something went wrong. Please try again.");
-                    setLoading(false);
-                  }
-                );
-              })
-              .catch(() => {
-                setErrorMsg("Something went wrong. Please try again.");
+            api(url, { method: "PATCH", body })
+              .then(() => finishSuccess())
+              .catch((e) => {
+                setErrorMsg(e.message);
                 setLoading(false);
               });
           }}

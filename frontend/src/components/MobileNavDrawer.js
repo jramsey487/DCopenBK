@@ -7,8 +7,9 @@ import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
 import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
-import { getAuthHeader, getLocalStorage } from "./Utils";
+import { getLocalStorage } from "./Utils";
 import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
+import { api, clearApiCache } from "./api";
 import {
   NavIconRoster,
   NavIconTeams,
@@ -237,9 +238,9 @@ export default function MobileNavDrawer({ group, setToken }) {
     if (!pk || !open || group === "ticketing") {
       return;
     }
-    fetch(`/api/get-ballkid/${pk}/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setBallkid(data));
+    api(`/api/get-ballkid/${pk}/${pk}`)
+      .then((data) => setBallkid(data))
+      .catch((error) => window.alert(error.message));
   }, [pk, open, group]);
 
   useEffect(() => {
@@ -278,6 +279,7 @@ export default function MobileNavDrawer({ group, setToken }) {
     if (group !== "ticketing") {
       removeDeviceSubscriptionOnLogout();
     }
+    clearApiCache();
     setToken("");
     localStorage.clear();
   };
