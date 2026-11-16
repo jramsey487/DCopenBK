@@ -234,7 +234,10 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
             e.stopPropagation();
             e.preventDefault();
             saveBallkid(ballkid, { last_day: comments }, setUpdated)
-              .catch((err) => window.alert(err.message));
+              .catch((err) => {
+                setDisabled(false);
+                window.alert(err.message);
+              });
           }}
         >
           <Done />
@@ -278,7 +281,10 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
             e.stopPropagation();
             e.preventDefault();
             saveBallkid(ballkid, { last_day: comments }, setUpdated)
-              .catch((err) => window.alert(err.message));
+              .catch((err) => {
+                setDisabled(false);
+                window.alert(err.message);
+              });
           }}
         >
           <Done />
