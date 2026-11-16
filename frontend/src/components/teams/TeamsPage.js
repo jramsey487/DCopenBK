@@ -232,10 +232,13 @@ export default function TeamsPage() {
           setPairs(Array.isArray(pairsData) ? pairsData : []);
         }
       )
-      .catch(() => {
-        if (!cancelled && !hadCache) {
-          setAssigned([]);
-          setShowTeams(false);
+      .catch((error) => {
+        if (!cancelled) {
+          window.alert(error.message);
+          if (!hadCache) {
+            setAssigned([]);
+            setShowTeams(false);
+          }
         }
       })
       .finally(() => {
