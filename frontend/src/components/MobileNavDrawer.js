@@ -9,6 +9,7 @@ import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
 import { getAuthHeader, getLocalStorage } from "./Utils";
 import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
+import { clearApiCache } from "./api";
 import {
   NavIconRoster,
   NavIconTeams,
@@ -278,6 +279,7 @@ export default function MobileNavDrawer({ group, setToken }) {
     if (group !== "ticketing") {
       removeDeviceSubscriptionOnLogout();
     }
+    clearApiCache();
     setToken("");
     localStorage.clear();
   };
