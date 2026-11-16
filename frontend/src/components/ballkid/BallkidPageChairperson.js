@@ -433,13 +433,13 @@ export function FinalsHistoryTable({ pk }) {
   const [analytics, setAnalytics] = useState([]);
 
   useEffect(() => {
-    fetch(`/api/get-finals-history/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setFinals(data));
+    api(`/api/get-finals-history/${pk}`)
+      .then((data) => setFinals(data))
+      .catch((error) => window.alert(error.message));
 
-    fetch(`/api/get-finals-analytics/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setAnalytics(data));
+    api(`/api/get-finals-analytics/${pk}`)
+      .then((data) => setAnalytics(data))
+      .catch((error) => window.alert(error.message));
   }, [pk]);
 
   return (
@@ -695,11 +695,9 @@ function RatingSection({ ballkid }) {
     : "ballkid";
 
   useEffect(() => {
-    fetch(`/api/calibration-parameters/${ballkid.id}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setParams(data));
+    api(`/api/calibration-parameters/${ballkid.id}`)
+      .then((data) => setParams(data))
+      .catch((error) => window.alert(error.message));
   }, [ballkid.id]);
 
   return (
@@ -1052,24 +1050,19 @@ export function AggregateMetrics({ pk }) {
   const isChairperson = getLocalStorage("group") === "chairperson";
 
   useEffect(() => {
-    fetch(`/api/get-checkin-court-analytics/${pk}`, {
-      headers: getAuthHeader(),
-    })
-      .then((data) => setMetrics(data));
+    api(`/api/get-checkin-court-analytics/${pk}`)
+      .then((data) => setMetrics(data))
+      .catch((error) => window.alert(error.message));
 
-    fetch(`/api/get-average-checkin-time/${pk}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setCheckinTimeMetrics(data));
+    api(`/api/get-average-checkin-time/${pk}`)
+      .then((data) => setCheckinTimeMetrics(data))
+      .catch((error) => window.alert(error.message));
 
     if (isChairperson) {
-      fetch("/api/get-average-court-leaderboard", {
-        headers: getAuthHeader(),
-      })
-        .then((response) => response.json())
+      api("/api/get-average-court-leaderboard")
         .then((data) => setAverages(data))
-        .then(() => setLoading(false));
+        .catch((error) => window.alert(error.message))
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -1205,15 +1198,7 @@ export default function BallkidPageChairperson(props) {
       setBallkid(null);
     }
 
-    fetch(`/api/get-ballkid/${pk}/${myBallkidId}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(String(response.status));
-        }
-        return response.json();
-      })
+    api(`/api/get-ballkid/${pk}/${myBallkidId}`)
       .then((data) => {
         if (attempt !== loadAttempt.current) {
           return;
@@ -1232,16 +1217,14 @@ export default function BallkidPageChairperson(props) {
         }
       });
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) =>
-        setTeams(Array.isArray(data?.teams) ? data.teams : [])
-      );
+    api("/api/calc-num-teams")
+      .then((data) => setTeams(Array.isArray(data?.teams) ? data.teams : []))
+      .catch((error) => window.alert(error.message));
 
-    fetch(`/api/get-cut-history/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/get-cut-history/${pk}`)
       .then((data) => setCuts(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [updated, pk, myBallkidId]);
 
   if (loadState === "no_link") {
