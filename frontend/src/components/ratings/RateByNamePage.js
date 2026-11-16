@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 
 import {
   LayoutButtons,
-  getAuthHeader,
   getLocalStorage,
   SearchAndFilter,
   filterBallkids,
   BallkidCard,
 } from "../Utils";
 import { rateByName, rateByNameNonchairperson } from "../HelpMessages";
+import { api } from "../api";
 import {
   RatingsPageShell,
   FilterTogglePill,
@@ -114,21 +114,16 @@ export default function RateByNamePage() {
   const pk = getLocalStorage("ballkid_id");
 
   useEffect(() => {
-    fetch("/api/list/" + pk, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
+    api("/api/list/" + pk)
       .then((data) => {
         setBallkids(data.filter((ballkid) => ballkid.is_cut === false));
         setMyTeam(data.filter((ballkid) => ballkid.id === pk)[0]?.current_team);
-      });
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
+      })
+      .catch((error) => window.alert(error.message));
+    api("/api/get-tournament")
       .then((data) => setTournamentShowTeams(data["show_teams"]))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [pk, updated]);
 
   const visibleBallkids = filterBallkids(
