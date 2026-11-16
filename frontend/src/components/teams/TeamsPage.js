@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import {
   CourtAssignment,
-  getAuthHeader,
   isCurrentHour,
   Banners,
   getLocalStorage,
@@ -23,6 +22,7 @@ import {
 } from "./CourtNote";
 import { TeamPositionPairs, fetchTeamPairs, mergePairsFromServer } from "./TeamPairs";
 import { cacheGet, cacheSet } from "../apiCache";
+import { api } from "../api";
 import "./teams-page.css";
 
 const ASSIGNED_CACHE = "teams:assigned";
@@ -192,19 +192,10 @@ export default function TeamsPage() {
     let cancelled = false;
 
     Promise.all([
-      fetch("/api/sorted-list", { headers: getAuthHeader() }).then((response) =>
-        response.json()
-      ),
-      fetch("/api/calc-num-teams", { headers: getAuthHeader() }).then(
-        (response) => response.json()
-      ),
-      fetch("/api/get-tournament", {
-        method: "GET",
-        headers: getAuthHeader(),
-      }).then((response) => response.json()),
-      fetch("/api/get-next-shifts", { headers: getAuthHeader() }).then(
-        (response) => response.json()
-      ),
+      api("/api/sorted-list"),
+      api("/api/calc-num-teams"),
+      api("/api/get-tournament"),
+      api("/api/get-next-shifts"),
       fetchCourtNotes(getToday()).catch(() => []),
       fetchTeamPairs().catch(() => []),
     ])
