@@ -18,10 +18,10 @@ import { DataGrid } from "@mui/x-data-grid";
 import {
   BallkidAndIcon,
   ConfirmDialog,
-  getAuthHeader,
   getCurrentYear,
 } from "../Utils";
 import { ratingsCaptainLeaderboard } from "../HelpMessages";
+import { api } from "../api";
 import { CHART_COLORS } from "../Consts";
 import { RaterParamsChart } from "../ballkid/RaterParamsChart";
 import {
@@ -36,9 +36,9 @@ function RaterParamsSection() {
   const [selected, setSelected] = useState([]);
 
   useEffect(() => {
-    fetch("/api/calibration-parameters", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setParams(data));
+    api("/api/calibration-parameters")
+      .then((data) => setParams(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   if (params === undefined || params === null) {
@@ -121,8 +121,7 @@ function FeedbackEmailsSection() {
   const [waiting, setWaiting] = useState(false);
 
   const load = useCallback(() => {
-    fetch(`/api/captain-feedback-emails/${year}`, { headers: getAuthHeader() })
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
+    api(`/api/captain-feedback-emails/${year}`)
       .then((payload) => {
         setData(payload);
         setError("");
@@ -130,7 +129,7 @@ function FeedbackEmailsSection() {
           setWaiting(false);
         }
       })
-      .catch(() => setError("Could not load the feedback email list."));
+      .catch((error) => setError(error.message));
   }, [year]);
 
   useEffect(() => {
@@ -264,10 +263,10 @@ export default function CaptainLeaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/get-captain-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-captain-leaderboard")
       .then((data) => setBallkids(data))
-      .then(() => setLoading(false));
+      .catch((error) => window.alert(error.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const columns = [
