@@ -12,6 +12,9 @@ class ApiConfig(AppConfig):
         # calibration path avoids per-rater/per-ratee ORM queries.
         from api.utils import rating_calibration_optimized
         from api.views import rating
+        from api.utils import analytics_cache
+
+        analytics_cache.install()
 
         rating.get_min_dates = rating_calibration_optimized.get_min_dates
         rating.save_rater_params = rating_calibration_optimized.save_rater_params

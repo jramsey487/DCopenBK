@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 
 import {
   LayoutButtons,
   SearchAndFilter,
   filterBallkids,
-  getAuthHeader,
   getLocalStorage,
   BallkidCard,
   HelpIcon,
   Banners,
 } from "../Utils";
+import { useApi } from "../api";
 import { list, listNonchairperson } from "../HelpMessages";
-import { cacheGet, cacheSet } from "../apiCache";
 import "./ballkid-list-by-name.css";
-
-const LIST_CACHE_KEY = "api:list";
 
 function activeBallkids(data) {
   return (Array.isArray(data) ? data : []).filter(
@@ -26,9 +24,10 @@ function activeBallkids(data) {
 }
 
 export default function BallkidList() {
-  const cached = cacheGet(LIST_CACHE_KEY);
-  const [ballkids, setBallkids] = useState(() =>
-    cached != null ? activeBallkids(cached) : null
+  const { data, error, loading, refetch } = useApi("/api/list", { ttl: 60000 });
+  const ballkids = useMemo(
+    () => (data === undefined ? null : activeBallkids(data)),
+    [data]
   );
 
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -38,30 +37,45 @@ export default function BallkidList() {
   const group = getLocalStorage("group");
   const filters = ["captain", "chairperson", "back", "net"];
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => {
-        cacheSet(LIST_CACHE_KEY, data);
-        if (!cancelled) {
-          setBallkids(activeBallkids(data));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setBallkids((prev) => (prev == null ? [] : prev));
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const filtered =
     ballkids == null ? [] : filterBallkids(ballkids, searchKeyword, filterGroup);
+
+  let body;
+  if (loading) {
+    body = <div className="ballkid-list-empty">Loading ballkids…</div>;
+  } else if (error && ballkids == null) {
+    body = (
+      <div className="ballkid-list-empty">
+        {error.message}{" "}
+        <Button size="small" onClick={refetch}>
+          Retry
+        </Button>
+      </div>
+    );
+  } else if (!ballkids || ballkids.length === 0) {
+    body = <div className="ballkid-list-empty">There are no ballkids to show.</div>;
+  } else {
+    body = (
+      <div
+        className={
+          layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
+        }
+      >
+        {filtered.map((ballkid) => (
+          <div className="ballkid-list-card-wrap" key={ballkid.id}>
+            <BallkidCard
+              ballkid={ballkid}
+              renderAdditional={
+                <Typography variant="body2" color="text.secondary">
+                  {ballkid.preferred_position}
+                </Typography>
+              }
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="page ballkid-list-page">
@@ -97,30 +111,7 @@ export default function BallkidList() {
         </div>
       </div>
 
-      {ballkids == null ? (
-        <div className="ballkid-list-empty">Loading ballkids…</div>
-      ) : ballkids.length === 0 ? (
-        <div className="ballkid-list-empty">There are no ballkids to show.</div>
-      ) : (
-        <div
-          className={
-            layout === "grid" ? "ballkid-list-grid" : "ballkid-list-stack"
-          }
-        >
-          {filtered.map((ballkid) => (
-            <div className="ballkid-list-card-wrap" key={ballkid.id}>
-              <BallkidCard
-                ballkid={ballkid}
-                renderAdditional={
-                  <Typography variant="body2" color="text.secondary">
-                    {ballkid.preferred_position}
-                  </Typography>
-                }
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      {body}
     </div>
   );
 }

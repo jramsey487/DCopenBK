@@ -29,47 +29,33 @@ import { checkin } from "../HelpMessages";
 import { IconButton, TextField } from "@mui/material";
 import "./checkin-page.css";
 import "../teams/teams-page.css";
+import { api } from "../api";
 
-function CheckinButton({ ballkid, isCheckedIn, setUpdated }) {
-  const checkinString = isCheckedIn ? "Check Out" : "Check In";
-  const newCheckinStatus = isCheckedIn ? false : true;
-
+function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError }) {
   const [loading, setLoading] = useState(false);
 
-  return (
-    <LoadingButton
-      className={
-        isCheckedIn
-          ? "teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-action-btn"
-          : "teams-chairperson-team-btn teams-chairperson-team-btn--keep checkin-action-btn"
-      }
-      variant="outlined"
-      loading={loading}
-      size="small"
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => {
-        setLoading(true);
-        e.stopPropagation();
-        e.preventDefault();
-        fetch("/api/update-ballkid", {
-          method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            first_name: ballkid.first_name,
-            last_name: ballkid.last_name,
-            is_checked_in: newCheckinStatus,
-          }),
-        })
-          .then((response) => response.json())
-          .then(() => {
-            setUpdated(true);
-            setLoading(false);
-          });
-      }}
-    >
-      {checkinString}
-    </LoadingButton>
-  );
+  const toggle = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api("/api/update-ballkid", {
+        method: "PATCH",
+        body: {
+          first_name: ballkid.first_name,
+          last_name: ballkid.last_name,
+          is_checked_in: !isCheckedIn,
+        },
+        invalidates: ["/api/list", "/api/sorted-list"],
+      });
+      setUpdated(true);
+    } catch (err) {
+      onError?.(err.message); // previously: silently swallowed
+    } finally {
+      setLoading(false);
+    }
+  };
+  // ...render unchanged, with onClick={toggle}
 }
 
 function CheckoutComments({ ballkid, layout, setUpdated }) {

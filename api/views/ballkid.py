@@ -33,6 +33,11 @@ from api.utils.teams_generator import TeamsGenerator
 from api.views.rating import run_calibration_and_save_params
 from accounts.views import UpdateCaptainStatus
 from api.models.shift_group import ShiftGroup
+from api.utils.analytics_cache import (
+    ensure_calibrated,
+    refresh_checkin_analytics,
+    refresh_court_analytics,
+)
 
 from datetime import timedelta, datetime
 import logging
@@ -1533,7 +1538,7 @@ class GetCheckinLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        recalc_checkin_analytics()
+        refresh_checkin_analytics()
         year = get_current_year()
 
         return (
@@ -1567,7 +1572,7 @@ class GetAverageCheckinLeaderboard(APIView):
 
     def get(self, request):
         year = get_current_year()
-        recalc_checkin_analytics()
+        refresh_checkin_analytics()
 
         averages = (
             Ballkid.objects.filter(is_active=True)
@@ -1604,7 +1609,7 @@ class GetRatingsCaptainLeaderboard(generics.ListAPIView):
 
     def get_queryset(self):
         year = get_current_year()
-        run_calibration_and_save_params(year)
+        ensure_calibrated(year)
 
         return (
             Ballkid.objects.filter(is_active=True)
@@ -1664,7 +1669,7 @@ class GetRatingsBallkidLeaderboard(generics.ListAPIView):
 
     def get_queryset(self):
         year = get_current_year()
-        run_calibration_and_save_params(year)
+        ensure_calibrated(year)
 
         return (
             Ballkid.objects.filter(is_active=True)
@@ -1715,8 +1720,8 @@ class GetCourtLeaderboard(generics.ListAPIView):
     serializer_class = BallkidSerializer
 
     def get_queryset(self):
-        recalc_court_analytics()
-        recalc_checkin_analytics()
+        refresh_court_analytics()
+        refresh_checkin_analytics()
 
         return annotate_durations(Ballkid.objects.filter(is_active=True)).order_by(
             "-court_duration"
@@ -1727,8 +1732,8 @@ class GetAverageCourtLeaderboard(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        recalc_court_analytics()
-        recalc_checkin_analytics()
+        refresh_court_analytics()
+        refresh_checkin_analytics()
 
         averages = annotate_durations(Ballkid.objects.filter(is_active=True)).aggregate(
             checkin_avg=Coalesce(Avg("checkin_duration"), timedelta()),
