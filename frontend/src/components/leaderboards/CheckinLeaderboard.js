@@ -16,6 +16,7 @@ import {
   getTimeStr,
 } from "../Utils";
 import { checkinLeaderboard } from "../HelpMessages";
+import { api } from "../api";
 import {
   LeaderboardShell,
   LeaderboardGridPanel,
