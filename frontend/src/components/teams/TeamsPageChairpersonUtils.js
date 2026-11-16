@@ -492,9 +492,9 @@ export function Header({
     if (!mode.showVisibilityToggle) {
       return;
     }
-    fetch("/api/get-tournament", { method: "GET", headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTournament(data));
+    api("/api/get-tournament")
+      .then((data) => setTournament(data))
+      .catch((error) => setErrorMsg(error.message));
   }, [mode.showVisibilityToggle]);
 
   if (mode.showVisibilityToggle && (tournament === null || tournament === undefined)) {
@@ -576,8 +576,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
     setSucceeded(false);
     pendingRefreshRef.current = false;
 
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) => {
         const checkedIn = (Array.isArray(data) ? data : []).filter(
           (ballkid) => ballkid.is_checked_in === true
@@ -591,7 +590,7 @@ function CreateTeamsDialog({ open, setOpen, setUpdated }) {
           )
         );
       })
-      .catch(() => {});
+      .catch((error) => setErrorMsg(error.message));
   }, [open]);
 
   const handleClose = () => {
