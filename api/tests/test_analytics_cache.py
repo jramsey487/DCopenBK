@@ -15,7 +15,7 @@ class AnalyticsCacheTests(SimpleTestCase):
 
     def test_ensure_fresh_runs_when_no_cached_timestamp_exists(self):
         ran = []
-        with patch("api.utils.analytics_cache.time.time", side_effect=[100, 100]):
+        with patch("api.utils.analytics_cache.time.time", return_value=100):
             self.assertTrue(
                 analytics_cache.ensure_fresh("checkin", lambda: ran.append(True))
             )
