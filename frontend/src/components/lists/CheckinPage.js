@@ -40,6 +40,8 @@ async function saveBallkid(ballkid, fields, setUpdated) {
 }
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError = (message) => window.alert(message) }) {
+  const checkinString = isCheckedIn ? "Check Out" : "Check In";
+  const newCheckinStatus = !isCheckedIn;
   const [loading, setLoading] = useState(false);
 
   const toggle = async (e) => {
@@ -52,20 +54,32 @@ function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError = (message) =
         body: {
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
-          is_checked_in: !isCheckedIn,
+          is_checked_in: newCheckinStatus,
         },
         invalidates: ["/api/list", "/api/sorted-list"],
       });
       setUpdated(true);
     } catch (err) {
-      onError?.(err.message); // previously: silently swallowed
+      onError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <LoadingButton loading={loading} variant="contained" size="small" onClick={toggle} className="checkin-action-btn">
-      {isCheckedIn ? "Check out" : "Check in"}
+    <LoadingButton
+      className={
+        isCheckedIn
+          ? "teams-chairperson-team-btn teams-chairperson-team-btn--checkout-team checkin-action-btn"
+          : "teams-chairperson-team-btn teams-chairperson-team-btn--keep checkin-action-btn"
+      }
+      variant="outlined"
+      loading={loading}
+      size="small"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={toggle}
+    >
+      {checkinString}
     </LoadingButton>
   );
 }
@@ -163,7 +177,10 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
             e.stopPropagation();
             e.preventDefault();
             saveBallkid(ballkid, { checkout_comments: comments }, setUpdated)
-              .catch((err) => window.alert(err.message));
+              .catch((err) => {
+                setDisabled(false);
+                window.alert(err.message);
+              });
           }}
         >
           <Done />
