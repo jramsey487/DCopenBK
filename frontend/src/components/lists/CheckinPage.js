@@ -12,7 +12,6 @@ import Done from "@mui/icons-material/Done";
 
 import {
   LayoutButtons,
-  getAuthHeader,
   getLocalStorage,
   SearchAndFilter,
   filterBallkids,
@@ -30,6 +29,15 @@ import { IconButton, TextField } from "@mui/material";
 import "./checkin-page.css";
 import "../teams/teams-page.css";
 import { api } from "../api";
+
+async function saveBallkid(ballkid, fields, setUpdated) {
+  await api("/api/update-ballkid", {
+    method: "PATCH",
+    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...fields },
+    invalidates: ["/api/list", "/api/sorted-list"],
+  });
+  setUpdated(true);
+}
 
 function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError }) {
   const [loading, setLoading] = useState(false);
@@ -55,7 +63,11 @@ function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError }) {
       setLoading(false);
     }
   };
-  // ...render unchanged, with onClick={toggle}
+  return (
+    <LoadingButton loading={loading} variant="contained" size="small" onClick={toggle} className="checkin-action-btn">
+      {isCheckedIn ? "Check out" : "Check in"}
+    </LoadingButton>
+  );
 }
 
 function CheckoutComments({ ballkid, layout, setUpdated }) {
@@ -103,17 +115,8 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
             setDisabled(true);
             e.stopPropagation();
             e.preventDefault();
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                checkout_comments: comments,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
+            saveBallkid(ballkid, { checkout_comments: comments }, setUpdated)
+              .catch((err) => window.alert(err.message));
           }}
         >
           <Done />
@@ -156,17 +159,8 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
             setDisabled(true);
             e.stopPropagation();
             e.preventDefault();
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                checkout_comments: comments,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
+            saveBallkid(ballkid, { checkout_comments: comments }, setUpdated)
+              .catch((err) => window.alert(err.message));
           }}
         >
           <Done />
@@ -219,17 +213,8 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
             setDisabled(true);
             e.stopPropagation();
             e.preventDefault();
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                last_day: comments,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
+            saveBallkid(ballkid, { last_day: comments }, setUpdated)
+              .catch((err) => window.alert(err.message));
           }}
         >
           <Done />
@@ -272,17 +257,8 @@ function LastDayComments({ ballkid, layout, setUpdated }) {
             setDisabled(true);
             e.stopPropagation();
             e.preventDefault();
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                last_day: comments,
-              }),
-            })
-              .then((response) => response.json())
-              .then(() => setUpdated(true));
+            saveBallkid(ballkid, { last_day: comments }, setUpdated)
+              .catch((err) => window.alert(err.message));
           }}
         >
           <Done />
@@ -453,8 +429,7 @@ export default function CheckinPage(props) {
   const loading = checkedIn == null || checkedOut == null;
 
   useEffect(() => {
-    fetch("/api/list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/list")
       .then((data) => {
         const list = Array.isArray(data) ? data : [];
         setCheckedIn(
@@ -470,7 +445,8 @@ export default function CheckinPage(props) {
           )
         );
       })
-      .catch(() => {
+      .catch((err) => {
+        window.alert(err.message);
         setCheckedIn((prev) => (prev == null ? [] : prev));
         setCheckedOut((prev) => (prev == null ? [] : prev));
       })
