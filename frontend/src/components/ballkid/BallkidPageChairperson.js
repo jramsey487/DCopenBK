@@ -39,6 +39,7 @@ import Close from "@mui/icons-material/Close";
 import Edit from "@mui/icons-material/Edit";
 
 import CaptainFeedbackSection from "../ratings/CaptainFeedbackSection";
+import { api } from "../api";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import { CourtHistoryChart } from "./CourtHistoryChart";
@@ -80,6 +81,14 @@ import {
   CHECKOUT_OPTIONS,
   LAST_DAY_OPTIONS,
 } from "../Consts";
+
+function updateBallkid(ballkid, fields) {
+  return api("/api/update-ballkid", {
+    method: "PATCH",
+    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...fields },
+    invalidates: ["/api/list", "/api/sorted-list"],
+  });
+}
 
 const CHAIR_TABS = [
   { id: "info", label: "Info" },
@@ -143,23 +152,7 @@ function useCheckinToggle(ballkid, setUpdated, setErrorMsg, setSuccessMsg) {
   const toggleCheckin = () => {
     setLoading(true);
     setErrorMsg("");
-    fetch("/api/update-ballkid", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        first_name: ballkid.first_name,
-        last_name: ballkid.last_name,
-        is_checked_in: !checkedIn,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.text().then((body) => {
-            throw new Error(body || String(response.status));
-          });
-        }
-        return response.json();
-      })
+    updateBallkid(ballkid, { is_checked_in: !checkedIn, })
       .then(() => {
         setSuccessMsg(
           checkedIn ? "Checked out successfully." : "Checked in successfully."
@@ -289,16 +282,7 @@ function renderPreferredPosition(ballkid, setBallkid) {
               setBallkid((prev) => ({ ...prev, preferred_position: pos }));
 
               // 2. Send the update to the backend silently
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  preferred_position: pos,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { preferred_position: pos, })
                 .catch(() => {
                   // Revert back if request fails
                   setBallkid((prev) => ({
@@ -350,16 +334,7 @@ function renderPosition(ballkid, setUpdated) {
             }}
             onClick={() => {
               if (isSelected) return;
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  position: pos,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { position: pos, })
                 .then(() => setUpdated(true));
             }}
           >
@@ -375,16 +350,7 @@ function renderTeam(ballkid, teams = [], setUpdated) {
   const currentTeam = ballkid.current_team || "";
 
   const handleTeamChange = (teamNum) => {
-    fetch("/api/update-ballkid", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        first_name: ballkid.first_name,
-        last_name: ballkid.last_name,
-        current_team: Number(teamNum),
-      }),
-    })
-      .then((response) => response.json())
+    updateBallkid(ballkid, { current_team: Number(teamNum), })
       .then(() => setUpdated(true));
   };
 
@@ -820,16 +786,7 @@ function ActiveOverflowMenu(props) {
           <MenuItem
             onClick={() => {
               setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_captain: false,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { is_captain: false, })
                 .then(() => props.setUpdated(true));
             }}
           >
@@ -842,16 +799,7 @@ function ActiveOverflowMenu(props) {
           <MenuItem
             onClick={() => {
               setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_captain: true,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { is_captain: true, })
                 .then(() => props.setUpdated(true));
             }}
           >
@@ -865,16 +813,7 @@ function ActiveOverflowMenu(props) {
         <MenuItem
           onClick={() => {
             setAnchorEl(null);
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                is_active: false,
-              }),
-            })
-              .then((response) => response.json())
+            updateBallkid(ballkid, { is_active: false, })
               .then(() => props.setUpdated(true));
           }}
         >
@@ -891,16 +830,7 @@ function ActiveOverflowMenu(props) {
           }}
           onClick={() => {
             setAnchorEl(null);
-            fetch("/api/update-ballkid", {
-              method: "PATCH",
-              headers: getAuthHeader(),
-              body: JSON.stringify({
-                first_name: ballkid.first_name,
-                last_name: ballkid.last_name,
-                is_cut: true,
-              }),
-            })
-              .then((response) => response.json())
+            updateBallkid(ballkid, { is_cut: true, })
               .then(() => props.setUpdated(true));
           }}
         >
@@ -950,16 +880,7 @@ function InactiveOverflowMenu(props) {
           <MenuItem
             onClick={() => {
               setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_cut: false,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { is_cut: false, })
                 .then(() => props.setUpdated(true));
             }}
           >
@@ -972,16 +893,7 @@ function InactiveOverflowMenu(props) {
           <MenuItem
             onClick={() => {
               setAnchorEl(null);
-              fetch("/api/update-ballkid", {
-                method: "PATCH",
-                headers: getAuthHeader(),
-                body: JSON.stringify({
-                  first_name: ballkid.first_name,
-                  last_name: ballkid.last_name,
-                  is_active: true,
-                }),
-              })
-                .then((response) => response.json())
+              updateBallkid(ballkid, { is_active: true, })
                 .then(() => props.setUpdated(true));
             }}
           >
@@ -1013,23 +925,9 @@ function DropdownComments({ ballkid, commentType, setSuccessMsg, setErrorMsg }) 
       ? { checkout_comments: newVal }
       : { last_day: newVal };
 
-    fetch("/api/update-ballkid", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        first_name: ballkid.first_name,
-        last_name: ballkid.last_name,
-        ...commentsBody,
-      }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          setSuccessMsg("Updated successfully!");
-        } else {
-          setErrorMsg("Error saving selection.");
-        }
-      })
-      .catch(() => setErrorMsg("Error saving selection."))
+    updateBallkid(ballkid, { ...commentsBody, })
+      .then(() => setSuccessMsg("Updated successfully!"))
+      .catch((error) => setErrorMsg(error.message))
       .finally(() => setLoading(false));
   };
 
@@ -1071,23 +969,13 @@ function Comments({ ballkid, setSuccessMsg, setErrorMsg }) {
   const commentsInput = useRef(null);
 
   const handleSave = () => {
-    fetch("/api/update-ballkid", {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        first_name: ballkid.first_name,
-        last_name: ballkid.last_name,
-        comments: comments,
-      }),
-    }).then((response) => {
-      if (response.ok) {
+    updateBallkid(ballkid, { comments })
+      .then(() => {
         setSuccessMsg("Comments saved!");
         setEditing(false);
         setSavedComments(comments);
-      } else {
-        setErrorMsg("Error saving comments.");
-      }
-    });
+      })
+      .catch((error) => setErrorMsg(error.message));
   };
 
   if (!editing) {
@@ -1167,7 +1055,6 @@ export function AggregateMetrics({ pk }) {
     fetch(`/api/get-checkin-court-analytics/${pk}`, {
       headers: getAuthHeader(),
     })
-      .then((response) => response.json())
       .then((data) => setMetrics(data));
 
     fetch(`/api/get-average-checkin-time/${pk}`, {
@@ -1477,16 +1364,7 @@ export default function BallkidPageChairperson(props) {
                       setBallkid((prev) => ({ ...prev, num_tickets: newTickets }));
 
                       // 2. Send background patch request
-                      fetch("/api/update-ballkid", {
-                        method: "PATCH",
-                        headers: getAuthHeader(),
-                        body: JSON.stringify({
-                          first_name: ballkid.first_name,
-                          last_name: ballkid.last_name,
-                          num_tickets: newTickets,
-                        }),
-                      })
-                        .then((response) => response.json())
+                      updateBallkid(ballkid, { num_tickets: newTickets, })
                         .catch(() => {
                           // Revert on error
                           setBallkid((prev) => ({ ...prev, num_tickets: ballkid.num_tickets }));
@@ -1506,16 +1384,7 @@ export default function BallkidPageChairperson(props) {
                       setBallkid((prev) => ({ ...prev, num_tickets: newTickets }));
 
                       // 2. Send the request to the backend silently in the background
-                      fetch("/api/update-ballkid", {
-                        method: "PATCH",
-                        headers: getAuthHeader(),
-                        body: JSON.stringify({
-                          first_name: ballkid.first_name,
-                          last_name: ballkid.last_name,
-                          num_tickets: newTickets,
-                        }),
-                      })
-                        .then((response) => response.json())
+                      updateBallkid(ballkid, { num_tickets: newTickets, })
                         .catch(() => {
                           // Optional: Revert local state if the server request fails
                           setBallkid((prev) => ({ ...prev, num_tickets: ballkid.num_tickets }));
