@@ -15,7 +15,6 @@ import RemoveCircleOutline from "@mui/icons-material/RemoveCircleOutline";
 
 import {
   filterBallkids,
-  getAuthHeader,
   SearchAndFilter,
   ConfirmDialog,
   Banners,
@@ -27,6 +26,7 @@ import {
   POSITIONS,
 } from "../Consts";
 import { cut } from "../HelpMessages";
+import { api } from "../api";
 import { DraggableBallkidRow, DraggableBallkidRowTwoColumns, sortBallkidsByBoardOrder } from "../BallkidChip";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import "../teams/teams-page.css";
@@ -104,18 +104,13 @@ export function patchCutBallkidInState(setActive, refetchActive, ballkid, patch)
     );
   });
 
-  fetch("/api/update-ballkid", {
+  api("/api/update-ballkid", {
     method: "PATCH",
-    headers: getAuthHeader(),
-    body: JSON.stringify({
-      first_name: ballkid.first_name,
-      last_name: ballkid.last_name,
-      ...patch,
-    }),
-  }).then((response) => {
-    if (!response.ok) {
-      refetchActive();
-    }
+    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...patch },
+    invalidates: ["/api/list", "/api/sorted-list"],
+  }).catch((error) => {
+    refetchActive();
+    window.alert(error.message);
   });
 }
 
