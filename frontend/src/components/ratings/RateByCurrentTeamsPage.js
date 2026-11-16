@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 import {
-  getAuthHeader,
   getLocalStorage,
   isCurrentHour,
   CourtAssignment,
@@ -11,6 +10,7 @@ import {
 } from "../Utils";
 import { POSITIONS } from "../Consts";
 import { rateByCurrentTeam } from "../HelpMessages";
+import { api } from "../api";
 import { TeamsPhotoToggle, personInitials } from "../teams/TeamsShared";
 import { RatingsPageShell, RateActionButton } from "./RatingsPageShared";
 
@@ -130,8 +130,7 @@ export default function RateByCurrentTeamsPage() {
   const group = getLocalStorage("group");
 
   useEffect(() => {
-    fetch("/api/sorted-list/" + pk + "?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list/" + pk + "?rank=0")
       .then((data) => {
         setAssigned(
           data.filter(
@@ -139,23 +138,21 @@ export default function RateByCurrentTeamsPage() {
               ballkid.is_checked_in === true && ballkid.current_team > 0
           )
         );
-      });
+      })
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setTeams(data["teams"]));
+    api("/api/calc-num-teams")
+      .then((data) => setTeams(data["teams"]))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-tournament", {
-      method: "GET",
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setShowTeams(data["show_teams"]));
+    api("/api/get-tournament")
+      .then((data) => setShowTeams(data["show_teams"]))
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-next-shifts")
       .then((data) => setNextShifts(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [pk, updated]);
 
   const myBallkidId = Number(pk);
