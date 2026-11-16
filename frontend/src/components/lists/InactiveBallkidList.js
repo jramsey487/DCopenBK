@@ -8,7 +8,6 @@ import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 
 import {
   LayoutButtons,
-  getAuthHeader,
   getLocalStorage,
   SearchAndFilter,
   filterBallkids,
@@ -17,6 +16,7 @@ import {
   Banners,
 } from "../Utils";
 import { inactive } from "../HelpMessages";
+import { api } from "../api";
 import "./ballkid-list-by-name.css";
 import "../teams/teams-page.css";
 
@@ -30,17 +30,13 @@ function renderUnarchiveButton(ballkid, setUpdated) {
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        fetch("/api/update-ballkid", {
+        api("/api/update-ballkid", {
           method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            first_name: ballkid.first_name,
-            last_name: ballkid.last_name,
-            is_active: true,
-          }),
+          body: { first_name: ballkid.first_name, last_name: ballkid.last_name, is_active: true },
+          invalidates: ["/api/list", "/api/sorted-list"],
         })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
+          .then(() => setUpdated(true))
+          .catch((err) => window.alert(err.message));
       }}
     >
       Un-archive
@@ -58,17 +54,13 @@ function renderUncutButton(ballkid, setUpdated) {
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        fetch("/api/update-ballkid", {
+        api("/api/update-ballkid", {
           method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            first_name: ballkid.first_name,
-            last_name: ballkid.last_name,
-            is_cut: false,
-          }),
+          body: { first_name: ballkid.first_name, last_name: ballkid.last_name, is_cut: false },
+          invalidates: ["/api/list", "/api/sorted-list"],
         })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
+          .then(() => setUpdated(true))
+          .catch((err) => window.alert(err.message));
       }}
     >
       Un-cut
