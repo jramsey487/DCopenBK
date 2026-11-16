@@ -47,7 +47,6 @@ import { RaterParamsChart } from "./RaterParamsChart";
 import { BallkidParamsChart } from "./BallkidParamsChart";
 
 import {
-  getAuthHeader,
   getBallkidId,
   getIsSuperuser,
   getLocalStorage,
