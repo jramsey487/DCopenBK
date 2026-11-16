@@ -4,13 +4,14 @@ import { Link as RouterLink } from "react-router-dom";
 import Button from "@mui/material/Button";
 import Shortcut from "@mui/icons-material/Shortcut";
 
-import { getAuthHeader, getBallkidId } from "../Utils";
+import { getBallkidId } from "../Utils";
 import {
   renderBallkidCutHistory,
   FinalsHistoryTable,
   AggregateMetrics,
 } from "./BallkidPageChairperson";
 import { CheckinHistoryChart } from "./CheckinHistoryChart";
+import { api } from "../api";
 import { CaptainHistoryChart } from "./CaptainHistoryChart";
 import {
   ProfilePageShell,
@@ -33,11 +34,9 @@ function RatingSection({ ballkid }) {
   const [params, setParams] = useState({});
 
   useEffect(() => {
-    fetch(`/api/calibration-parameters/${ballkid.id}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setParams(data));
+    api(`/api/calibration-parameters/${ballkid.id}`)
+      .then((data) => setParams(data))
+      .catch((error) => window.alert(error.message));
   }, [ballkid.id]);
 
   if (!ballkid.is_captain) {
@@ -107,12 +106,8 @@ export default function MyProfile(props) {
     let cancelled = false;
 
     Promise.all([
-      fetch("/api/get-ballkid/" + pk, { headers: getAuthHeader() }).then(
-        (response) => (response.ok ? response.json() : Promise.reject(response))
-      ),
-      fetch("/api/get-cut-history/" + pk, { headers: getAuthHeader() }).then(
-        (response) => (response.ok ? response.json() : [])
-      ),
+      api("/api/get-ballkid/" + pk),
+      api("/api/get-cut-history/" + pk).catch(() => []),
       fetchTournament(),
     ])
       .then(([ballkidData, cutsData, tournamentData]) => {
