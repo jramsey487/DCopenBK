@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import { DataGrid } from "@mui/x-data-grid";
 
 import {
-  getAuthHeader,
   getDurationStr,
   getLocalStorage,
   BallkidAndIcon,
@@ -16,9 +15,9 @@ export default function MatchLeaderboard(props) {
   const [checkinTimes, setCheckinTimes] = useState([]);
 
   useEffect(() => {
-    fetch("/api/get-checkin-times", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setCheckinTimes(data));
+    api("/api/get-checkin-times")
+      .then((data) => setCheckinTimes(data))
+      .catch((error) => window.alert(error.message));
   }, []);
 
   const columns = [
