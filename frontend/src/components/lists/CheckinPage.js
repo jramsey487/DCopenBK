@@ -39,7 +39,7 @@ async function saveBallkid(ballkid, fields, setUpdated) {
   setUpdated(true);
 }
 
-function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError }) {
+function CheckinButton({ ballkid, isCheckedIn, setUpdated, onError = (message) => window.alert(message) }) {
   const [loading, setLoading] = useState(false);
 
   const toggle = async (e) => {
@@ -116,7 +116,10 @@ function CheckoutComments({ ballkid, layout, setUpdated }) {
             e.stopPropagation();
             e.preventDefault();
             saveBallkid(ballkid, { checkout_comments: comments }, setUpdated)
-              .catch((err) => window.alert(err.message));
+              .catch((err) => {
+                setDisabled(false);
+                window.alert(err.message);
+              });
           }}
         >
           <Done />
