@@ -9,7 +9,8 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat, getAuthHeader } from "../Utils";
+import { getTimeFloat } from "../Utils";
+import { api } from "../api";
 import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
@@ -18,9 +19,9 @@ export function CaptainHistoryChart({ pk }) {
   const [histories, setHistories] = useState([]);
 
   useEffect(() => {
-    fetch(`/api/get-captains/${pk}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then((data) => setHistories(data));
+    api(`/api/get-captains/${pk}`)
+      .then((data) => setHistories(data))
+      .catch((error) => window.alert(error.message));
   }, [pk]);
 
   const labels = histories.map(
