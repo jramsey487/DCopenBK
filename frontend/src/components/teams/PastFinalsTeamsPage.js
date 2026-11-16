@@ -73,7 +73,10 @@ export default function PastFinalsTeamsPage() {
     setLoading(true);
     api(`/api/get-past-finals/${year}`)
       .then((data) => setBallkids(Array.isArray(data) ? data : []))
-      .catch(() => setBallkids([]))
+      .catch((error) => {
+        window.alert(error.message);
+        setBallkids([]);
+      })
       .finally(() => setLoading(false));
   }, [year]);
 
