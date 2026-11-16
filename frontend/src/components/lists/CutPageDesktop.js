@@ -548,20 +548,20 @@ export default function CutPageDesktop(props) {
   );
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list")
       .then((data) =>
         setActive(
           data.filter((ballkid) => !ballkid.is_cut && !ballkid.is_chairperson)
         )
-      );
+      )
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/emails-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/emails-list")
       .then((data) => {
         setEmails(data["emails"]);
         setMissingEmails(data["missing"] || []);
-      });
+      })
+      .catch((error) => window.alert(error.message));
   }, [refreshKey]);
 
   return (
