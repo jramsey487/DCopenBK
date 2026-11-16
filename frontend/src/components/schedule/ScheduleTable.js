@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 import {
-  getAuthHeader,
   isCurrentScheduleSlot,
   isHalfHourSlot,
   dayHourToStr,
   ConfirmDialog,
 } from "../Utils";
+import { api } from "../api";
 import "./schedule-table.css";
 
 function TeamCell({ teamStr, hour, court, setUpdated }) {
@@ -26,17 +26,13 @@ function TeamCell({ teamStr, hour, court, setUpdated }) {
       onChange={(e) => {
         const next = e.target.value.replace(/[^\d]/g, "");
         setTeam(next);
-        fetch("/api/update-schedule", {
+        api("/api/update-schedule", {
           method: "PATCH",
-          headers: getAuthHeader(),
-          body: JSON.stringify({
-            hour,
-            court,
-            team: next,
-          }),
+          body: { hour, court, team: next },
+          invalidates: ["/api/get-schedule"],
         })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
+          .then(() => setUpdated(true))
+          .catch((error) => window.alert(error.message));
       }}
     />
   );
@@ -55,17 +51,13 @@ function CourtHeader({ court, date, setUpdated, canDelete }) {
     if (trimmed === court) {
       return;
     }
-    fetch("/api/update-court-name", {
+    api("/api/update-court-name", {
       method: "PATCH",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        date,
-        oldName: court,
-        newName: trimmed,
-      }),
+      body: { date, oldName: court, newName: trimmed },
+      invalidates: ["/api/get-schedule"],
     })
-      .then((response) => response.json())
-      .then(() => setUpdated(true));
+      .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message));
   };
 
   return (
@@ -119,26 +111,23 @@ function CourtHeader({ court, date, setUpdated, canDelete }) {
 
 function EditToolbar({ date, courts, setUpdated }) {
   const addHour = () => {
-    fetch("/api/add-hour", {
+    api("/api/add-hour", {
       method: "POST",
-      headers: getAuthHeader(),
-      body: JSON.stringify({
-        date,
-        num_courts: courts.length,
-      }),
+      body: { date, num_courts: courts.length },
+      invalidates: ["/api/get-schedule"],
     })
-      .then((response) => response.json())
-      .then(() => setUpdated(true));
+      .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message));
   };
 
   const deleteHour = () => {
-    fetch("/api/delete-hour", {
+    api("/api/delete-hour", {
       method: "DELETE",
-      headers: getAuthHeader(),
-      body: JSON.stringify({ date }),
+      body: { date },
+      invalidates: ["/api/get-schedule"],
     })
-      .then((response) => response.json())
-      .then(() => setUpdated(true));
+      .then(() => setUpdated(true))
+      .catch((error) => window.alert(error.message));
   };
 
   return (
@@ -169,13 +158,13 @@ function AddCourtButton({ date, setUpdated }) {
       type="button"
       className="sched-edit-add-court"
       onClick={() => {
-        fetch("/api/add-court", {
+        api("/api/add-court", {
           method: "POST",
-          headers: getAuthHeader(),
-          body: JSON.stringify({ date }),
+          body: { date },
+          invalidates: ["/api/get-schedule"],
         })
-          .then((response) => response.json())
-          .then(() => setUpdated(true));
+          .then(() => setUpdated(true))
+          .catch((error) => window.alert(error.message));
       }}
     >
       <span className="sched-edit-tool-icon" aria-hidden>
