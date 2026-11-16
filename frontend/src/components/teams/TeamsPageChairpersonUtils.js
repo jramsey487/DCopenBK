@@ -25,6 +25,7 @@ import Check from "@mui/icons-material/Check";
 import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 import {
+  getAuthHeader,
   Alerts,
   HideShowToggle,
   isCurrentHour,
