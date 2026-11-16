@@ -114,8 +114,7 @@ export default function InactiveBallkidList(props) {
   const filters = ["captain", "chairperson", "back", "net"];
 
   useEffect(() => {
-    fetch("/api/inactive-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/inactive-list")
       .then((data) => {
         setArchived(data.filter((ballkid) => ballkid.is_active === false));
         setCut(
@@ -124,7 +123,8 @@ export default function InactiveBallkidList(props) {
           )
         );
       })
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [updated]);
 
   return (
