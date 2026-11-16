@@ -7,7 +7,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
 import {
-  getAuthHeader,
   SearchAndFilter,
   filterBallkids,
   ConfirmDialog,
@@ -49,17 +48,17 @@ export function UnassignedPanel({
       if (monitor.didDrop()) {
         return;
       }
-      fetch("/api/update-ballkid", {
+      api("/api/update-ballkid", {
         method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
+        body: {
           first_name: ballkid.first_name,
           last_name: ballkid.last_name,
           ...mode.unassignPatch(),
-        }),
+        },
+        invalidates: ["/api/list", "/api/sorted-list"],
       })
-        .then((response) => response.json())
-        .then(() => setUpdated(true));
+        .then(() => setUpdated(true))
+        .catch((err) => window.alert(err.message));
     },
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
