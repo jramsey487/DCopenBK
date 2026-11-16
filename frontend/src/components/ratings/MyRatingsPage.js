@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-import { getAuthHeader, getLocalStorage } from "../Utils";
+import { getLocalStorage } from "../Utils";
+import { api } from "../api";
 import RatingsGrid from "./RatingsGrid";
 import { viewMyRatings, viewMyRatingsNonchairperson } from "../HelpMessages";
 import { RatingsPageShell, RatingsGridPanel } from "./RatingsPageShared";
@@ -13,10 +14,10 @@ export default function MyRatingsPage() {
   const group = getLocalStorage("group");
 
   useEffect(() => {
-    fetch(`/api/my-ratings/${ballkidId}`, { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api(`/api/my-ratings/${ballkidId}`)
       .then((data) => setRatings(data))
-      .then(() => setUpdated(false));
+      .then(() => setUpdated(false))
+      .catch((error) => window.alert(error.message));
   }, [ballkidId, updated]);
 
   return (
