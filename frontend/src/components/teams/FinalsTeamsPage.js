@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 import {
-  getAuthHeader,
   BallkidAndIcon,
   Banners,
   getLocalStorage,
@@ -11,6 +10,7 @@ import { finalsTeamsNonchairperson } from "../HelpMessages";
 import { PersonPhotoTile, TeamsPhotoToggle } from "./TeamsShared";
 import { TeamsPageTopBar } from "./TeamsChairpersonShared";
 import { cacheGet, cacheSet } from "../apiCache";
+import { api } from "../api";
 import "./teams-page.css";
 
 const ASSIGNED_CACHE = "finals-teams:assigned";
@@ -86,13 +86,8 @@ export default function FinalsTeamsPage() {
     let cancelled = false;
 
     Promise.all([
-      fetch("/api/sorted-list", { headers: getAuthHeader() }).then((response) =>
-        response.json()
-      ),
-      fetch("/api/get-tournament", {
-        method: "GET",
-        headers: getAuthHeader(),
-      }).then((response) => response.json()),
+      api("/api/sorted-list"),
+      api("/api/get-tournament"),
     ])
       .then(([listData, tournamentData]) => {
         if (cancelled) {
