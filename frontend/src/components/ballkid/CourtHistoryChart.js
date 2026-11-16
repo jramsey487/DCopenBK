@@ -11,7 +11,8 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { getTimeFloat, getAuthHeader, getLocalStorage } from "../Utils";
+import { getTimeFloat, getLocalStorage } from "../Utils";
+import { api } from "../api";
 import { CHART_COLORS } from "../Consts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
@@ -40,19 +41,15 @@ export function CourtHistoryChart({ pk }) {
   const isChairperson = getLocalStorage("group") === "chairperson";
 
   useEffect(() => {
-    fetch(`/api/get-checkin-court-analytics/${pk}`, {
-      headers: getAuthHeader(),
-    })
-      .then((response) => response.json())
-      .then((data) => setAnalytics(data));
+    api(`/api/get-checkin-court-analytics/${pk}`)
+      .then((data) => setAnalytics(data))
+      .catch((error) => window.alert(error.message));
 
     isChairperson
-      ? fetch("/api/get-average-court-leaderboard", {
-          headers: getAuthHeader(),
-        })
-          .then((response) => response.json())
+      ? api("/api/get-average-court-leaderboard")
           .then((data) => setAverages(data))
-          .then(() => setLoading(false))
+          .catch((error) => window.alert(error.message))
+          .finally(() => setLoading(false))
       : setLoading(false);
   }, [pk, isChairperson]);
 
