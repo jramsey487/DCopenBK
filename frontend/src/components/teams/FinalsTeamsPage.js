@@ -100,10 +100,13 @@ export default function FinalsTeamsPage() {
         setAssigned(nextAssigned);
         setShowFinalsTeams(nextShow);
       })
-      .catch(() => {
-        if (!cancelled && !hadCache) {
-          setAssigned([]);
-          setShowFinalsTeams(false);
+      .catch((error) => {
+        if (!cancelled) {
+          window.alert(error.message);
+          if (!hadCache) {
+            setAssigned([]);
+            setShowFinalsTeams(false);
+          }
         }
       })
       .finally(() => {
