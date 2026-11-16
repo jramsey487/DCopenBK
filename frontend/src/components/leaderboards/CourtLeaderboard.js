@@ -17,6 +17,7 @@ import {
   toPercent,
 } from "../Utils";
 import { courtLeaderboard } from "../HelpMessages";
+import { api } from "../api";
 import {
   LeaderboardShell,
   LeaderboardGridPanel,
