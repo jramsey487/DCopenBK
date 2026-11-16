@@ -99,7 +99,7 @@ class TicketLotteryInvariantTests(TicketInvariantTestCase):
             sorted([S.CONFIRMED, S.CONFIRMED, S.WAITLIST]),
         )
         self.assertEqual(
-            Ballkid.objects.filter(ticket__ticket_session=session, ticket__status=S.CONFIRMED)
+            Ballkid.objects.filter(ticket_set__ticket_session=session, ticket_set__status=S.CONFIRMED)
             .count(),
             2,
         )
