@@ -6,7 +6,6 @@ import Paper from "@mui/material/Paper";
 
 import {
   filterBallkids,
-  getAuthHeader,
   SearchAndFilter,
   Alerts,
   Banners,
@@ -14,6 +13,7 @@ import {
 import { patchCutBallkidInState, compareCutPageBallkids } from "./CutPageDesktop";
 import { CUT_STATUSES } from "../Consts";
 import { cut } from "../HelpMessages";
+import { api } from "../api";
 import { TeamsChairpersonPageHeader } from "../teams/TeamsChairpersonShared";
 import {
   CutMobileAssignTable,
@@ -114,17 +114,15 @@ export default function CutPageMobile() {
   );
 
   useEffect(() => {
-    fetch("/api/sorted-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list")
       .then((data) =>
         setActive(
           data.filter((ballkid) => !ballkid.is_cut && !ballkid.is_chairperson)
         )
-      );
+      )
+      .catch((error) => window.alert(error.message));
 
-    fetch("/api/emails-list", { headers: getAuthHeader() })
-      .then((response) => response.json())
-      .then(() => {});
+    api("/api/emails-list").catch((error) => window.alert(error.message));
   }, [refreshKey]);
 
   return (
