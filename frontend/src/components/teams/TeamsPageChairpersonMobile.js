@@ -8,6 +8,7 @@ import {
   ActionsButtons,
 } from "./TeamsPageChairpersonUtils";
 import { courtNotesToMap, fetchCourtNotes } from "./CourtNote";
+import { api } from "../api";
 
 export default function TeamsPageChairpersonMobile(props) {
   const [assigned, setAssigned] = useState([]);
@@ -18,8 +19,7 @@ export default function TeamsPageChairpersonMobile(props) {
   const [courtNotes, setCourtNotes] = useState({});
 
   useEffect(() => {
-    fetch("/api/sorted-list?rank=0", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/sorted-list?rank=0")
       .then((data) => {
         setAssigned(
           data.filter(
@@ -35,12 +35,10 @@ export default function TeamsPageChairpersonMobile(props) {
         );
       });
 
-    fetch("/api/calc-num-teams", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/calc-num-teams")
       .then((data) => setTeams(data["teams"]));
 
-    fetch("/api/get-next-shifts", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-next-shifts")
       .then((data) => setNextShifts(data))
       .then(() => setUpdated(false));
 
