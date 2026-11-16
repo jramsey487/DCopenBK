@@ -4,7 +4,8 @@ import Box from "@mui/material/Box";
 
 import { DataGrid } from "@mui/x-data-grid";
 
-import { BallkidAndIcon, getAuthHeader } from "../Utils";
+import { BallkidAndIcon } from "../Utils";
+import { api } from "../api";
 import { ratingsBallkidLeaderboard } from "../HelpMessages";
 import {
   LeaderboardShell,
@@ -18,10 +19,10 @@ export default function BallkidLeaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/get-ballkid-leaderboard", { headers: getAuthHeader() })
-      .then((response) => response.json())
+    api("/api/get-ballkid-leaderboard")
       .then((data) => setBallkids(data))
-      .then(() => setLoading(false));
+      .catch((error) => window.alert(error.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const columns = [
