@@ -38,7 +38,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-# No OS-level build dependencies are needed for the pinned Python wheels.
+# Install the PostgreSQL 16 client tools. The production database is
+# PostgreSQL 16, so pg_dump/pg_restore must use the matching major version.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+    && install -d /usr/share/keyrings \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client-16 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies.
 COPY requirements.txt /tmp/requirements.txt
