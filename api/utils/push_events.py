@@ -152,7 +152,7 @@ def _notify_round_live(session_id):
         "title": "Ticket requests are open",
         "body": (
             f"Request tickets for {date_label} by "
-            f"{f"{closes.strftime('%I:%M %p').lstrip('0')} ET"}."
+            f"{closes.strftime('%I:%M %p').lstrip('0')} ET."
         ),
         "url": "/tickets",
         "tag": f"ticket-round-{session.id}",
