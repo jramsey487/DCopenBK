@@ -1,4 +1,4 @@
-from django.db.models import Value, Avg, F, StdDev
+from django.db.models import Q, Value, Avg, F
 from django.db.models.functions import Concat
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -10,32 +10,41 @@ from api.models.ballkid import *
 from api.utils.utils import *
 from api.utils.consts import *
 
+# Query-optimized implementations of the calibration bookkeeping. These used to
+# be defined here too and swapped in from ApiConfig.ready(); importing them
+# directly means there is only one copy of each function to maintain.
+# (ApiConfig.ready() still assigns them onto this module, which is now a no-op
+# and can be deleted.)
+from api.utils.rating_calibration_optimized import (
+    get_min_dates,
+    save_rater_params,
+    save_ratee_params,
+)
+
 from datetime import datetime
 from api.calibration import calibrate_parameters
 import networkx as nx
-import statistics
 import logging
 
 logger = logging.getLogger("api.rating")
 
 
-def get_min_dates(ratings):
-    """
-    For a queryset ratings, returns a dict mapping year to min_date in that year
-    """
-    years = set(ratings.values_list("date__year", flat=True))
-    return {
-        year: min([rating.date for rating in ratings.filter(date__year=year)])
-        for year in years
-    }
-
-
-def queryset_to_rcal(ratings, bucket_size=DAYS_PER_BUCKET, returnAveraged=True):
+def queryset_to_rcal(
+    ratings, bucket_size=DAYS_PER_BUCKET, returnAveraged=True, year=None
+):
     """
     Converts a Django queryset into the appropriate format for review calibration:
         Queryset of Rating objects => dict of (captain, ballkid, day) : rating
 
-    Returns the averaged rcal dict format
+    Returns the averaged rcal dict format.
+
+    year: the season being calibrated (defaults to the current calendar year).
+    That season's ratees keep their plain name as the key, because the saved
+    results (improvement, offset) are later looked up by plain name. Ratings
+    from every other season are keyed "<name>_<year>" so each season's version
+    of a ballkid is treated as a separate person. Previously this was always
+    the *current* year, so calibrating a past year saved no ratee improvement
+    or offset at all.
     """
     logger.info(f"[queryset_to_rcal] ratings {ratings}")
 
@@ -44,7 +53,8 @@ def queryset_to_rcal(ratings, bucket_size=DAYS_PER_BUCKET, returnAveraged=True):
         return {}
 
     rcal_dict = {}
-    current_year = get_current_year()
+    if year is None:
+        year = get_current_year()
     min_dates = get_min_dates(ratings)
     logger.info(f"[queryset_to_rcal] ratings {ratings} have min_dates {min_dates}")
 
@@ -56,7 +66,7 @@ def queryset_to_rcal(ratings, bucket_size=DAYS_PER_BUCKET, returnAveraged=True):
             rating.rater_name,
             (
                 rating.ratee_name
-                if rating.date.year == current_year
+                if rating.date.year == year
                 else f"{rating.ratee_name}_{rating.date.year}"
             ),
             mapped_date,
@@ -81,7 +91,14 @@ def remove_nonoverlapping_reviewers(data):
     Takes in review data. Outputs (new_data, excluded). new_data is the data
     that results in the largest connected graph of reviewers. excluded is the
     set of reviewers removed from the data in order to make new_data connected.
+
+    Ties between equally large groups of reviewers are broken
+    deterministically (alphabetically by first reviewer) instead of by set
+    iteration order, so the same ratings always produce the same calibration.
     """
+    if not data:
+        return {}, set()
+
     graph = {}
     for r, p, d in data:
         graph.setdefault(p, set()).add(r)
@@ -92,12 +109,11 @@ def remove_nonoverlapping_reviewers(data):
             for j in v:
                 g.add_edge(i, j)
 
-    # get largest connected component
-    con = nx.connected_components(g)
-    if not con:
-        return {}, {r for (r, p, d) in data}
-
-    con = max(con, key=len, default=[])
+    # largest connected component, ties broken by name
+    components = list(nx.connected_components(g))
+    if not components:
+        return {}, set()
+    con = sorted(components, key=lambda c: (-len(c), min(c)))[0]
 
     new_data = {(r, p, d): y for ((r, p, d), y) in data.items() if r in con}
     excluded = set(g.nodes).difference(con)
@@ -109,7 +125,7 @@ def remove_nonoverlapping_reviewers(data):
     return new_data, excluded
 
 
-def calibrate(ratings, year_ratings, tournament):
+def calibrate(ratings, year_ratings, tournament, year=None):
     ignore_outliers = tournament.rcal_ignore_outliers
     year_threshold = tournament.rcal_year_threshold
     bucket_size = tournament.rcal_bucket_size
@@ -119,11 +135,8 @@ def calibrate(ratings, year_ratings, tournament):
     logger.info(
         f"[calibrate] starting calibration for {len(train_ratings)} ratings and {len(year_ratings)} year_ratings"
     )
-    train = queryset_to_rcal(train_ratings, bucket_size, returnAveraged=True)
-    test = queryset_to_rcal(year_ratings, bucket_size, returnAveraged=False)
-
-    # test = queryset_to_rcal(year_ratings, rating_name, returnAveraged=False)
-    # train = {key: sum(val) / len(val) for key, val in test.items()}
+    train = queryset_to_rcal(train_ratings, bucket_size, returnAveraged=True, year=year)
+    test = queryset_to_rcal(year_ratings, bucket_size, returnAveraged=False, year=year)
 
     train, excluded = remove_nonoverlapping_reviewers(train)
 
@@ -152,65 +165,6 @@ def calibrate(ratings, year_ratings, tournament):
     return cp, excluded, None
 
 
-def save_rater_params(cp, year_ratings, year):
-    """
-    Save rater calibration parameters
-
-    Arguments:
-    cp: rcal cp object to represent calibration
-    year_ratings: complete and auto-excluded ratings from this year (excludes manually
-        excluded and draft ratings)
-    year: threshold above which a rater's ratings should be excluded
-    """
-    raters = set(year_ratings.values_list("rater", "rater_name"))
-
-    for rater_id, name in raters:
-        # ballkid = Ballkid.objects.get(id=rater_id)
-        # name = ballkid.get_name()
-
-        # Update all non-calibration related parameters
-        rater_ratings = year_ratings.filter(rater__id=rater_id)
-        # Use get_or_create + a targeted UPDATE so refreshing raw aggregates
-        # cannot overwrite existing calibration fields on this shared row.
-        params, _ = CalibrationParams.objects.get_or_create(
-            ballkid_id=rater_id,
-            year=year,
-        )
-        CalibrationParams.objects.filter(pk=params.pk).update(
-            num_rater_ratings=rater_ratings.count(),
-            rater_raw_avg=rater_ratings.aggregate(val=Avg("rating"))["val"],
-            rater_raw_stdev=rater_ratings.aggregate(val=StdDev("rating"))["val"],
-        )
-        logger.info(
-            f"[save_rater_params] Saved non-calibration params for {name} with params {params}"
-        )
-
-        # Update all calibration-related parameters
-        if cp is not None:
-            # distance to ideal is 1/(4.5) int_{.5}^5 (ax + b - x)**2, where a is scale, b is offset
-            a = cp.reviewer_scales().get(name)
-            b = cp.reviewer_offsets().get(name)
-            if a is None or b is None:
-                distance = None
-            else:
-                distance = (1 / 4) * (
-                    37 * a**2 + a * (22 * b - 74) + 4 * b**2 - 22 * b + 37
-                )
-
-            params, _ = CalibrationParams.objects.update_or_create(
-                ballkid_id=rater_id,
-                year=year,
-                defaults={
-                    "rater_scale": a,
-                    "rater_offset": b,
-                    "rater_distance_to_ideal": distance,
-                },
-            )
-            logger.info(
-                f"[save_rater_params] Saved calibration params for {name} with params {params}"
-            )
-
-
 def autoexclude(year_ratings, autoexclude_threshold, year):
     """
     Set ratings of raters with a current-season distance to ideal above the
@@ -231,88 +185,13 @@ def autoexclude(year_ratings, autoexclude_threshold, year):
     ratings_to_autoexclude = year_ratings.filter(rater__in=raters_to_autoexclude)
     num_updated = ratings_to_autoexclude.update(status=RATING_STATUS.AUTO_EXCLUDED)
     logger.info(
-        f"[autoexclude] Auto-excluded {len(ratings_to_autoexclude)} ratings, {num_updated} updated for raters: {raters_to_autoexclude}"
+        f"[autoexclude] Auto-excluded {num_updated} ratings for raters: {list(raters_to_autoexclude)}"
     )
 
     # Auto-include ratings of raters with dist < threshold
     ratings_to_include = year_ratings.exclude(rater__in=raters_to_autoexclude)
     num_updated = ratings_to_include.update(status=RATING_STATUS.COMPLETE)
-    logger.info(
-        f"[autoexclude] Auto-included {len(ratings_to_include)} ratings, {num_updated} updated"
-    )
-
-
-def save_ratee_params(cp, year_ratings_wo_excluded, year):
-    """
-    Save ratee calibration parameters
-
-    Arguments:
-    cp: rcal cp object to represent calibration
-    year_ratings_excluded: ONLY complete ratings from this year (excludes manually excluded,
-        auto-excluded, and draft ratings)
-    year: year
-    """
-    ballkids = Ballkid.objects.filter(is_active=True).values_list(
-        "id", Concat("first_name", Value(" "), "last_name")
-    )
-
-    for ballkid_id, name in ballkids:
-        # ballkid = Ballkid.objects.get(id=rater_id)
-        # name = ballkid.get_name()
-
-        # Update all non-calibration related parameters
-        ratee_ratings = year_ratings_wo_excluded.filter(ratee__id=ballkid_id)
-        unexcluded_raters = set(ratee_ratings.values_list("rater", flat=True))
-
-        # Reviewer and ratee statistics share CalibrationParams rows.
-        # A targeted UPDATE keeps reviewer calibration values intact when
-        # only the ratee's raw aggregates are being refreshed.
-        params, _ = CalibrationParams.objects.get_or_create(
-            ballkid_id=ballkid_id,
-            year=year,
-        )
-        CalibrationParams.objects.filter(pk=params.pk).update(
-            num_raters=len(unexcluded_raters),
-            num_ratee_ratings=ratee_ratings.count(),
-            ratee_raw_avg=ratee_ratings.aggregate(val=Avg("rating"))["val"],
-            ratee_raw_stdev=ratee_ratings.aggregate(val=StdDev("rating"))["val"],
-        )
-        logger.info(
-            f"[save_ratee_params] Saved non-calibration params for {name} with params {params}"
-        )
-
-        # Update all calibration-related parameters
-        if cp is not None:
-            ratee_ratings_calibrated = [
-                get_postprocessed_rating(cp, rating.rating, rating.rater_name)
-                for rating in ratee_ratings
-            ]
-
-            calibrated_avg = (
-                statistics.mean(ratee_ratings_calibrated)
-                if len(ratee_ratings_calibrated) > 0
-                else None
-            )
-            calibrated_stdev = (
-                statistics.stdev(ratee_ratings_calibrated)
-                if len(ratee_ratings_calibrated) > 1
-                else None
-            )
-
-            params, _ = CalibrationParams.objects.update_or_create(
-                ballkid=ballkid_id,
-                year=year,
-                defaults={
-                    "ratee_calibrated_avg": calibrated_avg,
-                    "ratee_calibrated_stdev": calibrated_stdev,
-                    "ratee_improvement": cp.improvement_rates().get(name),
-                    "ratee_offset": cp.person_offsets().get(name),
-                },
-            )
-
-            logger.info(
-                f"[save_ratee_params] Saved calibration params for {name} with params {params}"
-            )
+    logger.info(f"[autoexclude] Auto-included {num_updated} ratings")
 
 
 def get_postprocessed_rating(cp, rating, name):
@@ -357,11 +236,14 @@ def run_calibration_and_save_params(year):
     ## STEP 2: Train on all ratings with year > year_threshold and calibrate for year_ratings
     # Ratings with manually excluded status are excluded, otherwise complete and auto-excluded
     # ratings are included
-    (cp, excluded, failed_categories) = calibrate(ratings, year_ratings, tournament)
-
-    logger.warning(
-        f"[run_calibration_and_save] failed rating categories {failed_categories}"
+    (cp, excluded, failed_categories) = calibrate(
+        ratings, year_ratings, tournament, year=year
     )
+
+    if failed_categories is not None:
+        logger.warning(
+            f"[run_calibration_and_save] calibration failed: {failed_categories!r}"
+        )
 
     # A failed fit must never drive rating-status changes or overwrite
     # reviewer calibration parameters. In particular, do not let stale
@@ -576,25 +458,6 @@ class CalibratedRatings(APIView):
             for rating in year_ratings
         ]
 
-        # Chain multiple sorts to allow for one of them to be reversed but not the rest.
-        # When chaining multiple sorts, first sort is the least priority sort and last
-        # sort is the highest priority sort.
-        # postprocessed = sorted(
-        #     postprocessed,
-        #     key=lambda k: (
-        #         k["rater_name"].split(" ")[1],
-        #         k["rater_name"].split(" ")[0],
-        #     ),
-        # )
-        # postprocessed = sorted(postprocessed, key=lambda k: k["date"], reverse=True)
-        # postprocessed = sorted(
-        #     postprocessed,
-        #     key=lambda k: (
-        #         k["ratee_name"].split(" ")[-1],
-        #         k["ratee_name"].split(" ")[0],
-        #     ),
-        # )
-
         # If an rcal warning was thrown for the overall rating category
         if failed_categories is not None:
             logger.warning(
@@ -713,6 +576,5 @@ class DeleteRating(APIView):
         rating.status = RATING_STATUS.DELETED
         rating.save()
         logger.info(f"[DeleteRating] deleting rating {rating}")
-        # rating.delete()
 
         return Response(status=status.HTTP_200_OK)
