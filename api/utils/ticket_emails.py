@@ -54,7 +54,7 @@ def _session_date_display(option, session=None):
     ticket_date = option.ticket_date if option else (session.ticket_date if session else None)
     if ticket_date is None:
         return ""
-    return ticket_date.strftime("%A, %B %-d")
+    return f"{ticket_date.strftime('%A, %B')} {ticket_date.day}"
 
 
 def _session_display(option, session=None):
@@ -68,12 +68,15 @@ def _session_display(option, session=None):
 
 def _format_deadline_long(dt):
     local = as_et(dt)
-    return local.strftime("%-I:%M %p ET on %A, %B %-d")
+    return (
+        f"{local.strftime('%I:%M %p').lstrip('0')} ET on "
+        f"{local.strftime('%A, %B')} {local.day}"
+    )
 
 
 def _format_deadline_short(dt):
     local = as_et(dt)
-    return local.strftime("%-I:%M %p ET")
+    return f"{local.strftime('%I:%M %p').lstrip('0')} ET"
 
 
 def _tickets_remaining_display(ballkid):

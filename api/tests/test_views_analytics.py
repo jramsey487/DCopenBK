@@ -249,9 +249,7 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 9), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 9)): [
                     self.ballkid2.id,
                 ],
             },
@@ -338,15 +336,11 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 6), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 6)): [
                     self.ballkid1.id,
                     self.ballkid2.id,
                 ],
-                datetime.strftime(
-                    datetime(self.year, 4, 7), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [self.ballkid1.id],
+                format_weekday_month_day(datetime(self.year, 4, 7)): [self.ballkid1.id],
             },
             response.data,
         )
@@ -392,14 +386,10 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 6), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 6)): [
                     self.ballkid1.id,
                 ],
-                datetime.strftime(
-                    datetime(self.year, 4, 7), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [self.ballkid1.id],
+                format_weekday_month_day(datetime(self.year, 4, 7)): [self.ballkid1.id],
             },
             response.data,
         )
@@ -445,9 +435,7 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 6), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 6)): [
                     self.ballkid1.id,
                     self.ballkid2.id,
                 ],
@@ -494,9 +482,7 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 9), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 9)): [
                     self.ballkid2.id,
                 ],
             },
@@ -544,9 +530,7 @@ class TestGetPastTeams(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {
-                datetime.strftime(
-                    datetime(self.year, 4, 6), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [
+                format_weekday_month_day(datetime(self.year, 4, 6)): [
                     self.ballkid1.id,
                     self.ballkid2.id,
                 ]
