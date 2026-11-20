@@ -23,7 +23,12 @@ HYPHEN_YEAR_MONTH_DAY_FORMAT_STR = "%Y-%m-%d"
 T_YEAR_MONTH_DAY_FORMAT_STR = "%Y-%m-%dT%H:%M:%S"
 T_YEAR_MONTH_DAY_Z_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.000Z"
 SLASH_MONTH_DAY_YEAR_FORMAT_STR = "%m/%d/%Y"
-WEEKDAY_MONTH_DAY_FORMAT_STR = "%a, %b %-d"
+WEEKDAY_MONTH_DAY_FORMAT_STR = "%a, %b %d"
+
+
+def format_weekday_month_day(value):
+    """Format a weekday/month/day without platform-specific strftime flags."""
+    return f"{value.strftime('%a, %b')} {value.day}"
 YEAR_FORMAT_STR = "%Y"
 WEEKDAY_FORMAT_STR = "%A"
 HOUR_COLON_MINUTE_FORMAT_STR = "%H:%M"

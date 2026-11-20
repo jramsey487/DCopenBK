@@ -147,12 +147,12 @@ def _notify_round_live(session_id):
         return
 
     closes = as_et(session.closes_at)
-    date_label = session.ticket_date.strftime("%A, %B %-d")
+    date_label = f"{session.ticket_date.strftime('%A, %B')} {session.ticket_date.day}"
     payload = {
         "title": "Ticket requests are open",
         "body": (
             f"Request tickets for {date_label} by "
-            f"{closes.strftime('%-I:%M %p ET')}."
+            f"{f"{closes.strftime('%I:%M %p').lstrip('0')} ET"}."
         ),
         "url": "/tickets",
         "tag": f"ticket-round-{session.id}",

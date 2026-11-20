@@ -635,7 +635,7 @@ class TicketFlowTests(APITestCase):
             {"id": ticket.id},
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         ticket.refresh_from_db()
         self.assertEqual(ticket.status, TICKET_STATUS.CONFIRMED)
         self.assertEqual(ticket.num_granted, 1)
@@ -665,7 +665,7 @@ class TicketFlowTests(APITestCase):
             {"id": ticket.id},
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         ticket.refresh_from_db()
         self.assertEqual(ticket.status, TICKET_STATUS.CONFIRMED)
         self.assertEqual(ticket.num_granted, 1)
@@ -694,7 +694,7 @@ class TicketFlowTests(APITestCase):
             {"id": ticket.id},
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         ticket.refresh_from_db()
         self.assertEqual(ticket.status, TICKET_STATUS.CONFIRMED)
         self.assertEqual(ticket.num_granted, 1)
@@ -1103,7 +1103,7 @@ class TicketFlowTests(APITestCase):
         response = self.client.post(
             reverse("confirm-tickets"), {"accept": False}, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         night_ticket = Ticket.objects.get(ballkid=self.ballkid2, ticket_option=night)
         self.assertEqual(night_ticket.status, TICKET_STATUS.WAITLIST)
         self.assertEqual(

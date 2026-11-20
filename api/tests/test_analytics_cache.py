@@ -113,7 +113,7 @@ class CalibrationCacheTests(SimpleTestCase):
     @patch("api.views.rating.run_calibration_and_save_params")
     @patch("api.utils.analytics_cache.calibration_signature")
     def test_changed_signature_triggers_calibration(self, signature, calibrate):
-        signature.side_effect = [("first",), ("second",)]
+        signature.side_effect = [("first",), ("second",), ("second",)]
         calibrate.return_value = (object(), None, None)
 
         self.assertTrue(analytics_cache.ensure_calibrated(2026))
@@ -127,5 +127,16 @@ class CalibrationCacheTests(SimpleTestCase):
         calibrate.return_value = (None, None, RuntimeError("no calibration"))
 
         self.assertTrue(analytics_cache.ensure_calibrated(2026))
+        # A failed fit is throttled for the same input signature. It is not
+        # cached as a successful calibration, and changed inputs can retry.
+        self.assertFalse(analytics_cache.ensure_calibrated(2026))
+        self.assertEqual(calibrate.call_count, 1)
+        self.assertIsNone(cache.get(analytics_cache._k("calibration:2026", "sig")))
+        self.assertEqual(
+            cache.get(analytics_cache._k("calibration:2026", "failed")),
+            ("unchanged",),
+        )
+
+        signature.return_value = ("changed",)
         self.assertTrue(analytics_cache.ensure_calibrated(2026))
         self.assertEqual(calibrate.call_count, 2)

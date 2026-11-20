@@ -136,7 +136,7 @@ class ApplicationValidationMixin:
         if age_at_tournament < MINIMUM_AGE:
             raise serializers.ValidationError(
                 f"Applicants must be {MINIMUM_AGE} years old by the start of "
-                f"the tournament ({start_date:%B %-d, %Y})."
+                f"the tournament ({start_date:%B} {start_date.day}, {start_date.year})."
             )
         return value
 
