@@ -45,7 +45,7 @@ retention is 30 days.
 From the updated local repository, create one Fly scheduled Machine:
 
 ```powershell
-fly machine run . --app dcopenbk --region iad --schedule daily --command "python manage.py backup_database"
+fly machine run . python manage.py backup_database --app dcopenbk --region iad --schedule daily --restart no
 ```
 
 Fly starts the scheduled Machine for its first run and then approximately once
