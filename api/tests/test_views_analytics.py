@@ -340,9 +340,7 @@ class TestGetPastTeams(APITestCase):
                     self.ballkid1.id,
                     self.ballkid2.id,
                 ],
-                datetime.strftime(
-                    datetime(self.year, 4, 7), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [self.ballkid1.id],
+                format_weekday_month_day(datetime(self.year, 4, 7)): [self.ballkid1.id],
             },
             response.data,
         )
@@ -391,9 +389,7 @@ class TestGetPastTeams(APITestCase):
                 format_weekday_month_day(datetime(self.year, 4, 6)): [
                     self.ballkid1.id,
                 ],
-                datetime.strftime(
-                    datetime(self.year, 4, 7), WEEKDAY_MONTH_DAY_FORMAT_STR
-                ): [self.ballkid1.id],
+                format_weekday_month_day(datetime(self.year, 4, 7)): [self.ballkid1.id],
             },
             response.data,
         )
