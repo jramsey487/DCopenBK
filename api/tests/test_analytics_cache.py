@@ -113,7 +113,7 @@ class CalibrationCacheTests(SimpleTestCase):
     @patch("api.views.rating.run_calibration_and_save_params")
     @patch("api.utils.analytics_cache.calibration_signature")
     def test_changed_signature_triggers_calibration(self, signature, calibrate):
-        signature.side_effect = [("first",), ("second",), ("second",)]
+        signature.side_effect = [("first",), ("second",), ("second",), ("second",)]
         calibrate.return_value = (object(), None, None)
 
         self.assertTrue(analytics_cache.ensure_calibrated(2026))
