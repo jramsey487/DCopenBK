@@ -194,7 +194,7 @@ def _notify_lottery_results(session_id):
         else:
             info["waitlisted"] = True
 
-    date_label = session.ticket_date.strftime("%A, %B %-d")
+    date_label = f"{session.ticket_date.strftime('%A, %B')} {session.ticket_date.day}"
     for user, info in per_user.items():
         if info["granted"]:
             noun = "ticket" if info["granted"] == 1 else "tickets"
