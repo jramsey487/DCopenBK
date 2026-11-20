@@ -1,10 +1,8 @@
 import os
 import tempfile
 from datetime import timedelta
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from django.test import SimpleTestCase, override_settings
 from django.utils import timezone
 
@@ -14,7 +12,7 @@ from api.utils import database_backups as backups
 class BackupEncryptionTests(SimpleTestCase):
     def test_encrypt_decrypt_round_trip(self):
         key = os.urandom(32)
-        payload = (b"dcopenbk backup contents\x00" * 10000)
+        payload = b"dcopenbk backup contents\x00" * 10000
         with tempfile.TemporaryDirectory() as directory:
             source = os.path.join(directory, "source.dump")
             encrypted = os.path.join(directory, "source.dump.enc")
@@ -22,7 +20,8 @@ class BackupEncryptionTests(SimpleTestCase):
             with open(source, "wb") as stream:
                 stream.write(payload)
             backups.encrypt_file(source, encrypted, key)
-            self.assertNotEqual(open(source, "rb").read(), open(encrypted, "rb").read())
+            with open(source, "rb") as original, open(encrypted, "rb") as protected:
+                self.assertNotEqual(original.read(), protected.read())
             backups.decrypt_file(encrypted, restored, key)
             with open(restored, "rb") as stream:
                 self.assertEqual(stream.read(), payload)
@@ -52,13 +51,12 @@ class BackupEncryptionTests(SimpleTestCase):
         run.assert_not_called()
         download.assert_not_called()
 
-    def test_retention_only_deletes_objects_under_database_prefix(self):
-        now = timezone.now()
+    def _assert_retention_prunes_old_object(self, now, old_last_modified):
         client = MagicMock()
         paginator = client.get_paginator.return_value
         paginator.paginate.return_value = [{"Contents": [
-            {"Key": backups.BACKUP_PREFIX + "old.dump.enc", "LastModified": now - timedelta(days=31)},
-            {"Key": backups.BACKUP_PREFIX + "new.dump.enc", "LastModified": now - timedelta(days=2)},
+            {"Key": backups.BACKUP_PREFIX + "old.dump.enc", "LastModified": old_last_modified},
+            {"Key": backups.BACKUP_PREFIX + "new.dump.enc", "LastModified": backups._utc_aware(now) - timedelta(days=2)},
         ]}]
         deleted = backups.prune_backups(client, "bucket", retention_days=30, now=now)
         self.assertEqual(deleted, 1)
@@ -66,3 +64,22 @@ class BackupEncryptionTests(SimpleTestCase):
             Bucket="bucket",
             Delete={"Objects": [{"Key": backups.BACKUP_PREFIX + "old.dump.enc"}], "Quiet": True},
         )
+
+    def test_retention_handles_naive_django_time_and_aware_s3_time(self):
+        now = timezone.now().replace(tzinfo=None)
+        self._assert_retention_prunes_old_object(now, timezone.now() - timedelta(days=31))
+
+    def test_retention_handles_aware_django_time_and_naive_s3_time(self):
+        now = timezone.now()
+        self._assert_retention_prunes_old_object(now, (now - timedelta(days=31)).replace(tzinfo=None))
+
+    def test_retention_only_deletes_objects_under_database_prefix(self):
+        now = timezone.now()
+        client = MagicMock()
+        paginator = client.get_paginator.return_value
+        paginator.paginate.return_value = [{"Contents": [
+            {"Key": backups.BACKUP_PREFIX + "old.dump.enc", "LastModified": backups._utc_aware(now) - timedelta(days=31)},
+            {"Key": backups.BACKUP_PREFIX + "new.dump.enc", "LastModified": backups._utc_aware(now) - timedelta(days=2)},
+        ]}]
+        deleted = backups.prune_backups(client, "bucket", retention_days=30, now=now)
+        self.assertEqual(deleted, 1)

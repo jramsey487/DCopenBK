@@ -155,14 +155,21 @@ def list_backups(client=None, bucket=None):
     return objects
 
 
+def _utc_aware(value):
+    """Normalize Django and S3 timestamps before comparing retention dates."""
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=datetime_timezone.utc)
+    return value.astimezone(datetime_timezone.utc)
+
+
 def prune_backups(client=None, bucket=None, retention_days=30, now=None):
     client = client or r2_client()
     bucket = bucket or bucket_name()
-    cutoff = (now or timezone.now()) - timedelta(days=retention_days)
+    cutoff = _utc_aware(now or timezone.now()) - timedelta(days=retention_days)
     expired = [
         {"Key": item["Key"]}
         for item in list_backups(client, bucket)
-        if item.get("LastModified") and item["LastModified"] < cutoff
+        if item.get("LastModified") and _utc_aware(item["LastModified"]) < cutoff
     ]
     for offset in range(0, len(expired), 1000):
         client.delete_objects(Bucket=bucket, Delete={"Objects": expired[offset:offset + 1000], "Quiet": True})
