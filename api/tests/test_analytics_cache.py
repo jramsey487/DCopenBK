@@ -117,7 +117,7 @@ class CalibrationCacheTests(SimpleTestCase):
         calibrate.return_value = (object(), None, None)
 
         self.assertTrue(analytics_cache.ensure_calibrated(2026))
-        self.assertTrue(analytics_cache.ensure_calibrated(2026))
+        self.assertFalse(analytics_cache.ensure_calibrated(2026))
         self.assertEqual(calibrate.call_count, 2)
 
     @patch("api.views.rating.run_calibration_and_save_params")
