@@ -98,7 +98,7 @@ def is_female_ballkid(ballkid):
     applications = getattr(ballkid, "_team_generation_applications", None)
     if applications is None:
         applications = list(
-            ballkid.source_application.order_by("-submitted_at")[:1]
+            ballkid.source_application.order_by("-submitted_at", "-pk")[:1]
         )
     return bool(applications and applications[0].gender == "F")
 
@@ -369,9 +369,7 @@ class TeamsGenerator:
                 "source_application",
                 queryset=BallcrewApplication.objects.only(
                     "gender", "submitted_at", "promoted_ballkid_id"
-                ).order_by(
-                    "-submitted_at"
-                ),
+                ).order_by("-submitted_at", "-pk"),
                 to_attr="_team_generation_applications",
             )
         )
