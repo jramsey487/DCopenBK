@@ -1,8 +1,9 @@
 from api.models.ballkid import *
 from api.utils.consts import *
 
-from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch, Q
+
+from api.models.application import BallcrewApplication
 
 from datetime import date
 import math
@@ -87,17 +88,17 @@ def get_previous_teammates(ballkid_ids):
 
 
 def is_female_ballkid(ballkid):
-    """Return whether the ballkid's linked application identifies them as female.
+    """Return whether the ballkid's most recent linked application says female.
 
-    Gender is collected on BallcrewApplication, not on the legacy Ballkid
-    model. Older Ballkid records without a linked application are therefore
+    Gender is collected on BallcrewApplication, whose promoted_ballkid
+    relation is a ForeignKey (a returning ballkid can have multiple annual
+    applications). Older Ballkid records without a linked application are
     treated as unknown rather than guessed from a name or other attribute.
     """
-    try:
-        application = ballkid.source_application
-    except ObjectDoesNotExist:
-        return False
-    return application.gender == "F"
+    applications = getattr(ballkid, "_team_generation_applications", None)
+    if applications is None:
+        applications = ballkid.source_application.all().order_by("-submitted_at")
+    return bool(applications and applications[0].gender == "F")
 
 
 class Team:
@@ -358,10 +359,17 @@ class TeamsGenerator:
         - Finally go through all ballkids. Assign them to the smallest team at their preferred
         position or if that team is already maxed out, then the smallest team in general
         """
-        # Gender lives on the linked application. Select it up front so the
-        # coverage pass and Team.add_ballkid do not issue one query per person.
-        all = Ballkid.objects.filter(is_checked_in=True).select_related(
-            "source_application"
+        # Gender lives on linked applications (a returning ballkid can
+        # have multiple annual applications). Prefetch the latest application
+        # so team placement does not issue one query per person.
+        all = Ballkid.objects.filter(is_checked_in=True).prefetch_related(
+            Prefetch(
+                "source_application",
+                queryset=BallcrewApplication.objects.only("gender", "submitted_at").order_by(
+                    "-submitted_at"
+                ),
+                to_attr="_team_generation_applications",
+            )
         )
         max_ballkids_per_team = math.ceil(len(all) / len(self.teams))
 
