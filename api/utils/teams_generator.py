@@ -1,7 +1,9 @@
 from api.models.ballkid import *
 from api.utils.consts import *
 
-from django.db.models import Q
+from django.db.models import Prefetch, Q
+
+from api.models.application import BallcrewApplication
 
 from datetime import date
 import math
@@ -85,6 +87,22 @@ def get_previous_teammates(ballkid_ids):
     return previous_teammates
 
 
+def is_female_ballkid(ballkid):
+    """Return whether the ballkid's most recent linked application says female.
+
+    Gender is collected on BallcrewApplication, whose promoted_ballkid
+    relation is a ForeignKey (a returning ballkid can have multiple annual
+    applications). Older Ballkid records without a linked application are
+    treated as unknown rather than guessed from a name or other attribute.
+    """
+    applications = getattr(ballkid, "_team_generation_applications", None)
+    if applications is None:
+        applications = list(
+            ballkid.source_application.order_by("-submitted_at", "-pk")[:1]
+        )
+    return bool(applications and applications[0].gender == "F")
+
+
 class Team:
     def __init__(self, num):
         self.number = num
@@ -92,6 +110,7 @@ class Team:
         self.experienced = {position: [] for position in [POSITION.N, POSITION.B]}
         self.captain_ids = set()
         self.member_ids = set()
+        self.female_ids = set()
 
     def get_number(self):
         return self.number
@@ -108,6 +127,9 @@ class Team:
     def has_experienced(self, position):
         return len(self.experienced[position]) > 0
 
+    def has_female(self):
+        return bool(self.female_ids)
+
     def add_ballkid(self, ballkid):
         position = ballkid.position
 
@@ -122,6 +144,9 @@ class Team:
             or (ballkid.is_out_of_town and ballkid.num_years_experience > 0)
         ):
             self.experienced[position].append(ballkid)
+
+        if is_female_ballkid(ballkid):
+            self.female_ids.add(ballkid.id)
 
         if ballkid.is_captain:
             self.captain_ids.add(ballkid.id)
@@ -273,10 +298,13 @@ class TeamsGenerator:
         return smallest_position_team
 
     def get_team_without_experienced_position(
-        self, position, avoid_captain_ids=None, avoid_teammate_ids=None
+        self, position, avoid_captain_ids=None, avoid_teammate_ids=None,
+        restrict_to=None,
     ):
         candidate_teams = self.get_eligible_teams(
-            avoid_captain_ids, avoid_teammate_ids=avoid_teammate_ids
+            avoid_captain_ids,
+            avoid_teammate_ids=avoid_teammate_ids,
+            restrict_to=restrict_to,
         )
         eligible_teams = [
             team for team in candidate_teams if not team.has_experienced(position)
@@ -333,7 +361,18 @@ class TeamsGenerator:
         - Finally go through all ballkids. Assign them to the smallest team at their preferred
         position or if that team is already maxed out, then the smallest team in general
         """
-        all = Ballkid.objects.filter(is_checked_in=True)
+        # Gender lives on linked applications (a returning ballkid can
+        # have multiple annual applications). Prefetch the latest application
+        # so team placement does not issue one query per person.
+        all = Ballkid.objects.filter(is_checked_in=True).prefetch_related(
+            Prefetch(
+                "source_application",
+                queryset=BallcrewApplication.objects.only(
+                    "gender", "submitted_at", "promoted_ballkid_id"
+                ).order_by("-submitted_at", "-pk"),
+                to_attr="_team_generation_applications",
+            )
+        )
         max_ballkids_per_team = math.ceil(len(all) / len(self.teams))
 
         all_by_id = {b.id: b for b in all}
@@ -432,6 +471,50 @@ class TeamsGenerator:
 
                 # Increment team counter
                 team_counter = (team_counter + 1) % len(self.teams)
+
+        # Female coverage is a targeted placement pass after shift groups and
+        # captains have been fixed. Those assignments are never moved or split;
+        # girls already on those teams count toward coverage. Only flexible
+        # assignments are considered here, and the existing supervet/regular
+        # placement passes handle everyone left over exactly as before.
+        for candidate_pool in (supervets, ballkids):
+            for candidate in list(candidate_pool):
+                if not is_female_ballkid(candidate):
+                    continue
+
+                uncovered_teams = [
+                    team for team in self.teams if not team.has_female()
+                ]
+                if not uncovered_teams:
+                    break
+
+                avoid_captain_ids = previous_captains.get(candidate.id, set())
+                avoid_teammate_ids = previous_teammates.get(candidate.id, set())
+
+                # Keep the existing experienced-position preference for
+                # supervets, but constrain it to teams still needing a girl.
+                team = None
+                if candidate in supervets:
+                    team = self.get_team_without_experienced_position(
+                        candidate.position,
+                        avoid_captain_ids=avoid_captain_ids,
+                        avoid_teammate_ids=avoid_teammate_ids,
+                        restrict_to=uncovered_teams,
+                    )
+
+                # Otherwise use the same position/team-size balancing helper
+                # as the normal pass, limited to teams still needing coverage.
+                if team is None:
+                    team = self.get_smallest_team(
+                        candidate.position,
+                        max_size=max_ballkids_per_team,
+                        avoid_captain_ids=avoid_captain_ids,
+                        avoid_teammate_ids=avoid_teammate_ids,
+                        restrict_to=uncovered_teams,
+                    )
+
+                team.add_ballkid(candidate)
+                candidate_pool.remove(candidate)
 
         for supervet in supervets:
             avoid_captain_ids = previous_captains.get(supervet.id, set())
