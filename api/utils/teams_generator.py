@@ -97,7 +97,9 @@ def is_female_ballkid(ballkid):
     """
     applications = getattr(ballkid, "_team_generation_applications", None)
     if applications is None:
-        applications = ballkid.source_application.all().order_by("-submitted_at")
+        applications = list(
+            ballkid.source_application.order_by("-submitted_at")[:1]
+        )
     return bool(applications and applications[0].gender == "F")
 
 
@@ -365,7 +367,9 @@ class TeamsGenerator:
         all = Ballkid.objects.filter(is_checked_in=True).prefetch_related(
             Prefetch(
                 "source_application",
-                queryset=BallcrewApplication.objects.only("gender", "submitted_at").order_by(
+                queryset=BallcrewApplication.objects.only(
+                    "gender", "submitted_at", "promoted_ballkid_id"
+                ).order_by(
                     "-submitted_at"
                 ),
                 to_attr="_team_generation_applications",
