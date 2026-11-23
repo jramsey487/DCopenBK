@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime, date
 from django.db.models import Max
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -37,10 +38,12 @@ def parse_tournament_date(value):
 
 def get_days_shifts(param):
     if param == "":
-        date = datetime.now()
+        target_date = timezone.localdate()
     else:
-        date = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR)
-    start_hour = datetime(year=date.year, month=date.month, day=date.day, hour=8)
+        target_date = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR).date()
+    start_hour = timezone.make_aware(
+        datetime(year=target_date.year, month=target_date.month, day=target_date.day, hour=8)
+    )
     end_hour = start_hour + timedelta(days=1)
 
     return Schedule.objects.filter(start__gte=start_hour, start__lt=end_hour)
@@ -240,7 +243,7 @@ class UpdateCourtName(APIView):
                 shift.save()
 
         note_date = (
-            datetime.now().date()
+            timezone.localdate()
             if request.data["date"] == ""
             else datetime.strptime(
                 request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR
