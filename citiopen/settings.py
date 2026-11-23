@@ -50,8 +50,6 @@ ALLOWED_HOSTS = env.list(
         "127.0.0.1",
         "localhost",
         "dcopenbk.fly.dev",
-        "dcopenbk.com",
-        "www.dcopenbk.com",
     ],
 )
 
@@ -59,8 +57,6 @@ CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
     default=[
         "https://dcopenbk.fly.dev",
-        "https://dcopenbk.com",
-        "https://www.dcopenbk.com",
     ],
 )
 
@@ -195,7 +191,7 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
-DOMAIN = env.str("DOMAIN", default="dcopenbk.com")
+DOMAIN = env.str("DOMAIN", default="dcopenbk.fly.dev")
 SITE_BASE_URL = env.str("SITE_BASE_URL", default=f"https://{DOMAIN}")
 SITE_NAME = "Mubadala DC Open Ballcrew"
 DJOSER = {
