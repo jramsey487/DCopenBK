@@ -687,7 +687,7 @@ class CutHistory(models.Model):
 
 class CheckinHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
-    start = models.DateTimeField(default=datetime.now)
+    start = models.DateTimeField(default=timezone.now)
     end = models.DateTimeField(null=True)
     duration = models.DurationField(default=timedelta)
     is_first_checkin = models.BooleanField(default=True)
@@ -716,7 +716,7 @@ class CaptainHistory(models.Model):
     ballkid = models.ForeignKey(
         Ballkid, on_delete=models.CASCADE, related_name="captainhistory_ballkid"
     )
-    start = models.DateTimeField(default=datetime.now)
+    start = models.DateTimeField(default=timezone.now)
     end = models.DateTimeField(null=True)
     duration = models.DurationField(default=timedelta)
     team = models.IntegerField(default=0)
@@ -746,7 +746,7 @@ class CaptainAnalytics(models.Model):
 class TeamHistory(models.Model):
     ballkid = models.ForeignKey(Ballkid, on_delete=models.CASCADE)
     team = models.IntegerField(default=0)
-    start = models.DateTimeField(default=datetime.now)
+    start = models.DateTimeField(default=timezone.now)
     end = models.DateTimeField(null=True)
     duration = models.DurationField(default=timedelta)
 
