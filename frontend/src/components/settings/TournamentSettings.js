@@ -880,9 +880,9 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
 
         <p className="tournament-settings-create-note">
           Time zone: {timezoneName}. This is detected from the device creating the tournament and can be changed later.
-      </p>
-      <p className="tournament-settings-create-note">
-        Tryouts (optional -- you can also set these later).
+        </p>
+        <p className="tournament-settings-create-note">
+          Tryouts (optional -- you can also set these later).
         </p>
         <div className="tournament-settings-date-row">
           <TournamentDateField
@@ -967,7 +967,6 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   );
 }
 
-export default 
 function TournamentTimezone({ tournament, setUpdated, setSuccessMsg, setErrorMsg }) {
   const [value, setValue] = useState(tournament.timezone || "America/New_York");
   const [saving, setSaving] = useState(false);
@@ -1029,7 +1028,7 @@ function TournamentTimezone({ tournament, setUpdated, setSuccessMsg, setErrorMsg
   );
 }
 
-function TournamentSettings(props) {
+export default function TournamentSettings(props) {
   const [tournament, setTournament] = useState();
 
   const [successMsg, setSuccessMsg] = useState("");
