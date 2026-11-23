@@ -34,6 +34,7 @@ class CourtNote(models.Model):
 
 class Tournament(models.Model):
     year = models.IntegerField(default=0)
+    timezone = models.CharField(max_length=64, default="America/New_York")
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
 
