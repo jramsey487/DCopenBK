@@ -285,7 +285,8 @@ def recalc_captain_analytics(ballkid, now=None, year=None):
     logger.info(f"[recalc-captain-analytics] for ballkid {ballkid}")
 
     if now is None:
-        now = timezone.localtime()
+        now = timezone.now()
+    now = ensure_aware_datetime(now)
     if year is None:
         year = get_current_year()
 
@@ -549,7 +550,8 @@ def unassign_future_shifts(team, now=None):
         return
 
     if now is None:
-        now = timezone.localtime()
+        now = timezone.now()
+    now = ensure_aware_datetime(now)
 
     # Unassign all future shifts for this team
     remaining_shifts = Schedule.objects.filter(
