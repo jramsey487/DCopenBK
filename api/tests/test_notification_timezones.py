@@ -1,8 +1,6 @@
 from datetime import datetime, timezone as datetime_timezone
 
 from django.test import TestCase
-from zoneinfo import ZoneInfo
-
 from api.management.commands.send_notifications import Command, format_time
 from api.models.schedule import Tournament
 
