@@ -2,6 +2,7 @@ from datetime import timedelta, datetime, date
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from django.db.models import Max
 from django.utils import timezone
+from api.models.schedule import Schedule, Tournament
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -528,6 +529,11 @@ class GetTournament(APIView):
             if timezone_name is None:
                 return Response(
                     {"detail": "timezone must be a valid IANA timezone name (for example, America/New_York)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if timezone_name != tournament.timezone and Schedule.objects.exists():
+                return Response(
+                    {"detail": "The tournament time zone cannot be changed after shifts have been created. Set it before building the schedule."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             tournament.timezone = timezone_name
