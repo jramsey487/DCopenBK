@@ -83,6 +83,9 @@ class CreateSchedule(APIView):
             f"{request.data['date']} {request.data['start_hour']}",
             f"{SLASH_MONTH_DAY_YEAR_FORMAT_STR} {HOUR_COLON_MINUTE_FORMAT_STR}",
         )
+        start_hour = timezone.make_aware(
+            start_hour, timezone.get_current_timezone()
+        )
         num_teams = request.data["num_teams"]
         num_hours = request.data["num_hours"]
         num_courts = request.data["num_courts"]
@@ -208,6 +211,7 @@ class UpdateSchedule(APIView):
         try:
             hour = request.data["hour"]
             start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+            start = timezone.make_aware(start, timezone.get_current_timezone())
 
             court = request.data["court"].strip()
             raw_team = request.data["team"]
@@ -611,6 +615,7 @@ class ShiftSchedule(APIView):
     def patch(self, request, format=None):
         hour = request.data["hour"]
         start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+        start = timezone.make_aware(start, timezone.get_current_timezone())
         direction = request.data["direction"]
         step = timedelta(minutes=30)
 
