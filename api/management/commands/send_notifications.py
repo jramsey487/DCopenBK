@@ -84,8 +84,11 @@ class Command(BaseCommand):
                 self.stdout.write("Notification check skipped: teams are hidden from ballkids.")
             return True
 
-        shift_count = self.send_shift_reminders(now)
-        team_count = self.send_team_change_notifications(now)
+        # Calendar dates and human-readable shift times must follow the
+        # tournament, not the Fly machine or the individual worker's device.
+        with timezone.override(tournament.timezone):
+            shift_count = self.send_shift_reminders(now)
+            team_count = self.send_team_change_notifications(now)
 
         if verbose or shift_count or team_count:
             self.stdout.write(
