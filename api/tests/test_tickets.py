@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User, Group
 from django.test import override_settings
+from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
@@ -12,6 +13,7 @@ from api.utils.consts import TICKET_LIMIT
 from api.utils.tickets import (
     EASTERN,
     for_storage,
+    now_et,
     maybe_advance_session,
     remaining_tickets,
     run_lottery,
@@ -37,6 +39,14 @@ def _naive(dt):
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class TicketFlowTests(APITestCase):
+
+    def test_ticket_time_helpers_follow_active_tournament_timezone(self):
+        instant = datetime(2026, 7, 20, 16, 0, tzinfo=EASTERN)
+        with timezone.override("Europe/London"):
+            local = now_et(instant)
+            self.assertEqual(local.hour, 21)
+            self.assertEqual(local.tzinfo.key, "Europe/London")
+
     def setUp(self):
         self.now = datetime.now(EASTERN)
         self.ticket_date = (self.now + timedelta(days=1)).date()
