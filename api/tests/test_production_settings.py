@@ -23,6 +23,8 @@ class ProductionSettingsFailFastTests(SimpleTestCase):
             child_env.pop(name, None)
 
         child_env["DEBUG"] = "False"
+        # Prevent a developer's local .env from leaking into these isolated cases.
+        child_env["PYTHON_DOTENV_DISABLED"] = "true"
         child_env["PYTHONPATH"] = os.pathsep.join(
             filter(
                 None,
