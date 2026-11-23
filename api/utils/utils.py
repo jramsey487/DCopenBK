@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from api.utils.consts import *
 
 from datetime import datetime, timedelta, date
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger("api.utils")
@@ -20,7 +21,7 @@ def setup_testing_client(name="chairperson"):
 
 
 def get_current_year():
-    return datetime.now().year
+    return timezone.localdate().year
 
 
 def get_tournament_age_reference_date(year=None):
@@ -74,6 +75,19 @@ def get_last_name(full_name):
     return full_name.split(" ")[-1]
 
 
+def ensure_aware_datetime(value, current_timezone=None):
+    """Interpret legacy naive datetimes in the active timezone.
+
+    All datetimes returned from the ORM are aware when USE_TZ=True. This helper
+    keeps older internal callers that pass naive local datetimes compatible.
+    """
+    if value is None or timezone.is_aware(value):
+        return value
+    return timezone.make_aware(
+        value, current_timezone or timezone.get_current_timezone()
+    )
+
+
 def calc_overlapping_time(start1, end1, start2, end2):
     """
     Calculate overlapping time between 2 time ranges (defined by start and end datetimes).
@@ -88,6 +102,11 @@ def calc_overlapping_time(start1, end1, start2, end2):
     """
     if end1 is None or end2 is None:
         return timedelta()
+
+    start1 = ensure_aware_datetime(start1)
+    end1 = ensure_aware_datetime(end1)
+    start2 = ensure_aware_datetime(start2)
+    end2 = ensure_aware_datetime(end2)
 
     if end1 <= start2 or end2 <= start1:
         return timedelta()

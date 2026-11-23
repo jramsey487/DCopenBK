@@ -1,5 +1,8 @@
 from datetime import timedelta, datetime, date
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from django.db.models import Max
+from django.utils import timezone
+from api.models.schedule import Schedule, Tournament
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,6 +16,21 @@ from api.utils.utils import get_current_year, refresh_ballkid_ages
 import logging
 
 logger = logging.getLogger("api.schedule")
+
+
+DEFAULT_TOURNAMENT_TIMEZONE = "America/New_York"
+
+
+def parse_tournament_timezone(value):
+    """Return a valid IANA timezone name, or None for invalid/blank input."""
+    if not isinstance(value, str) or not value.strip() or len(value.strip()) > 64:
+        return None
+    name = value.strip()
+    try:
+        ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return None
+    return name
 
 
 def parse_tournament_date(value):
@@ -37,10 +55,12 @@ def parse_tournament_date(value):
 
 def get_days_shifts(param):
     if param == "":
-        date = datetime.now()
+        target_date = timezone.localdate()
     else:
-        date = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR)
-    start_hour = datetime(year=date.year, month=date.month, day=date.day, hour=8)
+        target_date = datetime.strptime(param, SLASH_MONTH_DAY_YEAR_FORMAT_STR).date()
+    start_hour = timezone.make_aware(
+        datetime(year=target_date.year, month=target_date.month, day=target_date.day, hour=8)
+    )
     end_hour = start_hour + timedelta(days=1)
 
     return Schedule.objects.filter(start__gte=start_hour, start__lt=end_hour)
@@ -63,6 +83,9 @@ class CreateSchedule(APIView):
         start_hour = datetime.strptime(
             f"{request.data['date']} {request.data['start_hour']}",
             f"{SLASH_MONTH_DAY_YEAR_FORMAT_STR} {HOUR_COLON_MINUTE_FORMAT_STR}",
+        )
+        start_hour = timezone.make_aware(
+            start_hour, timezone.get_current_timezone()
         )
         num_teams = request.data["num_teams"]
         num_hours = request.data["num_hours"]
@@ -189,6 +212,7 @@ class UpdateSchedule(APIView):
         try:
             hour = request.data["hour"]
             start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+            start = timezone.make_aware(start, timezone.get_current_timezone())
 
             court = request.data["court"].strip()
             raw_team = request.data["team"]
@@ -240,7 +264,7 @@ class UpdateCourtName(APIView):
                 shift.save()
 
         note_date = (
-            datetime.now().date()
+            timezone.localdate()
             if request.data["date"] == ""
             else datetime.strptime(
                 request.data["date"], SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -291,7 +315,7 @@ class CourtNotes(APIView):
     def get(self, request, format=None):
         param = request.query_params.get("date", "")
         if param == "":
-            note_date = datetime.now().date()
+            note_date = timezone.localdate()
         else:
             note_date = datetime.strptime(
                 param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -312,7 +336,7 @@ class CourtNotes(APIView):
             )
 
         if param == "":
-            note_date = datetime.now().date()
+            note_date = timezone.localdate()
         else:
             note_date = datetime.strptime(
                 param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -354,7 +378,7 @@ class EndCourt(APIView):
 
     def patch(self, request, format=None):
         court = request.data["court"]
-        now = datetime.now()
+        now = timezone.now()
 
         remaining_shifts = Schedule.objects.filter(
             court=court, start__gte=now, start__lt=now + timedelta(hours=12)
@@ -389,7 +413,7 @@ class GetNextShifts(APIView):
         10am are returned
         """
         # TODO: maybe change this to filter to unique teams
-        threshold = datetime.now() - timedelta(hours=1)
+        threshold = timezone.now() - timedelta(hours=1)
         shifts = (
             Schedule.objects.exclude(team=0)
             .filter(start__gt=threshold)
@@ -458,11 +482,20 @@ class GetTournament(APIView):
                 {"detail": tryout_error}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        timezone_name = request.data.get("timezone", DEFAULT_TOURNAMENT_TIMEZONE)
+        timezone_name = parse_tournament_timezone(timezone_name)
+        if timezone_name is None:
+            return Response(
+                {"detail": "timezone must be a valid IANA timezone name (for example, America/New_York)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         tournament, _ = Tournament.objects.update_or_create(
             year=request.data["year"],
             defaults={
                 "start_date": start,
                 "end_date": end,
+                "timezone": timezone_name,
                 **tryout_values,
             },
         )
@@ -490,6 +523,20 @@ class GetTournament(APIView):
             )
         for field, value in tryout_values.items():
             setattr(tournament, field, value)
+
+        if "timezone" in request.data:
+            timezone_name = parse_tournament_timezone(request.data["timezone"])
+            if timezone_name is None:
+                return Response(
+                    {"detail": "timezone must be a valid IANA timezone name (for example, America/New_York)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if timezone_name != tournament.timezone and Schedule.objects.exists():
+                return Response(
+                    {"detail": "The tournament time zone cannot be changed after shifts have been created. Set it before building the schedule."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tournament.timezone = timezone_name
 
         if "time" in request.data:
             timestamp = datetime.strptime(
@@ -574,6 +621,7 @@ class ShiftSchedule(APIView):
     def patch(self, request, format=None):
         hour = request.data["hour"]
         start = datetime.strptime(f"{hour}", T_YEAR_MONTH_DAY_FORMAT_STR)
+        start = timezone.make_aware(start, timezone.get_current_timezone())
         direction = request.data["direction"]
         step = timedelta(minutes=30)
 

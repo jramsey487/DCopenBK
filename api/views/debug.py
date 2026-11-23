@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -709,7 +710,7 @@ class DownloadData(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request, format=None):
-        today = datetime.strftime(datetime.now(), "%Y%m%d")
+        today = timezone.localdate().strftime("%Y%m%d")
 
         resource_list = [
             BallkidResource(),

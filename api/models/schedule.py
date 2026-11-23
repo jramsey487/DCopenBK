@@ -1,12 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from datetime import datetime
+from django.utils import timezone
 from api.utils.utils import *
 from api.models.enums import COURT
 
 
 class Schedule(models.Model):
-    start = models.DateTimeField(default=datetime.now)
+    start = models.DateTimeField(default=timezone.now)
     end = models.DateTimeField(blank=True, null=True)
     team = models.IntegerField(default=0)
     court = models.CharField(max_length=50, blank=True)
@@ -34,6 +34,7 @@ class CourtNote(models.Model):
 
 class Tournament(models.Model):
     year = models.IntegerField(default=0)
+    timezone = models.CharField(max_length=64, default="America/New_York")
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
 

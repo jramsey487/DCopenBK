@@ -22,6 +22,8 @@ from api.utils.rating_calibration_optimized import (
 )
 
 from datetime import datetime
+
+from django.utils import timezone
 from api.calibration import calibrate_parameters
 import networkx as nx
 import logging
@@ -352,7 +354,7 @@ class CreateRating(APIView):
             rater_id = serializer.data["rater"]
             ratee_id = serializer.data["ratee"]
             rating = Rating.objects.create(
-                created_at=datetime.now(),
+                created_at=timezone.now(),
                 rater_id=rater_id,
                 ratee_id=ratee_id,
                 date=serializer.data["date"],
@@ -408,7 +410,7 @@ class SaveDraftRating(APIView):
             rater_id=rater_id,
             ratee_id=ratee_id,
             defaults={
-                "created_at": datetime.now(),
+                "created_at": timezone.now(),
                 "date": datetime.strftime(date, HYPHEN_YEAR_MONTH_DAY_FORMAT_STR),
                 "rating": request.data["rating"],
                 "athleticism_rating": request.data["athleticism_rating"],

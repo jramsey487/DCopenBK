@@ -843,6 +843,9 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
   const [tryoutDate2, setTryoutDate2] = useState(null);
   const [tryoutPlace1, setTryoutPlace1] = useState("");
   const [tryoutPlace2, setTryoutPlace2] = useState("");
+  const [timezoneName] = useState(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"
+  );
 
   return (
     <div className="tournament-settings-create-grid">
@@ -875,6 +878,9 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
           <TournamentDateField label="End Date" value={end} onChange={setEnd} />
         </div>
 
+        <p className="tournament-settings-create-note">
+          Time zone: {timezoneName}. This is detected from the device creating the tournament and can be changed later.
+        </p>
         <p className="tournament-settings-create-note">
           Tryouts (optional -- you can also set these later).
         </p>
@@ -926,6 +932,7 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
               headers: getAuthHeader(),
               body: JSON.stringify({
                 year: year,
+                timezone: timezoneName,
                 start: localDateToIso(start),
                 end: localDateToIso(end),
                 // Optional; JSON.stringify drops the undefined ones.
@@ -957,6 +964,66 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
         Create Tournament
       </Button>
     </div>
+  );
+}
+
+function TournamentTimezone({ tournament, setUpdated, setSuccessMsg, setErrorMsg }) {
+  const [value, setValue] = useState(tournament.timezone || "America/New_York");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setValue(tournament.timezone || "America/New_York");
+  }, [tournament.timezone]);
+
+  const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  const dirty = value.trim() !== (tournament.timezone || "America/New_York");
+
+  return (
+    <section className="tournament-settings-card">
+      <h2 className="tournament-settings-section-title">Time zone</h2>
+      <p className="tournament-settings-create-note">
+        Scheduling, shift reminders, and deadlines use this time zone. Your device's time zone only affects how times are displayed on your own device. Set this before creating shifts; it cannot be changed after the schedule exists.
+        Detected on this device: {detected || "unavailable"}.
+      </p>
+      <div className="tournament-settings-date-row">
+        <TextField
+          label="IANA time zone"
+          variant="standard"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="America/New_York"
+          helperText="Example: America/New_York, Europe/London, or Asia/Tokyo"
+          sx={{ minWidth: 260, flex: 1 }}
+        />
+        <Button
+          size="small"
+          disabled={!dirty || saving || !value.trim()}
+          onClick={() => {
+            setSaving(true);
+            fetch("/api/get-tournament", {
+              method: "PATCH",
+              headers: getAuthHeader(),
+              body: JSON.stringify({ timezone: value.trim() }),
+            })
+              .then(async (response) => {
+                if (!response.ok) {
+                  const data = await response.json();
+                  throw new Error(data.detail || "Invalid time zone.");
+                }
+                setSuccessMsg("Tournament time zone updated.");
+                setErrorMsg("");
+                setUpdated(true);
+              })
+              .catch((error) => {
+                setSuccessMsg("");
+                setErrorMsg(error.message || "Error updating time zone.");
+              })
+              .finally(() => setSaving(false));
+          }}
+        >
+          {saving ? "Saving…" : "Save time zone"}
+        </Button>
+      </div>
+    </section>
   );
 }
 
@@ -1061,6 +1128,13 @@ export default function TournamentSettings(props) {
             </section>
 
             <TournamentDates
+              tournament={tournament}
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+
+            <TournamentTimezone
               tournament={tournament}
               setUpdated={setUpdated}
               setSuccessMsg={setSuccessMsg}
