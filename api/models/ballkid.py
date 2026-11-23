@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.db.models import Max, Q
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
@@ -103,7 +104,7 @@ class Ballkid(models.Model):
         logger.info(f"[handle_checkin_history] ballkid {self.id}, value {value}")
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -112,7 +113,7 @@ class Ballkid(models.Model):
 
         # If checking in, create new checkin history row
         if value:
-            now_date = (now - timedelta(hours=CHECKIN_START_HOUR)).date()
+            now_date = timezone.localtime(now - timedelta(hours=CHECKIN_START_HOUR)).date()
             is_first_checkin = (
                 CheckinHistory.objects.filter(
                     ballkid=self,
@@ -150,7 +151,7 @@ class Ballkid(models.Model):
         logger.info(f"[handle_team_history] ballkid {self.id}, value {value}")
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -191,7 +192,7 @@ class Ballkid(models.Model):
         logger.info(f"[handle_captain_history_team] ballkid {self.id}, value {value}")
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -294,7 +295,7 @@ class Ballkid(models.Model):
         )
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
 
         # If ballkid is unassigned, then do nothing because promotion/demotion doesn't
         # matter and will be handled when the ballkid is assigned to a team
@@ -351,7 +352,7 @@ class Ballkid(models.Model):
             # (assumed to be 10am) the following day. If a ballkid is cut at
             # 2am on Thursday, then it will indicate that the furthest day is
             # Wednesday (time does not matter for cut history)
-            now = datetime.now() - timedelta(hours=MATCHES_START_HOUR)
+            now = timezone.localtime(timezone.now()) - timedelta(hours=MATCHES_START_HOUR)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -388,7 +389,7 @@ class Ballkid(models.Model):
             return
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
         current_year = get_current_year()
 
         # Update or create finals history entry for the current year
@@ -412,7 +413,7 @@ class Ballkid(models.Model):
             return
 
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
         current_year = get_current_year()
 
         # Update or create finals history entry for the current year
@@ -427,7 +428,7 @@ class Ballkid(models.Model):
 
     def handle_finals_history_hideshow(self, value, now=None):
         if now is None:
-            now = datetime.now()
+            now = timezone.now()
         current_year = get_current_year()
 
         # If no finals team assigned to the ballkid, then don't
