@@ -21,6 +21,7 @@ from django.db.models import (
 )
 from django.db.models.functions import TruncDay, Coalesce, DenseRank, Concat
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from api.models.ballkid import *
 from api.models.rating import *
@@ -76,8 +77,10 @@ def get_todays_team_cohorts(num_teams):
     extra team, or anything a chairperson hand-edited via UpdateSchedule/
     ShiftSchedule/EndCourt).
     """
-    now = datetime.now()
-    start_of_day = datetime(year=now.year, month=now.month, day=now.day, hour=8)
+    today = timezone.localdate()
+    start_of_day = timezone.make_aware(
+        datetime(year=today.year, month=today.month, day=today.day, hour=8)
+    )
     end_of_day = start_of_day + timedelta(days=1)
 
     shifts = Schedule.objects.filter(
@@ -106,7 +109,7 @@ def recalc_checkin_analytics(ballkid=None, now=None, year=None):
     logger.info(f"[recalc-checkin-analytics] for ballkid {ballkid}")
 
     if now is None:
-        now = datetime.now()
+        now = timezone.now()
     if year is None:
         year = get_current_year()
 
@@ -143,10 +146,9 @@ def recalc_checkin_analytics(ballkid=None, now=None, year=None):
             )
             continue
 
-        day = datetime.strftime(
-            history.start - timedelta(hours=CHECKIN_START_HOUR),
-            HYPHEN_YEAR_MONTH_DAY_FORMAT_STR,
-        )
+        day = timezone.localtime(
+            history.start - timedelta(hours=CHECKIN_START_HOUR)
+        ).strftime(HYPHEN_YEAR_MONTH_DAY_FORMAT_STR)
         analytics[history.ballkid_id][0].add(day)
 
         end_time = history.end if history.end else now
