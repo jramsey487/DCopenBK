@@ -352,7 +352,7 @@ class CreateRating(APIView):
             rater_id = serializer.data["rater"]
             ratee_id = serializer.data["ratee"]
             rating = Rating.objects.create(
-                created_at=datetime.now(),
+                created_at=timezone.now(),
                 rater_id=rater_id,
                 ratee_id=ratee_id,
                 date=serializer.data["date"],
