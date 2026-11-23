@@ -153,12 +153,16 @@ if os.environ.get("GITHUB_WORKFLOW"):
         }
     }
 elif DEBUG:
-    DATABASES = {
-        "default": env.dj_db_url(
-            "DATABASE_URL",
-            default="postgres://iosue:password@localhost/citiopen",
-        )
-    }
+    LOCAL_DATABASE_URL = env.str("DATABASE_URL", default="").strip()
+    if LOCAL_DATABASE_URL:
+        DATABASES = {"default": env.dj_db_url("DATABASE_URL")}
+    else:
+        DATABASES = {
+            "default": env.dj_db_url(
+                "DATABASE_URL",
+                default="postgres://iosue:password@localhost/citiopen",
+            )
+        }
 else:
     DATABASE_URL = env.str("DATABASE_URL", default="").strip()
     if not DATABASE_URL:
