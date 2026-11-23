@@ -1,6 +1,7 @@
 import logging
 import time
 from datetime import timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError, close_old_connections
@@ -100,13 +101,27 @@ class Command(BaseCommand):
         return True
 
     def active_tournament(self, now):
-        """The current year's tournament if today is within its start/end dates."""
-        local_now = timezone.localtime(now)
-        tournament = Tournament.objects.filter(year=local_now.year).first()
-        if tournament is None or tournament.start_date is None or tournament.end_date is None:
-            return None
-        if tournament.start_date <= local_now.date() <= tournament.end_date:
-            return tournament
+        """Find the tournament whose own local calendar date is active."""
+        # A timezone far from UTC can be on a different calendar year around
+        # New Year's. Check adjacent years rather than assuming the server's
+        # configured TIME_ZONE determines the tournament year.
+        utc_year = now.year
+        default_year = timezone.localtime(now).year
+        candidate_years = {utc_year - 1, utc_year, utc_year + 1, default_year}
+        tournaments = Tournament.objects.filter(year__in=candidate_years)
+
+        for tournament in tournaments:
+            if tournament.start_date is None or tournament.end_date is None:
+                continue
+            try:
+                local_now = timezone.localtime(now, ZoneInfo(tournament.timezone))
+            except (ZoneInfoNotFoundError, ValueError):
+                continue
+            if (
+                local_now.year == tournament.year
+                and tournament.start_date <= local_now.date() <= tournament.end_date
+            ):
+                return tournament
         return None
 
     # ------------------------------------------------------------------
