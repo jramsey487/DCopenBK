@@ -1,8 +1,12 @@
 from datetime import datetime, timezone as datetime_timezone
 
 from django.test import TestCase
+from django.test import RequestFactory
+from django.utils import timezone
 from api.management.commands.send_notifications import Command, format_time
 from api.models.schedule import Tournament
+from api.middleware import TournamentTimezoneMiddleware
+from api.utils.utils import get_current_year
 
 
 class NotificationTimezoneTests(TestCase):
@@ -36,3 +40,25 @@ class NotificationTimezoneTests(TestCase):
         now = datetime(2027, 1, 1, 2, 0, tzinfo=datetime_timezone.utc)
 
         self.assertEqual(Command().active_tournament(now), tournament)
+
+
+
+class TournamentTimezoneMiddlewareTests(TestCase):
+    def test_request_uses_configured_tournament_timezone(self):
+        Tournament.objects.create(
+            year=get_current_year(),
+            start_date=datetime(2026, 1, 1).date(),
+            end_date=datetime(2026, 12, 31).date(),
+            timezone="Europe/London",
+        )
+        request = RequestFactory().get("/")
+        observed = {}
+
+        def get_response(_request):
+            observed["timezone"] = timezone.get_current_timezone_name()
+            return None
+
+        middleware = TournamentTimezoneMiddleware(get_response)
+        middleware(request)
+
+        self.assertEqual(observed["timezone"], "Europe/London")
