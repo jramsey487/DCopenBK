@@ -981,8 +981,7 @@ function TournamentTimezone({ tournament, setUpdated, setSuccessMsg, setErrorMsg
     <section className="tournament-settings-card">
       <h2 className="tournament-settings-section-title">Time zone</h2>
       <p className="tournament-settings-create-note">
-        Tournament schedules, shift reminders, and deadlines use this time zone.
-        Your device's time zone only affects how times are displayed on your own device.
+        Scheduling, shift reminders, and deadlines use this time zone. Your device's time zone only affects how times are displayed on your own device. Set this before creating shifts; it cannot be changed after the schedule exists.
         Detected on this device: {detected || "unavailable"}.
       </p>
       <div className="tournament-settings-date-row">
