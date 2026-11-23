@@ -1,4 +1,4 @@
-"""Ticket rounds, lottery, waitlist, and email helpers (America/New_York).
+"""Ticket rounds, lottery, waitlist, and email helpers (tournament-local time).
 
 A round is a TicketSession (one date's form). A session is a TicketOption
 (session #, day/night/all day, pool size) that ballkids pick on that form.
@@ -25,11 +25,17 @@ EASTERN = ZoneInfo("America/New_York")
 
 
 def now_et(now=None):
+    """Normalize a datetime to the active tournament timezone.
+
+    HTTP requests activate the tournament's IANA timezone in middleware.
+    Management commands without a tournament context fall back to settings.TIME_ZONE.
+    """
+    current_timezone = timezone.get_current_timezone()
     if now is None:
-        now = datetime.now(EASTERN)
+        now = timezone.now()
     if timezone.is_naive(now):
-        return now.replace(tzinfo=EASTERN)
-    return now.astimezone(EASTERN)
+        return timezone.make_aware(now, current_timezone)
+    return timezone.localtime(now, current_timezone)
 
 
 def for_storage(dt):
@@ -95,7 +101,7 @@ def default_winner_confirm_by(closes_at):
         local.day,
         TICKET_WINNER_CONFIRM_HOUR,
         0,
-        tzinfo=EASTERN,
+        tzinfo=timezone.get_current_timezone(),
     )
     if candidate <= local:
         candidate = candidate + timedelta(days=1)
