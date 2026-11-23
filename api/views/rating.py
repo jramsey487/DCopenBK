@@ -22,6 +22,8 @@ from api.utils.rating_calibration_optimized import (
 )
 
 from datetime import datetime
+
+from django.utils import timezone
 from api.calibration import calibrate_parameters
 import networkx as nx
 import logging
