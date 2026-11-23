@@ -70,7 +70,7 @@ class SeasonRolloverStatus(APIView):
         )
         export_done = bool(
             last_export
-            and datetime.now() - last_export.created_at
+            and timezone.now() - last_export.created_at
             < timedelta(days=EXPORT_FRESH_DAYS)
         )
 
