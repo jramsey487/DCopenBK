@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime, date
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from django.db.models import Max
 from django.utils import timezone
 from rest_framework import generics, status
@@ -14,6 +15,21 @@ from api.utils.utils import get_current_year, refresh_ballkid_ages
 import logging
 
 logger = logging.getLogger("api.schedule")
+
+
+DEFAULT_TOURNAMENT_TIMEZONE = "America/New_York"
+
+
+def parse_tournament_timezone(value):
+    """Return a valid IANA timezone name, or None for invalid/blank input."""
+    if not isinstance(value, str) or not value.strip() or len(value.strip()) > 64:
+        return None
+    name = value.strip()
+    try:
+        ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return None
+    return name
 
 
 def parse_tournament_date(value):
@@ -461,11 +477,20 @@ class GetTournament(APIView):
                 {"detail": tryout_error}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        timezone_name = request.data.get("timezone", DEFAULT_TOURNAMENT_TIMEZONE)
+        timezone_name = parse_tournament_timezone(timezone_name)
+        if timezone_name is None:
+            return Response(
+                {"detail": "timezone must be a valid IANA timezone name (for example, America/New_York)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         tournament, _ = Tournament.objects.update_or_create(
             year=request.data["year"],
             defaults={
                 "start_date": start,
                 "end_date": end,
+                "timezone": timezone_name,
                 **tryout_values,
             },
         )
@@ -493,6 +518,15 @@ class GetTournament(APIView):
             )
         for field, value in tryout_values.items():
             setattr(tournament, field, value)
+
+        if "timezone" in request.data:
+            timezone_name = parse_tournament_timezone(request.data["timezone"])
+            if timezone_name is None:
+                return Response(
+                    {"detail": "timezone must be a valid IANA timezone name (for example, America/New_York)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            tournament.timezone = timezone_name
 
         if "time" in request.data:
             timestamp = datetime.strptime(
