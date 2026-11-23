@@ -93,6 +93,8 @@ class ProductionSettingsFailFastTests(SimpleTestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("dcopenbk.fly.dev", result.stdout)
-        self.assertIn("https://dcopenbk.fly.dev", result.stdout)
-        self.assertIn("https://dcopenbk.fly.dev", result.stdout)
+        lines = result.stdout.splitlines()
+        self.assertEqual(lines[0], "dcopenbk.fly.dev")
+        self.assertEqual(lines[1], "https://dcopenbk.fly.dev")
+        self.assertIn("dcopenbk.fly.dev", lines[2].split(","))
+        self.assertIn("https://dcopenbk.fly.dev", lines[3].split(","))
