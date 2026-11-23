@@ -105,6 +105,7 @@ class Ballkid(models.Model):
 
         if now is None:
             now = timezone.now()
+        now = ensure_aware_datetime(now)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -152,6 +153,7 @@ class Ballkid(models.Model):
 
         if now is None:
             now = timezone.now()
+        now = ensure_aware_datetime(now)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -193,6 +195,7 @@ class Ballkid(models.Model):
 
         if now is None:
             now = timezone.now()
+        now = ensure_aware_datetime(now)
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
@@ -296,6 +299,7 @@ class Ballkid(models.Model):
 
         if now is None:
             now = timezone.now()
+        now = ensure_aware_datetime(now)
 
         # If ballkid is unassigned, then do nothing because promotion/demotion doesn't
         # matter and will be handled when the ballkid is assigned to a team
@@ -353,6 +357,8 @@ class Ballkid(models.Model):
             # 2am on Thursday, then it will indicate that the furthest day is
             # Wednesday (time does not matter for cut history)
             now = timezone.localtime(timezone.now()) - timedelta(hours=MATCHES_START_HOUR)
+        else:
+            now = timezone.localtime(ensure_aware_datetime(now))
 
         # If no change to field value (trying to set the field to the same as
         # the current value), then do nothing
