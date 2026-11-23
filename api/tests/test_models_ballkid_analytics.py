@@ -5,6 +5,10 @@ from api.models.schedule import *
 from datetime import datetime, timedelta
 
 
+def _aware(value):
+    return timezone.make_aware(value, timezone.get_current_timezone())
+
+
 class TestBallkidModelAnalytics(TestCase):
     def setUp(self):
         self.ballkid = Ballkid.objects.create(first_name="Lacy", last_name="Iosue")
