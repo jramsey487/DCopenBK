@@ -85,6 +85,67 @@ class TestGetTournament(APITestCase):
         ballkid.refresh_from_db()
         self.assertEqual(ballkid.age, 13)
 
+
+    def test_create_saves_detected_tournament_timezone(self):
+        response = self.client.post(
+            reverse("get-tournament"),
+            {
+                "year": self.year,
+                "start": "2026-07-18",
+                "end": "2026-07-26",
+                "timezone": "America/Los_Angeles",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year)
+        self.assertEqual(tournament.timezone, "America/Los_Angeles")
+        self.assertEqual(response.data["timezone"], "America/Los_Angeles")
+
+    def test_create_rejects_invalid_timezone(self):
+        response = self.client.post(
+            reverse("get-tournament"),
+            {
+                "year": self.year,
+                "start": "2026-07-18",
+                "end": "2026-07-26",
+                "timezone": "Mars/Olympus_Mons",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Tournament.objects.filter(year=self.year).exists())
+
+    def test_patch_updates_timezone(self):
+        Tournament.objects.create(
+            year=self.year,
+            start_date=date(2026, 7, 18),
+            end_date=date(2026, 7, 26),
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"timezone": "Europe/London"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year)
+        self.assertEqual(tournament.timezone, "Europe/London")
+
+    def test_patch_rejects_invalid_timezone_without_saving(self):
+        tournament = Tournament.objects.create(
+            year=self.year,
+            start_date=date(2026, 7, 18),
+            end_date=date(2026, 7, 26),
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"timezone": "Not/A_Real_Zone"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.timezone, "America/New_York")
+
     def test_rejects_inverted_range(self):
         response = self.client.post(
             reverse("get-tournament"),
