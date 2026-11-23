@@ -22,9 +22,11 @@ class ProductionSettingsFailFastTests(SimpleTestCase):
         for name in ("SECRET_KEY", "DATABASE_URL", "DEBUG", "GITHUB_WORKFLOW"):
             child_env.pop(name, None)
 
+        # Empty environment values override any matching values in a developer's
+        # local .env, keeping missing-variable cases deterministic.
+        child_env["SECRET_KEY"] = ""
+        child_env["DATABASE_URL"] = ""
         child_env["DEBUG"] = "False"
-        # Prevent a developer's local .env from leaking into these isolated cases.
-        child_env["PYTHON_DOTENV_DISABLED"] = "true"
         child_env["PYTHONPATH"] = os.pathsep.join(
             filter(
                 None,
