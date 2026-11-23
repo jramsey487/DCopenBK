@@ -1,3 +1,4 @@
+# Follows the latest notification-preferences migration on main.
 from django.db import migrations, models
 import django.utils.timezone
 
