@@ -19,7 +19,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 class ProductionSettingsFailFastTests(SimpleTestCase):
     def run_settings_code(self, code, overrides=None):
         child_env = os.environ.copy()
-        for name in ("SECRET_KEY", "DATABASE_URL", "DEBUG", "GITHUB_WORKFLOW"):
+        for name in ("SECRET_KEY", "DATABASE_URL", "DEBUG", "GITHUB_WORKFLOW", "DOMAIN", "SITE_BASE_URL", "ALLOWED_HOSTS", "CSRF_TRUSTED_ORIGINS"):
             child_env.pop(name, None)
 
         # Empty environment values override any matching values in a developer's
@@ -77,10 +77,12 @@ class ProductionSettingsFailFastTests(SimpleTestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_custom_domain_hosts_and_csrf_origins_are_allowed(self):
+    def test_fly_hostname_and_csrf_origin_are_allowed_and_canonical(self):
         result = self.run_settings_code(
             (
                 "import citiopen.settings as s; "
+                "print(s.DOMAIN); "
+                "print(s.SITE_BASE_URL); "
                 "print(','.join(s.ALLOWED_HOSTS)); "
                 "print(','.join(s.CSRF_TRUSTED_ORIGINS))"
             ),
@@ -91,7 +93,6 @@ class ProductionSettingsFailFastTests(SimpleTestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("dcopenbk.com", result.stdout)
-        self.assertIn("www.dcopenbk.com", result.stdout)
-        self.assertIn("https://dcopenbk.com", result.stdout)
-        self.assertIn("https://www.dcopenbk.com", result.stdout)
+        self.assertIn("dcopenbk.fly.dev", result.stdout)
+        self.assertIn("https://dcopenbk.fly.dev", result.stdout)
+        self.assertIn("https://dcopenbk.fly.dev", result.stdout)
