@@ -9,6 +9,7 @@ Returns {count, results, categories, actors}. `results` rows with count > 1
 
 from datetime import datetime, timedelta
 
+from django.utils import timezone
 from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -65,7 +66,7 @@ class ActionLogList(APIView):
 
         days = _int(params.get("days"), 0, 0, 3650)
         if days:
-            qs = qs.filter(created_at__gte=datetime.now() - timedelta(days=days))
+            qs = qs.filter(created_at__gte=timezone.now() - timedelta(days=days))
 
         q = (params.get("q") or "").strip()
         if q:
