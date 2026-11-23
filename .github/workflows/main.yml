@@ -13,6 +13,10 @@ jobs:
         os: [ubuntu-latest]
         python-version: ["3.10"]
 
+    # Non-production test key. The CI database is configured separately below.
+    env:
+      SECRET_KEY: "github-actions-test-key-not-for-production"
+
     services:
       postgres:
         image: postgres:latest
