@@ -30,6 +30,20 @@ class NotificationTimezoneTests(TestCase):
 
         self.assertEqual(Command().active_tournament(now), tournament)
 
+
+    def test_active_tournament_uses_tournament_timezone_at_year_boundary(self):
+        tournament = Tournament.objects.create(
+            year=2027,
+            start_date=datetime(2027, 1, 1).date(),
+            end_date=datetime(2027, 1, 2).date(),
+            timezone="Europe/London",
+        )
+        # London has crossed midnight, while the configured default zone
+        # (Eastern) and UTC are still on December 31.
+        now = datetime(2026, 12, 31, 23, 30, tzinfo=datetime_timezone.utc)
+
+        self.assertEqual(Command().active_tournament(now), tournament)
+
     def test_active_tournament_uses_eastern_year_at_new_year_boundary(self):
         tournament = Tournament.objects.create(
             year=2026,
