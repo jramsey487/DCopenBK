@@ -157,6 +157,9 @@ elif DEBUG:
     if LOCAL_DATABASE_URL:
         DATABASES = {"default": env.dj_db_url("DATABASE_URL")}
     else:
+        # An explicitly empty variable is not treated as "unset" by environs.
+        # Remove it so the documented local default can be applied.
+        os.environ.pop("DATABASE_URL", None)
         DATABASES = {
             "default": env.dj_db_url(
                 "DATABASE_URL",
