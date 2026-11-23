@@ -294,7 +294,7 @@ class CourtNotes(APIView):
     def get(self, request, format=None):
         param = request.query_params.get("date", "")
         if param == "":
-            note_date = datetime.now().date()
+            note_date = timezone.localdate()
         else:
             note_date = datetime.strptime(
                 param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -315,7 +315,7 @@ class CourtNotes(APIView):
             )
 
         if param == "":
-            note_date = datetime.now().date()
+            note_date = timezone.localdate()
         else:
             note_date = datetime.strptime(
                 param, SLASH_MONTH_DAY_YEAR_FORMAT_STR
@@ -357,7 +357,7 @@ class EndCourt(APIView):
 
     def patch(self, request, format=None):
         court = request.data["court"]
-        now = datetime.now()
+        now = timezone.now()
 
         remaining_shifts = Schedule.objects.filter(
             court=court, start__gte=now, start__lt=now + timedelta(hours=12)
@@ -392,7 +392,7 @@ class GetNextShifts(APIView):
         10am are returned
         """
         # TODO: maybe change this to filter to unique teams
-        threshold = datetime.now() - timedelta(hours=1)
+        threshold = timezone.now() - timedelta(hours=1)
         shifts = (
             Schedule.objects.exclude(team=0)
             .filter(start__gt=threshold)
