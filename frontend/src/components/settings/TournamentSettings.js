@@ -879,7 +879,10 @@ function CreateTournament({ setUpdated, setSuccessMsg, setErrorMsg }) {
         </div>
 
         <p className="tournament-settings-create-note">
-          Tryouts (optional -- you can also set these later).
+          Time zone: {timezoneName}. This is detected from the device creating the tournament and can be changed later.
+      </p>
+      <p className="tournament-settings-create-note">
+        Tryouts (optional -- you can also set these later).
         </p>
         <div className="tournament-settings-date-row">
           <TournamentDateField
