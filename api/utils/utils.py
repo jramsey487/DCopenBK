@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from api.utils.consts import *
 
 from datetime import datetime, timedelta, date
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger("api.utils")
@@ -20,7 +21,7 @@ def setup_testing_client(name="chairperson"):
 
 
 def get_current_year():
-    return datetime.now().year
+    return timezone.localdate().year
 
 
 def get_tournament_age_reference_date(year=None):
