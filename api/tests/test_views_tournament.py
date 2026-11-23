@@ -1,12 +1,13 @@
 from datetime import date
 
 from django.test import TestCase
+from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.models.ballkid import Ballkid
-from api.models.schedule import Tournament
+from api.models.schedule import Schedule, Tournament
 from api.utils.utils import get_current_year, setup_testing_client
 from api.views.schedule import parse_tournament_date
 
@@ -140,6 +141,23 @@ class TestGetTournament(APITestCase):
         response = self.client.patch(
             reverse("get-tournament"),
             {"timezone": "Not/A_Real_Zone"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.timezone, "America/New_York")
+
+
+    def test_timezone_cannot_change_after_shifts_exist(self):
+        tournament = Tournament.objects.create(
+            year=self.year,
+            start_date=date(2026, 7, 18),
+            end_date=date(2026, 7, 26),
+        )
+        Schedule.objects.create(start=timezone.now(), court="Stadium")
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"timezone": "Europe/London"},
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
