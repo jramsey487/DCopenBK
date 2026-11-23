@@ -175,7 +175,7 @@ def recalc_court_analytics(ballkid=None, now=None, year=None):
     logger.info(f"[recalc-court-analytics] for ballkid {ballkid}")
 
     if now is None:
-        now = datetime.now()
+        now = timezone.localtime()
     if year is None:
         year = get_current_year()
 
@@ -283,7 +283,7 @@ def recalc_captain_analytics(ballkid, now=None, year=None):
     logger.info(f"[recalc-captain-analytics] for ballkid {ballkid}")
 
     if now is None:
-        now = datetime.now()
+        now = timezone.localtime()
     if year is None:
         year = get_current_year()
 
@@ -547,7 +547,7 @@ def unassign_future_shifts(team, now=None):
         return
 
     if now is None:
-        now = datetime.now()
+        now = timezone.localtime()
 
     # Unassign all future shifts for this team
     remaining_shifts = Schedule.objects.filter(
@@ -632,7 +632,7 @@ class SelfCutList(generics.ListAPIView):
         # Update all ballkids who are self-cutting today to have
         # a cut status of self-cut
         current_day = datetime.strftime(
-            (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
+            (timezone.localtime() - timedelta(hours=MATCHES_START_HOUR)), "%A"
         )
         updated = Ballkid.objects.filter(
             is_active=True, is_cut=False, last_day=current_day
@@ -1010,7 +1010,7 @@ class CutAll(APIView):
 
         if self_cut:
             current_day = datetime.strftime(
-                (datetime.now() - timedelta(hours=MATCHES_START_HOUR)), "%A"
+                (timezone.localtime() - timedelta(hours=MATCHES_START_HOUR)), "%A"
             )
             queryset = Ballkid.objects.filter(
                 is_active=True, is_cut=False, last_day=current_day
