@@ -642,7 +642,10 @@ fly status -a dcopenbk
 
 Secrets (Django `SECRET_KEY`, `DATABASE_URL`, email password, R2 credentials,
 `ANTHROPIC_API_KEY`, `WEB_PUSH_VAPID_*`, etc.) are already configured on the Fly
-app. List them with:
+app. Production startup now fails fast if `SECRET_KEY` or `DATABASE_URL` is missing;
+it will not fall back to a known Django key or SQLite. The canonical site URL defaults
+to `https://dcopenbk.com`, and Django accepts both the apex and `www` hostnames plus
+the Fly hostname. List configured secret names (values are not shown) with:
 
 ```bash
 fly secrets list -a dcopenbk
