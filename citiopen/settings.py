@@ -26,19 +26,43 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-try:
-    SECRET_KEY = env.str("SECRET_KEY")
-except Exception:
-    SECRET_KEY = "django-insecure-b*0^h432^nk2szzgvi81q@kq5rqx4xi)=beyug=1$k=euallto"
-
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
+# DEBUG defaults to False so an unset value is production-safe.
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "dcopenbk.fly.dev"]
+# A development-only key keeps local setup convenient. Production must supply
+# SECRET_KEY explicitly; never silently start with a known fallback key.
+_DEVELOPMENT_SECRET_KEY = "django-insecure-local-development-only-not-for-production"
+SECRET_KEY = env.str("SECRET_KEY", default="").strip()
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = _DEVELOPMENT_SECRET_KEY
+    else:
+        from django.core.exceptions import ImproperlyConfigured
 
-CSRF_TRUSTED_ORIGINS = ["https://dcopenbk.fly.dev"]
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set in the environment when DEBUG=False."
+        )
+
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=[
+        "127.0.0.1",
+        "localhost",
+        "dcopenbk.fly.dev",
+        "dcopenbk.com",
+        "www.dcopenbk.com",
+    ],
+)
+
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "https://dcopenbk.fly.dev",
+        "https://dcopenbk.com",
+        "https://www.dcopenbk.com",
+    ],
+)
 
 # Application definition
 
@@ -113,19 +137,10 @@ WSGI_APPLICATION = "citiopen.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DEBUG should be set to False in production and True locally
-if DEBUG:
-    DATABASES = {
-        "default": env.dj_db_url(
-            "DATABASE_URL",
-            default="postgres://iosue:password@localhost/citiopen",
-        )
-    }
-else:
-    DATABASES = {
-        "default": env.dj_db_url("DATABASE_URL", default="sqlite:///db.sqlite3"),
-    }
-
+# Database configuration
+# GitHub Actions uses its dedicated PostgreSQL service. Local development may
+# use the documented local PostgreSQL default. Production must explicitly
+# provide DATABASE_URL; it must never fall back to SQLite.
 if os.environ.get("GITHUB_WORKFLOW"):
     DATABASES = {
         "default": {
@@ -137,6 +152,22 @@ if os.environ.get("GITHUB_WORKFLOW"):
             "PORT": "5432",
         }
     }
+elif DEBUG:
+    DATABASES = {
+        "default": env.dj_db_url(
+            "DATABASE_URL",
+            default="postgres://iosue:password@localhost/citiopen",
+        )
+    }
+else:
+    DATABASE_URL = env.str("DATABASE_URL", default="").strip()
+    if not DATABASE_URL:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured(
+            "DATABASE_URL must be set when DEBUG=False; refusing to use SQLite."
+        )
+    DATABASES = {"default": env.dj_db_url("DATABASE_URL")}
 
 
 # Password validation
@@ -157,7 +188,7 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
-DOMAIN = "dcopenbk.fly.dev"
+DOMAIN = env.str("DOMAIN", default="dcopenbk.com")
 SITE_BASE_URL = env.str("SITE_BASE_URL", default=f"https://{DOMAIN}")
 SITE_NAME = "Mubadala DC Open Ballcrew"
 DJOSER = {
