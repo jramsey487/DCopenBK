@@ -410,7 +410,7 @@ class SaveDraftRating(APIView):
             rater_id=rater_id,
             ratee_id=ratee_id,
             defaults={
-                "created_at": datetime.now(),
+                "created_at": timezone.now(),
                 "date": datetime.strftime(date, HYPHEN_YEAR_MONTH_DAY_FORMAT_STR),
                 "rating": request.data["rating"],
                 "athleticism_rating": request.data["athleticism_rating"],
