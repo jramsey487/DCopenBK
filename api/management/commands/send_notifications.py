@@ -1,10 +1,11 @@
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError, close_old_connections
 from django.db.models import F, Q
+from django.utils import timezone
 
 from api.models.ballkid import Ballkid, TeamHistory
 from api.models.notifications import NotificationDelivery
@@ -21,8 +22,8 @@ TEAM_CHANGE_MAX_AGE_MINUTES = 35
 
 
 def format_time(value):
-    """Format a schedule time using the project's existing local-time convention."""
-    return value.strftime("%I:%M %p").lstrip("0")
+    """Format an aware schedule timestamp in the configured local timezone."""
+    return timezone.localtime(value).strftime("%I:%M %p").lstrip("0")
 
 
 class Command(BaseCommand):
@@ -67,8 +68,10 @@ class Command(BaseCommand):
                 self.stdout.write("Notification check skipped: Web Push is not configured.")
             return False
 
-        # This project has USE_TZ disabled, so use naive local datetimes.
-        now = datetime.now()
+        # Django stores DateTimeField values as UTC-aware timestamps. Use an
+        # aware UTC clock for database comparisons; convert to local time only
+        # when deriving calendar dates or displaying a schedule time.
+        now = timezone.now()
         tournament = self.active_tournament(now)
         if tournament is None:
             if verbose:
@@ -95,10 +98,11 @@ class Command(BaseCommand):
 
     def active_tournament(self, now):
         """The current year's tournament if today is within its start/end dates."""
-        tournament = Tournament.objects.filter(year=now.year).first()
+        local_now = timezone.localtime(now)
+        tournament = Tournament.objects.filter(year=local_now.year).first()
         if tournament is None or tournament.start_date is None or tournament.end_date is None:
             return None
-        if tournament.start_date <= now.date() <= tournament.end_date:
+        if tournament.start_date <= local_now.date() <= tournament.end_date:
             return tournament
         return None
 
@@ -187,7 +191,7 @@ class Command(BaseCommand):
         minutes, and only after today's first shift has started (so the
         initial morning assignment stays quiet and only changes are announced).
         """
-        today = now.date()
+        today = timezone.localdate(now)
         first_shift = (
             Schedule.objects.filter(start__date=today)
             .exclude(team=0)
