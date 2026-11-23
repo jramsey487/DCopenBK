@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django.utils import timezone
 
 from api.models.schedule import Schedule
 from api.models.enums import COURT
@@ -13,7 +14,7 @@ from datetime import datetime, timedelta
 class TestShiftSchedule(APITestCase):
     def setUp(self):
         self.client = setup_testing_client()
-        self.start = datetime(2026, 8, 5, 11, 0, 0)
+        self.start = timezone.make_aware(datetime(2026, 8, 5, 11, 0, 0))
         self.hour_str = self.start.strftime(T_YEAR_MONTH_DAY_FORMAT_STR)
 
         Schedule.objects.create(
