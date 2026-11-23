@@ -110,6 +110,7 @@ def recalc_checkin_analytics(ballkid=None, now=None, year=None):
 
     if now is None:
         now = timezone.now()
+    now = ensure_aware_datetime(now)
     if year is None:
         year = get_current_year()
 
@@ -175,7 +176,8 @@ def recalc_court_analytics(ballkid=None, now=None, year=None):
     logger.info(f"[recalc-court-analytics] for ballkid {ballkid}")
 
     if now is None:
-        now = timezone.localtime()
+        now = timezone.now()
+    now = ensure_aware_datetime(now)
     if year is None:
         year = get_current_year()
 
