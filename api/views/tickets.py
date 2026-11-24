@@ -962,8 +962,11 @@ class RunTicketWaitlist(APIView):
 class UpdateTicketUsed(APIView):
     permission_classes = [IsChairpersonOrTicketing]
 
+    @transaction.atomic
     def patch(self, request, format=None):
-        ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
+        ballkid = get_object_or_404(
+            Ballkid.objects.select_for_update(), id=request.data.get("ballkidId")
+        )
         if "num_tickets" in request.data:
             try:
                 ballkid.num_tickets = max(0, int(request.data["num_tickets"]))
@@ -996,6 +999,7 @@ class UpdateTicketUsed(APIView):
 class UpdateTicket(APIView):
     permission_classes = [IsChairpersonOrTicketing]
 
+    @transaction.atomic
     def post(self, request, format=None):
         session = pick_current_session(
             ticket_date=_parse_ticket_date(request.data.get("ticket_date"))
@@ -1010,13 +1014,16 @@ class UpdateTicket(APIView):
                 {"detail": "No ticket round found."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        session = TicketSession.objects.select_for_update().get(pk=session.pk)
         if session.lottery_run_at:
             return Response(
                 {"detail": "Cannot add requests after the lottery has run."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
+        ballkid = get_object_or_404(
+            Ballkid.objects.select_for_update(), id=request.data.get("ballkidId")
+        )
         if not ballkid_eligible_for_tickets(ballkid):
             return Response(
                 {
@@ -1068,30 +1075,52 @@ class UpdateTicket(APIView):
         ticket = _create_ticket_request(session, ballkid, option, num)
         return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
+    @transaction.atomic
     def delete(self, request, format=None):
         ticket_id = request.data.get("id")
         if ticket_id:
             ticket = get_object_or_404(Ticket, id=ticket_id)
+            if ticket.ticket_session_id:
+                session = TicketSession.objects.select_for_update().get(
+                    pk=ticket.ticket_session_id
+                )
+            else:
+                session = None
+            ballkid = (
+                Ballkid.objects.select_for_update().filter(pk=ticket.ballkid_id).first()
+                if ticket.ballkid_id else None
+            )
+            ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
         else:
             session = pick_current_session(
                 ticket_date=_parse_ticket_date(request.data.get("ticket_date"))
             )
-            ballkid = get_object_or_404(Ballkid, id=request.data.get("ballkidId"))
+            if session is None:
+                return Response(
+                    {"detail": "Ticket not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            session = TicketSession.objects.select_for_update().get(pk=session.pk)
+            ballkid = get_object_or_404(
+                Ballkid.objects.select_for_update(), id=request.data.get("ballkidId")
+            )
             option_id = request.data.get("option_id") or request.data.get("optionId")
             qs = Ticket.objects.filter(ticket_session=session, ballkid=ballkid)
             if option_id:
                 qs = qs.filter(ticket_option_id=option_id)
-            ticket = qs.first()
+            ticket = qs.select_for_update().first()
             if ticket is None:
                 return Response(
                     {"detail": "Ticket not found."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-        if ticket.status == TICKET_STATUS.CONFIRMED and ticket.ballkid:
-            ticket.ballkid.num_tickets = max(
-                0, (ticket.ballkid.num_tickets or 0) - ticket.num_granted
+        if ticket.status == TICKET_STATUS.CONFIRMED and ticket.ballkid_id:
+            if ballkid is None:
+                ballkid = Ballkid.objects.select_for_update().get(pk=ticket.ballkid_id)
+            ballkid.num_tickets = max(
+                0, (ballkid.num_tickets or 0) - ticket.num_granted
             )
-            ticket.ballkid.save(update_fields=["num_tickets"])
+            ballkid.save(update_fields=["num_tickets"])
         ticket.delete()
         return Response({"Success": "Deleted ticket"})
