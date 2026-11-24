@@ -300,6 +300,7 @@ class TicketFlowTests(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        process_ticket_email_outbox()
         waitlisted.refresh_from_db()
         self.assertEqual(waitlisted.status, TICKET_STATUS.CONFIRMED)
         self.assertEqual(len(mail.outbox), 1)
