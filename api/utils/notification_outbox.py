@@ -20,7 +20,7 @@ from api.utils.push_notifications import send_push_to_user, web_push_configured
 logger = logging.getLogger("api.notifications")
 
 MAX_ATTEMPTS = 10
-LEASE_SECONDS = 90
+LEASE_SECONDS = 300
 BASE_RETRY_SECONDS = 30
 MAX_RETRY_SECONDS = 3600
 
@@ -81,13 +81,14 @@ def _claim_next_delivery():
         delivery.locked_until = now + timedelta(seconds=LEASE_SECONDS)
         delivery.attempts += 1
         delivery.save(update_fields=["status", "locked_until", "attempts"])
-        return delivery.pk
+        return delivery.pk, delivery.locked_until
 
 
-def _mark_sent(delivery_id):
+def _mark_sent(delivery_id, lease_until):
     NotificationDelivery.objects.filter(
         pk=delivery_id,
         status=NotificationDelivery.STATUS_PROCESSING,
+        locked_until=lease_until,
     ).update(
         status=NotificationDelivery.STATUS_SENT,
         sent_at=timezone.now(),
@@ -96,8 +97,12 @@ def _mark_sent(delivery_id):
     )
 
 
-def _mark_failed(delivery_id, error):
-    delivery = NotificationDelivery.objects.filter(pk=delivery_id).first()
+def _mark_failed(delivery_id, lease_until, error):
+    delivery = NotificationDelivery.objects.filter(
+        pk=delivery_id,
+        status=NotificationDelivery.STATUS_PROCESSING,
+        locked_until=lease_until,
+    ).first()
     if delivery is None:
         return
 
@@ -116,6 +121,7 @@ def _mark_failed(delivery_id, error):
     NotificationDelivery.objects.filter(
         pk=delivery_id,
         status=NotificationDelivery.STATUS_PROCESSING,
+        locked_until=lease_until,
     ).update(
         status=status,
         available_at=available_at,
@@ -131,9 +137,10 @@ def process_notification_outbox(limit=100):
 
     sent = 0
     for _ in range(max(0, limit)):
-        delivery_id = _claim_next_delivery()
-        if delivery_id is None:
+        claim = _claim_next_delivery()
+        if claim is None:
             break
+        delivery_id, lease_until = claim
 
         delivery = NotificationDelivery.objects.select_related("user").filter(
             pk=delivery_id
@@ -143,15 +150,16 @@ def process_notification_outbox(limit=100):
 
         try:
             if send_push_to_user(delivery.user, delivery.payload):
-                _mark_sent(delivery_id)
+                _mark_sent(delivery_id, lease_until)
                 sent += 1
             else:
                 _mark_failed(
                     delivery_id,
+                    lease_until,
                     "Push delivery did not succeed on any active device.",
                 )
         except Exception as exc:
             logger.exception("Unexpected outbox delivery failure for row %s", delivery_id)
-            _mark_failed(delivery_id, exc)
+            _mark_failed(delivery_id, lease_until, exc)
 
     return sent
