@@ -64,7 +64,12 @@ COPY . /code/
 COPY --from=frontend-build /frontend/build/ /code/frontend/build/
 
 # Collect Django static assets.
-RUN python manage.py collectstatic --noinput
+# Build-time placeholders satisfy production-required settings only for this
+# static-asset collection step. They are not persisted as runtime environment
+# variables and are never used to connect to a database.
+RUN SECRET_KEY="docker-build-only-not-a-runtime-secret" \
+    DATABASE_URL="postgres://build:build@127.0.0.1:5432/build" \
+    python manage.py collectstatic --noinput
 
 EXPOSE 8000
 

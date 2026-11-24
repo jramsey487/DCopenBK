@@ -622,6 +622,9 @@ Re-running the same name updates the profile and role; the password is only set 
 
 ## Deployment
 
+The production app is hosted at **https://dcopenbk.fly.dev**. Django requires explicit production `SECRET_KEY` and `DATABASE_URL` values and will stop with a clear configuration error rather than falling back to a known development key or SQLite. The Fly hostname is the default canonical URL, allowed host, and CSRF trusted origin. Fly secrets are not changed by this code change.
+
+
 The app is deployed to **Fly.io** as [`dcopenbk`](https://fly.io/apps/dcopenbk) (region: `iad`).
 
 ### One-time CLI setup
