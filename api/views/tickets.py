@@ -2,6 +2,7 @@
 
 from datetime import datetime, date
 
+from django.db import transaction
 from django.db.models import F, Max, Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
@@ -555,10 +556,15 @@ class RequestTickets(APIView):
             return Response(payload[0], status=status_code)
         return Response({"tickets": payload}, status=status_code)
 
+    @transaction.atomic
     def post(self, request, format=None):
         ballkid, session, error = self._ballkid_and_open_session(request)
         if error:
             return error
+
+        # Keep the lock order consistent with lottery allocation: round, then ballkid.
+        session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         remaining = remaining_tickets(ballkid)
         budget_error = self._budget_error(remaining)
@@ -643,10 +649,15 @@ class RequestTickets(APIView):
             TicketSerializer(ticket).data, status=status.HTTP_201_CREATED
         )
 
+    @transaction.atomic
     def patch(self, request, format=None):
         ballkid, session, error = self._ballkid_and_open_session(request)
         if error:
             return error
+
+        # Keep the lock order consistent with lottery allocation: round, then ballkid.
+        session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         remaining = remaining_tickets(ballkid)
         budget_error = self._budget_error(remaining)
@@ -754,10 +765,15 @@ class RequestTickets(APIView):
         )
         return Response(TicketSerializer(ticket).data)
 
+    @transaction.atomic
     def delete(self, request, format=None):
         ballkid, session, error = self._ballkid_and_open_session(request)
         if error:
             return error
+
+        # Keep the lock order consistent with lottery allocation: round, then ballkid.
+        session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         qs = session.tickets.filter(
             ballkid=ballkid, status=TICKET_STATUS.REQUESTED
