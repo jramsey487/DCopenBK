@@ -543,12 +543,24 @@ def reallocate_declined_grants(declined_ticket, now=None):
 def _auto_confirm_win(
     ticket, grant, now, session, option=None, source="lottery", notify=True
 ):
+    # The caller holds the round lock. Lock the volunteer row as well because
+    # the same ballkid can receive allocations from different rounds concurrently.
+    ballkid = None
+    if ticket.ballkid_id:
+        ballkid = Ballkid.objects.select_for_update().get(pk=ticket.ballkid_id)
+        grant = min(grant, remaining_tickets(ballkid))
+
+    if grant <= 0:
+        ticket.num_granted = 0
+        ticket.status = TICKET_STATUS.WAITLIST
+        ticket.save(update_fields=["num_granted", "status"])
+        return 0
+
     ticket.num_granted = grant
     ticket.status = TICKET_STATUS.CONFIRMED
     ticket.confirmed_at = for_storage(now)
     ticket.save()
-    if ticket.ballkid_id:
-        ballkid = ticket.ballkid
+    if ballkid is not None:
         ballkid.num_tickets = (ballkid.num_tickets or 0) + grant
         ballkid.save(update_fields=["num_tickets"])
         if notify:
@@ -560,6 +572,7 @@ def _auto_confirm_win(
                 source=source,
                 num_requested=ticket.num_requested,
             )
+    return grant
 
 
 def _lottery_one_option(session, option, tickets, now=None):
