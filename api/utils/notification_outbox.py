@@ -85,7 +85,7 @@ def _claim_next_delivery():
 
 
 def _mark_sent(delivery_id, lease_until):
-    NotificationDelivery.objects.filter(
+    return NotificationDelivery.objects.filter(
         pk=delivery_id,
         status=NotificationDelivery.STATUS_PROCESSING,
         locked_until=lease_until,
@@ -150,8 +150,8 @@ def process_notification_outbox(limit=100):
 
         try:
             if send_push_to_user(delivery.user, delivery.payload):
-                _mark_sent(delivery_id, lease_until)
-                sent += 1
+                if _mark_sent(delivery_id, lease_until):
+                    sent += 1
             else:
                 _mark_failed(
                     delivery_id,
