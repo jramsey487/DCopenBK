@@ -1,6 +1,8 @@
 import os
 import uuid
 
+from django.db import transaction
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +13,6 @@ from api.utils.push_notifications import (
     deliver_push,
     is_allowed_push_endpoint,
     push_recipients,
-    run_in_background,
     web_push_configured,
 )
 
@@ -184,5 +185,8 @@ class PushAnnouncementView(APIView):
                 status=400,
             )
 
-        run_in_background(_send_announcement, audience, title, message, uuid.uuid4().hex)
+        # Persist each recipient's notification before returning. A worker can
+        # deliver the rows after this request or its Fly machine exits.
+        with transaction.atomic():
+            _send_announcement(audience, title, message, uuid.uuid4().hex)
         return Response({"queued": queued})
