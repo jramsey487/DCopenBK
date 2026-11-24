@@ -168,7 +168,11 @@ class TicketDeclineAtomicityTests(TestCase):
                 num_requested=1,
                 status=TICKET_STATUS.REQUESTED,
             )
-        run_lottery(session)
+        with patch(
+            "api.utils.tickets.random.shuffle",
+            side_effect=lambda rows: rows.sort(key=lambda row: row.ballkid_id),
+        ):
+            run_lottery(session)
         winning_ticket = Ticket.objects.get(ballkid=winner)
         factory = APIRequestFactory()
 
