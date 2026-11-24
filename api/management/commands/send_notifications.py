@@ -172,7 +172,7 @@ class Command(BaseCommand):
             for ballkid in ballkids:
                 ballkids_by_team.setdefault(ballkid.current_team, []).append(ballkid)
 
-        sent = 0
+        queued = 0
         for schedule in schedules:
             minutes = max(1, round((schedule.start - now).total_seconds() / 60))
             unit = "minute" if minutes == 1 else "minutes"
@@ -194,8 +194,8 @@ class Command(BaseCommand):
                     payload,
                     pref_field="shift_reminders_enabled",
                 ):
-                    sent += 1
-        return sent
+                    queued += 1
+        return queued
 
     def send_team_change_notifications(self, now):
         """
@@ -256,7 +256,7 @@ class Command(BaseCommand):
                 if upcoming:
                     schedule_by_team[team] = upcoming[0]
 
-        sent = 0
+        queued = 0
         for history in histories:
             ballkid = history.ballkid
             schedule = schedule_by_team.get(history.team)
@@ -279,5 +279,5 @@ class Command(BaseCommand):
                 payload,
                 pref_field="team_changes_enabled",
             ):
-                sent += 1
-        return sent
+                queued += 1
+        return queued
