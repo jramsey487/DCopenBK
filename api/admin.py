@@ -1,10 +1,12 @@
 from django.contrib import admin
+from django.utils import timezone
 from import_export import resources
 from import_export.admin import ExportMixin
 from .models.ballkid import *
 from .models.rating import *
 from .models.schedule import *
 from api.admin_application import *
+from api.models.notifications import NotificationDelivery
 
 # Register your models here.
 
@@ -145,6 +147,48 @@ class TeamHistoryAdmin(ExportMixin, admin.ModelAdmin):
 class TournamentAdmin(ExportMixin, admin.ModelAdmin):
     resource_classes = [TournamentResource]
 
+
+
+class NotificationDeliveryAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "notification_type",
+        "reference_key",
+        "status",
+        "attempts",
+        "available_at",
+        "sent_at",
+    )
+    list_filter = ("status", "notification_type")
+    search_fields = ("user__username", "reference_key", "last_error")
+    readonly_fields = (
+        "payload",
+        "attempts",
+        "available_at",
+        "locked_until",
+        "last_error",
+        "created_at",
+        "sent_at",
+    )
+    actions = ("retry_failed_notifications",)
+
+    @admin.action(description="Retry selected failed notifications")
+    def retry_failed_notifications(self, request, queryset):
+        updated = queryset.filter(
+            status=NotificationDelivery.STATUS_FAILED
+        ).update(
+            status=NotificationDelivery.STATUS_PENDING,
+            attempts=0,
+            available_at=timezone.now(),
+            locked_until=None,
+            last_error="",
+            sent_at=None,
+        )
+        self.message_user(request, f"Queued {updated} notification(s) for retry.")
+
+
+admin.site.register(NotificationDelivery, NotificationDeliveryAdmin)
 
 admin.site.register(Ballkid, BallkidAdmin)
 admin.site.register(CalibrationParams, CalibrationParamsAdmin)
