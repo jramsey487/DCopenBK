@@ -532,11 +532,12 @@ def reallocate_declined_grants(declined_ticket, now=None):
         grant = _grant_size(ticket, remaining_pool)
         if grant <= 0:
             continue
-        remaining_pool -= grant
-        _auto_confirm_win(
+        actual_grant = _auto_confirm_win(
             ticket, grant, now, session, option=option or ticket.ticket_option, source="waitlist"
         )
-        allocated.append(ticket)
+        if actual_grant:
+            remaining_pool -= actual_grant
+            allocated.append(ticket)
     return allocated
 
 
@@ -699,13 +700,13 @@ def deny_unfilled_waitlist(session):
 def allocate_waitlist_ticket(ticket, now=None):
     """Staff failsafe: confirm leftover tickets for a waitlisted or denied request."""
     now = now_et(now)
+    session_id = Ticket.objects.values_list("ticket_session_id", flat=True).get(pk=ticket.pk)
+    if session_id is None:
+        raise ValueError("No ticket round found.")
+    session = TicketSession.objects.select_for_update().get(pk=session_id)
     ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
     if ticket.status not in (TICKET_STATUS.WAITLIST, TICKET_STATUS.DENIED):
         raise ValueError("Only waitlisted or denied requests can be allocated.")
-    session = ticket.ticket_session
-    if session is None:
-        raise ValueError("No ticket round found.")
-    TicketSession.objects.select_for_update().get(pk=session.pk)
     if ticket.ballkid_id:
         ticket.ballkid.refresh_from_db()
         if not ballkid_eligible_for_tickets(ticket.ballkid):
