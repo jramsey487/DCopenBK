@@ -8,7 +8,7 @@ from django.db import close_old_connections
 from django.db.models import Q
 from pywebpush import WebPushException, webpush
 
-from api.models.notifications import NotificationSettings, PushSubscription
+from api.models.notifications import PushSubscription
 from api.utils.consts import TICKET_LIMIT
 
 logger = logging.getLogger("api.notifications")
