@@ -804,6 +804,7 @@ class RequestTickets(APIView):
 class ConfirmTickets(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request, format=None):
         ballkid = _my_ballkid(request.user)
         if ballkid is None:
@@ -865,7 +866,12 @@ class ConfirmTickets(APIView):
                 )
 
         session = maybe_advance_session(ticket.ticket_session)
-        ticket.refresh_from_db()
+        if session is not None:
+            session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
+        ticket = Ticket.objects.select_for_update().select_related(
+            "ticket_session", "ticket_option"
+        ).get(pk=ticket.pk, ballkid=ballkid)
         if session is None:
             return Response(
                 {"detail": "No ticket round found."},
