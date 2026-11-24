@@ -196,6 +196,21 @@ class TicketEmailDeliveryAdmin(admin.ModelAdmin):
     list_filter = ("status", "template_name")
     search_fields = ("recipient", "subject", "last_error")
     readonly_fields = ("idempotency_key", "recipient", "subject", "template_name", "context", "attempts", "available_at", "locked_until", "last_error", "created_at", "sent_at")
+    actions = ("retry_failed_ticket_emails",)
+
+    @admin.action(description="Retry selected failed ticket emails")
+    def retry_failed_ticket_emails(self, request, queryset):
+        updated = queryset.filter(
+            status=TicketEmailDelivery.STATUS_FAILED
+        ).update(
+            status=TicketEmailDelivery.STATUS_PENDING,
+            attempts=0,
+            available_at=timezone.now(),
+            locked_until=None,
+            last_error="",
+            sent_at=None,
+        )
+        self.message_user(request, f"Queued {updated} ticket email(s) for retry.")
 
 
 admin.site.register(Ballkid, BallkidAdmin)
