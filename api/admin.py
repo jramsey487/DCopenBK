@@ -6,7 +6,7 @@ from .models.ballkid import *
 from .models.rating import *
 from .models.schedule import *
 from api.admin_application import *
-from api.models.notifications import NotificationDelivery
+from api.models.notifications import NotificationDelivery, TicketEmailDelivery
 
 # Register your models here.
 
@@ -189,6 +189,14 @@ class NotificationDeliveryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(NotificationDelivery, NotificationDeliveryAdmin)
+
+@admin.register(TicketEmailDelivery)
+class TicketEmailDeliveryAdmin(admin.ModelAdmin):
+    list_display = ("id", "recipient", "subject", "template_name", "status", "attempts", "available_at", "sent_at")
+    list_filter = ("status", "template_name")
+    search_fields = ("recipient", "subject", "last_error")
+    readonly_fields = ("idempotency_key", "recipient", "subject", "template_name", "context", "attempts", "available_at", "locked_until", "last_error", "created_at", "sent_at")
+
 
 admin.site.register(Ballkid, BallkidAdmin)
 admin.site.register(CalibrationParams, CalibrationParamsAdmin)
