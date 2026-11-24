@@ -38,12 +38,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="notificationdelivery",
             name="available_at",
-            field=models.DateTimeField(db_index=True, default=django.utils.timezone.now),
+            field=models.DateTimeField(default=django.utils.timezone.now),
         ),
         migrations.AddField(
             model_name="notificationdelivery",
             name="locked_until",
-            field=models.DateTimeField(blank=True, db_index=True, null=True),
+            field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="notificationdelivery",
