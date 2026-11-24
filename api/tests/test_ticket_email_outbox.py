@@ -197,6 +197,6 @@ class TicketDeclineAtomicityTests(TestCase):
         )
         force_authenticate(request, user=user)
         second_response = ConfirmTickets.as_view()(request)
-        self.assertEqual(second_response.status_code, 400)
+        self.assertEqual(second_response.status_code, 404)
         winner.refresh_from_db()
         self.assertEqual(winner.num_tickets, 0)
