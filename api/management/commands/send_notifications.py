@@ -9,9 +9,10 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from api.models.ballkid import Ballkid, TeamHistory
-from api.models.notifications import NotificationDelivery
+from api.models.notifications import NotificationDelivery, TicketEmailDelivery
 from api.models.schedule import Schedule, Tournament
 from api.utils.notification_outbox import process_notification_outbox
+from api.utils.ticket_email_outbox import process_ticket_email_outbox
 from api.utils.push_notifications import deliver_push, web_push_configured
 
 logger = logging.getLogger("api.notifications")
@@ -64,52 +65,51 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def run_once(self, verbose):
-        """Queue due tournament notices and drain durable notifications."""
-        if not web_push_configured():
-            if verbose:
-                self.stdout.write("Notification check skipped: Web Push is not configured.")
-            return False
-
+        """Queue scheduled push notices and drain both durable outboxes."""
+        push_configured = web_push_configured()
         now = timezone.now()
-        tournament = self.active_tournament(now)
+        tournament = self.active_tournament(now) if push_configured else None
         shift_count = 0
         team_count = 0
 
-        if tournament is not None:
-            if tournament.show_teams:
-                # Calendar dates and human-readable shift times follow the
-                # tournament timezone, not the Fly machine's timezone.
-                with timezone.override(tournament.timezone):
-                    shift_count = self.send_shift_reminders(now)
-                    team_count = self.send_team_change_notifications(now)
-            elif verbose:
-                self.stdout.write(
-                    "Schedule notices skipped: teams are hidden from ballkids."
-                )
+        if tournament is not None and tournament.show_teams:
+            with timezone.override(tournament.timezone):
+                shift_count = self.send_shift_reminders(now)
+                team_count = self.send_team_change_notifications(now)
+        elif verbose and tournament is not None:
+            self.stdout.write(
+                "Schedule notices skipped: teams are hidden from ballkids."
+            )
 
-        # This runs even outside tournament dates: announcements and ticket
-        # events must still be delivered, and pending retries must recover.
-        delivered_count = process_notification_outbox(limit=100)
-        pending = NotificationDelivery.objects.filter(
+        # Ticket emails must keep flowing even when Web Push is not configured.
+        # Both workers claim rows briefly, then contact providers outside DB locks.
+        push_count = process_notification_outbox(limit=100) if push_configured else 0
+        email_count = process_ticket_email_outbox(limit=100)
+        push_pending = NotificationDelivery.objects.filter(
             status__in=(
                 NotificationDelivery.STATUS_PENDING,
                 NotificationDelivery.STATUS_PROCESSING,
             )
+        ).exists() if push_configured else False
+        email_pending = TicketEmailDelivery.objects.filter(
+            status__in=(
+                TicketEmailDelivery.STATUS_PENDING,
+                TicketEmailDelivery.STATUS_PROCESSING,
+            )
         ).exists()
 
-        if verbose or shift_count or team_count or delivered_count:
+        if verbose or shift_count or team_count or push_count or email_count:
             self.stdout.write(
                 self.style.SUCCESS(
-                    "Notification check complete: "
+                    "Delivery check complete: "
                     f"{shift_count} shift reminders queued, "
                     f"{team_count} team changes queued, "
-                    f"{delivered_count} notifications delivered."
+                    f"{push_count} push notifications sent, "
+                    f"{email_count} ticket emails sent."
                 )
             )
 
-        # Keep checking at the normal interval while a tournament is active
-        # or there is pending work/retry time to wait for.
-        return tournament is not None or pending
+        return tournament is not None or push_pending or email_pending
 
     def active_tournament(self, now):
         """Find the tournament whose own local calendar date is active."""

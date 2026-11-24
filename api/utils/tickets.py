@@ -254,14 +254,15 @@ def ticket_email_staff_payload():
 
 
 def send_ticket_email(ballkid, subject, template_name, context):
-    from api.utils.ticket_emails import send_ticket_html_email
+    """Queue a ticket email in PostgreSQL; never contact the provider in a transaction."""
+    from api.utils.ticket_email_outbox import enqueue_ticket_email
 
     if not ticket_emails_enabled():
         return False
     if not ballkid_eligible_for_tickets(ballkid):
         return False
     context.setdefault("email_title", subject)
-    return send_ticket_html_email(ballkid, subject, template_name, context)
+    return enqueue_ticket_email(ballkid, subject, template_name, context)
 
 
 def pick_current_session(now=None, ticket_date=None, year=None):
@@ -531,23 +532,36 @@ def reallocate_declined_grants(declined_ticket, now=None):
         grant = _grant_size(ticket, remaining_pool)
         if grant <= 0:
             continue
-        remaining_pool -= grant
-        _auto_confirm_win(
+        actual_grant = _auto_confirm_win(
             ticket, grant, now, session, option=option or ticket.ticket_option, source="waitlist"
         )
-        allocated.append(ticket)
+        if actual_grant:
+            remaining_pool -= actual_grant
+            allocated.append(ticket)
     return allocated
 
 
 def _auto_confirm_win(
     ticket, grant, now, session, option=None, source="lottery", notify=True
 ):
+    # The caller holds the round lock. Lock the volunteer row as well because
+    # the same ballkid can receive allocations from different rounds concurrently.
+    ballkid = None
+    if ticket.ballkid_id:
+        ballkid = Ballkid.objects.select_for_update().get(pk=ticket.ballkid_id)
+        grant = min(grant, remaining_tickets(ballkid))
+
+    if grant <= 0:
+        ticket.num_granted = 0
+        ticket.status = TICKET_STATUS.WAITLIST
+        ticket.save(update_fields=["num_granted", "status"])
+        return 0
+
     ticket.num_granted = grant
     ticket.status = TICKET_STATUS.CONFIRMED
     ticket.confirmed_at = for_storage(now)
     ticket.save()
-    if ticket.ballkid_id:
-        ballkid = ticket.ballkid
+    if ballkid is not None:
         ballkid.num_tickets = (ballkid.num_tickets or 0) + grant
         ballkid.save(update_fields=["num_tickets"])
         if notify:
@@ -559,6 +573,7 @@ def _auto_confirm_win(
                 source=source,
                 num_requested=ticket.num_requested,
             )
+    return grant
 
 
 def _lottery_one_option(session, option, tickets, now=None):
@@ -685,13 +700,13 @@ def deny_unfilled_waitlist(session):
 def allocate_waitlist_ticket(ticket, now=None):
     """Staff failsafe: confirm leftover tickets for a waitlisted or denied request."""
     now = now_et(now)
+    session_id = Ticket.objects.values_list("ticket_session_id", flat=True).get(pk=ticket.pk)
+    if session_id is None:
+        raise ValueError("No ticket round found.")
+    session = TicketSession.objects.select_for_update().get(pk=session_id)
     ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
     if ticket.status not in (TICKET_STATUS.WAITLIST, TICKET_STATUS.DENIED):
         raise ValueError("Only waitlisted or denied requests can be allocated.")
-    session = ticket.ticket_session
-    if session is None:
-        raise ValueError("No ticket round found.")
-    TicketSession.objects.select_for_update().get(pk=session.pk)
     if ticket.ballkid_id:
         ticket.ballkid.refresh_from_db()
         if not ballkid_eligible_for_tickets(ticket.ballkid):

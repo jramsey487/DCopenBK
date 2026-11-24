@@ -151,6 +151,7 @@ def base_context(ballkid, session, option=None, **extra):
     session_display = _session_display(option, session)
     ctx = {
         "recipient_name": ballkid.first_name,
+        "ticket_session_id": getattr(session, "id", None),
         "logo_url": ticket_logo_url(),
         "login_url": ticket_login_url(),
         "cta_url": ticket_cta_url(),
