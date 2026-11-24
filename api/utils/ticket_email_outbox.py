@@ -33,7 +33,13 @@ def enqueue_ticket_email(ballkid, subject, template_name, context):
         "template_name": str(template_name),
         "context": context,
     }
-    fingerprint = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    # The remaining-ticket count is display-only and may change if an event
+    # helper is retried. Excluding it keeps the same logical email idempotent.
+    identity = dict(payload)
+    identity["context"] = dict(context)
+    identity["context"].pop("tickets_remaining", None)
+    identity["context"].pop("tickets_remaining_display", None)
+    fingerprint = json.dumps(identity, sort_keys=True, separators=(",", ":"), default=str)
     key = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()
     _, created = TicketEmailDelivery.objects.get_or_create(
         idempotency_key=key,
