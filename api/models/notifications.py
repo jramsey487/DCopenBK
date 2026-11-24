@@ -68,3 +68,37 @@ class NotificationDelivery(models.Model):
             models.Index(fields=["status", "available_at"], name="notif_outbox_due_idx"),
             models.Index(fields=["status", "locked_until"], name="notif_outbox_lock_idx"),
         ]
+
+
+class TicketEmailDelivery(models.Model):
+    """Durable, idempotent email outbox for ticket lifecycle messages."""
+
+    STATUS_PENDING = "pending"
+    STATUS_PROCESSING = "processing"
+    STATUS_SENT = "sent"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "Pending"),
+        (STATUS_PROCESSING, "Processing"),
+        (STATUS_SENT, "Sent"),
+        (STATUS_FAILED, "Failed"),
+    )
+
+    idempotency_key = models.CharField(max_length=64, unique=True)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=255)
+    template_name = models.CharField(max_length=80)
+    context = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    available_at = models.DateTimeField(default=timezone.now)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["status", "available_at"], name="ticket_email_due_idx"),
+            models.Index(fields=["status", "locked_until"], name="ticket_email_lock_idx"),
+        ]
