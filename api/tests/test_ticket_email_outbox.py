@@ -3,14 +3,16 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
-from django.utils import timezone
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.models.ballkid import Ballkid, Ticket, TicketOption, TicketSession
 from api.models.enums import TICKET_STATUS
 from api.models.notifications import TicketEmailDelivery
+from api.models.schedule import Tournament
 from api.utils.consts import TICKET_LIMIT
 from api.utils.ticket_email_outbox import enqueue_ticket_email, process_ticket_email_outbox
-from api.utils.tickets import _auto_confirm_win, for_storage, now_et
+from api.utils.tickets import _auto_confirm_win, for_storage, now_et, run_lottery
+from api.views.tickets import ConfirmTickets
 
 
 class TicketEmailOutboxTests(TestCase):
@@ -113,3 +115,77 @@ class TicketAllocationLockTests(TestCase):
         self.assertEqual(ticket.status, TICKET_STATUS.WAITLIST)
         self.assertEqual(ticket.num_granted, 0)
         self.assertEqual(ballkid.num_tickets, TICKET_LIMIT)
+
+
+class TicketDeclineAtomicityTests(TestCase):
+    def test_duplicate_decline_does_not_refund_twice(self):
+        year = date.today().year
+        Tournament.objects.create(
+            year=year,
+            start_date=date(year, 7, 20),
+            end_date=date(year, 7, 28),
+            ticket_emails_enabled=False,
+        )
+        user = User.objects.create_user(
+            username="decline-test",
+            email="decline@example.com",
+            password="not-used",
+        )
+        winner = Ballkid.objects.create(
+            user=user, first_name="Winner", last_name="Volunteer"
+        )
+        waitlisted = Ballkid.objects.create(
+            first_name="Waitlist", last_name="Volunteer"
+        )
+        session = TicketSession.objects.create(
+            year=year,
+            ticket_date=date.today() + timedelta(days=1),
+            closes_at=for_storage(now_et() - timedelta(hours=1)),
+            winner_confirm_by=for_storage(now_et() + timedelta(hours=12)),
+            pool_size=1,
+        )
+        option = TicketOption.objects.create(
+            ticket_session=session,
+            session_number=1,
+            ticket_date=session.ticket_date,
+            pool_size=1,
+        )
+        for index, ballkid in enumerate((winner, waitlisted), start=1):
+            Ticket.objects.create(
+                year=year,
+                session="1",
+                ticket_session=session,
+                ticket_option=option,
+                ballkid=ballkid,
+                order=index,
+                num_requested=1,
+                status=TICKET_STATUS.REQUESTED,
+            )
+        run_lottery(session)
+        winning_ticket = Ticket.objects.get(ballkid=winner)
+        factory = APIRequestFactory()
+
+        request = factory.post(
+            "/api/tickets/confirm/",
+            {"id": winning_ticket.id, "accept": False},
+            format="json",
+        )
+        force_authenticate(request, user=user)
+        first_response = ConfirmTickets.as_view()(request)
+        self.assertEqual(first_response.status_code, 200)
+
+        winner.refresh_from_db()
+        self.assertEqual(winner.num_tickets, 0)
+        self.assertEqual(Ticket.objects.get(ballkid=winner).status, TICKET_STATUS.DECLINED)
+        self.assertEqual(Ticket.objects.get(ballkid=waitlisted).status, TICKET_STATUS.CONFIRMED)
+
+        request = factory.post(
+            "/api/tickets/confirm/",
+            {"id": winning_ticket.id, "accept": False},
+            format="json",
+        )
+        force_authenticate(request, user=user)
+        second_response = ConfirmTickets.as_view()(request)
+        self.assertEqual(second_response.status_code, 400)
+        winner.refresh_from_db()
+        self.assertEqual(winner.num_tickets, 0)
