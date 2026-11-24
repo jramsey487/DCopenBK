@@ -4,15 +4,11 @@ import os
 import threading
 from urllib.parse import urlparse
 
-from django.db import IntegrityError, close_old_connections
+from django.db import close_old_connections
 from django.db.models import Q
 from pywebpush import WebPushException, webpush
 
-from api.models.notifications import (
-    NotificationDelivery,
-    NotificationSettings,
-    PushSubscription,
-)
+from api.models.notifications import PushSubscription
 from api.utils.consts import TICKET_LIMIT
 
 logger = logging.getLogger("api.notifications")
@@ -95,7 +91,7 @@ def send_push_to_user(user, payload):
 
 
 def run_in_background(fn, *args, **kwargs):
-    """Run fn in a daemon thread so a slow push service never delays a request."""
+    """Run non-critical work in a daemon thread (not used for durable push sends)."""
 
     def runner():
         try:
@@ -109,36 +105,16 @@ def run_in_background(fn, *args, **kwargs):
 
 
 def deliver_push(user, notification_type, key, payload, pref_field=None):
-    """
-    Send one notification at most once per (user, type, key). The delivery row
-    is claimed *before* sending so overlapping runs can't double-send, and is
-    released if nothing could be delivered (so a retry is possible).
-    """
-    if pref_field and NotificationSettings.objects.filter(
-        user=user, **{pref_field: False}
-    ).exists():
-        return False
+    """Queue a push in PostgreSQL; a scheduler process handles delivery and retries."""
+    from api.utils.notification_outbox import enqueue_push
 
-    try:
-        NotificationDelivery.objects.create(
-            user=user, notification_type=notification_type, reference_key=key
-        )
-    except IntegrityError:
-        return False
-
-    if send_push_to_user(user, payload):
-        return True
-
-    NotificationDelivery.objects.filter(
-        user=user, notification_type=notification_type, reference_key=key
-    ).delete()
-    return False
+    return enqueue_push(user, notification_type, key, payload, pref_field=pref_field)
 
 
 def push_recipients(*, pref_field=None, captains_only=False, tickets_left=False):
     """
     Active, non-cut ballcrew with a login and at least one active device,
-    skipping anyone who turned `pref_field` off.
+    skipping anyone who turned pref_field off.
     """
     from api.models.ballkid import Ballkid
 

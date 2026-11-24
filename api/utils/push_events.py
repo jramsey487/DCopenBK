@@ -1,28 +1,18 @@
 """
 Push notifications triggered by ticket changes.
 
-Hooked in with model signals (like api/utils/audit.py) so the ticket code
-itself doesn't need to know about push:
-
-- A round going live                    -> "Ticket requests are open"
-- The lottery running                   -> "Your ticket results are in"
-- A ticket becoming confirmed AFTER the
-  lottery (waitlist promotion, decline
-  reallocation, staff Allocate)         -> "A spot opened up"
-
-Everything is a no-op until Web Push is configured, and sends happen in a
-background thread after the transaction commits.
+Signals write notification outbox rows in the same database transaction as
+the ticket/session change. The scheduler delivers those rows after commit, so
+a Fly restart cannot discard the notification between the event and enqueue.
 """
 
 import logging
 
-from django.db import transaction
 from django.db.models.signals import post_init, post_save
 
 from api.utils.push_notifications import (
     deliver_push,
     push_recipients,
-    run_in_background,
     web_push_configured,
 )
 
@@ -53,17 +43,13 @@ def _ticket_saved(sender, instance, created, **kwargs):
             and instance.ballkid_id
             and instance.ticket_session_id
         ):
-            # Decide *now*, inside the transaction: winners confirmed by the
-            # lottery itself are saved before lottery_run_at is set, and they
-            # get the results notification instead of this one.
+            # Decide inside the save transaction: lottery winners are saved
+            # before lottery_run_at is set and receive the results notice.
             after_lottery = TicketSession.objects.filter(
                 pk=instance.ticket_session_id, lottery_run_at__isnull=False
             ).exists()
             if after_lottery:
-                ticket_id = instance.pk
-                transaction.on_commit(
-                    lambda: run_in_background(_notify_spot_opened, ticket_id)
-                )
+                _notify_spot_opened(instance.pk)
     except Exception:
         logger.exception("Ticket push hook failed")
     finally:
@@ -119,19 +105,13 @@ def _session_saved(sender, instance, created, **kwargs):
         orig = getattr(instance, "_push_orig", {})
         if web_push_configured():
             if instance.is_live and orig.get("is_live") is False:
-                session_id = instance.pk
-                transaction.on_commit(
-                    lambda: run_in_background(_notify_round_live, session_id)
-                )
+                _notify_round_live(instance.pk)
             if (
                 instance.lottery_run_at is not None
                 and "lottery_run_at" in orig
                 and orig["lottery_run_at"] is None
             ):
-                session_id = instance.pk
-                transaction.on_commit(
-                    lambda: run_in_background(_notify_lottery_results, session_id)
-                )
+                _notify_lottery_results(instance.pk)
     except Exception:
         logger.exception("Ticket session push hook failed")
     finally:

@@ -4,18 +4,19 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError, close_old_connections
+from django.db import close_old_connections
 from django.db.models import F, Q
 from django.utils import timezone
 
 from api.models.ballkid import Ballkid, TeamHistory
 from api.models.notifications import NotificationDelivery
 from api.models.schedule import Schedule, Tournament
-from api.utils.push_notifications import send_push_to_user, web_push_configured
+from api.utils.notification_outbox import process_notification_outbox
+from api.utils.push_notifications import deliver_push, web_push_configured
 
 logger = logging.getLogger("api.notifications")
 
-IDLE_SLEEP_SECONDS = 300
+IDLE_SLEEP_SECONDS = 30
 # How long an assignment must stay put before we tell the ballkid.
 TEAM_CHANGE_STABLE_MINUTES = 5
 # Don't announce assignments that have been in place longer than this.
@@ -63,42 +64,52 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def run_once(self, verbose):
-        """Returns True if the tournament is active (i.e. keep polling quickly)."""
+        """Queue due tournament notices and drain durable notifications."""
         if not web_push_configured():
             if verbose:
                 self.stdout.write("Notification check skipped: Web Push is not configured.")
             return False
 
-        # Django stores DateTimeField values as UTC-aware timestamps. Use an
-        # aware UTC clock for database comparisons; convert to local time only
-        # when deriving calendar dates or displaying a schedule time.
         now = timezone.now()
         tournament = self.active_tournament(now)
-        if tournament is None:
-            if verbose:
-                self.stdout.write("Notification check skipped: tournament is not active.")
-            return False
+        shift_count = 0
+        team_count = 0
 
-        # Notifications name the team, so never send them while teams are hidden.
-        if not tournament.show_teams:
-            if verbose:
-                self.stdout.write("Notification check skipped: teams are hidden from ballkids.")
-            return True
+        if tournament is not None:
+            if tournament.show_teams:
+                # Calendar dates and human-readable shift times follow the
+                # tournament timezone, not the Fly machine's timezone.
+                with timezone.override(tournament.timezone):
+                    shift_count = self.send_shift_reminders(now)
+                    team_count = self.send_team_change_notifications(now)
+            elif verbose:
+                self.stdout.write(
+                    "Schedule notices skipped: teams are hidden from ballkids."
+                )
 
-        # Calendar dates and human-readable shift times must follow the
-        # tournament, not the Fly machine or the individual worker's device.
-        with timezone.override(tournament.timezone):
-            shift_count = self.send_shift_reminders(now)
-            team_count = self.send_team_change_notifications(now)
+        # This runs even outside tournament dates: announcements and ticket
+        # events must still be delivered, and pending retries must recover.
+        delivered_count = process_notification_outbox(limit=100)
+        pending = NotificationDelivery.objects.filter(
+            status__in=(
+                NotificationDelivery.STATUS_PENDING,
+                NotificationDelivery.STATUS_PROCESSING,
+            )
+        ).exists()
 
-        if verbose or shift_count or team_count:
+        if verbose or shift_count or team_count or delivered_count:
             self.stdout.write(
                 self.style.SUCCESS(
                     "Notification check complete: "
-                    f"{shift_count} shift reminders, {team_count} team changes."
+                    f"{shift_count} shift reminders queued, "
+                    f"{team_count} team changes queued, "
+                    f"{delivered_count} notifications delivered."
                 )
             )
-        return True
+
+        # Keep checking at the normal interval while a tournament is active
+        # or there is pending work/retry time to wait for.
+        return tournament is not None or pending
 
     def active_tournament(self, now):
         """Find the tournament whose own local calendar date is active."""
@@ -142,29 +153,6 @@ class Command(BaseCommand):
             .distinct()
         )
 
-    def claim(self, user, notification_type, key):
-        """Record the delivery *before* sending so overlapping runs can't double-send."""
-        try:
-            NotificationDelivery.objects.create(
-                user=user, notification_type=notification_type, reference_key=key
-            )
-            return True
-        except IntegrityError:
-            return False
-
-    def release(self, user, notification_type, key):
-        NotificationDelivery.objects.filter(
-            user=user, notification_type=notification_type, reference_key=key
-        ).delete()
-
-    def deliver(self, user, notification_type, key, payload):
-        if not self.claim(user, notification_type, key):
-            return False
-        if send_push_to_user(user, payload):
-            return True
-        self.release(user, notification_type, key)  # allow a retry on the next pass
-        return False
-
     # ------------------------------------------------------------------
 
     def send_shift_reminders(self, now):
@@ -184,7 +172,7 @@ class Command(BaseCommand):
             for ballkid in ballkids:
                 ballkids_by_team.setdefault(ballkid.current_team, []).append(ballkid)
 
-        sent = 0
+        queued = 0
         for schedule in schedules:
             minutes = max(1, round((schedule.start - now).total_seconds() / 60))
             unit = "minute" if minutes == 1 else "minutes"
@@ -199,9 +187,15 @@ class Command(BaseCommand):
                 "tag": f"shift-{schedule.id}",
             }
             for ballkid in ballkids_by_team.get(schedule.team, []):
-                if self.deliver(ballkid.user, "shift_reminder", str(schedule.id), payload):
-                    sent += 1
-        return sent
+                if deliver_push(
+                    ballkid.user,
+                    "shift_reminder",
+                    str(schedule.id),
+                    payload,
+                    pref_field="shift_reminders_enabled",
+                ):
+                    queued += 1
+        return queued
 
     def send_team_change_notifications(self, now):
         """
@@ -262,7 +256,7 @@ class Command(BaseCommand):
                 if upcoming:
                     schedule_by_team[team] = upcoming[0]
 
-        sent = 0
+        queued = 0
         for history in histories:
             ballkid = history.ballkid
             schedule = schedule_by_team.get(history.team)
@@ -278,6 +272,12 @@ class Command(BaseCommand):
                 "url": "/teams",
                 "tag": f"team-change-{ballkid.id}",
             }
-            if self.deliver(ballkid.user, "team_change", str(history.id), payload):
-                sent += 1
-        return sent
+            if deliver_push(
+                ballkid.user,
+                "team_change",
+                str(history.id),
+                payload,
+                pref_field="team_changes_enabled",
+            ):
+                queued += 1
+        return queued
