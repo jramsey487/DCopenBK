@@ -42,6 +42,13 @@ class TicketEmailOutboxTests(TestCase):
                 self.ballkid, "Ticket results", "lottery_results", self.context
             )
         )
+        # Balance display fields can change between retries of the same event.
+        changed_context = dict(self.context, tickets_remaining=0, tickets_remaining_display="0 of 2")
+        self.assertFalse(
+            enqueue_ticket_email(
+                self.ballkid, "Ticket results", "lottery_results", changed_context
+            )
+        )
         self.assertEqual(TicketEmailDelivery.objects.count(), 1)
 
     @patch("api.utils.ticket_email_outbox._send")
