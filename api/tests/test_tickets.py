@@ -244,6 +244,7 @@ class TicketFlowTests(APITestCase):
 
     def test_lottery_sends_one_digest_for_multi_session_requests(self):
         from django.core import mail
+        from api.utils.ticket_email_outbox import process_ticket_email_outbox
 
         night = TicketOption.objects.create(
             ticket_session=self.session,
@@ -269,6 +270,7 @@ class TicketFlowTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mail.outbox.clear()
         run_lottery(self.session)
+        process_ticket_email_outbox()
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Ticket results", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].to, [self.bk_user.email])
@@ -279,6 +281,7 @@ class TicketFlowTests(APITestCase):
 
     def test_waitlist_promo_still_sends_individual_confirmed_email(self):
         from django.core import mail
+        from api.utils.ticket_email_outbox import process_ticket_email_outbox
 
         self.option.pool_size = 1
         self.option.save()
@@ -286,6 +289,7 @@ class TicketFlowTests(APITestCase):
             self._auth(user)
             self._request(1)
         run_lottery(self.session)
+        process_ticket_email_outbox()
         confirmed = Ticket.objects.get(status=TICKET_STATUS.CONFIRMED)
         waitlisted = Ticket.objects.get(status=TICKET_STATUS.WAITLIST)
         mail.outbox.clear()
