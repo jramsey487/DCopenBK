@@ -254,14 +254,15 @@ def ticket_email_staff_payload():
 
 
 def send_ticket_email(ballkid, subject, template_name, context):
-    from api.utils.ticket_emails import send_ticket_html_email
+    """Queue a ticket email in PostgreSQL; never contact the provider in a transaction."""
+    from api.utils.ticket_email_outbox import enqueue_ticket_email
 
     if not ticket_emails_enabled():
         return False
     if not ballkid_eligible_for_tickets(ballkid):
         return False
     context.setdefault("email_title", subject)
-    return send_ticket_html_email(ballkid, subject, template_name, context)
+    return enqueue_ticket_email(ballkid, subject, template_name, context)
 
 
 def pick_current_session(now=None, ticket_date=None, year=None):
