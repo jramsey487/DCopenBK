@@ -187,7 +187,13 @@ class Command(BaseCommand):
                 "tag": f"shift-{schedule.id}",
             }
             for ballkid in ballkids_by_team.get(schedule.team, []):
-                if deliver_push(\n                    ballkid.user,\n                    "shift_reminder",\n                    str(schedule.id),\n                    payload,\n                    pref_field="shift_reminders_enabled",\n                ):
+                if deliver_push(
+                    ballkid.user,
+                    "shift_reminder",
+                    str(schedule.id),
+                    payload,
+                    pref_field="shift_reminders_enabled",
+                ):
                     sent += 1
         return sent
 
@@ -266,6 +272,12 @@ class Command(BaseCommand):
                 "url": "/teams",
                 "tag": f"team-change-{ballkid.id}",
             }
-            if deliver_push(\n                ballkid.user,\n                "team_change",\n                str(history.id),\n                payload,\n                pref_field="team_changes_enabled",\n            ):
+            if deliver_push(
+                ballkid.user,
+                "team_change",
+                str(history.id),
+                payload,
+                pref_field="team_changes_enabled",
+            ):
                 sent += 1
         return sent
