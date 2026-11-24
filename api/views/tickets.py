@@ -869,9 +869,11 @@ class ConfirmTickets(APIView):
         if session is not None:
             session = TicketSession.objects.select_for_update().get(pk=session.pk)
         ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
-        ticket = Ticket.objects.select_for_update().select_related(
-            "ticket_session", "ticket_option"
-        ).get(pk=ticket.pk, ballkid=ballkid)
+        # Do not select_related nullable ticket foreign keys on a FOR UPDATE query:
+        # PostgreSQL rejects locking the nullable side of an outer join.
+        ticket = Ticket.objects.select_for_update().get(
+            pk=ticket.pk, ballkid=ballkid
+        )
         # A duplicate decline request may have selected this ticket before the
         # first request committed. Recheck state after acquiring the row lock.
         if ticket.status != TICKET_STATUS.CONFIRMED:
