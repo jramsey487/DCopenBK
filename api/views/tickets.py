@@ -872,6 +872,13 @@ class ConfirmTickets(APIView):
         ticket = Ticket.objects.select_for_update().select_related(
             "ticket_session", "ticket_option"
         ).get(pk=ticket.pk, ballkid=ballkid)
+        # A duplicate decline request may have selected this ticket before the
+        # first request committed. Recheck state after acquiring the row lock.
+        if ticket.status != TICKET_STATUS.CONFIRMED:
+            return Response(
+                {"detail": "This ticket has already been actioned."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if session is None:
             return Response(
                 {"detail": "No ticket round found."},
