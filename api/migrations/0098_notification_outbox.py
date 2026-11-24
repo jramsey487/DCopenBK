@@ -14,6 +14,8 @@ class Migration(migrations.Migration):
             name="payload",
             field=models.JSONField(blank=True, default=dict),
         ),
+        # Existing delivery rows represent notifications already claimed by
+        # the old implementation. Preserve them as sent to avoid resending.
         migrations.AddField(
             model_name="notificationdelivery",
             name="status",
@@ -51,7 +53,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="notificationdelivery",
             name="created_at",
-            field=models.DateTimeField(auto_now_add=True, null=True),
+            field=models.DateTimeField(default=django.utils.timezone.now),
+            preserve_default=False,
         ),
         migrations.AlterField(
             model_name="notificationdelivery",
