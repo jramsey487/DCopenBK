@@ -47,13 +47,28 @@ BALLKID_LIST_DEFER_FIELDS = (
 
 def viewer_can_see_age(request):
     """Captains and chairpersons may see ages; regular ballcrew may not.
-    With no request in the serializer context (nested/internal use), hide it."""
-    user = getattr(request, "user", None)
-    if user is None or not user.is_authenticated:
+
+    Cache the decision on the request because this helper is called once per
+    serialized ballkid. Without the cache, each list item repeats the same
+    Django-group membership queries. With no request in the serializer
+    context (nested/internal use), hide age.
+    """
+    if request is None:
         return False
-    if is_chairperson_or_superuser(user):
-        return True
-    return user.groups.filter(name="captain").exists()
+
+    cache_attribute = "_ballkid_list_can_see_age"
+    if hasattr(request, cache_attribute):
+        return getattr(request, cache_attribute)
+
+    user = getattr(request, "user", None)
+    can_see_age = False
+    if user is not None and user.is_authenticated:
+        can_see_age = is_chairperson_or_superuser(user)
+        if not can_see_age:
+            can_see_age = user.groups.filter(name="captain").exists()
+
+    setattr(request, cache_attribute, can_see_age)
+    return can_see_age
 
 
 class BallkidSerializer(serializers.ModelSerializer):

@@ -1,5 +1,7 @@
 from django.urls import reverse
 from django.db.models import Max
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.contrib.auth.models import User, Group
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
@@ -65,6 +67,33 @@ class TestBallkidListView(APITestCase):
         self.assertNotIn("comments", response.data[0])
         self.assertNotIn("phone", response.data[0])
         self.assertNotIn("emergency_name", response.data[0])
+
+    def test_captain_list_caches_age_permission_check(self):
+        captain_client = setup_testing_client("captain")
+        Ballkid.objects.create(
+            first_name="Captain",
+            last_name="Viewer",
+            age=19,
+            is_captain=True,
+        )
+
+        with CaptureQueriesContext(connection) as captured:
+            response = captain_client.get(reverse("sorted-list"))
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertTrue(response.data)
+        self.assertIn("age", response.data[0])
+
+        # The view performs two group-related queries for its own filtering
+        # and role handling. Age visibility adds only its two role checks once,
+        # not once for every serialized ballkid.
+        group_queries = [
+            query["sql"]
+            for query in captured.captured_queries
+            if "auth_group" in query["sql"].lower()
+            or "auth_user_groups" in query["sql"].lower()
+        ]
+        self.assertLessEqual(len(group_queries), 4, group_queries)
 
     def test_sorted_list(self):
         response = self.client.get(reverse("sorted-list"))
