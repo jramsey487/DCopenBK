@@ -192,7 +192,6 @@ class Command(BaseCommand):
                     "shift_reminder",
                     str(schedule.id),
                     payload,
-                    pref_field="shift_reminders_enabled",
                 ):
                     queued += 1
         return queued
@@ -277,7 +276,6 @@ class Command(BaseCommand):
                 "team_change",
                 str(history.id),
                 payload,
-                pref_field="team_changes_enabled",
             ):
                 queued += 1
         return queued
