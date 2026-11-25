@@ -51,6 +51,9 @@ def get_previous_teammates(ballkid_ids):
     teams/days are represented: one to identify each ballkid's latest
     assignment, and one to fetch all matching team histories.
     """
+    if not ballkid_ids:
+        return {}
+
     histories = TeamHistory.objects.filter(
         ballkid_id__in=ballkid_ids,
         start__date__lt=date.today(),
