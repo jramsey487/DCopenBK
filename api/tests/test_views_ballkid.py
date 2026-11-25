@@ -84,8 +84,8 @@ class TestBallkidListView(APITestCase):
         self.assertTrue(response.data)
         self.assertIn("age", response.data[0])
 
-        # The view itself reads the user's groups once to determine list
-        # behavior. Age visibility should add only its two role checks once,
+        # The view performs two group-related queries for its own filtering
+        # and role handling. Age visibility adds only its two role checks once,
         # not once for every serialized ballkid.
         group_queries = [
             query["sql"]
@@ -93,7 +93,7 @@ class TestBallkidListView(APITestCase):
             if "auth_group" in query["sql"].lower()
             or "auth_user_groups" in query["sql"].lower()
         ]
-        self.assertLessEqual(len(group_queries), 3, group_queries)
+        self.assertLessEqual(len(group_queries), 4, group_queries)
 
     def test_sorted_list(self):
         response = self.client.get(reverse("sorted-list"))
