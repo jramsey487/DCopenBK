@@ -45,18 +45,20 @@ def get_previous_captains(ballkid_ids):
 
 def get_previous_teammates(ballkid_ids):
     """
-    Returns a dict mapping ballkid_id -> set of teammate ballkid ids,
-    representing everyone who shared a team with that ballkid on the most
-    recent day strictly before today that they have a TeamHistory entry
-    for. Used as a soft constraint when auto-generating teams so ballkids
-    aren't repeatedly placed with the same teammates day after day.
+    Return each ballkid's teammates from their most recent previous day.
+
+    The lookup uses two database queries regardless of how many distinct
+    teams/days are represented: one to identify each ballkid's latest
+    assignment, and one to fetch all matching team histories.
     """
+    if not ballkid_ids:
+        return {}
+
     histories = TeamHistory.objects.filter(
         ballkid_id__in=ballkid_ids,
         start__date__lt=date.today(),
     ).order_by("ballkid_id", "-start")
 
-    # Step 1: find each ballkid's most recent team + day they were on
     latest_start = {}
     latest_team = {}
     for history in histories:
@@ -65,27 +67,36 @@ def get_previous_teammates(ballkid_ids):
             latest_start[bid] = history.start
             latest_team[bid] = history.team
 
-    # Step 2: group ballkids by (team, day) so everyone sharing a (team,
-    # day) can be looked up with one query per distinct pair, rather than
-    # one query per ballkid
     by_team_day = {}
     for bid, start in latest_start.items():
         key = (latest_team[bid], start.date())
         by_team_day.setdefault(key, []).append(bid)
 
     previous_teammates = {bid: set() for bid in latest_start}
+    if not by_team_day:
+        return previous_teammates
 
-    for (team, day), bids_that_day in by_team_day.items():
-        teammates_that_day = set(
-            TeamHistory.objects.filter(team=team, start__date=day).values_list(
-                "ballkid_id", flat=True
-            )
-        )
-        for bid in bids_that_day:
-            previous_teammates[bid] = teammates_that_day - {bid}
+    # Fetch candidate rows for every relevant team/date in one query. The
+    # team/date cross-product may include unrelated combinations; discard
+    # those in Python so only exact (team, day) groups are used.
+    teams = {team for team, _day in by_team_day}
+    days = {day for _team, day in by_team_day}
+    teammates_by_team_day = {}
+    for history in TeamHistory.objects.filter(
+        team__in=teams,
+        start__date__in=days,
+    ).values_list("team", "start", "ballkid_id"):
+        team, start, ballkid_id = history
+        key = (team, start.date())
+        if key in by_team_day:
+            teammates_by_team_day.setdefault(key, set()).add(ballkid_id)
+
+    for key, ballkid_ids_for_day in by_team_day.items():
+        teammates = teammates_by_team_day.get(key, set())
+        for bid in ballkid_ids_for_day:
+            previous_teammates[bid] = teammates - {bid}
 
     return previous_teammates
-
 
 def is_female_ballkid(ballkid):
     """Return whether the ballkid's most recent linked application says female.
