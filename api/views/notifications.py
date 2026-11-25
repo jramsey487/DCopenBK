@@ -128,7 +128,6 @@ def _send_announcement(audience, title, message, key):
             "announcement",
             key,
             payload,
-            pref_field="announcements_enabled",
         )
 
 
