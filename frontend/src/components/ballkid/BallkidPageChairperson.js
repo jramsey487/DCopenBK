@@ -84,7 +84,7 @@ import {
 function updateBallkid(ballkid, fields) {
   return api("/api/update-ballkid", {
     method: "PATCH",
-    body: { first_name: ballkid.first_name, last_name: ballkid.last_name, ...fields },
+    body: { ballkid_id: ballkid.id, ...fields },
     invalidates: ["/api/list", "/api/sorted-list"],
   });
 }
