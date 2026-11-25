@@ -143,7 +143,6 @@ def _notify_round_live(session_id):
             "ticket_round",
             f"round-{session.id}",
             payload,
-            pref_field=PREF,
         )
 
 
