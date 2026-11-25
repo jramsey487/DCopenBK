@@ -5,12 +5,15 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.models.ballkid import Ballkid
-from api.utils.utils import setup_testing_client
+from api.models.schedule import Tournament
+from api.utils.utils import get_current_year, setup_testing_client
 
 
 class TestUpdateBallkidIntegrity(APITestCase):
     def setUp(self):
         self.client = setup_testing_client()
+        # Ballkid.validate() expects a Tournament row for the current season.
+        Tournament.objects.create(year=get_current_year())
         self.first = Ballkid.objects.create(
             first_name="Alex", last_name="Smith", comments="first record"
         )
