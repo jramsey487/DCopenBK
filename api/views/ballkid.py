@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
 from django.db.models import (
     Max,
     Count,
@@ -818,53 +819,96 @@ class UpdateBallkid(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
-        # I have absolutely no idea why, but the following line is necessary to
-        # prevent a RawPostDataException: You cannot access body after reading
-        # from request's data stream
+        # Preserve compatibility with the legacy request parser behavior.
         request.body
 
         serializer = self.serializer_class(data=request.data, partial=True)
-
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            logger.info(f"[UpdateBallkid] serializer data: {serializer.data}")
-
-            # Get ballkid with the corresponding first and last names
-            first_name = serializer.data["first_name"]
-            last_name = serializer.data["last_name"]
-            ballkid = get_object_or_404(
-                Ballkid, first_name=first_name, last_name=last_name
+        if not serializer.is_valid():
+            logger.warning(
+                "[UpdateBallkid] serializer errors: %s", serializer.errors
+            )
+            return Response(
+                {"Invalid serializer": f"Errors: {serializer.errors}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-            for field in serializer.data:
-                if field in ["first_name", "last_name", "user", "self_cut"]:
+        validated_data = serializer.validated_data
+        raw_ballkid_id = request.data.get(
+            "ballkid_id", request.data.get("id")
+        )
+
+        # New clients send the immutable database ID. Accept the old
+        # name-based payload only when it identifies exactly one record.
+        if raw_ballkid_id is not None:
+            try:
+                ballkid_id = int(raw_ballkid_id)
+                if ballkid_id <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "ballkid_id must be a positive integer"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            first_name = request.data.get("first_name")
+            last_name = request.data.get("last_name")
+            if not first_name or not last_name:
+                return Response(
+                    {"error": "ballkid_id is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            matches = Ballkid.objects.filter(
+                first_name=first_name, last_name=last_name
+            )
+            match_count = matches.count()
+            if match_count == 0:
+                return Response(
+                    {"error": "Ballkid not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            if match_count > 1:
+                return Response(
+                    {
+                        "error": (
+                            "This name matches multiple ballkids. "
+                            "Retry with ballkid_id."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            ballkid_id = matches.values_list("id", flat=True).get()
+
+        # Serialize updates to one ballkid and keep all field/history/account
+        # changes in one transaction. Any validation or side-effect failure
+        # rolls back the entire PATCH rather than leaving a partial update.
+        with transaction.atomic():
+            ballkid = get_object_or_404(
+                Ballkid.objects.select_for_update(), pk=ballkid_id
+            )
+
+            self_cut = validated_data.get("self_cut", False)
+            for field, value in validated_data.items():
+                if field in {
+                    "first_name",
+                    "last_name",
+                    "user",
+                    "self_cut",
+                }:
                     continue
 
-                # Update the ballkid's field per the patch request
-                if serializer.data[field] is not None:
-                    self_cut = (
-                        serializer.data["self_cut"]
-                        if "self_cut" in serializer.data
-                        else False
-                    )
-                    ballkid.set_field(field, serializer.data[field], self_cut=self_cut)
+                if value is not None:
+                    ballkid.set_field(field, value, self_cut=self_cut)
 
-                # If updating whether or not the ballkid is a captain, also update
-                # account permissions for that ballkid
+                # Captain status also updates the linked account's group.
                 if field == "is_captain":
-                    view = UpdateCaptainStatus.as_view()
-                    response = view(request._request)
+                    UpdateCaptainStatus.as_view()(request._request)
 
             ballkid.validate()
             ballkid.save()
 
-            return Response(BallkidSerializer(ballkid).data)
+        return Response(BallkidSerializer(ballkid).data)
 
-        logger.warning(f"[UpdateBallkid] serializer errors: {serializer.errors}")
-        return Response(
-            {"Invalid serializer": f"Errors: {serializer.errors}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )    
 
 ASSIGN_FIELDS = (
     "current_team",
