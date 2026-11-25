@@ -79,7 +79,10 @@ def ensure_fresh(name, recompute, max_age=60, min_interval=5):
             return False
 
     owns_lock = cache.add(_k(name, "lock"), 1, timeout=LOCK_SECONDS)
-    if not owns_lock and computed_at is not None:
+    # cache.add is the atomic lock acquisition. If another worker owns the
+    # lock, never recompute here—even when no timestamp exists yet. Otherwise
+    # simultaneous first requests can all run the expensive calculation.
+    if not owns_lock:
         return False
 
     try:

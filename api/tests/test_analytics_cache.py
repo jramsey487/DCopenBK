@@ -61,6 +61,18 @@ class AnalyticsCacheTests(SimpleTestCase):
             )
         self.assertFalse(cache.get(analytics_cache._k("checkin", "dirty"), False))
 
+    def test_existing_lock_prevents_initial_duplicate_recompute(self):
+        # The first request has not stored an "at" timestamp yet. A second
+        # request must still respect the lock instead of recomputing in parallel.
+        cache.add(analytics_cache._k("checkin", "lock"), 1, timeout=120)
+        with patch("api.utils.analytics_cache.time.time", return_value=100):
+            self.assertFalse(
+                analytics_cache.ensure_fresh(
+                    "checkin", lambda: self.fail("initial lock was ignored")
+                )
+            )
+        self.assertIsNone(cache.get(analytics_cache._k("checkin", "at")))
+
     def test_existing_lock_prevents_duplicate_recompute(self):
         cache.set(analytics_cache._k("court", "at"), 100, None)
         cache.add(analytics_cache._k("court", "lock"), 1, timeout=120)
