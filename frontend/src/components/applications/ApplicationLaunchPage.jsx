@@ -169,7 +169,7 @@ export default function ApplicationLaunchPage() {
             <TableCell>Ballkid</TableCell>
             <TableCell align="right">Veterancy</TableCell>
             <TableCell align="right">Historical baseline</TableCell>
-            <TableCell align="right">Verified seasons</TableCell>
+            <TableCell align="right">Verified seasons after 2026</TableCell>
             <TableCell>Last check-in</TableCell>
             <TableCell>Launch decision</TableCell>
           </TableRow>
