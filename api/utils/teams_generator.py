@@ -2,6 +2,7 @@ from api.models.ballkid import *
 from api.utils.consts import *
 
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from api.models.application import BallcrewApplication
 
