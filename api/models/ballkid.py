@@ -118,7 +118,7 @@ class Ballkid(models.Model):
             # returning-veteran eligibility. Keep it independent of the
             # transient active/archive status on Ballkid.
             local_checkin = timezone.localtime(now)
-            SeasonParticipation.objects.update_or_create(
+            participation, created = SeasonParticipation.objects.get_or_create(
                 ballkid=self,
                 year=local_checkin.year,
                 defaults={
@@ -127,6 +127,19 @@ class Ballkid(models.Model):
                     "source": SeasonParticipation.SOURCE_CHECKIN,
                 },
             )
+            if not created:
+                update_fields = []
+                if participation.first_checkin is None or now < participation.first_checkin:
+                    participation.first_checkin = now
+                    update_fields.append("first_checkin")
+                if participation.last_checkin is None or now > participation.last_checkin:
+                    participation.last_checkin = now
+                    update_fields.append("last_checkin")
+                if participation.source == SeasonParticipation.SOURCE_IMPORTED:
+                    participation.source = SeasonParticipation.SOURCE_CHECKIN
+                    update_fields.append("source")
+                if update_fields:
+                    participation.save(update_fields=update_fields)
             now_date = timezone.localtime(now - timedelta(hours=CHECKIN_START_HOUR)).date()
             is_first_checkin = (
                 CheckinHistory.objects.filter(
