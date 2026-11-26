@@ -1,8 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
   MenuItem,
@@ -24,6 +28,12 @@ const DECISION_LABELS = {
   invite_back: "Invite back",
   must_try_out: "Must try out",
 };
+const DELIVERY_LABELS = {
+  not_sent: "Not sent",
+  sending: "Sending",
+  sent: "Sent",
+  failed: "Failed",
+};
 
 export default function ApplicationLaunchPage() {
   const [year, setYear] = useState("");
@@ -33,7 +43,19 @@ export default function ApplicationLaunchPage() {
   const [savingIds, setSavingIds] = useState({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const undecidedCount = roster.filter((person) => (person.decision || "undecided") === "undecided").length;
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [sendLoading, setSendLoading] = useState(false);
+
+  const undecidedCount = roster.filter(
+    (person) => (person.decision || "undecided") === "undecided"
+  ).length;
+  const selectedRecipient = useMemo(
+    () => preview?.results?.find((person) => person.ballkid_id === selectedId) || preview?.results?.[0] || null,
+    [preview, selectedId]
+  );
 
   const loadRoster = useCallback(async () => {
     setLoading(true);
@@ -63,6 +85,33 @@ export default function ApplicationLaunchPage() {
   useEffect(() => {
     loadRoster();
   }, [loadRoster]);
+
+  const loadPreview = async () => {
+    if (!year) return;
+    setPreviewLoading(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/applications/launch-preview?source_year=${encodeURIComponent(year)}`,
+        { headers: getAuthHeader() }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || data.source_year || "Unable to build email preview.");
+      }
+      setPreview(data);
+      setSelectedId((current) =>
+        data.results?.some((person) => person.ballkid_id === current)
+          ? current
+          : data.results?.[0]?.ballkid_id ?? null
+      );
+      setPreviewOpen(true);
+    } catch (err) {
+      setError(err.message || "Unable to build email preview.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const saveDecision = async (ballkidId, nextDecision) => {
     const previousDecision =
@@ -110,6 +159,40 @@ export default function ApplicationLaunchPage() {
     }
   };
 
+  const sendLaunchEmails = async () => {
+    if (!preview || !preview.year) return;
+    setSendLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/applications/launch-send", {
+        method: "POST",
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ source_year: Number(year) }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to start invitation email batch.");
+      }
+      setNotice(`Started sending ${data.queued} returning-volunteer invitation emails for ${data.year}. Refresh the preview to check delivery status.`);
+      setPreviewOpen(false);
+    } catch (err) {
+      setError(err.message || "Unable to start invitation email batch.");
+    } finally {
+      setSendLoading(false);
+    }
+  };
+
+  const canSend =
+    preview &&
+    preview.applications_open &&
+    preview.undecided.length === 0 &&
+    preview.missing_email.length === 0 &&
+    preview.sendable > 0 &&
+    !preview.sending;
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h5" component="h1" gutterBottom>
@@ -122,9 +205,9 @@ export default function ApplicationLaunchPage() {
       </Typography>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        This page records invite-back and tryout decisions only. Email previews,
-        sending, and opening applications are not wired up yet; nothing is
-        emailed from this page.
+        This page records next-season invite-back / tryout decisions and previews
+        returning-volunteer emails. Sending requires applications to be open.
+        Email delivery is tracked per recipient so failed sends can be retried.
       </Alert>
 
       <Box
@@ -137,7 +220,7 @@ export default function ApplicationLaunchPage() {
         }}
       >
         <TextField
-          label="Tournament year"
+          label="Prior tournament year"
           type="number"
           size="small"
           value={year}
@@ -146,6 +229,13 @@ export default function ApplicationLaunchPage() {
         />
         <Button variant="contained" onClick={loadRoster} disabled={loading || !year}>
           {loading ? "Loading…" : "Refresh roster"}
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={loadPreview}
+          disabled={previewLoading || !year}
+        >
+          {previewLoading ? "Building preview…" : "Preview launch emails"}
         </Button>
         <Typography color="text.secondary" variant="body2">
           {count} checked-in {count === 1 ? "person" : "people"} in {year || "—"}
@@ -159,7 +249,7 @@ export default function ApplicationLaunchPage() {
         <Alert severity={undecidedCount > 0 ? "warning" : "success"} sx={{ mb: 2 }}>
           {undecidedCount > 0
             ? `${undecidedCount} of ${roster.length} returning volunteers still need a decision.`
-            : `All ${roster.length} returning volunteers have an invitation / tryout decision.`}
+            : `All ${roster.length} returning volunteers have a decision for ${Number(year) + 1}.`}
         </Alert>
       ) : null}
 
@@ -186,12 +276,8 @@ export default function ApplicationLaunchPage() {
                 ) : null}
               </TableCell>
               <TableCell align="right">{person.veterancy_years}</TableCell>
-              <TableCell align="right">
-                {person.historical_veterancy_years}
-              </TableCell>
-              <TableCell align="right">
-                {person.verified_veterancy_years}
-              </TableCell>
+              <TableCell align="right">{person.historical_veterancy_years}</TableCell>
+              <TableCell align="right">{person.verified_veterancy_years}</TableCell>
               <TableCell>
                 {person.last_checkin
                   ? new Date(person.last_checkin).toLocaleDateString()
@@ -230,6 +316,112 @@ export default function ApplicationLaunchPage() {
           ) : null}
         </TableBody>
       </Table>
+
+      <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} fullWidth maxWidth="lg">
+        <DialogTitle>
+          Returning-volunteer email preview — {preview?.year}
+        </DialogTitle>
+        <DialogContent dividers>
+          {preview ? (
+            <>
+              <Alert
+                severity={preview.undecided.length || preview.missing_email.length ? "warning" : preview.applications_open ? "success" : "info"}
+                sx={{ mb: 2 }}
+              >
+                {preview.sendable} recipients ready. {preview.undecided.length} undecided; {preview.missing_email.length} missing email.
+                {!preview.applications_open ? " Applications are currently closed, so sending is disabled." : ""}
+              </Alert>
+              {preview.undecided.length ? (
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Decisions needed: {preview.undecided.join(", ")}
+                </Typography>
+              ) : null}
+              {preview.missing_email.length ? (
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Missing email: {preview.missing_email.join(", ")}
+                </Typography>
+              ) : null}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(260px, 0.8fr) minmax(0, 1.2fr)" }, gap: 2 }}>
+                <Box sx={{ maxHeight: 360, overflow: "auto", border: 1, borderColor: "divider", borderRadius: 1 }}>
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Recipient</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {preview.results.map((person) => (
+                        <TableRow
+                          key={person.ballkid_id}
+                          hover
+                          selected={person.ballkid_id === selectedRecipient?.ballkid_id}
+                          onClick={() => setSelectedId(person.ballkid_id)}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={600}>{person.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {person.email || "No email"} · {DECISION_LABELS[person.decision]}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">
+                              {DELIVERY_LABELS[person.status] || person.status}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
+                <Box>
+                  {selectedRecipient ? (
+                    <>
+                      <Typography variant="subtitle2">{selectedRecipient.name} — {selectedRecipient.email || "No email address"}</Typography>
+                      <TextField
+                        label="Subject"
+                        value={selectedRecipient.subject}
+                        fullWidth
+                        size="small"
+                        margin="dense"
+                        InputProps={{ readOnly: true }}
+                      />
+                      <TextField
+                        label="Email body"
+                        value={selectedRecipient.text}
+                        fullWidth
+                        multiline
+                        minRows={12}
+                        margin="dense"
+                        InputProps={{ readOnly: true }}
+                      />
+                      {selectedRecipient.last_error ? (
+                        <Alert severity="error" sx={{ mt: 1 }}>{selectedRecipient.last_error}</Alert>
+                      ) : null}
+                    </>
+                  ) : (
+                    <Typography color="text.secondary">No recipients in this roster.</Typography>
+                  )}
+                </Box>
+              </Box>
+            </>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={loadPreview} disabled={previewLoading}>
+            Refresh delivery status
+          </Button>
+          <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            onClick={sendLaunchEmails}
+            disabled={!canSend || sendLoading}
+          >
+            {sendLoading ? "Starting…" : "Send invitation emails"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }
