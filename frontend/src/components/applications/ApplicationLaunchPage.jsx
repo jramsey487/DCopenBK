@@ -26,7 +26,7 @@ const DECISION_LABELS = {
 };
 
 export default function ApplicationLaunchPage() {
-  const [year, setYear] = useState(String(new Date().getFullYear() - 1));
+  const [year, setYear] = useState("");
   const [roster, setRoster] = useState([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -39,14 +39,15 @@ export default function ApplicationLaunchPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(
-        `/api/applications/veterancy-roster?year=${encodeURIComponent(year)}`,
-        { headers: getAuthHeader() }
-      );
+      const rosterUrl = year
+        ? `/api/applications/veterancy-roster?year=${encodeURIComponent(year)}`
+        : "/api/applications/veterancy-roster";
+      const response = await fetch(rosterUrl, { headers: getAuthHeader() });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.year || "Unable to load the prior-season roster.");
       }
+      setYear((current) => current || String(data.year));
       setRoster(Array.isArray(data.results) ? data.results : []);
       setCount(Number(data.count) || 0);
     } catch (err) {
