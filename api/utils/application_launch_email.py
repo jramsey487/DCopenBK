@@ -1,5 +1,6 @@
 """Returning-volunteer invitation preview and resumable email delivery."""
 import logging
+import smtplib
 import threading
 from datetime import timedelta
 from django.conf import settings
@@ -19,6 +20,27 @@ _STALE_SEND_RETRY_NOTE = (
     "A previous email worker stopped before recording completion. "
     "Retrying may send a duplicate if the mail provider accepted the earlier attempt."
 )
+
+
+_MAIL_THROTTLE_MARKERS = (
+    "4.7.28", "quota", "rate limit", "rate-limit", "too many messages",
+    "daily limit", "sending limit", "temporarily blocked",
+)
+
+
+def _is_mail_provider_throttle(exc):
+    """Identify provider quota/throttle responses that should stop a batch."""
+    code = getattr(exc, "smtp_code", None)
+    detail = " ".join(
+        str(value)
+        for value in (exc, getattr(exc, "smtp_error", ""))
+        if value is not None
+    ).lower()
+    # SMTP 4xx responses are temporary; continuing to send to the same
+    # provider/account is unlikely to help and may worsen its rate limiting.
+    return (isinstance(code, int) and 400 <= code < 500) or any(
+        marker in detail for marker in _MAIL_THROTTLE_MARKERS
+    )
 
 
 def launch_send_in_progress():
@@ -166,7 +188,7 @@ def _send_one(kid, source_year, year, slots):
             status="failed", last_error=str(exc)[:2000]
         )
         logger.exception("Launch email failed for Ballkid %s", kid.id)
-        return "failed"
+        return "halt" if _is_mail_provider_throttle(exc) else "failed"
 
 
 def send_launch_notifications(source_year):
@@ -190,6 +212,11 @@ def send_launch_notifications(source_year):
                 counts["skipped"] += 1
                 continue
             result = _send_one(kid, source_year, year, slots)
+            if result == "halt":
+                # The recipient failure is logged; leave all remaining rows
+                # untouched so the chairperson can retry after the provider cools down.
+                counts["failed"] += 1
+                break
             counts[result] = counts.get(result, 0) + 1
         return counts
     except Exception:
