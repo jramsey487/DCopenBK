@@ -337,7 +337,11 @@ export default function Navbar({ isLoggedIn, setToken }) {
         <div className="app-navbar-right">
           {isLoggedIn ? (
             isMobile ? (
-              <MobileNavDrawer group={group} setToken={setToken} />
+              <MobileNavDrawer
+                group={group}
+                isSuperuser={isSuperuser}
+                setToken={setToken}
+              />
             ) : (
               <DesktopNavbarItem
                 tab={accountTab}
