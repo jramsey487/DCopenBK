@@ -739,7 +739,7 @@ class CaptainHistory(models.Model):
         indexes = [
             models.Index(
                 fields=["ballkid", "captain", "team", "-start"],
-                name="captainhist_pair_team_start_idx",
+                name="captainhist_pair_team_idx",
             ),
         ]
 
