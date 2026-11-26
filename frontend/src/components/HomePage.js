@@ -50,6 +50,7 @@ import AnnouncementsPage from "./settings/AnnouncementsPage";
 import ApplicationPage from "./applications/ApplicationPage";
 import SizingReportPage from "./applications/SizingReportPage";
 import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
+import ApplicationLaunchPage from "./applications/ApplicationLaunchPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
 import ShiftGroupsPage from "./applications/ShiftGroupsPage";
 import HandbookPage from "./applications/HandbookPage";
@@ -64,6 +65,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route exact path="/" element={<BallkidList />} />
       <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageChairperson />} />
+      <Route path="/application-launch" element={<ApplicationLaunchPage />} />
       <Route path="/applications" element={<ApplicationsReviewPage />} />
       <Route path="/action-log" element={<ActionLogPage />} />
       <Route path="/checkin" element={<CheckinPage />} />
