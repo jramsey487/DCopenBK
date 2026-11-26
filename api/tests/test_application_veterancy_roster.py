@@ -1,12 +1,15 @@
 from django.contrib.auth.models import Group, User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIRequestFactory, force_authenticate
+from unittest.mock import patch
+from django.core import mail
 
 from api.models.ballkid import Ballkid, SeasonParticipation
-from api.models.application import ApplicationLaunchDecision
+from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
 from api.utils.utils import get_current_year
 from api.views.application import (
     ApplicationLaunchDecisionView,
+    ApplicationLaunchPreviewView,
     ApplicationVeterancyRosterView,
 )
 
@@ -107,3 +110,52 @@ class TestApplicationVeterancyRosterView(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["year"], expected_year)
+
+    def test_preview_lists_decision_for_next_application_year(self):
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+        request = self.factory.get(
+            "/api/applications/launch-preview", {"source_year": 2026}
+        )
+        force_authenticate(request, user=self.user)
+
+        response = ApplicationLaunchPreviewView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["year"], 2027)
+        self.assertEqual(response.data["sendable"], 1)
+        self.assertEqual(response.data["results"][0]["decision"], "invite_back")
+        self.assertIn("invited back", response.data["results"][0]["subject"].lower())
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    @patch("api.utils.application_launch_email.get_tryout_slot_info", return_value=[])
+    def test_launch_email_send_is_logged_and_not_sent_twice(self, _slots):
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+
+        from api.utils.application_launch_email import send_launch_notifications
+
+        first = send_launch_notifications(2026)
+        second = send_launch_notifications(2026)
+
+        self.assertEqual(first["sent"], 1)
+        self.assertEqual(second["skipped"], 1)
+        self.assertEqual(len(mail.outbox), 1)
+        log = ApplicationLaunchEmailLog.objects.get(
+            ballkid=self.ballkid, year=2027, kind="returning_invitation"
+        )
+        self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
+        self.assertEqual(log.attempts, 1)
