@@ -47,6 +47,7 @@ const chairpersonTabs = [
     subtabs: [
       { label: "Apply", url: "/apply" },
       { label: "Ball Crew Handbook", url: "/handbook" },
+      { label: "Application Launch", url: "/application-launch" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
       { label: "Sizing Report", url: "/sizing-report" },
