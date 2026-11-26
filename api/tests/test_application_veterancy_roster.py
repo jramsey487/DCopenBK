@@ -1,5 +1,7 @@
 from django.contrib.auth.models import Group, User
 from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
 from rest_framework.test import APIRequestFactory, force_authenticate
 from unittest.mock import patch
 from django.core import mail
@@ -96,6 +98,39 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(decision.source_year, 2026)
         self.assertEqual(decision.decision, "invite_back")
         self.assertEqual(decision.updated_by, self.user)
+
+    def test_roster_veterancy_uses_constant_participation_query_count(self):
+        for index in range(8):
+            kid = Ballkid.objects.create(
+                first_name=f"Roster{index}",
+                last_name="Query",
+                veterancy_baseline_years=1,
+                veterancy_baseline_through_year=2026,
+            )
+            SeasonParticipation.objects.create(
+                ballkid=kid,
+                year=2027,
+                source=SeasonParticipation.SOURCE_CHECKIN,
+            )
+
+        request = self.factory.get(
+            "/api/applications/veterancy-roster", {"year": 2027}
+        )
+        force_authenticate(request, user=self.user)
+
+        with CaptureQueriesContext(connection) as captured:
+            response = ApplicationVeterancyRosterView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        participation_queries = [
+            query
+            for query in captured.captured_queries
+            if "api_seasonparticipation" in query["sql"].lower()
+        ]
+        # One query loads the selected-season roster and one prefetches
+        # earned seasons for all roster members; no per-person queries.
+        self.assertEqual(len(participation_queries), 2)
+        self.assertEqual(response.data["count"], 9)
 
     def test_default_roster_year_is_latest_year_with_checkins(self):
         current_year = get_current_year()
