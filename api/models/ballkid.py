@@ -615,31 +615,27 @@ class Ballkid(models.Model):
         """
         return f"{self.first_name} {self.last_name}"
 
-    def get_veterancy_years(self):
+    def get_veterancy_years(self, as_of_year=None):
         """
         Return the historical baseline plus distinct verified seasons after
         the baseline cutoff. A season is earned by at least one check-in.
         """
-        verified_years = (
-            self.season_participations.filter(
-                year__gt=self.veterancy_baseline_through_year
-            )
-            .values("year")
-            .distinct()
-            .count()
+        participations = self.season_participations.filter(
+            year__gt=self.veterancy_baseline_through_year
         )
+        if as_of_year is not None:
+            participations = participations.filter(year__lte=as_of_year)
+        verified_years = participations.values("year").distinct().count()
         return self.veterancy_baseline_years + verified_years
 
-    def get_verified_veterancy_years(self):
+    def get_verified_veterancy_years(self, as_of_year=None):
         """Count distinct check-in-earned seasons after the historical cutoff."""
-        return (
-            self.season_participations.filter(
-                year__gt=self.veterancy_baseline_through_year
-            )
-            .values("year")
-            .distinct()
-            .count()
+        participations = self.season_participations.filter(
+            year__gt=self.veterancy_baseline_through_year
         )
+        if as_of_year is not None:
+            participations = participations.filter(year__lte=as_of_year)
+        return participations.values("year").distinct().count()
 
     def get_preferred_position(self):
         """
