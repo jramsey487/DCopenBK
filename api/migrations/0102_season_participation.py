@@ -73,7 +73,6 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("checkin", "Recorded check-in"),
-                            ("manual", "Manually confirmed"),
                             ("imported", "Imported historical record"),
                         ],
                         default="checkin",
