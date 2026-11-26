@@ -7,6 +7,7 @@ from unittest.mock import patch
 from django.core import mail
 from django.utils import timezone
 from datetime import timedelta
+import smtplib
 
 from api.models.ballkid import Ballkid, SeasonParticipation
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
@@ -238,6 +239,60 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(second["sent"], 1)
         self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
         self.assertEqual(log.attempts, 2)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    @patch("api.utils.application_launch_email.get_tryout_slot_info", return_value=[])
+    @patch(
+        "api.utils.application_launch_email.EmailMultiAlternatives.send",
+        side_effect=smtplib.SMTPResponseException(452, b"4.7.28 rate limit"),
+    )
+    def test_provider_throttle_stops_batch_and_leaves_remaining_recipients_unsent(
+        self, _send, _slots
+    ):
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+
+        second_user = User.objects.create_user(
+            username="second-launch-volunteer",
+            email="second@example.com",
+            password="test",
+        )
+        second_kid = Ballkid.objects.create(
+            first_name="Second", last_name="Volunteer", user=second_user
+        )
+        SeasonParticipation.objects.create(
+            ballkid=second_kid,
+            year=2026,
+            source=SeasonParticipation.SOURCE_CHECKIN,
+        )
+        for kid in (self.ballkid, second_kid):
+            ApplicationLaunchDecision.objects.create(
+                ballkid=kid,
+                year=2027,
+                source_year=2026,
+                decision="invite_back",
+                updated_by=self.user,
+            )
+
+        from api.utils.application_launch_email import send_launch_notifications
+
+        result = send_launch_notifications(2026)
+
+        self.assertEqual(result["sent"], 0)
+        self.assertEqual(result["failed"], 1)
+        self.assertEqual(
+            ApplicationLaunchEmailLog.objects.filter(
+                ballkid=self.ballkid, year=2027, status=ApplicationLaunchEmailLog.STATUS_FAILED
+            ).count(),
+            1,
+        )
+        self.assertFalse(
+            ApplicationLaunchEmailLog.objects.filter(
+                ballkid=second_kid, year=2027
+            ).exists()
+        )
+        _send.assert_called_once()
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     @patch("api.utils.application_launch_email.get_tryout_slot_info", return_value=[])
