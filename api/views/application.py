@@ -342,6 +342,16 @@ class ApplicationVeterancyRosterView(APIView):
         participation_rows = list(
             SeasonParticipation.objects.filter(year=year)
             .select_related("ballkid", "ballkid__user")
+            .prefetch_related(
+                Prefetch(
+                    "ballkid__season_participations",
+                    queryset=SeasonParticipation.objects.filter(
+                        year__lte=year,
+                        year__gt=F("ballkid__veterancy_baseline_through_year"),
+                    ).only("ballkid_id", "year"),
+                    to_attr="veterancy_participations",
+                )
+            )
             .order_by("ballkid__last_name", "ballkid__first_name", "ballkid_id")
         )
         decisions = {
@@ -356,6 +366,13 @@ class ApplicationVeterancyRosterView(APIView):
         for participation in participation_rows:
             ballkid = participation.ballkid
             launch_decision = decisions.get(ballkid.id)
+            verified_years = len(
+                {
+                    season.year
+                    for season in getattr(ballkid, "veterancy_participations", [])
+                }
+            )
+            historical_years = ballkid.veterancy_baseline_years
             roster.append(
                 {
                     "ballkid_id": ballkid.id,
@@ -375,11 +392,9 @@ class ApplicationVeterancyRosterView(APIView):
                         if participation.last_checkin
                         else None
                     ),
-                    "historical_veterancy_years": ballkid.veterancy_baseline_years,
-                    "verified_veterancy_years": ballkid.get_verified_veterancy_years(
-                        as_of_year=year
-                    ),
-                    "veterancy_years": ballkid.get_veterancy_years(as_of_year=year),
+                    "historical_veterancy_years": historical_years,
+                    "verified_veterancy_years": verified_years,
+                    "veterancy_years": historical_years + verified_years,
                 }
             )
         return Response({"year": year, "count": len(roster), "results": roster})
