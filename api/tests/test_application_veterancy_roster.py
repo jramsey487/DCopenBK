@@ -3,7 +3,11 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.models.ballkid import Ballkid, SeasonParticipation
-from api.views.application import ApplicationVeterancyRosterView
+from api.models.application import ApplicationLaunchDecision
+from api.views.application import (
+    ApplicationLaunchDecisionView,
+    ApplicationVeterancyRosterView,
+)
 
 
 class TestApplicationVeterancyRosterView(TestCase):
@@ -67,3 +71,22 @@ class TestApplicationVeterancyRosterView(TestCase):
         response = ApplicationVeterancyRosterView.as_view()(request)
 
         self.assertEqual(response.status_code, 403)
+
+    def test_chairperson_can_save_invite_back_decision(self):
+        request = self.factory.patch(
+            "/api/applications/veterancy-roster/decision",
+            {"year": 2026, "decision": "invite_back"},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+
+        response = ApplicationLaunchDecisionView.as_view()(
+            request, ballkid_id=self.ballkid.id
+        )
+
+        self.assertEqual(response.status_code, 200)
+        decision = ApplicationLaunchDecision.objects.get(
+            ballkid=self.ballkid, year=2026
+        )
+        self.assertEqual(decision.decision, "invite_back")
+        self.assertEqual(decision.updated_by, self.user)
