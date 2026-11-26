@@ -4,6 +4,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.models.ballkid import Ballkid, SeasonParticipation
 from api.models.application import ApplicationLaunchDecision
+from api.utils.utils import get_current_year
 from api.views.application import (
     ApplicationLaunchDecisionView,
     ApplicationVeterancyRosterView,
@@ -90,3 +91,18 @@ class TestApplicationVeterancyRosterView(TestCase):
         )
         self.assertEqual(decision.decision, "invite_back")
         self.assertEqual(decision.updated_by, self.user)
+
+    def test_default_roster_year_is_latest_year_with_checkins(self):
+        current_year = get_current_year()
+        expected_year = (
+            current_year
+            if SeasonParticipation.objects.filter(year=current_year).exists()
+            else current_year - 1
+        )
+        request = self.factory.get("/api/applications/veterancy-roster")
+        force_authenticate(request, user=self.user)
+
+        response = ApplicationVeterancyRosterView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["year"], expected_year)
