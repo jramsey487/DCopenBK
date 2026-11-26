@@ -39,9 +39,9 @@ def _content(first_name, decision, year, slots):
         subject = f"Returning ball crew invitation and tryout — {site} {year}"
         paragraphs = [
             f"We'd love for you to be considered for the {site} ball crew in {year}. For this season, we need you to attend a tryout before your spot can be confirmed.",
-            "Please submit your application and select a tryout date. This is not a rejection; the tryout is the next step.",
+            "Please submit your application and reply to this email with the tryout date you plan to attend so we can confirm it. This is not a rejection; the tryout is the next step.",
         ]
-        button = "Apply and choose a tryout"
+        button = "Apply and confirm tryout by email"
     else:
         return None
     if tryouts:
