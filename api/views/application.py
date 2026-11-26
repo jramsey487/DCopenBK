@@ -41,6 +41,7 @@ from accounts.emails import send_set_password_emails_async
 from api.models.application import (
     ApplicationInterest,
     ApplicationLaunchDecision,
+    ApplicationLaunchEmailLog,
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
@@ -61,6 +62,11 @@ from api.serializers_application import (
     get_tryout_slot_info,
     recommendation_counts,
     TryoutReviewSerializer,
+)
+from api.utils.application_launch_email import (
+    build_launch_preview,
+    launch_send_in_progress,
+    send_launch_notifications_async,
 )
 from api.utils.application_decision_email import (
     applicant_emails_enabled,
@@ -442,6 +448,92 @@ class ApplicationLaunchDecisionView(APIView):
                 "notes": launch_decision.notes,
                 "updated_at": launch_decision.updated_at.isoformat(),
             }
+        )
+
+
+class ApplicationLaunchPreviewView(APIView):
+    """Chairperson-only, side-effect-free preview of returning-volunteer emails."""
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        raw_year = request.query_params.get("source_year")
+        if raw_year is None:
+            current_year = get_current_year()
+            raw_year = (
+                current_year
+                if SeasonParticipation.objects.filter(year=current_year).exists()
+                else current_year - 1
+            )
+        try:
+            source_year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"source_year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if source_year < 1900 or source_year > get_current_year():
+            return Response(
+                {"source_year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(build_launch_preview(source_year))
+
+
+class ApplicationLaunchSendView(APIView):
+    """Start a guarded, resumable batch of returning-volunteer invitations."""
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        raw_year = request.data.get("source_year")
+        try:
+            source_year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"source_year": "Provide the prior tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if source_year < 1900 or source_year > get_current_year():
+            return Response(
+                {"source_year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not ApplicationSettings.get_solo().is_open:
+            return Response(
+                {"detail": "Open applications before sending invitation emails."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if launch_send_in_progress():
+            return Response(
+                {"detail": "A launch email batch is already in progress."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        preview = build_launch_preview(source_year)
+        if preview["undecided"]:
+            return Response(
+                {
+                    "detail": "Resolve all invitation / tryout decisions before sending.",
+                    "undecided": preview["undecided"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if preview["missing_email"]:
+            return Response(
+                {
+                    "detail": "Add an email address for every person being invited.",
+                    "missing_email": preview["missing_email"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        send_launch_notifications_async(source_year)
+        return Response(
+            {
+                "queued": preview["sendable"],
+                "year": preview["year"],
+                "detail": "Invitation batch started. Refresh the preview to see delivery status.",
+            },
+            status=status.HTTP_202_ACCEPTED,
         )
 
 
