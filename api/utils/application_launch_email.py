@@ -1,6 +1,7 @@
 """Returning-volunteer invitation preview and resumable email delivery."""
 import logging
 import threading
+from datetime import timedelta
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import close_old_connections, transaction
@@ -13,6 +14,11 @@ from api.serializers_application import get_tryout_slot_info
 
 logger = logging.getLogger("api.utils.application_launch_email")
 _send_lock = threading.Lock()
+_STALE_SEND_AFTER = timedelta(minutes=15)
+_STALE_SEND_RETRY_NOTE = (
+    "A previous email worker stopped before recording completion. "
+    "Retrying may send a duplicate if the mail provider accepted the earlier attempt."
+)
 
 
 def launch_send_in_progress():
@@ -72,6 +78,17 @@ def build_launch_preview(source_year):
         email = (kid.user.email or "").strip() if kid.user_id else ""
         message = _content(kid.first_name, decision, year, slots)
         log = logs.get(kid.id)
+        status_value = log.status if log else "not_sent"
+        last_error = log.last_error if log else ""
+        if (
+            log
+            and log.status == "sending"
+            and log.updated_at <= timezone.now() - _STALE_SEND_AFTER
+        ):
+            # A process restart can strand a durable row in "sending".
+            # Surface it as retryable without silently resending during preview.
+            status_value = "failed"
+            last_error = _STALE_SEND_RETRY_NOTE
         if decision == "undecided":
             undecided.append(kid.get_name())
         if decision in ("invite_back", "must_try_out") and not email:
@@ -80,9 +97,9 @@ def build_launch_preview(source_year):
             "ballkid_id": kid.id, "name": kid.get_name(), "email": email,
             "decision": decision, "subject": message[0] if message else "",
             "text": message[1] if message else "",
-            "status": log.status if log else "not_sent",
+            "status": status_value,
             "sent_at": log.sent_at.isoformat() if log and log.sent_at else None,
-            "last_error": log.last_error if log else "",
+            "last_error": last_error,
         })
     sendable = sum(1 for r in results if r["decision"] in ("invite_back", "must_try_out") and r["email"] and r["status"] in ("not_sent", "failed"))
     return {
@@ -108,12 +125,33 @@ def _send_one(kid, source_year, year, slots):
                 },
             )
             if not created:
-                if log.status in ("sent", "sending"):
+                if log.status == "sent":
                     return "skipped"
-                claimed = ApplicationLaunchEmailLog.objects.filter(pk=log.pk, status="failed").update(
-                    status="sending", attempts=F("attempts") + 1, last_error="",
-                    recipient_email=kid.user.email, subject=subject,
-                )
+                now = timezone.now()
+                if log.status == "sending":
+                    stale_before = now - _STALE_SEND_AFTER
+                    claimed = ApplicationLaunchEmailLog.objects.filter(
+                        pk=log.pk,
+                        status="sending",
+                        updated_at__lte=stale_before,
+                    ).update(
+                        attempts=F("attempts") + 1,
+                        updated_at=now,
+                        last_error=_STALE_SEND_RETRY_NOTE,
+                        recipient_email=kid.user.email,
+                        subject=subject,
+                    )
+                else:
+                    claimed = ApplicationLaunchEmailLog.objects.filter(
+                        pk=log.pk, status="failed"
+                    ).update(
+                        status="sending",
+                        attempts=F("attempts") + 1,
+                        updated_at=now,
+                        last_error="",
+                        recipient_email=kid.user.email,
+                        subject=subject,
+                    )
                 if not claimed:
                     return "skipped"
         msg = EmailMultiAlternatives(subject, body, to=[kid.user.email], reply_to=[settings.SUPPORT_EMAIL])
