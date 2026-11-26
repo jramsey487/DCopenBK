@@ -134,7 +134,6 @@ const emptyForm = {
   is_veteran: null,
 
   // veteran-only
-  years_experience: "",
   position: "",
   likelihood: "",
   headshot_update: null,
@@ -217,7 +216,6 @@ function validateStep(step, form, existingFiles = {}) {
   if (step === 1) {
     if (form.is_veteran) {
       [
-        "years_experience",
         "position",
         "likelihood",
         "veteran_sunday_or_monday",
@@ -1091,15 +1089,6 @@ export default function ApplicationPage() {
           <Typography variant="h6">
             Veteran Ballperson
           </Typography>
-
-          <TextField
-            label="Years of experience (not counting this year)"
-            type="number"
-            value={form.years_experience}
-            onChange={set("years_experience")}
-            required
-            {...fp("years_experience")}
-          />
 
           <TextField
             select
