@@ -2,7 +2,7 @@
 from django.db import migrations, models
 
 
-HISTORICAL_BASELINE_CUTOFF_YEAR = 2026
+HISTORICAL_BASELINE_CUTOFF_YEAR = 2025
 
 
 def copy_historical_experience(apps, schema_editor):
