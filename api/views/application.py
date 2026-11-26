@@ -47,7 +47,8 @@ from api.models.application import (
     derive_last_day,
     TryoutReview,
 )
-from api.models.ballkid import Ballkid
+from api.models.ballkid import Ballkid, SeasonParticipation
+from api.utils.utils import get_current_year
 from api.models.schedule import Tournament
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
@@ -299,6 +300,62 @@ class ApplicationListView(generics.ListAPIView):
         if status_filter:
             qs = qs.filter(status=status_filter)
         return qs
+
+
+class ApplicationVeterancyRosterView(APIView):
+    """
+    Chairperson-only roster of Ballkids who checked in during a selected
+    season. This is the evidence-based prior-season list used by Application
+    Launch; roster assignment alone never creates a row.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        default_year = get_current_year() - 1
+        raw_year = request.query_params.get("year", default_year)
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if year < 1900 or year > get_current_year():
+            return Response(
+                {"year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation_rows = (
+            SeasonParticipation.objects.filter(year=year)
+            .select_related("ballkid", "ballkid__user")
+            .order_by("ballkid__last_name", "ballkid__first_name", "ballkid_id")
+        )
+        roster = []
+        for participation in participation_rows:
+            ballkid = participation.ballkid
+            roster.append(
+                {
+                    "ballkid_id": ballkid.id,
+                    "first_name": ballkid.first_name,
+                    "last_name": ballkid.last_name,
+                    "full_name": ballkid.get_name(),
+                    "email": ballkid.user.email if ballkid.user_id else "",
+                    "participation_year": participation.year,
+                    "last_checkin": (
+                        participation.last_checkin.isoformat()
+                        if participation.last_checkin
+                        else None
+                    ),
+                    "historical_veterancy_years": ballkid.veterancy_baseline_years,
+                    "verified_veterancy_years": ballkid.get_verified_veterancy_years(
+                        as_of_year=year
+                    ),
+                    "veterancy_years": ballkid.get_veterancy_years(as_of_year=year),
+                }
+            )
+        return Response({"year": year, "count": len(roster), "results": roster})
 
 
 class ApplicationDetailView(generics.RetrieveAPIView):
