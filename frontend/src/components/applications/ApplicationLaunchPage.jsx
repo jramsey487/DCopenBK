@@ -48,6 +48,10 @@ export default function ApplicationLaunchPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [sendLoading, setSendLoading] = useState(false);
+  const [applicationsOpen, setApplicationsOpen] = useState(null);
+  const [openingApplications, setOpeningApplications] = useState(false);
+  const [interestPending, setInterestPending] = useState(null);
+  const [notifyingInterest, setNotifyingInterest] = useState(false);
 
   const undecidedCount = roster.filter(
     (person) => (person.decision || "undecided") === "undecided"
@@ -85,6 +89,31 @@ export default function ApplicationLaunchPage() {
   useEffect(() => {
     loadRoster();
   }, [loadRoster]);
+
+  const loadLaunchSettings = useCallback(async () => {
+    try {
+      const settingsResponse = await fetch("/api/application-settings", {
+        headers: getAuthHeader(),
+      });
+      if (settingsResponse.ok) {
+        const settingsData = await settingsResponse.json();
+        setApplicationsOpen(Boolean(settingsData.is_open));
+      }
+      const interestResponse = await fetch("/api/application-interest/summary", {
+        headers: getAuthHeader(),
+      });
+      if (interestResponse.ok) {
+        const interestData = await interestResponse.json();
+        setInterestPending(Number(interestData.pending) || 0);
+      }
+    } catch (err) {
+      // Keep launch controls disabled if settings couldn't be confirmed.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLaunchSettings();
+  }, [loadLaunchSettings]);
 
   const loadPreview = async () => {
     if (!year) return;
@@ -156,6 +185,58 @@ export default function ApplicationLaunchPage() {
       setError(err.message || "Unable to save decision.");
     } finally {
       setSavingIds((current) => ({ ...current, [ballkidId]: false }));
+    }
+  };
+
+  const openApplications = async () => {
+    if (applicationsOpen || openingApplications) return;
+    if (!window.confirm("Open applications to the public now?")) return;
+    setOpeningApplications(true);
+    setError("");
+    try {
+      const response = await fetch("/api/application-settings", {
+        method: "PATCH",
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_open: true }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to open applications.");
+      }
+      setApplicationsOpen(Boolean(data.is_open));
+      setNotice("Applications are now open.");
+      await loadLaunchSettings();
+    } catch (err) {
+      setError(err.message || "Unable to open applications.");
+    } finally {
+      setOpeningApplications(false);
+    }
+  };
+
+  const notifyInterestList = async () => {
+    if (!applicationsOpen || notifyingInterest) return;
+    if (!window.confirm("Email everyone on the interest list who has not been notified yet?")) return;
+    setNotifyingInterest(true);
+    setError("");
+    try {
+      const response = await fetch("/api/application-interest/notify", {
+        method: "POST",
+        headers: getAuthHeader(),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to notify the interest list.");
+      }
+      setInterestPending(Number(data.remaining_after) || 0);
+      setNotice(`Interest-list notification started for ${data.queued} people. ${data.remaining_after} remain for a later batch.`);
+      await loadLaunchSettings();
+    } catch (err) {
+      setError(err.message || "Unable to notify the interest list.");
+    } finally {
+      setNotifyingInterest(false);
     }
   };
 
@@ -236,6 +317,24 @@ export default function ApplicationLaunchPage() {
           disabled={previewLoading || !year}
         >
           {previewLoading ? "Building preview…" : "Preview launch emails"}
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={openApplications}
+          disabled={applicationsOpen !== false || openingApplications}
+        >
+          {openingApplications ? "Opening…" : applicationsOpen ? "Applications open" : "Open applications"}
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={notifyInterestList}
+          disabled={!applicationsOpen || notifyingInterest || interestPending === 0 || interestPending === null}
+        >
+          {notifyingInterest
+            ? "Notifying…"
+            : interestPending === null
+              ? "Notify interest list"
+              : `Notify interest list (${interestPending})`}
         </Button>
         <Typography color="text.secondary" variant="body2">
           {count} checked-in {count === 1 ? "person" : "people"} in {year || "—"}
