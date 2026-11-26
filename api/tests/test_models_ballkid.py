@@ -310,7 +310,7 @@ class TestBallkidModel(TestCase):
 
     def test_veterancy_includes_historical_baseline_and_verified_future_years(self):
         self.ballkid.veterancy_baseline_years = 4
-        self.ballkid.veterancy_baseline_through_year = 2025
+        self.ballkid.veterancy_baseline_through_year = 2026
         self.ballkid.save(
             update_fields=[
                 "veterancy_baseline_years",
@@ -320,17 +320,17 @@ class TestBallkidModel(TestCase):
 
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
-            year=2025,
+            year=2026,
             source=SeasonParticipation.SOURCE_IMPORTED,
         )
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
-            year=2026,
+            year=2027,
             source=SeasonParticipation.SOURCE_CHECKIN,
         )
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
-            year=2027,
+            year=2028,
             source=SeasonParticipation.SOURCE_CHECKIN,
         )
 
