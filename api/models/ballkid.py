@@ -114,6 +114,20 @@ class Ballkid(models.Model):
 
         # If checking in, create new checkin history row
         if value:
+            now_date = timezone.localtime(now - timedelta(hours=CHECKIN_START_HOUR)).date()
+            is_first_checkin = (
+                CheckinHistory.objects.filter(
+                    ballkid=self,
+                    start__startswith=now_date,
+                ).count()
+                == 0
+            )
+
+            history = CheckinHistory.objects.create(
+                ballkid=self, start=now, is_first_checkin=is_first_checkin
+            )
+            history.save()
+
             # A dated, explicit season record is the reliable source for
             # returning-veteran eligibility. Keep it independent of the
             # transient active/archive status on Ballkid.
@@ -140,20 +154,6 @@ class Ballkid(models.Model):
                     update_fields.append("source")
                 if update_fields:
                     participation.save(update_fields=update_fields)
-            now_date = timezone.localtime(now - timedelta(hours=CHECKIN_START_HOUR)).date()
-            is_first_checkin = (
-                CheckinHistory.objects.filter(
-                    ballkid=self,
-                    start__startswith=now_date,
-                ).count()
-                == 0
-            )
-
-            history = CheckinHistory.objects.create(
-                ballkid=self, start=now, is_first_checkin=is_first_checkin
-            )
-            history.save()
-
         # If checking out, update most recent checkin history row
         else:
             histories = CheckinHistory.objects.filter(ballkid=self)
