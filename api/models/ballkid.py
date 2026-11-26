@@ -42,6 +42,9 @@ class Ballkid(models.Model):
     emergency_name = models.CharField(max_length=160, blank=True, null=True)
     emergency_phone = PhoneNumberField(null=True, blank=True)
     num_years_experience = models.IntegerField(default=0)
+    # One-time historical experience baseline; future years require a recorded check-in.
+    veterancy_baseline_years = models.PositiveSmallIntegerField(default=0)
+    veterancy_baseline_through_year = models.PositiveSmallIntegerField(default=2026)
     is_out_of_town = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
     is_chairperson = models.BooleanField(default=False)
@@ -611,6 +614,32 @@ class Ballkid(models.Model):
         Returns ballkid's full name
         """
         return f"{self.first_name} {self.last_name}"
+
+    def get_veterancy_years(self):
+        """
+        Return the historical baseline plus distinct verified seasons after
+        the baseline cutoff. A season is earned by at least one check-in.
+        """
+        verified_years = (
+            self.season_participations.filter(
+                year__gt=self.veterancy_baseline_through_year
+            )
+            .values("year")
+            .distinct()
+            .count()
+        )
+        return self.veterancy_baseline_years + verified_years
+
+    def get_verified_veterancy_years(self):
+        """Count distinct check-in-earned seasons after the historical cutoff."""
+        return (
+            self.season_participations.filter(
+                year__gt=self.veterancy_baseline_through_year
+            )
+            .values("year")
+            .distinct()
+            .count()
+        )
 
     def get_preferred_position(self):
         """
