@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("year", models.PositiveSmallIntegerField()),
+                ("source_year", models.PositiveSmallIntegerField()),
                 (
                     "decision",
                     models.CharField(
