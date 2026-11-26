@@ -44,7 +44,7 @@ class Ballkid(models.Model):
     num_years_experience = models.IntegerField(default=0)
     # One-time historical experience baseline; future years require a recorded check-in.
     veterancy_baseline_years = models.PositiveSmallIntegerField(default=0)
-    veterancy_baseline_through_year = models.PositiveSmallIntegerField(default=2025)
+    veterancy_baseline_through_year = models.PositiveSmallIntegerField(default=2026)
     is_out_of_town = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
     is_chairperson = models.BooleanField(default=False)
