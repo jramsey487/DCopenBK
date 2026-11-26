@@ -1,5 +1,6 @@
 # Generated for explicit year-by-year ballcrew participation tracking.
 from django.db import migrations, models
+from django.utils import timezone
 import django.db.models.deletion
 
 
@@ -20,7 +21,8 @@ def backfill_season_participation(apps, schema_editor):
     for ballkid_id, started in years.iterator():
         if started is None:
             continue
-        year = started.year
+        # Match the local tournament-year boundary used by live check-ins.
+        year = timezone.localtime(started).year
         key = (ballkid_id, year)
         bounds = grouped.get(key)
         if bounds is None:
