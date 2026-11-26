@@ -84,7 +84,7 @@ def build_launch_preview(source_year):
             "sent_at": log.sent_at.isoformat() if log and log.sent_at else None,
             "last_error": log.last_error if log else "",
         })
-    sendable = sum(1 for r in results if r["decision"] in ("invite_back", "must_try_out") and r["email"])
+    sendable = sum(1 for r in results if r["decision"] in ("invite_back", "must_try_out") and r["email"] and r["status"] in ("not_sent", "failed"))
     return {
         "source_year": source_year, "year": year, "count": len(results),
         "sendable": sendable, "undecided": undecided, "missing_email": missing,
@@ -135,6 +135,8 @@ def send_launch_notifications(source_year):
     if not _send_lock.acquire(blocking=False):
         return {"busy": True, "sent": 0, "failed": 0, "skipped": 0}
     try:
+        if not ApplicationSettings.get_solo().is_open:
+            return {"sent": 0, "failed": 0, "skipped": 0, "blocked": True}
         preview = build_launch_preview(source_year)
         if preview["undecided"] or preview["missing_email"]:
             return {"blocked": True, "sent": 0, "failed": 0, "skipped": 0}
