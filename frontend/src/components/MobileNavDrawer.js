@@ -74,7 +74,7 @@ function pathActive(pathname, item) {
   return pathname === item.url || pathname.startsWith(item.url + "/");
 }
 
-function getNavSections(group) {
+function getNavSections(group, isSuperuser = false) {
   const list = {
     label: "List",
     Icon: NavIconRoster,
@@ -91,6 +91,7 @@ function getNavSections(group) {
     items: [
       { label: "Apply", url: "/apply" },
       { label: "Ball Crew Handbook", url: "/handbook" },
+      { label: "Application Launch", url: "/application-launch" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
       { label: "Sizing Report", url: "/sizing-report" },
@@ -179,6 +180,10 @@ function getNavSections(group) {
     ],
   };
 
+  if (isSuperuser || group === "chairperson") {
+    return [applicationsChairperson, list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets, adminTools];
+  }
+
   switch (group) {
     case "chairperson":
       return [applicationsChairperson, list, teamsChairperson, schedule, ratingsChairperson, leaderboards, tickets, adminTools];
@@ -222,7 +227,7 @@ function getAccountItems(group) {
   return base;
 }
 
-export default function MobileNavDrawer({ group, setToken }) {
+export default function MobileNavDrawer({ group, isSuperuser = false, setToken }) {
   const [open, setOpen] = useState(false);
   const [ballkid, setBallkid] = useState(null);
   const [openSections, setOpenSections] = useState({});
@@ -260,7 +265,10 @@ export default function MobileNavDrawer({ group, setToken }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const navSections = useMemo(() => getNavSections(group), [group]);
+  const navSections = useMemo(
+    () => getNavSections(group, isSuperuser),
+    [group, isSuperuser]
+  );
   const accountItems = useMemo(() => getAccountItems(group), [group]);
 
   const displayName = ballkid
