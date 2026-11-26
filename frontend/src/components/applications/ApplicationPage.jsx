@@ -723,8 +723,7 @@ export default function ApplicationPage() {
           {minimumAge
             ? `You must be ${minimumAge} or older by the start of the tournament. `
             : ""}
-          First-time applicants must attend a tryout. Returning ball crew are
-          encouraged to come, but it isn't required.
+          First-time applicants and veterans who did not receive a returning invitation must attend a tryout.
         </Typography>
 
         {upcomingTryouts.length > 0 ? (
