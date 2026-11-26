@@ -252,6 +252,99 @@ function validateStep(step, form, existingFiles = {}) {
   return errors;
 }
 
+function InterestSignup() {
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done
+  const [error, setError] = useState("");
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setStatus("sending");
+    try {
+      const response = await fetch("/api/application-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, first_name: firstName, website }),
+      });
+      if (response.ok) {
+        setStatus("done");
+        return;
+      }
+      setError(
+        response.status === 429
+          ? "Too many attempts -- please try again in a little while."
+          : "Please enter a valid email address."
+      );
+    } catch (err) {
+      setError("Something went wrong -- please try again.");
+    }
+    setStatus("idle");
+  };
+
+  if (status === "done") {
+    return (
+      <Typography color="success.main">
+        You're on the list! We'll email you the application link when
+        applications open.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box component="form" onSubmit={submit}>
+      <Typography variant="subtitle1" gutterBottom>
+        Want a heads-up when applications open?
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Leave your email and we'll send you the application link. We'll only
+        use it for that.
+      </Typography>
+      <Stack spacing={2}>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <TextField
+          label="First name (optional)"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          inputProps={{ maxLength: 100 }}
+        />
+        {/* Honeypot -- hidden from people, tempting to bots. */}
+        <input
+          type="text"
+          name="website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", height: 0, width: 0 }}
+        />
+        {error ? (
+          <Typography color="error" variant="body2">
+            {error}
+          </Typography>
+        ) : null}
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={status === "sending" || email.trim() === ""}
+          sx={{ alignSelf: "flex-start" }}
+        >
+          Notify me
+        </Button>
+      </Stack>
+    </Box>
+  );
+}
+
 function FieldError({ message }) {
   return message ? (
     <Typography variant="caption" color="error">
@@ -608,11 +701,12 @@ export default function ApplicationPage() {
           Applications are currently closed
         </Typography>
 
-        <Typography>
+        <Typography sx={{ mb: 3 }}>
           We're not accepting new ballcrew applications right now.
           Check back later, or reach out to
           mdetennis.ballcrew@gmail.com with any questions.
         </Typography>
+        <InterestSignup />
       </Paper>
     );
   }
