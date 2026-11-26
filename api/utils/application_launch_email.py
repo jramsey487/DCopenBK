@@ -159,8 +159,15 @@ def send_launch_notifications(source_year):
         return {"sent": 0, "failed": 0, "skipped": 0, "error": "send_failed"}
     finally:
         _send_lock.release()
+
+
+def _send_launch_thread(source_year):
+    try:
+        send_launch_notifications(source_year)
+    finally:
+        # Only the worker thread should close its own database connection.
         close_old_connections()
 
 
 def send_launch_notifications_async(source_year):
-    threading.Thread(target=send_launch_notifications, args=(source_year,), daemon=True).start()
+    threading.Thread(target=_send_launch_thread, args=(source_year,), daemon=True).start()
