@@ -25,7 +25,7 @@ class TestApplicationVeterancyRosterView(TestCase):
             last_name="Volunteer",
             user=self.user,
             veterancy_baseline_years=5,
-            veterancy_baseline_through_year=2025,
+            veterancy_baseline_through_year=2026,
         )
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
@@ -57,8 +57,8 @@ class TestApplicationVeterancyRosterView(TestCase):
         person = response.data["results"][0]
         self.assertEqual(person["ballkid_id"], self.ballkid.id)
         self.assertEqual(person["historical_veterancy_years"], 5)
-        self.assertEqual(person["verified_veterancy_years"], 1)
-        self.assertEqual(person["veterancy_years"], 6)
+        self.assertEqual(person["verified_veterancy_years"], 0)
+        self.assertEqual(person["veterancy_years"], 5)
 
     def test_requires_chairperson_or_superuser(self):
         regular_user = User.objects.create_user(
