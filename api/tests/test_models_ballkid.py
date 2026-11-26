@@ -320,12 +320,12 @@ class TestBallkidModel(TestCase):
 
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
-            year=2024,
+            year=2025,
             source=SeasonParticipation.SOURCE_IMPORTED,
         )
         SeasonParticipation.objects.create(
             ballkid=self.ballkid,
-            year=2025,
+            year=2026,
             source=SeasonParticipation.SOURCE_CHECKIN,
         )
         SeasonParticipation.objects.create(
