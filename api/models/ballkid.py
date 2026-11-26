@@ -741,11 +741,9 @@ class SeasonParticipation(models.Model):
     """A durable record that a ballkid worked during a particular season."""
 
     SOURCE_CHECKIN = "checkin"
-    SOURCE_MANUAL = "manual"
     SOURCE_IMPORTED = "imported"
     SOURCE_CHOICES = (
         (SOURCE_CHECKIN, "Recorded check-in"),
-        (SOURCE_MANUAL, "Manually confirmed"),
         (SOURCE_IMPORTED, "Imported historical record"),
     )
 
