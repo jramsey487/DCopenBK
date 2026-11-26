@@ -6,6 +6,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  Link,
   MenuItem,
   Paper,
   Radio,
@@ -365,6 +366,7 @@ export default function ApplicationPage() {
 
   const [applicationsOpen, setApplicationsOpen] = useState(null);
   const [tournamentStartDate, setTournamentStartDate] = useState(null);
+  const [minimumAge, setMinimumAge] = useState(null);
   const [tryoutSlots, setTryoutSlots] = useState([]);
   const [rookieTryoutsAvailable, setRookieTryoutsAvailable] =
     useState(true);
@@ -433,6 +435,7 @@ export default function ApplicationPage() {
         setTournamentStartDate(
           data.tournament_start_date || null
         );
+        setMinimumAge(data.minimum_age || null);
         setTryoutSlots(data.tryout_slots || []);
         setRookieTryoutsAvailable(
           data.rookie_tryouts_available !== false
@@ -688,6 +691,13 @@ export default function ApplicationPage() {
   // Closed-to-new-applicants page doesn't apply to someone editing their
   // own application -- the server decides whether edits are still allowed.
   if (!isEditing && applicationsOpen === false) {
+    // Only show tryout dates that are still ahead of us. Stored settings can
+    // contain last season's dates during the off-season.
+    const today = new Date().toLocaleDateString("en-CA");
+    const upcomingTryouts = tryoutSlots.filter(
+      (slot) => slot.date && slot.date >= today
+    );
+
     return (
       <Paper
         sx={{
@@ -698,13 +708,38 @@ export default function ApplicationPage() {
         }}
       >
         <Typography variant="h5" gutterBottom>
+          Tryout Application
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2 }}>
           Applications are currently closed
         </Typography>
+        <Typography sx={{ mb: 2 }}>
+          Applications usually open in March or April. Questions? Reach out to
+          mdetennis.ballcrew@gmail.com.
+        </Typography>
 
-        <Typography sx={{ mb: 3 }}>
-          We're not accepting new ballcrew applications right now.
-          Check back later, or reach out to
-          mdetennis.ballcrew@gmail.com with any questions.
+        <Typography variant="subtitle2">Who can apply</Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          {minimumAge
+            ? `You must be ${minimumAge} or older by the start of the tournament. `
+            : ""}
+          First-time applicants must attend a tryout. Returning ball crew are
+          encouraged to come, but it isn't required.
+        </Typography>
+
+        {upcomingTryouts.length > 0 ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2">Tryouts</Typography>
+            {upcomingTryouts.map((slot) => (
+              <Typography key={slot.value} variant="body2">
+                {formatTryoutSlot(slot)}
+              </Typography>
+            ))}
+          </Box>
+        ) : null}
+
+        <Typography variant="body2" sx={{ mb: 3 }}>
+          New to ball crew? Read the <Link href="/handbook">handbook</Link>.
         </Typography>
         <InterestSignup />
       </Paper>
@@ -767,6 +802,10 @@ export default function ApplicationPage() {
     );
   }
 
+  const tournamentYear = tournamentStartDate
+    ? tournamentStartDate.slice(0, 4)
+    : String(new Date().getFullYear());
+
   // For new applicants, full tryout slots disappear.
   // For an applicant editing an existing application, their currently
   // selected slot remains available even if it has since become full.
@@ -789,7 +828,7 @@ export default function ApplicationPage() {
         {isEditing
           ? "Edit Your Application"
           : "Ballcrew Application"}{" "}
-        &mdash; Mubadala DC Open 2026
+        &mdash; Mubadala DC Open {tournamentYear}
       </Typography>
 
       {isEditing ? (
