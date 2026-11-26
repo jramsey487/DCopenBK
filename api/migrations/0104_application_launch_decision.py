@@ -58,6 +58,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={"ordering": ["year", "ballkid_id"]},
         ),
         migrations.AddConstraint(
             model_name="applicationlaunchdecision",
