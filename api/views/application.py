@@ -321,7 +321,7 @@ class ApplicationVeterancyRosterView(APIView):
         )
         raw_year = request.query_params.get("year", default_year)
         try:
-            year = int(raw_year)
+            year = int(target_year)
         except (TypeError, ValueError):
             return Response(
                 {"year": "Provide a valid calendar year."},
@@ -341,7 +341,8 @@ class ApplicationVeterancyRosterView(APIView):
         decisions = {
             decision.ballkid_id: decision
             for decision in ApplicationLaunchDecision.objects.filter(
-                year=year,
+                year=year + 1,
+                source_year=year,
                 ballkid_id__in=[row.ballkid_id for row in participation_rows],
             )
         }
@@ -384,7 +385,7 @@ class ApplicationLaunchDecisionView(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, ballkid_id):
-        raw_year = request.data.get("year", get_current_year() - 1)
+        target_year = request.data.get("year", get_current_year())
         try:
             year = int(raw_year)
         except (TypeError, ValueError):
@@ -408,19 +409,25 @@ class ApplicationLaunchDecisionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        source_year = year - 1
         if not SeasonParticipation.objects.filter(
-            ballkid_id=ballkid_id, year=year
+            ballkid_id=ballkid_id, year=source_year
         ).exists():
             return Response(
-                {"detail": "No recorded check-in for this Ballkid in that year."},
+                {"detail": "No recorded check-in for this Ballkid in the prior tournament year."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         launch_decision, _created = ApplicationLaunchDecision.objects.get_or_create(
             ballkid_id=ballkid_id,
             year=year,
-            defaults={"decision": decision, "updated_by": request.user},
+            defaults={
+                "source_year": source_year,
+                "decision": decision,
+                "updated_by": request.user,
+            },
         )
+        launch_decision.source_year = source_year
         launch_decision.decision = decision
         launch_decision.updated_by = request.user
         if "notes" in request.data:
@@ -430,6 +437,7 @@ class ApplicationLaunchDecisionView(APIView):
             {
                 "ballkid_id": ballkid_id,
                 "year": year,
+                "source_year": source_year,
                 "decision": launch_decision.decision,
                 "notes": launch_decision.notes,
                 "updated_at": launch_decision.updated_at.isoformat(),
