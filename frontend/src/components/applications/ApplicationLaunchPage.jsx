@@ -116,9 +116,9 @@ export default function ApplicationLaunchPage() {
         Application Launch
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Start with the people who actually checked in during the previous
-        tournament. Their annual participation is tracked separately from the
-        one-time historical experience baseline.
+        Start with the people who actually checked in during the selected
+        tournament. The historical experience baseline is preserved through
+        2026; verified check-in seasons from 2027 onward add to that total.
       </Typography>
 
       <Alert severity="info" sx={{ mb: 2 }}>
