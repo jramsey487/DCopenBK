@@ -88,14 +88,14 @@ export default function ApplicationLaunchPage() {
             ...getAuthHeader(),
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ year: Number(year), decision: nextDecision }),
+          body: JSON.stringify({ year: Number(year) + 1, decision: nextDecision }),
         }
       );
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.decision || data.detail || "Unable to save decision.");
       }
-      setNotice(`Saved ${DECISION_LABELS[nextDecision]} for ${data.year}.`);
+      setNotice(`Saved ${DECISION_LABELS[nextDecision]} for application season ${data.year}.`);
     } catch (err) {
       setRoster((current) =>
         current.map((person) =>
@@ -171,7 +171,7 @@ export default function ApplicationLaunchPage() {
             <TableCell align="right">Historical baseline</TableCell>
             <TableCell align="right">Verified seasons after 2026</TableCell>
             <TableCell>Last check-in</TableCell>
-            <TableCell>Launch decision</TableCell>
+            <TableCell>Decision for {Number(year) + 1}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
