@@ -321,7 +321,7 @@ class ApplicationVeterancyRosterView(APIView):
         )
         raw_year = request.query_params.get("year", default_year)
         try:
-            year = int(target_year)
+            year = int(raw_year)
         except (TypeError, ValueError):
             return Response(
                 {"year": "Provide a valid calendar year."},
@@ -387,13 +387,13 @@ class ApplicationLaunchDecisionView(APIView):
     def patch(self, request, ballkid_id):
         target_year = request.data.get("year", get_current_year())
         try:
-            year = int(raw_year)
+            year = int(target_year)
         except (TypeError, ValueError):
             return Response(
                 {"year": "Provide a valid calendar year."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if year < 1900 or year > get_current_year():
+        if year < 1900 or year > get_current_year() + 1:
             return Response(
                 {"year": "Year must be between 1900 and the current tournament year."},
                 status=status.HTTP_400_BAD_REQUEST,
