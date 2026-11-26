@@ -150,7 +150,6 @@ class ApplicationValidationMixin:
 
         if is_veteran:
             required = [
-                "years_experience",
                 "position",
                 "likelihood",
                 "veteran_sunday_or_monday",
