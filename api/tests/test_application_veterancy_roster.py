@@ -76,7 +76,7 @@ class TestApplicationVeterancyRosterView(TestCase):
     def test_chairperson_can_save_invite_back_decision(self):
         request = self.factory.patch(
             "/api/applications/veterancy-roster/decision",
-            {"year": 2026, "decision": "invite_back"},
+            {"year": 2027, "decision": "invite_back"},
             format="json",
         )
         force_authenticate(request, user=self.user)
@@ -87,8 +87,9 @@ class TestApplicationVeterancyRosterView(TestCase):
 
         self.assertEqual(response.status_code, 200)
         decision = ApplicationLaunchDecision.objects.get(
-            ballkid=self.ballkid, year=2026
+            ballkid=self.ballkid, year=2027
         )
+        self.assertEqual(decision.source_year, 2026)
         self.assertEqual(decision.decision, "invite_back")
         self.assertEqual(decision.updated_by, self.user)
 
