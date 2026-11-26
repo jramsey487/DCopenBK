@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 
 import BallcrewLogo from "./BallcrewLogo";
 import MobileNavDrawer from "./MobileNavDrawer";
-import { getLocalStorage, useIsMobile } from "./Utils";
+import { getLocalStorage, getIsSuperuser, useIsMobile } from "./Utils";
 import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
 import { clearApiCache } from "./api";
 import "./navbar.css";
@@ -277,11 +277,15 @@ function DesktopNavbarItem({ tab, useIconButton, setToken }) {
 
 export default function Navbar({ isLoggedIn, setToken }) {
   const group = getLocalStorage("group");
+  const isSuperuser = getIsSuperuser();
   const isMobile = useIsMobile();
 
   var accountTab = {};
   var tabs = [];
-  switch (group) {
+  if (isSuperuser) {
+    tabs = chairpersonTabs;
+    accountTab = chairpersonAccountTab;
+  } else switch (group) {
     case "ballkid":
       tabs = ballkidTabs;
       accountTab = ballkidAccountTab;
