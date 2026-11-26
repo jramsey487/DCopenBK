@@ -149,6 +149,8 @@ application_urls = [
     path("application-edit/<uuid:token>", ApplicationEditView.as_view(), name="application-edit"),
     path("applications", ApplicationListView.as_view(), name="applications"),
     path("applications/veterancy-roster", ApplicationVeterancyRosterView.as_view(), name="applications-veterancy-roster"),
+    path("applications/launch-preview", ApplicationLaunchPreviewView.as_view(), name="applications-launch-preview"),
+    path("applications/launch-send", ApplicationLaunchSendView.as_view(), name="applications-launch-send"),
     path("applications/veterancy-roster/<int:ballkid_id>/decision", ApplicationLaunchDecisionView.as_view(), name="applications-veterancy-roster-decision"),
     # Fixed-name routes must come before the <int:pk> ones (they can't clash
     # with an int, but keeping them together makes the list easy to scan).
