@@ -5,6 +5,8 @@ from django.db import connection
 from rest_framework.test import APIRequestFactory, force_authenticate
 from unittest.mock import patch
 from django.core import mail
+from django.utils import timezone
+from datetime import timedelta
 
 from api.models.ballkid import Ballkid, SeasonParticipation
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
@@ -230,6 +232,50 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(second["sent"], 1)
         self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
         self.assertEqual(log.attempts, 2)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    @patch("api.utils.application_launch_email.get_tryout_slot_info", return_value=[])
+    def test_stale_sending_email_is_visible_and_can_be_retried(self, _slots):
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+        log = ApplicationLaunchEmailLog.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            kind="returning_invitation",
+            recipient_email=self.user.email,
+            subject="Previous launch email",
+            status=ApplicationLaunchEmailLog.STATUS_SENDING,
+            attempts=1,
+        )
+        ApplicationLaunchEmailLog.objects.filter(pk=log.pk).update(
+            updated_at=timezone.now() - timedelta(hours=1)
+        )
+
+        from api.utils.application_launch_email import (
+            build_launch_preview,
+            send_launch_notifications,
+        )
+
+        preview = build_launch_preview(2026)
+        self.assertEqual(preview["results"][0]["status"], "failed")
+        self.assertEqual(preview["sendable"], 1)
+        self.assertIn("may send a duplicate", preview["results"][0]["last_error"])
+
+        result = send_launch_notifications(2026)
+        log.refresh_from_db()
+        self.assertEqual(result["sent"], 1)
+        self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
+        self.assertEqual(log.attempts, 2)
+        self.assertEqual(len(mail.outbox), 1)
 
     @patch("api.views.application.send_launch_notifications_async")
     def test_launch_send_requires_open_applications_and_resolved_decisions(self, send_async):
