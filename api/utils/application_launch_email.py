@@ -45,9 +45,9 @@ def _content(first_name, decision, year, slots):
     else:
         return None
     if tryouts:
-        paragraphs.append("Tryout information:\\n" + "\\n".join(tryouts))
+        paragraphs.append("Tryout information:\n" + "\n".join(tryouts))
     paragraphs.extend([f"Ball crew handbook: {handbook_url}", f"Applications: {apply_url}", "Questions? Reply to this email."])
-    text = "\\n\\n".join([greeting, *paragraphs, site])
+    text = "\n\n".join([greeting, *paragraphs, site])
     html = (
         '<div style="font-family:Arial,Helvetica,sans-serif;color:#1a2233;max-width:600px">'
         f"<p>{escape(greeting)}</p>"
