@@ -30,6 +30,7 @@ import {
 } from "@mui/material";
 
 import { ConfirmDialog, getAuthHeader } from "../Utils";
+import InterestListCard from "./InterestListCard";
 import ApplicationDetailDrawer from "./ApplicationDetailDrawer";
 
 const STATUS_COLORS = {
@@ -655,7 +656,9 @@ export default function ApplicationsReviewPage() {
       </Box>
 
       <Box sx={{ overflowX: "auto" }}>
-        <Table size="small">
+        <InterestListCard applicationsOpen={Boolean(applicationsOpen)} />
+
+      <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>{sortHeader("name", "Name")}</TableCell>
