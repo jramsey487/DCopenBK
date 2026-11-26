@@ -307,3 +307,56 @@ class TestBallkidModel(TestCase):
             ).id,
             participation_id,
         )
+
+    def test_veterancy_includes_historical_baseline_and_verified_future_years(self):
+        self.ballkid.veterancy_baseline_years = 4
+        self.ballkid.veterancy_baseline_through_year = 2026
+        self.ballkid.save(
+            update_fields=[
+                "veterancy_baseline_years",
+                "veterancy_baseline_through_year",
+            ]
+        )
+
+        SeasonParticipation.objects.create(
+            ballkid=self.ballkid,
+            year=2026,
+            source=SeasonParticipation.SOURCE_IMPORTED,
+        )
+        SeasonParticipation.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source=SeasonParticipation.SOURCE_CHECKIN,
+        )
+        SeasonParticipation.objects.create(
+            ballkid=self.ballkid,
+            year=2028,
+            source=SeasonParticipation.SOURCE_CHECKIN,
+        )
+
+        self.assertEqual(self.ballkid.get_veterancy_years(), 6)
+        self.assertEqual(self.ballkid.get_verified_veterancy_years(), 2)
+
+    def test_veterancy_does_not_count_seasons_before_baseline_cutoff(self):
+        self.ballkid.veterancy_baseline_years = 3
+        self.ballkid.veterancy_baseline_through_year = 2026
+        self.ballkid.save(
+            update_fields=[
+                "veterancy_baseline_years",
+                "veterancy_baseline_through_year",
+            ]
+        )
+
+        SeasonParticipation.objects.create(
+            ballkid=self.ballkid,
+            year=2025,
+            source=SeasonParticipation.SOURCE_IMPORTED,
+        )
+        SeasonParticipation.objects.create(
+            ballkid=self.ballkid,
+            year=2026,
+            source=SeasonParticipation.SOURCE_CHECKIN,
+        )
+
+        self.assertEqual(self.ballkid.get_veterancy_years(), 3)
+        self.assertEqual(self.ballkid.get_verified_veterancy_years(), 0)
