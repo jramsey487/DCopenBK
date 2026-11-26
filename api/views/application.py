@@ -40,6 +40,7 @@ from rest_framework.views import APIView
 from accounts.emails import send_set_password_emails_async
 from api.models.application import (
     ApplicationInterest,
+    ApplicationLaunchDecision,
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
@@ -327,14 +328,22 @@ class ApplicationVeterancyRosterView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        participation_rows = (
+        participation_rows = list(
             SeasonParticipation.objects.filter(year=year)
             .select_related("ballkid", "ballkid__user")
             .order_by("ballkid__last_name", "ballkid__first_name", "ballkid_id")
         )
+        decisions = {
+            decision.ballkid_id: decision
+            for decision in ApplicationLaunchDecision.objects.filter(
+                year=year,
+                ballkid_id__in=[row.ballkid_id for row in participation_rows],
+            )
+        }
         roster = []
         for participation in participation_rows:
             ballkid = participation.ballkid
+            launch_decision = decisions.get(ballkid.id)
             roster.append(
                 {
                     "ballkid_id": ballkid.id,
@@ -343,6 +352,12 @@ class ApplicationVeterancyRosterView(APIView):
                     "full_name": ballkid.get_name(),
                     "email": ballkid.user.email if ballkid.user_id else "",
                     "participation_year": participation.year,
+                    "decision": (
+                        launch_decision.decision
+                        if launch_decision
+                        else ApplicationLaunchDecision.DECISION_UNDECIDED
+                    ),
+                    "decision_notes": launch_decision.notes if launch_decision else "",
                     "last_checkin": (
                         participation.last_checkin.isoformat()
                         if participation.last_checkin
@@ -356,6 +371,65 @@ class ApplicationVeterancyRosterView(APIView):
                 }
             )
         return Response({"year": year, "count": len(roster), "results": roster})
+
+
+class ApplicationLaunchDecisionView(APIView):
+    """Save a chairperson's per-season invite-back / tryout decision."""
+
+    permission_classes = [IsChairperson]
+
+    def patch(self, request, ballkid_id):
+        raw_year = request.data.get("year", get_current_year() - 1)
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if year < 1900 or year > get_current_year():
+            return Response(
+                {"year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        decision = request.data.get("decision")
+        allowed_decisions = {
+            value for value, _label in ApplicationLaunchDecision.DECISION_CHOICES
+        }
+        if decision not in allowed_decisions:
+            return Response(
+                {"decision": "Choose invite back, must try out, or undecided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not SeasonParticipation.objects.filter(
+            ballkid_id=ballkid_id, year=year
+        ).exists():
+            return Response(
+                {"detail": "No recorded check-in for this Ballkid in that year."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        launch_decision, _created = ApplicationLaunchDecision.objects.get_or_create(
+            ballkid_id=ballkid_id,
+            year=year,
+            defaults={"decision": decision, "updated_by": request.user},
+        )
+        launch_decision.decision = decision
+        launch_decision.updated_by = request.user
+        if "notes" in request.data:
+            launch_decision.notes = request.data.get("notes") or ""
+        launch_decision.save()
+        return Response(
+            {
+                "ballkid_id": ballkid_id,
+                "year": year,
+                "decision": launch_decision.decision,
+                "notes": launch_decision.notes,
+                "updated_at": launch_decision.updated_at.isoformat(),
+            }
+        )
 
 
 class ApplicationDetailView(generics.RetrieveAPIView):
