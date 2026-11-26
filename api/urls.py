@@ -148,6 +148,7 @@ application_urls = [
     path("submit-application", SubmitApplicationView.as_view(), name="submit-application"),
     path("application-edit/<uuid:token>", ApplicationEditView.as_view(), name="application-edit"),
     path("applications", ApplicationListView.as_view(), name="applications"),
+    path("applications/veterancy-roster", ApplicationVeterancyRosterView.as_view(), name="applications-veterancy-roster"),
     # Fixed-name routes must come before the <int:pk> ones (they can't clash
     # with an int, but keeping them together makes the list easy to scan).
     path("applications/export", ApplicationExportView.as_view(), name="applications-export"),
