@@ -250,7 +250,7 @@ class BallcrewApplicationSubmitSerializer(
 
     class Meta:
         model = BallcrewApplication
-        exclude = _REVIEW_WORKFLOW_FIELDS
+        exclude = _REVIEW_WORKFLOW_FIELDS + ["years_experience"]
 
 
 class BallcrewApplicationEditSerializer(
@@ -267,7 +267,7 @@ class BallcrewApplicationEditSerializer(
 
     class Meta:
         model = BallcrewApplication
-        exclude = _REVIEW_WORKFLOW_FIELDS + ["edit_token"]
+        exclude = _REVIEW_WORKFLOW_FIELDS + ["edit_token", "years_experience"]
         read_only_fields = ["is_veteran"]
 
 
