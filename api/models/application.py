@@ -410,7 +410,10 @@ class ApplicationLaunchDecision(models.Model):
         on_delete=models.CASCADE,
         related_name="application_launch_decisions",
     )
+    # The year the invitation applies to (e.g. 2027); source_year is the
+    # prior tournament year whose check-in established eligibility.
     year = models.PositiveSmallIntegerField()
+    source_year = models.PositiveSmallIntegerField()
     decision = models.CharField(
         max_length=20,
         choices=DECISION_CHOICES,
