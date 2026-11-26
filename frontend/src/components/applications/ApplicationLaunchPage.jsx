@@ -33,6 +33,7 @@ export default function ApplicationLaunchPage() {
   const [savingIds, setSavingIds] = useState({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const undecidedCount = roster.filter((person) => (person.decision || "undecided") === "undecided").length;
 
   const loadRoster = useCallback(async () => {
     setLoading(true);
@@ -153,6 +154,14 @@ export default function ApplicationLaunchPage() {
 
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
       {notice ? <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert> : null}
+
+      {roster.length > 0 ? (
+        <Alert severity={undecidedCount > 0 ? "warning" : "success"} sx={{ mb: 2 }}>
+          {undecidedCount > 0
+            ? `${undecidedCount} of ${roster.length} returning volunteers still need a decision.`
+            : `All ${roster.length} returning volunteers have an invitation / tryout decision.`}
+        </Alert>
+      ) : null}
 
       <Table size="small">
         <TableHead>
