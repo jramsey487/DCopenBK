@@ -90,7 +90,7 @@ def get_previous_teammates(ballkid_ids):
         start__date__in=days,
     ).values_list("team", "start", "ballkid_id"):
         team, start, ballkid_id = history
-        key = (team, start.date())
+        key = (team, timezone.localtime(start).date())
         if key in by_team_day:
             teammates_by_team_day.setdefault(key, set()).add(ballkid_id)
 
