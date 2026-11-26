@@ -267,3 +267,43 @@ class TestBallkidModel(TestCase):
         self.assertEqual("", self.ballkid.finals_team)
         self.assertEqual(POSITION.N, self.ballkid.finals_position)
         self.assertEqual(POSITION.NB, self.ballkid.preferred_position)
+
+    def test_checkin_records_yearly_season_participation(self):
+        self.ballkid.is_checked_in = False
+        self.ballkid.save(update_fields=["is_checked_in"])
+
+        self.ballkid.set_field("is_checked_in", True)
+
+        participation = SeasonParticipation.objects.get(
+            ballkid=self.ballkid, year=get_current_year()
+        )
+        self.assertEqual(
+            participation.source, SeasonParticipation.SOURCE_CHECKIN
+        )
+        self.assertIsNotNone(participation.first_checkin)
+        self.assertIsNotNone(participation.last_checkin)
+
+    def test_repeat_checkin_does_not_duplicate_season_participation(self):
+        self.ballkid.is_checked_in = False
+        self.ballkid.save(update_fields=["is_checked_in"])
+        self.ballkid.set_field("is_checked_in", True)
+
+        participation_id = SeasonParticipation.objects.get(
+            ballkid=self.ballkid, year=get_current_year()
+        ).id
+
+        self.ballkid.set_field("is_checked_in", False)
+        self.ballkid.set_field("is_checked_in", True)
+
+        self.assertEqual(
+            SeasonParticipation.objects.filter(
+                ballkid=self.ballkid, year=get_current_year()
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            SeasonParticipation.objects.get(
+                ballkid=self.ballkid, year=get_current_year()
+            ).id,
+            participation_id,
+        )
