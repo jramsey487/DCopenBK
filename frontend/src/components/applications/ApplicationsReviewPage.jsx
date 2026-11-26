@@ -655,10 +655,10 @@ export default function ApplicationsReviewPage() {
         </Typography>
       </Box>
 
-      <Box sx={{ overflowX: "auto" }}>
-        <InterestListCard applicationsOpen={Boolean(applicationsOpen)} />
+      <InterestListCard applicationsOpen={Boolean(applicationsOpen)} />
 
-      <Table size="small">
+      <Box sx={{ overflowX: "auto" }}>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>{sortHeader("name", "Name")}</TableCell>
