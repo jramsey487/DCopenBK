@@ -313,7 +313,12 @@ class ApplicationVeterancyRosterView(APIView):
     permission_classes = [IsChairperson]
 
     def get(self, request):
-        default_year = get_current_year() - 1
+        current_year = get_current_year()
+        default_year = (
+            current_year
+            if SeasonParticipation.objects.filter(year=current_year).exists()
+            else current_year - 1
+        )
         raw_year = request.query_params.get("year", default_year)
         try:
             year = int(raw_year)
