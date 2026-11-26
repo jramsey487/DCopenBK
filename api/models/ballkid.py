@@ -114,6 +114,19 @@ class Ballkid(models.Model):
 
         # If checking in, create new checkin history row
         if value:
+            # A dated, explicit season record is the reliable source for
+            # returning-veteran eligibility. Keep it independent of the
+            # transient active/archive status on Ballkid.
+            local_checkin = timezone.localtime(now)
+            SeasonParticipation.objects.update_or_create(
+                ballkid=self,
+                year=local_checkin.year,
+                defaults={
+                    "first_checkin": now,
+                    "last_checkin": now,
+                    "source": SeasonParticipation.SOURCE_CHECKIN,
+                },
+            )
             now_date = timezone.localtime(now - timedelta(hours=CHECKIN_START_HOUR)).date()
             is_first_checkin = (
                 CheckinHistory.objects.filter(
@@ -708,6 +721,45 @@ class CheckinHistory(models.Model):
 
     def __str__(self):
         return f"{self.ballkid.get_name()} checked in at {self.start} and checked out at {self.end} (total duration: {self.duration})"
+
+
+
+class SeasonParticipation(models.Model):
+    """A durable record that a ballkid worked during a particular season."""
+
+    SOURCE_CHECKIN = "checkin"
+    SOURCE_MANUAL = "manual"
+    SOURCE_IMPORTED = "imported"
+    SOURCE_CHOICES = (
+        (SOURCE_CHECKIN, "Recorded check-in"),
+        (SOURCE_MANUAL, "Manually confirmed"),
+        (SOURCE_IMPORTED, "Imported historical record"),
+    )
+
+    ballkid = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, related_name="season_participations"
+    )
+    year = models.PositiveSmallIntegerField()
+    first_checkin = models.DateTimeField(null=True, blank=True)
+    last_checkin = models.DateTimeField(null=True, blank=True)
+    source = models.CharField(
+        max_length=12, choices=SOURCE_CHOICES, default=SOURCE_CHECKIN
+    )
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("ballkid", "year"),
+                name="season_participation_ballkid_year_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=("year", "ballkid"), name="seasonpart_year_kid_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.ballkid.get_name()} worked in {self.year}"
 
 
 class CheckinAnalytics(models.Model):
