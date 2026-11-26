@@ -9,6 +9,10 @@ from django.core import mail
 from api.models.ballkid import Ballkid, SeasonParticipation
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
 from api.utils.utils import get_current_year
+from api.serializers_application import (
+    BallcrewApplicationEditSerializer,
+    BallcrewApplicationSubmitSerializer,
+)
 from api.views.application import (
     ApplicationLaunchDecisionView,
     ApplicationLaunchPreviewView,
@@ -48,6 +52,10 @@ class TestApplicationVeterancyRosterView(TestCase):
             year=2027,
             source=SeasonParticipation.SOURCE_CHECKIN,
         )
+
+    def test_applicant_api_no_longer_exposes_years_experience(self):
+        self.assertNotIn("years_experience", BallcrewApplicationSubmitSerializer().fields)
+        self.assertNotIn("years_experience", BallcrewApplicationEditSerializer().fields)
 
     def test_returns_checkin_roster_and_veterancy_as_of_requested_year(self):
         request = self.factory.get(
