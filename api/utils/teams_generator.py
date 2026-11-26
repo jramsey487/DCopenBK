@@ -2,6 +2,7 @@ from api.models.ballkid import *
 from api.utils.consts import *
 
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from api.models.application import BallcrewApplication
 
@@ -56,7 +57,7 @@ def get_previous_teammates(ballkid_ids):
 
     histories = TeamHistory.objects.filter(
         ballkid_id__in=ballkid_ids,
-        start__date__lt=date.today(),
+        start__date__lt=timezone.localdate(),
     ).order_by("ballkid_id", "-start")
 
     latest_start = {}
@@ -69,7 +70,9 @@ def get_previous_teammates(ballkid_ids):
 
     by_team_day = {}
     for bid, start in latest_start.items():
-        key = (latest_team[bid], start.date())
+        # Django's start__date lookup uses the active timezone; use the
+        # same timezone when grouping the returned aware datetimes.
+        key = (latest_team[bid], timezone.localtime(start).date())
         by_team_day.setdefault(key, []).append(bid)
 
     previous_teammates = {bid: set() for bid in latest_start}
@@ -87,7 +90,7 @@ def get_previous_teammates(ballkid_ids):
         start__date__in=days,
     ).values_list("team", "start", "ballkid_id"):
         team, start, ballkid_id = history
-        key = (team, start.date())
+        key = (team, timezone.localtime(start).date())
         if key in by_team_day:
             teammates_by_team_day.setdefault(key, set()).add(ballkid_id)
 

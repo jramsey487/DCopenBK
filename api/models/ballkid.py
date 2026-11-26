@@ -698,6 +698,14 @@ class CheckinHistory(models.Model):
     duration = models.DurationField(default=timedelta)
     is_first_checkin = models.BooleanField(default=True)
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["ballkid", "-start"],
+                name="checkin_ballkid_start_idx",
+            ),
+        ]
+
     def __str__(self):
         return f"{self.ballkid.get_name()} checked in at {self.start} and checked out at {self.end} (total duration: {self.duration})"
 
@@ -726,6 +734,14 @@ class CaptainHistory(models.Model):
     end = models.DateTimeField(null=True)
     duration = models.DurationField(default=timedelta)
     team = models.IntegerField(default=0)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["ballkid", "captain", "team", "-start"],
+                name="captainhist_pair_team_idx",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.ballkid.get_name()} had captain {self.captain.get_name()} on starting at {self.start}"
