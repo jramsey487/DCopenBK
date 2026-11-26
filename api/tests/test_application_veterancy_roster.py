@@ -159,3 +159,30 @@ class TestApplicationVeterancyRosterView(TestCase):
         )
         self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
         self.assertEqual(log.attempts, 1)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    @patch("api.utils.application_launch_email.get_tryout_slot_info", return_value=[])
+    @patch("api.utils.application_launch_email.EmailMultiAlternatives.send", side_effect=[Exception("temporary SMTP failure"), 1])
+    def test_failed_launch_email_can_be_retried(self, _send, _slots):
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+
+        from api.utils.application_launch_email import send_launch_notifications
+
+        first = send_launch_notifications(2026)
+        log = ApplicationLaunchEmailLog.objects.get(
+            ballkid=self.ballkid, year=2027, kind="returning_invitation"
+        )
+        self.assertEqual(first["failed"], 1)
+        self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_FAILED)
+
+        second = send_launch_notifications(2026)
+        log.refresh_from_db()
+        self.assertEqual(second["sent"], 1)
+        self.assertEqual(log.status, ApplicationLaunchEmailLog.STATUS_SENT)
+        self.assertEqual(log.attempts, 2)
