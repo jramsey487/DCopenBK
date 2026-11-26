@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.test import TestCase
 from django.utils import timezone
@@ -44,6 +44,24 @@ class PreviousTeammateHistoryTests(TestCase):
         self.assertEqual(previous[c.id], set())
         self.assertEqual(previous[d.id], {e.id})
         self.assertEqual(previous[e.id], {d.id})
+
+    def test_groups_history_using_active_timezone_near_midnight(self):
+        with timezone.override("America/New_York"):
+            local_yesterday = timezone.localdate() - timedelta(days=1)
+            local_start = timezone.make_aware(
+                datetime.combine(local_yesterday, time(23, 30)),
+                timezone.get_current_timezone(),
+            )
+
+            a = self.make_ballkid("Timezone A")
+            b = self.make_ballkid("Timezone B")
+            self.add_history(a, 4, local_start)
+            self.add_history(b, 4, local_start + timedelta(minutes=1))
+
+            previous = get_previous_teammates([a.id, b.id])
+
+            self.assertEqual(previous[a.id], {b.id})
+            self.assertEqual(previous[b.id], {a.id})
 
     def test_empty_input_returns_without_database_queries(self):
         with self.assertNumQueries(0):
