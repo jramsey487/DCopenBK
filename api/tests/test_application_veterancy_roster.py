@@ -110,6 +110,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(decision.updated_by, self.user)
 
     def test_roster_veterancy_uses_constant_participation_query_count(self):
+        current_year = get_current_year()
         for index in range(8):
             kid = Ballkid.objects.create(
                 first_name=f"Roster{index}",
@@ -119,12 +120,12 @@ class TestApplicationVeterancyRosterView(TestCase):
             )
             SeasonParticipation.objects.create(
                 ballkid=kid,
-                year=2027,
+                year=current_year,
                 source=SeasonParticipation.SOURCE_CHECKIN,
             )
 
         request = self.factory.get(
-            "/api/applications/veterancy-roster", {"year": 2027}
+            "/api/applications/veterancy-roster", {"year": current_year}
         )
         force_authenticate(request, user=self.user)
 
