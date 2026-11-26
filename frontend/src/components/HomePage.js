@@ -56,7 +56,7 @@ import ShiftGroupsPage from "./applications/ShiftGroupsPage";
 import HandbookPage from "./applications/HandbookPage";
 import TriviaPage from "./applications/TriviaPage";
 
-import { useToken, getLocalStorage, useIsMobile } from "./Utils";
+import { useToken, getLocalStorage, getIsSuperuser, useIsMobile } from "./Utils";
 import { setUnauthorizedHandler } from "./api";
 
 function chairpersonRoutes(isMobile, setToken) {
@@ -214,6 +214,7 @@ export default function HomePage(props) {
   }, [setToken]);
 
   const group = getLocalStorage("group");
+  const isSuperuser = getIsSuperuser();
 
   return !token ? (
     <Router>
@@ -223,7 +224,7 @@ export default function HomePage(props) {
   ) : (
     <Router>
       <Navbar isLoggedIn={true} setToken={setToken} />
-      {group === "chairperson"
+      {group === "chairperson" || isSuperuser
         ? chairpersonRoutes(isMobile, setToken)
         : group === "captain"
         ? captainRoutes(setToken)
