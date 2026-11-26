@@ -124,6 +124,11 @@ class TestApplicationVeterancyRosterView(TestCase):
                 source=SeasonParticipation.SOURCE_CHECKIN,
             )
 
+        expected_count = 8 + int(
+            SeasonParticipation.objects.filter(
+                ballkid=self.ballkid, year=current_year
+            ).exists()
+        )
         request = self.factory.get(
             "/api/applications/veterancy-roster", {"year": current_year}
         )
@@ -141,7 +146,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         # One query loads the selected-season roster and one prefetches
         # earned seasons for all roster members; no per-person queries.
         self.assertEqual(len(participation_queries), 2)
-        self.assertEqual(response.data["count"], 9)
+        self.assertEqual(response.data["count"], expected_count)
 
     def test_default_roster_year_is_latest_year_with_checkins(self):
         current_year = get_current_year()
