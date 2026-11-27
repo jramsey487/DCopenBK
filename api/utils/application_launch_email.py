@@ -72,7 +72,7 @@ def _content(first_name, decision, year, tournament_dates=None):
         paragraphs.insert(1, f"Tournament dates: {tournament_dates}")
     if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:
         paragraphs.append("Questions? Reply to this email.")
-    text = "\\n\\n".join([
+    text = "\n\n".join([
         greeting,
         *paragraphs,
         f"Submit application: {apply_url}",
@@ -267,7 +267,7 @@ def send_launch_test_email(first_name, decision, year, tournament_dates, destina
     subject = f"[TEST EMAIL] {subject}"
     body = (
         "TEST EMAIL — sent only to the chairperson who requested this preview. "
-        "This was not sent to the volunteer.\\n\\n" + body
+        "This was not sent to the volunteer.\n\n" + body
     )
     banner = (
         '<p style="padding:10px;background:#fff3cd;color:#664d03;border:1px solid #ffecb5">'
