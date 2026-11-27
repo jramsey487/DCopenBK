@@ -216,7 +216,7 @@ def send_launch_notifications(source_year):
         decisions = {d.ballkid_id: d.decision for d in ApplicationLaunchDecision.objects.filter(year=year, source_year=source_year)}
         roster = SeasonParticipation.objects.filter(year=source_year).select_related("ballkid", "ballkid__user").order_by("ballkid_id")
         counts = {"sent": 0, "failed": 0, "skipped": 0}
-        slots = get_tryout_slot_info()
+        slots = get_tryout_slot_info(tournament_year=year)
         tournament = Tournament.objects.filter(year=year).first()
         tournament_dates = (
             f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
