@@ -257,6 +257,32 @@ def send_launch_notifications(source_year):
         _send_lock.release()
 
 
+
+def send_launch_test_email(first_name, decision, year, tournament_dates, destination):
+    """Send one explicitly requested preview to the authenticated chairperson."""
+    content = _content(first_name, decision, year, tournament_dates)
+    if not content:
+        raise ValueError("Choose invite back or must try out before sending.")
+    subject, body, html = content
+    subject = f"[TEST EMAIL] {subject}"
+    body = (
+        "TEST EMAIL — sent only to the chairperson who requested this preview. "
+        "This was not sent to the volunteer.\\n\\n" + body
+    )
+    banner = (
+        '<p style="padding:10px;background:#fff3cd;color:#664d03;border:1px solid #ffecb5">'
+        '<strong>TEST EMAIL</strong> — sent only to the chairperson who requested this preview. '
+        "This was not sent to the volunteer.</p>"
+    )
+    html = html.replace("</div>", banner + "</div>", 1)
+    message = EmailMultiAlternatives(
+        subject, body, to=[destination], reply_to=[settings.SUPPORT_EMAIL]
+    )
+    message.attach_alternative(html, "text/html")
+    message.send(fail_silently=False)
+    return subject
+
+
 def _send_launch_thread(source_year):
     try:
         send_launch_notifications(source_year)
