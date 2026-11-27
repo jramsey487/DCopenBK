@@ -35,8 +35,10 @@ class TestApplicationVeterancyRosterView(TestCase):
         chairperson_group, _ = Group.objects.get_or_create(name="chairperson")
         self.user.groups.add(chairperson_group)
 
+        # Legacy state: dates belong to 2027, but the record was saved
+        # under the year the settings were entered (2026).
         Tournament.objects.create(
-            year=2027,
+            year=2026,
             start_date=date(2027, 7, 24),
             end_date=date(2027, 8, 1),
         )
