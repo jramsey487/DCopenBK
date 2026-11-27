@@ -60,6 +60,42 @@ class TestGetTournament(APITestCase):
         self.assertEqual(tournament.start_date, date(2026, 7, 19))
         self.assertEqual(tournament.end_date, date(2026, 7, 27))
 
+    def test_create_uses_start_date_year_instead_of_submitted_year(self):
+        response = self.client.post(
+            reverse("get-tournament"),
+            {
+                "year": self.year,
+                "start_date": f"{self.year + 1}-03-10",
+                "end_date": f"{self.year + 1}-03-18",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year + 1)
+        self.assertEqual(tournament.start_date, date(self.year + 1, 3, 10))
+        self.assertFalse(Tournament.objects.filter(year=self.year).exists())
+
+    def test_patch_rekeys_tournament_to_start_date_year(self):
+        Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {
+                "start_date": f"{self.year + 1}-03-10",
+                "end_date": f"{self.year + 1}-03-18",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year + 1)
+        self.assertEqual(tournament.start_date, date(self.year + 1, 3, 10))
+        self.assertEqual(tournament.end_date, date(self.year + 1, 3, 18))
+        self.assertFalse(Tournament.objects.filter(year=self.year).exists())
+
+
     def test_patch_start_date_refreshes_ages(self):
         Tournament.objects.create(
             year=self.year,
