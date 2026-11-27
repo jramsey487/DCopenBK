@@ -721,7 +721,7 @@ export default function ApplicationPage() {
           {minimumAge
             ? `You must be ${minimumAge} or older by the start of the tournament. `
             : ""}
-          First-time applicants and veterans who did not receive a returning invitation must attend a tryout.
+          If you do not have a returning invitation, you must attend a tryout.
         </Typography>
 
         {upcomingTryouts.length > 0 ? (
@@ -1056,14 +1056,14 @@ export default function ApplicationPage() {
             <FormControlLabel
               value="true"
               control={<Radio />}
-              label="I'm a Veteran"
+              label="I Have A Returning Invite"
               disabled={isEditing}
             />
 
             <FormControlLabel
               value="false"
               control={<Radio />}
-              label="This is my first time"
+              label="I Need To Tryout"
               disabled={
                 isEditing || !rookieTryoutsAvailable
               }
