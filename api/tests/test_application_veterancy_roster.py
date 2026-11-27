@@ -379,7 +379,10 @@ class TestApplicationVeterancyRosterView(TestCase):
 
     @patch("api.views.application.send_launch_notifications_async")
     def test_launch_send_requires_target_tournament_dates(self, send_async):
+        # Remove both a correctly keyed target and any legacy record whose
+        # start date belongs to 2027 but whose Tournament.year is stale.
         Tournament.objects.filter(year=2027).delete()
+        Tournament.objects.filter(start_date__year=2027).delete()
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
             year=2027,
