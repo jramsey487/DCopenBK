@@ -76,7 +76,7 @@ def get_tryout_slot_info(exclude_application_id=None, tournament_year=None):
     for value, label in TRYOUT_SLOT_CHOICES:
         n = 1 if value == "first" else 2
         date = getattr(tournament, f"tryout_date_{n}", None) if tournament else None
-        if date is None:
+        if date is None and tournament_year is None:
             date = getattr(settings_obj, f"tryout_date_{n}")
         location = (
             getattr(tournament, f"tryout_location_{n}", "") if tournament else ""
