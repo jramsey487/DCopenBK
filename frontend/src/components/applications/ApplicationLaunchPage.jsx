@@ -64,7 +64,7 @@ export default function ApplicationLaunchPage() {
   const filteredPreviewResults = useMemo(() => {
     const results = preview?.results || [];
     if (previewFilter === "undecided") return results.filter((person) => person.decision === "undecided");
-    if (previewFilter === "missing_email") return results.filter((person) => !person.email);
+    if (previewFilter === "missing_email") return results.filter((person) => !person.email && person.decision !== "undecided");
     if (previewFilter === "failed") return results.filter((person) => person.status === "failed");
     return results;
   }, [preview, previewFilter]);
@@ -305,7 +305,7 @@ export default function ApplicationLaunchPage() {
         if (!response.ok) return;
         const data = await response.json();
         if (active) setPreview(data);
-      } catch (err) {
+      } catch {
         // The last confirmed preview remains visible if a background refresh fails.
       }
     };
@@ -545,6 +545,13 @@ export default function ApplicationLaunchPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
+                      {filteredPreviewResults.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={2}>
+                            <Typography color="text.secondary" variant="body2">No recipients match this filter.</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
                       {filteredPreviewResults.map((person) => (
                         <TableRow
                           key={person.ballkid_id}
