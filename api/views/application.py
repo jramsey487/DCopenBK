@@ -17,6 +17,7 @@ URLs (see api/urls.py):
 """
 
 import csv
+import logging
 import re
 from datetime import date
 
@@ -85,6 +86,9 @@ from api.utils.application_email import (
     send_interest_notifications_async,
 )
 
+
+
+logger = logging.getLogger(__name__)
 
 def _as_bool(value, default=True):
     """Request values may be real booleans or strings like "false"."""
