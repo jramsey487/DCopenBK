@@ -203,6 +203,23 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(response.data["tournament_dates"], "July 24, 2027 – August 1, 2027")
         self.assertIn("Tournament dates: July 24, 2027 – August 1, 2027", response.data["results"][0]["text"])
 
+    def test_forced_tryout_email_is_direct_and_omits_tryout_schedule(self):
+        from api.utils.application_launch_email import _content
+
+        subject, text, html = _content(
+            "Taylor",
+            ApplicationLaunchDecision.DECISION_MUST_TRY_OUT,
+            2027,
+            "July 24, 2027 – August 1, 2027",
+        )
+
+        self.assertIn("Required tryout", subject)
+        self.assertIn("previous on-court performance did not meet the standard", text)
+        self.assertIn("must attend a tryout", text)
+        self.assertIn("does not guarantee selection", text)
+        self.assertNotIn("Tryout information:", text)
+        self.assertNotIn("Tryout information:", html)
+
     def test_preview_lists_decision_for_next_application_year(self):
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
