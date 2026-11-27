@@ -480,7 +480,14 @@ class ApplicationLaunchTournamentView(APIView):
         if year < 1900 or year > get_current_year() + 10:
             raise ValidationError({"year": "Target tournament year is outside the supported range."})
 
-        tournament = Tournament.objects.filter(year=year).first()
+        # Older settings may still be keyed to the year they were saved,
+        # while the tournament itself belongs to start_date.year. Prefer the
+        # date-derived year so Application Launch works before settings are
+        # re-saved and normalized.
+        tournament = (
+            Tournament.objects.filter(start_date__year=year).order_by("year").first()
+            or Tournament.objects.filter(year=year).first()
+        )
         return Response({
             "year": year,
             "exists": tournament is not None,
