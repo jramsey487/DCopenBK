@@ -315,6 +315,8 @@ export default function ApplicationLaunchPage() {
 
   const canSend =
     preview &&
+    preview.source_year === Number(year) &&
+    preview.year === Number(year) + 1 &&
     preview.tournament_configured &&
     preview.applications_open &&
     preview.undecided.length === 0 &&
