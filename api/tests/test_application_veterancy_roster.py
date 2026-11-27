@@ -6,7 +6,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 from unittest.mock import patch
 from django.core import mail
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 import smtplib
 
 from api.models.ballkid import Ballkid, SeasonParticipation
@@ -37,8 +37,8 @@ class TestApplicationVeterancyRosterView(TestCase):
 
         Tournament.objects.create(
             year=2027,
-            start_date="2027-07-24",
-            end_date="2027-08-01",
+            start_date=date(2027, 7, 24),
+            end_date=date(2027, 8, 1),
         )
 
         self.ballkid = Ballkid.objects.create(
