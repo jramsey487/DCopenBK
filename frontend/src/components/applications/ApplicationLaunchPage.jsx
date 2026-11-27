@@ -39,6 +39,10 @@ export default function ApplicationLaunchPage() {
   const [year, setYear] = useState("");
   const [roster, setRoster] = useState([]);
   const [count, setCount] = useState(0);
+  const [tournamentStart, setTournamentStart] = useState("");
+  const [tournamentEnd, setTournamentEnd] = useState("");
+  const [tournamentConfigured, setTournamentConfigured] = useState(false);
+  const [savingTournament, setSavingTournament] = useState(false);
   const [loading, setLoading] = useState(false);
   const [savingIds, setSavingIds] = useState({});
   const [error, setError] = useState("");
@@ -89,6 +93,57 @@ export default function ApplicationLaunchPage() {
   useEffect(() => {
     loadRoster();
   }, [loadRoster]);
+
+  const loadTargetTournament = useCallback(async () => {
+    if (!year) return;
+    try {
+      const response = await fetch(
+        `/api/applications/launch-tournament?year=${encodeURIComponent(Number(year) + 1)}`,
+        { headers: getAuthHeader() }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || data.year || "Unable to load target tournament dates.");
+      setTournamentStart(data.start_date || "");
+      setTournamentEnd(data.end_date || "");
+      setTournamentConfigured(Boolean(data.configured));
+    } catch (err) {
+      setTournamentConfigured(false);
+      setError(err.message || "Unable to load target tournament dates.");
+    }
+  }, [year]);
+
+  useEffect(() => {
+    loadTargetTournament();
+  }, [loadTargetTournament]);
+
+  const saveTargetTournament = async () => {
+    if (!year || !tournamentStart || !tournamentEnd) {
+      setError("Enter both tournament dates before saving.");
+      return;
+    }
+    setSavingTournament(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/applications/launch-tournament", {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: JSON.stringify({
+          year: Number(year) + 1,
+          start_date: tournamentStart,
+          end_date: tournamentEnd,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.end_date || data.dates || data.detail || "Unable to save tournament dates.");
+      setTournamentConfigured(Boolean(data.configured));
+      setNotice(`Tournament dates saved for ${data.year}.`);
+    } catch (err) {
+      setError(err.message || "Unable to save tournament dates.");
+    } finally {
+      setSavingTournament(false);
+    }
+  };
 
   const loadLaunchSettings = useCallback(async () => {
     try {
@@ -259,6 +314,7 @@ export default function ApplicationLaunchPage() {
 
   const canSend =
     preview &&
+    preview.tournament_configured &&
     preview.applications_open &&
     preview.undecided.length === 0 &&
     preview.missing_email.length === 0 &&
@@ -299,6 +355,29 @@ export default function ApplicationLaunchPage() {
           onChange={(event) => setYear(event.target.value)}
           inputProps={{ min: 1900, max: new Date().getFullYear() }}
         />
+        <TextField
+          label={`Target tournament start (${Number(year) + 1})`}
+          type="date"
+          size="small"
+          value={tournamentStart}
+          onChange={(event) => setTournamentStart(event.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label="Target tournament end"
+          type="date"
+          size="small"
+          value={tournamentEnd}
+          onChange={(event) => setTournamentEnd(event.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <Button
+          variant="outlined"
+          onClick={saveTargetTournament}
+          disabled={savingTournament || !year || !tournamentStart || !tournamentEnd}
+        >
+          {savingTournament ? "Saving dates…" : tournamentConfigured ? "Update tournament dates" : "Create tournament dates"}
+        </Button>
         <Button variant="contained" onClick={loadRoster} disabled={loading || !year}>
           {loading ? "Loading…" : "Refresh roster"}
         </Button>
@@ -415,10 +494,11 @@ export default function ApplicationLaunchPage() {
           {preview ? (
             <>
               <Alert
-                severity={preview.undecided.length || preview.missing_email.length ? "warning" : preview.applications_open ? "success" : "info"}
+                severity={!preview.tournament_configured || preview.undecided.length || preview.missing_email.length ? "warning" : preview.applications_open ? "success" : "info"}
                 sx={{ mb: 2 }}
               >
                 {preview.sendable} recipients ready. {preview.undecided.length} undecided; {preview.missing_email.length} missing email.
+                {!preview.tournament_configured ? ` Tournament dates for ${preview.year} are not configured; sending is disabled.` : ` Tournament dates: ${preview.tournament_dates}.`}
                 {!preview.applications_open ? " Applications are currently closed, so sending is disabled." : ""}
               </Alert>
               {preview.undecided.length ? (
