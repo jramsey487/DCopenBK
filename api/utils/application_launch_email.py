@@ -91,7 +91,7 @@ def _content(first_name, decision, year, slots, tournament_dates=None):
 
 def build_launch_preview(source_year):
     year = source_year + 1
-    slots = get_tryout_slot_info()
+    slots = get_tryout_slot_info(tournament_year=source_year + 1)
     tournament = Tournament.objects.filter(year=source_year + 1).first()
     tournament_dates = (
         f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
