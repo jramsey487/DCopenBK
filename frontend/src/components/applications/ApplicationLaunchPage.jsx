@@ -37,6 +37,8 @@ const DELIVERY_LABELS = {
 
 export default function ApplicationLaunchPage() {
   const [year, setYear] = useState("");
+  const [availableYears, setAvailableYears] = useState([]);
+  const [previewFilter, setPreviewFilter] = useState("all");
   const [roster, setRoster] = useState([]);
   const [count, setCount] = useState(0);
   const [tournamentStart, setTournamentStart] = useState("");
@@ -59,6 +61,13 @@ export default function ApplicationLaunchPage() {
   const undecidedCount = roster.filter(
     (person) => (person.decision || "undecided") === "undecided"
   ).length;
+  const filteredPreviewResults = useMemo(() => {
+    const results = preview?.results || [];
+    if (previewFilter === "undecided") return results.filter((person) => person.decision === "undecided");
+    if (previewFilter === "missing_email") return results.filter((person) => !person.email);
+    if (previewFilter === "failed") return results.filter((person) => person.status === "failed");
+    return results;
+  }, [preview, previewFilter]);
   const selectedRecipient = useMemo(
     () => preview?.results?.find((person) => person.ballkid_id === selectedId) || preview?.results?.[0] || null,
     [preview, selectedId]
@@ -77,6 +86,7 @@ export default function ApplicationLaunchPage() {
       if (!response.ok) {
         throw new Error(data.year || "Unable to load the prior-season roster.");
       }
+      setAvailableYears(Array.isArray(data.available_years) ? data.available_years : []);
       setYear((current) => current || String(data.year));
       setRoster(Array.isArray(data.results) ? data.results : []);
       setCount(Number(data.count) || 0);
@@ -274,14 +284,37 @@ export default function ApplicationLaunchPage() {
       if (!response.ok) {
         throw new Error(data.detail || "Unable to start invitation email batch.");
       }
-      setNotice(`Started sending ${data.queued} returning-volunteer invitation emails for ${data.year}. Refresh the preview to check delivery status.`);
-      setPreviewOpen(false);
+      setNotice(`Started sending ${data.queued} returning-volunteer invitation emails for ${data.year}. Delivery progress will update automatically.`);
+      await loadPreview();
     } catch (err) {
       setError(err.message || "Unable to start invitation email batch.");
     } finally {
       setSendLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!previewOpen || !year) return undefined;
+    let active = true;
+    const refreshDelivery = async () => {
+      try {
+        const response = await fetch(
+          `/api/applications/launch-preview?source_year=${encodeURIComponent(year)}`,
+          { headers: getAuthHeader() }
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (active) setPreview(data);
+      } catch (err) {
+        // The last confirmed preview remains visible if a background refresh fails.
+      }
+    };
+    const interval = setInterval(refreshDelivery, 5000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [previewOpen, year]);
 
   const canSend =
     preview &&
@@ -320,14 +353,22 @@ export default function ApplicationLaunchPage() {
           mb: 2,
         }}
       >
-        <TextField
-          label="Prior tournament year (check-ins)"
-          type="number"
-          size="small"
-          value={year}
-          onChange={(event) => setYear(event.target.value)}
-          inputProps={{ min: 1900, max: new Date().getFullYear() }}
-        />
+        <FormControl size="small" sx={{ minWidth: 210 }}>
+          <InputLabel id="launch-source-year-label">Prior tournament (check-ins)</InputLabel>
+          <Select
+            labelId="launch-source-year-label"
+            label="Prior tournament (check-ins)"
+            value={year}
+            onChange={(event) => setYear(event.target.value)}
+          >
+            {availableYears.map((availableYear) => (
+              <MenuItem key={availableYear} value={String(availableYear)}>
+                {availableYear} check-ins → {Number(availableYear) + 1} applications
+              </MenuItem>
+            ))}
+            {!availableYears.length && year ? <MenuItem value={year}>{year}</MenuItem> : null}
+          </Select>
+        </FormControl>
         <TextField
           label={`Tournament start (${Number(year) + 1})`}
           type="date"
@@ -466,7 +507,7 @@ export default function ApplicationLaunchPage() {
                 severity={!preview.tournament_configured || preview.undecided.length || preview.missing_email.length ? "warning" : preview.applications_open ? "success" : "info"}
                 sx={{ mb: 2 }}
               >
-                {preview.sendable} recipients ready. {preview.undecided.length} undecided; {preview.missing_email.length} missing email.
+                {preview.sendable} ready to send · {preview.sent || 0} sent · {preview.failed || 0} failed · {preview.remaining ?? preview.sendable} remaining. {preview.undecided.length} undecided; {preview.missing_email.length} missing email.
                 {!preview.tournament_configured ? ` Tournament dates for ${preview.year} are not configured; sending is disabled.` : ` Tournament dates: ${preview.tournament_dates}.`}
                 {!preview.applications_open ? " Applications are currently closed, so sending is disabled." : ""}
               </Alert>
@@ -480,6 +521,20 @@ export default function ApplicationLaunchPage() {
                   Missing email: {preview.missing_email.join(", ")}
                 </Typography>
               ) : null}
+              <FormControl size="small" sx={{ mb: 2, minWidth: 220 }}>
+                <InputLabel id="launch-preview-filter-label">Filter recipients</InputLabel>
+                <Select
+                  labelId="launch-preview-filter-label"
+                  label="Filter recipients"
+                  value={previewFilter}
+                  onChange={(event) => setPreviewFilter(event.target.value)}
+                >
+                  <MenuItem value="all">All recipients ({preview.results.length})</MenuItem>
+                  <MenuItem value="undecided">Undecided ({preview.undecided.length})</MenuItem>
+                  <MenuItem value="missing_email">Missing email ({preview.missing_email.length})</MenuItem>
+                  <MenuItem value="failed">Failed delivery ({preview.failed || 0})</MenuItem>
+                </Select>
+              </FormControl>
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(260px, 0.8fr) minmax(0, 1.2fr)" }, gap: 2 }}>
                 <Box sx={{ maxHeight: 360, overflow: "auto", border: 1, borderColor: "divider", borderRadius: 1 }}>
                   <Table size="small" stickyHeader>
@@ -490,7 +545,7 @@ export default function ApplicationLaunchPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {preview.results.map((person) => (
+                      {filteredPreviewResults.map((person) => (
                         <TableRow
                           key={person.ballkid_id}
                           hover
