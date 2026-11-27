@@ -466,6 +466,58 @@ class ApplicationLaunchDecisionView(APIView):
         )
 
 
+class ApplicationLaunchTournamentView(APIView):
+    """Read or configure the target tournament dates for launch invitations."""
+
+    permission_classes = [IsChairperson]
+
+    def _year(self, request):
+        raw_year = request.query_params.get("year") if request.method == "GET" else request.data.get("year")
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            raise ValidationError({"year": "Provide a valid target tournament year."})
+        if year < 1900 or year > get_current_year() + 10:
+            raise ValidationError({"year": "Target tournament year is outside the supported range."})
+        return year
+
+    def get(self, request):
+        year = self._year(request)
+        tournament = Tournament.objects.filter(year=year).first()
+        return Response({
+            "year": year,
+            "exists": tournament is not None,
+            "start_date": tournament.start_date.isoformat() if tournament and tournament.start_date else "",
+            "end_date": tournament.end_date.isoformat() if tournament and tournament.end_date else "",
+            "configured": bool(tournament and tournament.start_date and tournament.end_date),
+        })
+
+    def post(self, request):
+        year = self._year(request)
+        try:
+            start_date = date.fromisoformat(str(request.data.get("start_date", "")))
+            end_date = date.fromisoformat(str(request.data.get("end_date", "")))
+        except (TypeError, ValueError):
+            raise ValidationError({"dates": "Provide valid start and end dates (YYYY-MM-DD)."})
+        if start_date >= end_date:
+            raise ValidationError({"end_date": "Tournament end date must be after its start date."})
+        tournament, created = Tournament.objects.get_or_create(
+            year=year,
+            defaults={"start_date": start_date, "end_date": end_date},
+        )
+        if not created:
+            tournament.start_date = start_date
+            tournament.end_date = end_date
+            tournament.save(update_fields=["start_date", "end_date"])
+        return Response({
+            "year": year,
+            "exists": True,
+            "start_date": tournament.start_date.isoformat(),
+            "end_date": tournament.end_date.isoformat(),
+            "configured": True,
+        })
+
+
 class ApplicationLaunchPreviewView(APIView):
     """Chairperson-only, side-effect-free preview of returning-volunteer emails."""
 
@@ -525,6 +577,11 @@ class ApplicationLaunchSendView(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
         preview = build_launch_preview(source_year)
+        if not preview["tournament_configured"]:
+            return Response(
+                {"detail": f"Configure start and end dates for tournament {source_year + 1} before sending."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if preview["undecided"]:
             return Response(
                 {
