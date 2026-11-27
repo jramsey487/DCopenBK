@@ -72,7 +72,14 @@ def _content(first_name, decision, year, tournament_dates=None):
         paragraphs.insert(1, f"Tournament dates: {tournament_dates}")
     if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:
         paragraphs.append("Questions? Reply to this email.")
-    text = "\n\n".join([\n        greeting,\n        *paragraphs,\n        f"Submit application: {apply_url}",\n        f"Read the handbook: {handbook_url}",\n        site,\n    ])\n    html = (
+    text = "\\n\\n".join([
+        greeting,
+        *paragraphs,
+        f"Submit application: {apply_url}",
+        f"Read the handbook: {handbook_url}",
+        site,
+    ])
+    html = (
         '<div style="font-family:Arial,Helvetica,sans-serif;color:#1a2233;max-width:600px">'
         f"<p>{escape(greeting)}</p>"
         + "".join(f"<p>{escape(p).replace(chr(10), '<br>')}</p>" for p in paragraphs)
