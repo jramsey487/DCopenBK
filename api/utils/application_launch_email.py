@@ -60,10 +60,10 @@ def _content(first_name, decision, year, tournament_dates=None):
         ]
         button = "Apply for the upcoming season"
     elif decision == ApplicationLaunchDecision.DECISION_MUST_TRY_OUT:
-        subject = f"Required tryout for returning ball crew — {site} {year}"
+        subject = f"Tryout required to apply — {site} {year}"
         paragraphs = [
-            f"Your previous on-court performance did not meet the standard required for an automatic return to the {site} ball crew. You must attend a tryout in {year} to be considered for a roster spot.",
-            "Submit your application and contact the ball crew team to arrange a tryout. A tryout is required for consideration and does not guarantee selection.",
+            f"For the {site} ball crew in {year}, you must attend a tryout before you can be considered for a roster spot.",
+            "Please submit an application to be considered. Attending a tryout does not guarantee selection.",
         ]
         button = "Submit application"
     else:
