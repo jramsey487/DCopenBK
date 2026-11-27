@@ -103,6 +103,7 @@ export default function ApplicationLaunchPage() {
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || data.year || "Unable to load target tournament dates.");
+      setError("");
       setTournamentStart(data.start_date || "");
       setTournamentEnd(data.end_date || "");
       setTournamentConfigured(Boolean(data.configured));
@@ -348,7 +349,7 @@ export default function ApplicationLaunchPage() {
         }}
       >
         <TextField
-          label="Prior tournament year"
+          label="Prior tournament year (check-ins)"
           type="number"
           size="small"
           value={year}
@@ -364,7 +365,7 @@ export default function ApplicationLaunchPage() {
           InputLabelProps={{ shrink: true }}
         />
         <TextField
-          label="Target tournament end"
+          label={`Target tournament end (${Number(year) + 1})`}
           type="date"
           size="small"
           value={tournamentEnd}
