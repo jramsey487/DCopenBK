@@ -214,9 +214,11 @@ class TestApplicationVeterancyRosterView(TestCase):
         )
 
         self.assertIn("Required tryout", subject)
-        self.assertIn("previous on-court performance did not meet the standard", text)
-        self.assertIn("must attend a tryout", text)
+        self.assertIn("must attend a tryout before you can be considered", text)
+        self.assertIn("Please submit an application", text)
         self.assertIn("does not guarantee selection", text)
+        self.assertNotIn("previous on-court performance", text)
+        self.assertNotIn("contact the ball crew", text)
         self.assertNotIn("Tryout information:", text)
         self.assertNotIn("Tryout information:", html)
 
@@ -242,7 +244,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertIn("invited back", response.data["results"][0]["subject"].lower())
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-        def test_launch_email_send_is_logged_and_not_sent_twice(self):
+    def test_launch_email_send_is_logged_and_not_sent_twice(self):
         settings_obj = ApplicationSettings.get_solo()
         settings_obj.is_open = True
         settings_obj.save(update_fields=["is_open"])
@@ -269,7 +271,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(log.attempts, 1)
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-        @patch("api.utils.application_launch_email.EmailMultiAlternatives.send", side_effect=[Exception("temporary SMTP failure"), 1])
+    @patch("api.utils.application_launch_email.EmailMultiAlternatives.send", side_effect=[Exception("temporary SMTP failure"), 1])
     def test_failed_launch_email_can_be_retried(self, _send):
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
@@ -295,7 +297,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(log.attempts, 2)
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-        @patch(
+    @patch(
         "api.utils.application_launch_email.EmailMultiAlternatives.send",
         side_effect=smtplib.SMTPResponseException(452, b"4.7.28 rate limit"),
     )
@@ -348,7 +350,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         _send.assert_called_once()
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-        def test_stale_sending_email_is_visible_and_can_be_retried(self):
+    def test_stale_sending_email_is_visible_and_can_be_retried(self):
         settings_obj = ApplicationSettings.get_solo()
         settings_obj.is_open = True
         settings_obj.save(update_fields=["is_open"])
