@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
 from api.models.ballkid import SeasonParticipation
+from api.models.schedule import Tournament
 from api.serializers_application import get_tryout_slot_info
 
 logger = logging.getLogger("api.utils.application_launch_email")
@@ -47,7 +48,7 @@ def launch_send_in_progress():
     return _send_lock.locked()
 
 
-def _content(first_name, decision, year, slots):
+def _content(first_name, decision, year, slots, tournament_dates=None):
     site = settings.SITE_NAME
     apply_url = f"{settings.SITE_BASE_URL}/apply"
     handbook_url = f"{settings.SITE_BASE_URL}/handbook"
@@ -74,6 +75,8 @@ def _content(first_name, decision, year, slots):
         return None
     if tryouts:
         paragraphs.append("Tryout information:\n" + "\n".join(tryouts))
+    if tournament_dates:
+        paragraphs.insert(1, f"Tournament dates: {tournament_dates}")
     paragraphs.extend([f"Ball crew handbook: {handbook_url}", f"Applications: {apply_url}", "Questions? Reply to this email."])
     text = "\n\n".join([greeting, *paragraphs, site])
     html = (
@@ -89,6 +92,13 @@ def _content(first_name, decision, year, slots):
 def build_launch_preview(source_year):
     year = source_year + 1
     slots = get_tryout_slot_info()
+    tournament = Tournament.objects.filter(year=source_year + 1).first()
+    tournament_dates = (
+        f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
+        f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
+        if tournament and tournament.start_date and tournament.end_date
+        else None
+    )
     roster = list(SeasonParticipation.objects.filter(year=source_year).select_related("ballkid", "ballkid__user").order_by("ballkid__last_name", "ballkid__first_name"))
     decisions = {d.ballkid_id: d for d in ApplicationLaunchDecision.objects.filter(year=year, source_year=source_year)}
     logs = {l.ballkid_id: l for l in ApplicationLaunchEmailLog.objects.filter(year=year, source_year=source_year, kind="returning_invitation")}
@@ -98,7 +108,7 @@ def build_launch_preview(source_year):
         decision_row = decisions.get(kid.id)
         decision = decision_row.decision if decision_row else "undecided"
         email = (kid.user.email or "").strip() if kid.user_id else ""
-        message = _content(kid.first_name, decision, year, slots)
+        message = _content(kid.first_name, decision, year, slots, tournament_dates)
         log = logs.get(kid.id)
         status_value = log.status if log else "not_sent"
         last_error = log.last_error if log else ""
@@ -128,12 +138,14 @@ def build_launch_preview(source_year):
         "source_year": source_year, "year": year, "count": len(results),
         "sendable": sendable, "undecided": undecided, "missing_email": missing,
         "applications_open": ApplicationSettings.get_solo().is_open,
+        "tournament_dates": tournament_dates,
+        "tournament_configured": tournament_dates is not None,
         "sending": launch_send_in_progress(), "results": results,
     }
 
 
-def _send_one(kid, source_year, year, slots):
-    content = _content(kid.first_name, kid.decision, year, slots)
+def _send_one(kid, source_year, year, slots, tournament_dates):
+    content = _content(kid.first_name, kid.decision, year, slots, tournament_dates)
     if not content:
         return "skipped"
     subject, body, html = content
@@ -205,13 +217,22 @@ def send_launch_notifications(source_year):
         roster = SeasonParticipation.objects.filter(year=source_year).select_related("ballkid", "ballkid__user").order_by("ballkid_id")
         counts = {"sent": 0, "failed": 0, "skipped": 0}
         slots = get_tryout_slot_info()
+        tournament = Tournament.objects.filter(year=year).first()
+        tournament_dates = (
+            f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
+            f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
+            if tournament and tournament.start_date and tournament.end_date
+            else None
+        )
+        if not tournament_dates:
+            return {"blocked": True, "sent": 0, "failed": 0, "skipped": 0}
         for row in roster:
             kid = row.ballkid
             kid.decision = decisions.get(kid.id, "undecided")
             if kid.decision not in ("invite_back", "must_try_out") or not (kid.user_id and kid.user.email):
                 counts["skipped"] += 1
                 continue
-            result = _send_one(kid, source_year, year, slots)
+            result = _send_one(kid, source_year, year, slots, tournament_dates)
             if result == "halt":
                 # The recipient failure is logged; leave all remaining rows
                 # untouched so the chairperson can retry after the provider cools down.
