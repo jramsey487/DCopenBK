@@ -41,7 +41,7 @@ def get_tournament_start_date():
     return tournament.start_date if tournament else None
 
 
-def get_tryout_slot_info(exclude_application_id=None):
+def get_tryout_slot_info(exclude_application_id=None, tournament_year=None):
     """
     Returns a list of dicts, one per tryout slot ("first"/"second"), each
     with the slot's date and place (set per season on the current
@@ -64,8 +64,13 @@ def get_tryout_slot_info(exclude_application_id=None):
     offer) -- one source of truth for both.
     """
     settings_obj = ApplicationSettings.get_solo()
-    tournament = Tournament.objects.order_by("-year").first()
-    year = tournament.year if tournament else None
+    tournament_query = Tournament.objects.all()
+    if tournament_year is not None:
+        tournament_query = tournament_query.filter(year=tournament_year)
+    else:
+        tournament_query = tournament_query.order_by("-year")
+    tournament = tournament_query.first()
+    year = tournament.year if tournament else tournament_year
 
     slots = []
     for value, label in TRYOUT_SLOT_CHOICES:
