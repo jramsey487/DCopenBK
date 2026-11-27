@@ -156,9 +156,9 @@ class TestApplicationVeterancyRosterView(TestCase):
             for query in captured.captured_queries
             if "api_seasonparticipation" in query["sql"].lower()
         ]
-        # One query loads the selected-season roster and one prefetches
-        # earned seasons for all roster members; no per-person queries.
-        self.assertEqual(len(participation_queries), 3)
+        # Fixed queries load available seasons, the selected-season roster, and
+        # earned-season data; the count must not grow with roster size.
+        self.assertEqual(len(participation_queries), 4)
         self.assertEqual(response.data["count"], expected_count)
 
     def test_default_roster_year_is_latest_year_with_checkins(self):
