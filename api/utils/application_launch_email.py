@@ -68,8 +68,6 @@ def _content(first_name, decision, year, tournament_dates=None):
         button = "Submit application"
     else:
         return None
-    if tryouts:
-        paragraphs.append("Tryout information:\n" + "\n".join(tryouts))
     if tournament_dates:
         paragraphs.insert(1, f"Tournament dates: {tournament_dates}")
     paragraphs.extend([f"Ball crew handbook: {handbook_url}", f"Applications: {apply_url}", "Questions? Reply to this email."])
