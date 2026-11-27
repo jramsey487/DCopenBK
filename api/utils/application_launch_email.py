@@ -70,7 +70,8 @@ def _content(first_name, decision, year, tournament_dates=None):
         return None
     if tournament_dates:
         paragraphs.insert(1, f"Tournament dates: {tournament_dates}")
-    paragraphs.extend([f"Ball crew handbook: {handbook_url}", f"Applications: {apply_url}"])\n    if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:\n        paragraphs.append("Questions? Reply to this email.")
+    paragraphs.extend([f"Ball crew handbook: {handbook_url}", f"Applications: {apply_url}"])
+    if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:\n        paragraphs.append("Questions? Reply to this email.")
     text = "\n\n".join([greeting, *paragraphs, site])
     html = (
         '<div style="font-family:Arial,Helvetica,sans-serif;color:#1a2233;max-width:600px">'
