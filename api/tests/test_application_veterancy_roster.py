@@ -10,6 +10,7 @@ from datetime import timedelta
 import smtplib
 
 from api.models.ballkid import Ballkid, SeasonParticipation
+from api.models.schedule import Tournament
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
 from api.utils.utils import get_current_year
 from api.serializers_application import (
@@ -20,6 +21,7 @@ from api.views.application import (
     ApplicationLaunchDecisionView,
     ApplicationLaunchPreviewView,
     ApplicationLaunchSendView,
+    ApplicationLaunchTournamentView,
     ApplicationVeterancyRosterView,
 )
 
@@ -32,6 +34,12 @@ class TestApplicationVeterancyRosterView(TestCase):
         )
         chairperson_group, _ = Group.objects.get_or_create(name="chairperson")
         self.user.groups.add(chairperson_group)
+
+        Tournament.objects.create(
+            year=2027,
+            start_date="2027-07-24",
+            end_date="2027-08-01",
+        )
 
         self.ballkid = Ballkid.objects.create(
             first_name="Taylor",
@@ -163,6 +171,38 @@ class TestApplicationVeterancyRosterView(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["year"], expected_year)
+
+    def test_chairperson_can_create_future_tournament_dates(self):
+        request = self.factory.post(
+            "/api/applications/launch-tournament",
+            {"year": 2028, "start_date": "2028-03-10", "end_date": "2028-03-18"},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationLaunchTournamentView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["configured"])
+        tournament = Tournament.objects.get(year=2028)
+        self.assertEqual(tournament.start_date.isoformat(), "2028-03-10")
+        self.assertEqual(tournament.end_date.isoformat(), "2028-03-18")
+
+    def test_target_tournament_dates_are_in_launch_email_preview(self):
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+        request = self.factory.get(
+            "/api/applications/launch-preview", {"source_year": 2026}
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationLaunchPreviewView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["tournament_configured"])
+        self.assertEqual(response.data["tournament_dates"], "July 24, 2027 – August 1, 2027")
+        self.assertIn("Tournament dates: July 24, 2027 – August 1, 2027", response.data["results"][0]["text"])
 
     def test_preview_lists_decision_for_next_application_year(self):
         ApplicationLaunchDecision.objects.create(
