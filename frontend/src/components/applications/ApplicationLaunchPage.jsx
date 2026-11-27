@@ -53,6 +53,7 @@ export default function ApplicationLaunchPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [sendLoading, setSendLoading] = useState(false);
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
   const [applicationsOpen, setApplicationsOpen] = useState(null);
   const [openingApplications, setOpeningApplications] = useState(false);
   const [interestPending, setInterestPending] = useState(null);
@@ -290,6 +291,32 @@ export default function ApplicationLaunchPage() {
       setError(err.message || "Unable to start invitation email batch.");
     } finally {
       setSendLoading(false);
+    }
+  };
+
+
+  const sendTestEmail = async () => {
+    if (!selectedRecipient || !year || testEmailLoading) return;
+    if (!window.confirm("Send this preview as a clearly marked test email to your chairperson account email only? The volunteer will not receive it.")) return;
+    setTestEmailLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/applications/launch-test-email", {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: JSON.stringify({
+          ballkid_id: selectedRecipient.ballkid_id,
+          source_year: Number(year),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Unable to send test email.");
+      setNotice(`Test email sent to ${data.to}. It did not change the volunteer's delivery status.`);
+    } catch (err) {
+      setError(err.message || "Unable to send test email.");
+    } finally {
+      setTestEmailLoading(false);
     }
   };
 
@@ -588,6 +615,18 @@ export default function ApplicationLaunchPage() {
                         margin="dense"
                         InputProps={{ readOnly: true }}
                       />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{ mt: 1, mb: 1 }}
+                        onClick={sendTestEmail}
+                        disabled={testEmailLoading || !selectedRecipient || selectedRecipient.decision === "undecided"}
+                      >
+                        {testEmailLoading ? "Sending test…" : "Send test to my email"}
+                      </Button>
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 1 }}>
+                        Sends only to your chairperson account email. The selected volunteer's sent status is unchanged.
+                      </Typography>
                       <TextField
                         label="Email body"
                         value={selectedRecipient.text}
