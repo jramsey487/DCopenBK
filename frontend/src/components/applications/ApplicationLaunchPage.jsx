@@ -42,7 +42,6 @@ export default function ApplicationLaunchPage() {
   const [tournamentStart, setTournamentStart] = useState("");
   const [tournamentEnd, setTournamentEnd] = useState("");
   const [tournamentConfigured, setTournamentConfigured] = useState(false);
-  const [savingTournament, setSavingTournament] = useState(false);
   const [loading, setLoading] = useState(false);
   const [savingIds, setSavingIds] = useState({});
   const [error, setError] = useState("");
@@ -116,35 +115,6 @@ export default function ApplicationLaunchPage() {
   useEffect(() => {
     loadTargetTournament();
   }, [loadTargetTournament]);
-
-  const saveTargetTournament = async () => {
-    if (!year || !tournamentStart || !tournamentEnd) {
-      setError("Enter both tournament dates before saving.");
-      return;
-    }
-    setSavingTournament(true);
-    setError("");
-    setNotice("");
-    try {
-      const response = await fetch("/api/applications/launch-tournament", {
-        method: "POST",
-        headers: getAuthHeader(),
-        body: JSON.stringify({
-          year: Number(year) + 1,
-          start_date: tournamentStart,
-          end_date: tournamentEnd,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.end_date || data.dates || data.detail || "Unable to save tournament dates.");
-      setTournamentConfigured(Boolean(data.configured));
-      setNotice(`Tournament dates saved for ${data.year}.`);
-    } catch (err) {
-      setError(err.message || "Unable to save tournament dates.");
-    } finally {
-      setSavingTournament(false);
-    }
-  };
 
   const loadLaunchSettings = useCallback(async () => {
     try {
@@ -359,28 +329,24 @@ export default function ApplicationLaunchPage() {
           inputProps={{ min: 1900, max: new Date().getFullYear() }}
         />
         <TextField
-          label={`Target tournament start (${Number(year) + 1})`}
+          label={`Tournament start (${Number(year) + 1})`}
           type="date"
           size="small"
           value={tournamentStart}
-          onChange={(event) => setTournamentStart(event.target.value)}
           InputLabelProps={{ shrink: true }}
+          InputProps={{ readOnly: true }}
         />
         <TextField
-          label={`Target tournament end (${Number(year) + 1})`}
+          label={`Tournament end (${Number(year) + 1})`}
           type="date"
           size="small"
           value={tournamentEnd}
-          onChange={(event) => setTournamentEnd(event.target.value)}
           InputLabelProps={{ shrink: true }}
+          InputProps={{ readOnly: true }}
         />
-        <Button
-          variant="outlined"
-          onClick={saveTargetTournament}
-          disabled={savingTournament || !year || !tournamentStart || !tournamentEnd}
-        >
-          {savingTournament ? "Saving dates…" : tournamentConfigured ? "Update tournament dates" : "Create tournament dates"}
-        </Button>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
+          Set these dates in Admin Tools → Tournament Settings. Application Launch reads the saved tournament dates.
+        </Typography>
         <Button variant="contained" onClick={loadRoster} disabled={loading || !year}>
           {loading ? "Loading…" : "Refresh roster"}
         </Button>
