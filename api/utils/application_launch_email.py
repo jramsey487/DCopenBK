@@ -55,7 +55,7 @@ def _content(first_name, decision, year, tournament_dates=None):
     if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:
         subject = f"You're invited back to ball crew — {site} {year}"
         paragraphs = [
-            f"We'd love to have you back on the {site} ball crew for {year}.",
+            f"We'd love to have you back on the {site} ball crew for {year}!",
             "Please submit your application using the link below so we can confirm your availability and collect this season's details.",
         ]
         button = "Apply for the upcoming season"
