@@ -37,7 +37,14 @@ def get_tournament_start_date():
     row exists yet (age validation is skipped in that case rather than
     guessing at a date).
     """
-    tournament = Tournament.objects.order_by("-year").first()
+    today = timezone.localdate()
+    tournament = (
+        Tournament.objects.filter(start_date__gte=today)
+        .order_by("start_date", "year")
+        .first()
+        or Tournament.objects.filter(year=get_current_year()).first()
+        or Tournament.objects.order_by("-year").first()
+    )
     return tournament.start_date if tournament else None
 
 
@@ -64,12 +71,22 @@ def get_tryout_slot_info(exclude_application_id=None, tournament_year=None):
     offer) -- one source of truth for both.
     """
     settings_obj = ApplicationSettings.get_solo()
-    tournament_query = Tournament.objects.all()
     if tournament_year is not None:
-        tournament_query = tournament_query.filter(year=tournament_year)
+        # Match the calendar year of the configured start date first. Legacy
+        # records may still have Tournament.year set to the year they were
+        # originally saved rather than the actual tournament year.
+        tournament = (
+            Tournament.objects.filter(start_date__year=tournament_year).order_by("year").first()
+            or Tournament.objects.filter(year=tournament_year).first()
+        )
     else:
-        tournament_query = tournament_query.order_by("-year")
-    tournament = tournament_query.first()
+        today = timezone.localdate()
+        tournament = (
+            Tournament.objects.filter(start_date__gte=today)
+            .order_by("start_date", "year")
+            .first()
+            or Tournament.objects.order_by("-year").first()
+        )
     year = tournament.year if tournament else tournament_year
 
     slots = []
