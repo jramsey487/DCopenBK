@@ -12,7 +12,6 @@ from django.utils.html import escape
 from api.models.application import ApplicationLaunchDecision, ApplicationLaunchEmailLog, ApplicationSettings
 from api.models.ballkid import SeasonParticipation
 from api.models.schedule import Tournament
-from api.serializers_application import get_tryout_slot_info
 
 logger = logging.getLogger("api.utils.application_launch_email")
 _send_lock = threading.Lock()
@@ -48,15 +47,11 @@ def launch_send_in_progress():
     return _send_lock.locked()
 
 
-def _content(first_name, decision, year, slots, tournament_dates=None):
+def _content(first_name, decision, year, tournament_dates=None):
     site = settings.SITE_NAME
     apply_url = f"{settings.SITE_BASE_URL}/apply"
     handbook_url = f"{settings.SITE_BASE_URL}/handbook"
     greeting = f"Hi {first_name}," if first_name else "Hello,"
-    tryouts = []
-    for slot in slots:
-        detail = " — ".join(x for x in (slot.get("date"), slot.get("location")) if x)
-        tryouts.append(f"{slot.get('label', 'Tryout')}{': ' + detail if detail else ''}")
     if decision == ApplicationLaunchDecision.DECISION_INVITE_BACK:
         subject = f"You're invited back to ball crew — {site} {year}"
         paragraphs = [
@@ -65,12 +60,12 @@ def _content(first_name, decision, year, slots, tournament_dates=None):
         ]
         button = "Apply for the upcoming season"
     elif decision == ApplicationLaunchDecision.DECISION_MUST_TRY_OUT:
-        subject = f"Returning ball crew invitation and tryout — {site} {year}"
+        subject = f"Required tryout for returning ball crew — {site} {year}"
         paragraphs = [
-            f"We'd love for you to be considered for the {site} ball crew in {year}. For this season, we need you to attend a tryout before your spot can be confirmed.",
-            "Please submit your application and reply to this email with the tryout date you plan to attend so we can confirm it. This is not a rejection; the tryout is the next step.",
+            f"Your previous on-court performance did not meet the standard required for an automatic return to the {site} ball crew. You must attend a tryout in {year} to be considered for a roster spot.",
+            "Submit your application and contact the ball crew team to arrange a tryout. A tryout is required for consideration and does not guarantee selection.",
         ]
-        button = "Apply and confirm tryout by email"
+        button = "Submit application"
     else:
         return None
     if tryouts:
@@ -99,7 +94,6 @@ def _tournament_for_year(year):
 
 def build_launch_preview(source_year):
     year = source_year + 1
-    slots = get_tryout_slot_info(tournament_year=year)
     tournament = _tournament_for_year(year)
     tournament_dates = (
         f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
@@ -116,7 +110,7 @@ def build_launch_preview(source_year):
         decision_row = decisions.get(kid.id)
         decision = decision_row.decision if decision_row else "undecided"
         email = (kid.user.email or "").strip() if kid.user_id else ""
-        message = _content(kid.first_name, decision, year, slots, tournament_dates)
+        message = _content(kid.first_name, decision, year, tournament_dates)
         log = logs.get(kid.id)
         status_value = log.status if log else "not_sent"
         last_error = log.last_error if log else ""
@@ -152,8 +146,8 @@ def build_launch_preview(source_year):
     }
 
 
-def _send_one(kid, source_year, year, slots, tournament_dates):
-    content = _content(kid.first_name, kid.decision, year, slots, tournament_dates)
+def _send_one(kid, source_year, year, tournament_dates):
+    content = _content(kid.first_name, kid.decision, year, tournament_dates)
     if not content:
         return "skipped"
     subject, body, html = content
@@ -224,7 +218,6 @@ def send_launch_notifications(source_year):
         decisions = {d.ballkid_id: d.decision for d in ApplicationLaunchDecision.objects.filter(year=year, source_year=source_year)}
         roster = SeasonParticipation.objects.filter(year=source_year).select_related("ballkid", "ballkid__user").order_by("ballkid_id")
         counts = {"sent": 0, "failed": 0, "skipped": 0}
-        slots = get_tryout_slot_info(tournament_year=year)
         tournament = _tournament_for_year(year)
         tournament_dates = (
             f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
@@ -240,7 +233,7 @@ def send_launch_notifications(source_year):
             if kid.decision not in ("invite_back", "must_try_out") or not (kid.user_id and kid.user.email):
                 counts["skipped"] += 1
                 continue
-            result = _send_one(kid, source_year, year, slots, tournament_dates)
+            result = _send_one(kid, source_year, year, tournament_dates)
             if result == "halt":
                 # The recipient failure is logged; leave all remaining rows
                 # untouched so the chairperson can retry after the provider cools down.
