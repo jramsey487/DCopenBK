@@ -67,6 +67,7 @@ from api.utils.application_launch_email import (
     build_launch_preview,
     launch_send_in_progress,
     send_launch_notifications_async,
+    send_launch_test_email,
 )
 from api.utils.application_decision_email import (
     applicant_emails_enabled,
@@ -596,6 +597,71 @@ class ApplicationLaunchSendView(APIView):
                 "detail": "Invitation batch started. Refresh the preview to see delivery status.",
             },
             status=status.HTTP_202_ACCEPTED,
+        )
+
+
+
+class ApplicationLaunchTestEmailView(APIView):
+    """Send a selected launch-email preview only to the requesting chairperson."""
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        try:
+            ballkid_id = int(request.data.get("ballkid_id"))
+            source_year = int(request.data.get("source_year"))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Provide a Ballkid and prior tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not request.user.email:
+            return Response(
+                {"detail": "Add an email address to your chairperson account before sending a test."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        decision_row = get_object_or_404(
+            ApplicationLaunchDecision,
+            ballkid_id=ballkid_id,
+            year=source_year + 1,
+            source_year=source_year,
+        )
+        if decision_row.decision not in (
+            ApplicationLaunchDecision.DECISION_INVITE_BACK,
+            ApplicationLaunchDecision.DECISION_MUST_TRY_OUT,
+        ):
+            return Response(
+                {"detail": "Choose invite back or must try out before sending a test."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ballkid = get_object_or_404(Ballkid, pk=ballkid_id)
+        tournament = (
+            Tournament.objects.filter(start_date__year=source_year + 1).order_by("year").first()
+            or Tournament.objects.filter(year=source_year + 1).first()
+        )
+        tournament_dates = (
+            f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
+            f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
+            if tournament and tournament.start_date and tournament.end_date
+            else None
+        )
+        try:
+            subject = send_launch_test_email(
+                ballkid.first_name,
+                decision_row.decision,
+                source_year + 1,
+                tournament_dates,
+                request.user.email,
+            )
+        except Exception:
+            logger.exception("Application launch test email failed")
+            return Response(
+                {"detail": "Unable to send the test email. Check server email logs."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        return Response(
+            {"sent": True, "to": request.user.email, "subject": subject},
+            status=status.HTTP_200_OK,
         )
 
 
