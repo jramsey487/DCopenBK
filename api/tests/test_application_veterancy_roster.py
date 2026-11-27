@@ -379,6 +379,30 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     @patch("api.views.application.send_launch_notifications_async")
+    def test_launch_send_requires_target_tournament_dates(self, send_async):
+        Tournament.objects.filter(year=2027).delete()
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+        request = self.factory.post(
+            "/api/applications/launch-send",
+            {"source_year": 2026},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationLaunchSendView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Configure start and end dates", response.data["detail"])
+        send_async.assert_not_called()
+
+    @patch("api.views.application.send_launch_notifications_async")
     def test_launch_send_requires_open_applications_and_resolved_decisions(self, send_async):
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
