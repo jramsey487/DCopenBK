@@ -162,10 +162,7 @@ export default function ApplicationLaunchPage() {
         `/api/applications/veterancy-roster/${ballkidId}/decision`,
         {
           method: "PATCH",
-          headers: {
-            ...getAuthHeader(),
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeader(),
           body: JSON.stringify({ year: Number(year) + 1, decision: nextDecision }),
         }
       );
@@ -196,10 +193,7 @@ export default function ApplicationLaunchPage() {
     try {
       const response = await fetch("/api/application-settings", {
         method: "PATCH",
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeader(),
         body: JSON.stringify({ is_open: true }),
       });
       const data = await response.json();
@@ -247,10 +241,7 @@ export default function ApplicationLaunchPage() {
     try {
       const response = await fetch("/api/applications/launch-send", {
         method: "POST",
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeader(),
         body: JSON.stringify({ source_year: Number(year) }),
       });
       const data = await response.json();
@@ -355,7 +346,7 @@ export default function ApplicationLaunchPage() {
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Ballkid</TableCell>
+            <TableCell>Ballcrew</TableCell>
             <TableCell align="right">Veterancy</TableCell>
             <TableCell align="right">Historical baseline</TableCell>
             <TableCell align="right">Verified seasons after 2026</TableCell>
