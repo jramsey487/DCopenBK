@@ -397,7 +397,18 @@ class ApplicationVeterancyRosterView(APIView):
                     "veterancy_years": historical_years + verified_years,
                 }
             )
-        return Response(\n            {\n                "year": year,\n                "available_years": list(\n                    SeasonParticipation.objects.order_by("-year")\n                    .values_list("year", flat=True)\n                    .distinct()\n                ),\n                "count": len(roster),\n                "results": roster,\n            }\n        )
+        return Response(
+            {
+                "year": year,
+                "available_years": list(
+                    SeasonParticipation.objects.order_by("-year")
+                    .values_list("year", flat=True)
+                    .distinct()
+                ),
+                "count": len(roster),
+                "results": roster,
+            }
+        )
 
 
 class ApplicationLaunchDecisionView(APIView):
