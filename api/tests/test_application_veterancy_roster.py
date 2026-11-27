@@ -460,3 +460,57 @@ class TestApplicationVeterancyRosterView(TestCase):
 
         self.assertEqual(open_response.status_code, 202)
         send_async.assert_called_once_with(2026)
+
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_launch_test_email_goes_only_to_requesting_chair_and_does_not_log_as_sent(self):
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="invite_back",
+            updated_by=self.user,
+        )
+        request = self.factory.post(
+            "/api/applications/launch-test-email",
+            {"ballkid_id": self.ballkid.id, "source_year": 2026},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+
+        from api.views.application import ApplicationLaunchTestEmailView
+        response = ApplicationLaunchTestEmailView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["to"], self.user.email)
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, [self.user.email])
+        self.assertIn("[TEST EMAIL]", message.subject)
+        self.assertIn("TEST EMAIL", message.body)
+        self.assertFalse(
+            ApplicationLaunchEmailLog.objects.filter(
+                ballkid=self.ballkid, year=2027, kind="returning_invitation"
+            ).exists()
+        )
+
+    def test_launch_test_email_rejects_undecided_and_sends_nothing(self):
+        ApplicationLaunchDecision.objects.create(
+            ballkid=self.ballkid,
+            year=2027,
+            source_year=2026,
+            decision="undecided",
+            updated_by=self.user,
+        )
+        request = self.factory.post(
+            "/api/applications/launch-test-email",
+            {"ballkid_id": self.ballkid.id, "source_year": 2026},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+
+        from api.views.application import ApplicationLaunchTestEmailView
+        response = ApplicationLaunchTestEmailView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(len(mail.outbox), 0)
