@@ -172,19 +172,16 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["year"], expected_year)
 
-    def test_chairperson_can_create_future_tournament_dates(self):
-        request = self.factory.post(
-            "/api/applications/launch-tournament",
-            {"year": 2028, "start_date": "2028-03-10", "end_date": "2028-03-18"},
-            format="json",
+    def test_launch_tournament_endpoint_reads_admin_configured_dates(self):
+        request = self.factory.get(
+            "/api/applications/launch-tournament", {"year": 2027}
         )
         force_authenticate(request, user=self.user)
         response = ApplicationLaunchTournamentView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data["configured"])
-        tournament = Tournament.objects.get(year=2028)
-        self.assertEqual(tournament.start_date.isoformat(), "2028-03-10")
-        self.assertEqual(tournament.end_date.isoformat(), "2028-03-18")
+        self.assertEqual(response.data["start_date"], "2027-07-24")
+        self.assertEqual(response.data["end_date"], "2027-08-01")
 
     def test_target_tournament_dates_are_in_launch_email_preview(self):
         ApplicationLaunchDecision.objects.create(
