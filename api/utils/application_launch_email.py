@@ -134,9 +134,13 @@ def build_launch_preview(source_year):
             "last_error": last_error,
         })
     sendable = sum(1 for r in results if r["decision"] in ("invite_back", "must_try_out") and r["email"] and r["status"] in ("not_sent", "failed"))
+    eligible = [r for r in results if r["decision"] in ("invite_back", "must_try_out") and r["email"]]
+    sent_count = sum(1 for r in eligible if r["status"] == "sent")
+    failed_count = sum(1 for r in eligible if r["status"] == "failed")
+    remaining_count = sum(1 for r in eligible if r["status"] != "sent")
     return {
         "source_year": source_year, "year": year, "count": len(results),
-        "sendable": sendable, "undecided": undecided, "missing_email": missing,
+        "sendable": sendable, "sent": sent_count, "failed": failed_count, "remaining": remaining_count, "undecided": undecided, "missing_email": missing,
         "applications_open": ApplicationSettings.get_solo().is_open,
         "tournament_dates": tournament_dates,
         "tournament_configured": tournament_dates is not None,
