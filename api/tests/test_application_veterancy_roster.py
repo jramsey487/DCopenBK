@@ -81,6 +81,8 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["year"], 2026)
         self.assertEqual(response.data["count"], 1)
+        self.assertIn(2026, response.data["available_years"])
+        self.assertIn(2027, response.data["available_years"])
         person = response.data["results"][0]
         self.assertEqual(person["ballkid_id"], self.ballkid.id)
         self.assertEqual(person["historical_veterancy_years"], 5)
@@ -241,6 +243,9 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["year"], 2027)
         self.assertEqual(response.data["sendable"], 1)
+        self.assertEqual(response.data["sent"], 0)
+        self.assertEqual(response.data["failed"], 0)
+        self.assertEqual(response.data["remaining"], 1)
         self.assertEqual(response.data["results"][0]["decision"], "invite_back")
         self.assertIn("invited back", response.data["results"][0]["subject"].lower())
 
