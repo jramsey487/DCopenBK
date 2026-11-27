@@ -89,10 +89,18 @@ def _content(first_name, decision, year, slots, tournament_dates=None):
     return subject, text, html
 
 
+def _tournament_for_year(year):
+    """Find the tournament by its start-date year, with legacy key fallback."""
+    return (
+        Tournament.objects.filter(start_date__year=year).order_by("year").first()
+        or Tournament.objects.filter(year=year).first()
+    )
+
+
 def build_launch_preview(source_year):
     year = source_year + 1
-    slots = get_tryout_slot_info(tournament_year=source_year + 1)
-    tournament = Tournament.objects.filter(year=source_year + 1).first()
+    slots = get_tryout_slot_info(tournament_year=year)
+    tournament = _tournament_for_year(year)
     tournament_dates = (
         f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
         f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
@@ -217,7 +225,7 @@ def send_launch_notifications(source_year):
         roster = SeasonParticipation.objects.filter(year=source_year).select_related("ballkid", "ballkid__user").order_by("ballkid_id")
         counts = {"sent": 0, "failed": 0, "skipped": 0}
         slots = get_tryout_slot_info(tournament_year=year)
-        tournament = Tournament.objects.filter(year=year).first()
+        tournament = _tournament_for_year(year)
         tournament_dates = (
             f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
             f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
