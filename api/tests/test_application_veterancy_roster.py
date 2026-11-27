@@ -220,7 +220,7 @@ class TestApplicationVeterancyRosterView(TestCase):
         self.assertNotIn("previous on-court performance", text)
         self.assertNotIn("contact the ball crew", text)
         self.assertNotIn("Tryout information:", text)
-        self.assertNotIn("Tryout information:", html)
+        self.assertNotIn("Tryout information:", html)\n        self.assertNotIn("Questions? Reply to this email.", text)
 
     def test_preview_lists_decision_for_next_application_year(self):
         ApplicationLaunchDecision.objects.create(
