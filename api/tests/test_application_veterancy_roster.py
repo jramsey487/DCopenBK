@@ -213,7 +213,7 @@ class TestApplicationVeterancyRosterView(TestCase):
             "July 24, 2027 – August 1, 2027",
         )
 
-        self.assertIn("Required tryout", subject)
+        self.assertIn("Tryout required", subject)
         self.assertIn("must attend a tryout before you can be considered", text)
         self.assertIn("Please submit an application", text)
         self.assertIn("does not guarantee selection", text)
