@@ -30,6 +30,11 @@ from api.views.application import (
 class TestApplicationVeterancyRosterView(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
+        # Start each test from a known closed state; the singleton default may
+        # otherwise already be open and make rejected-open assertions misleading.
+        app_settings = ApplicationSettings.get_solo()
+        app_settings.is_open = False
+        app_settings.save(update_fields=["is_open"])
         self.user = User.objects.create_user(
             username="launch-chair", email="chair@example.com", password="test"
         )
