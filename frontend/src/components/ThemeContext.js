@@ -66,8 +66,12 @@ export function ThemeProvider({ children }) {
     }
 
     // Safari versions that support matchMedia but not addEventListener.
-    mediaQuery.addListener(applyTheme);
-    return () => mediaQuery.removeListener(applyTheme);
+    if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(applyTheme);
+      return () => mediaQuery.removeListener(applyTheme);
+    }
+
+    return undefined;
   }, [themePreference]);
 
   const value = useMemo(
