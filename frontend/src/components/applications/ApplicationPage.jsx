@@ -715,7 +715,7 @@ export default function ApplicationPage() {
         </Typography>
         <Typography sx={{ mb: 2 }}>
           Applications usually open in March or April. Questions? Reach out to
-          mdetennis.ballcrew@gmail.com.
+          {contactEmail || "the ballcrew"}.
         </Typography>
 
         <Typography variant="subtitle2">Who can apply</Typography>
@@ -835,7 +835,7 @@ export default function ApplicationPage() {
           You're editing your submitted application. Changes can
           be made until it's reviewed or the tournament starts. Your
           "veteran / first time" answer can't be changed here &mdash;
-          email mdetennis.ballcrew@gmail.com if that needs to change.
+          email {contactEmail || "the ballcrew"} if that needs to change.
         </Alert>
       ) : null}
 
@@ -1198,7 +1198,7 @@ export default function ApplicationPage() {
               DAY_TUE,
               tournamentStartDate
             )}{" "}
-            -- email us at mdetennis.ballcrew@gmail.com if that's a
+            -- email us at {contactEmail || "the ballcrew"} if that's a
             problem for some reason. You're only required to work
             one of{" "}
             {formatDayLabel(
