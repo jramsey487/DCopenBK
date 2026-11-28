@@ -334,6 +334,12 @@ class TestApplicationVeterancyRosterView(TestCase):
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     @patch("api.utils.application_launch_email.EmailMultiAlternatives.send", side_effect=[Exception("temporary SMTP failure"), 1])
     def test_failed_launch_email_can_be_retried(self, _send):
+        # Launch notification tests exercise email retry behavior, which is
+        # available only after applications have been opened.
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
             year=2027,
