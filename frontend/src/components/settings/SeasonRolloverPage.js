@@ -10,19 +10,6 @@ import "./season-rollover.css";
 
 const STATE_LABEL = { done: "Done", ready: "Ready", locked: "Locked" };
 
-const RESET_LABELS = {
-  ratings: "Ratings",
-  checkin_history: "Check-in history",
-  checkin_analytics: "Check-in analytics",
-  team_history: "Team history",
-  captain_history: "Captain history",
-  captain_analytics: "Captain analytics",
-  court_analytics: "Court analytics",
-  schedules: "Schedule shifts",
-  calibration_params: "Calibration parameters",
-  cut_history: "Cut history",
-};
-
 function plural(n, word) {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
@@ -68,7 +55,6 @@ export default function SeasonRolloverPage() {
   const [creating, setCreating] = useState(false);
 
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
   const [opening, setOpening] = useState(false);
 
   const refresh = useCallback(() => {
@@ -195,7 +181,6 @@ export default function SeasonRolloverPage() {
   const tournamentDone =
     status.tournament.exists && status.tournament.has_dates;
   const archiveDone = status.archive.done;
-  const resetDone = status.reset.done;
   const appsDone = status.applications.is_open;
 
   const states = {
@@ -206,7 +191,6 @@ export default function SeasonRolloverPage() {
       : exportDone && tournamentDone
       ? "ready"
       : "locked",
-    reset: resetDone ? "done" : archiveDone ? "ready" : "locked",
     applications: appsDone
       ? "done"
       : archiveDone && tournamentDone
@@ -215,10 +199,6 @@ export default function SeasonRolloverPage() {
   };
 
   const allDone = exportDone && tournamentDone && archiveDone && appsDone;
-  const resetRows = Object.entries(status.reset.counts).filter(
-    ([, n]) => n > 0
-  );
-
   return (
     <div className="page rollover-shell">
       <Banners />
@@ -365,57 +345,16 @@ export default function SeasonRolloverPage() {
           />
         </StepCard>
 
-        <StepCard
-          number={4}
-          title={`Clear leftover ${status.season_year} test data`}
-          state={states.reset}
-        >
-          {resetDone ? (
-            <p className="rollover-text">
-              No {status.season_year} ratings, check-ins, schedules or analytics. Nothing
-              to clear.
-            </p>
-          ) : (
-            <>
-              <p className="rollover-text">
-                Optional. Deletes {status.season_year} data left over from testing or a
-                dry run. If this is real {status.season_year} data you want to keep,
-                skip this step.
-              </p>
-              <ul className="rollover-counts">
-                {resetRows.map(([key, n]) => (
-                  <li key={key}>
-                    <span>{RESET_LABELS[key] || key}</span>
-                    <strong>{n}</strong>
-                  </li>
-                ))}
-              </ul>
-              {states.reset === "locked" ? (
-                <p className="rollover-meta">Archive the roster first.</p>
-              ) : null}
-              <Button
-                variant="contained"
-                color="error"
-                size="small"
-                disabled={states.reset === "locked"}
-                onClick={() => setResetOpen(true)}
-              >
-                Reset {status.season_year} data
-              </Button>
-            </>
-          )}
-          <ConfirmDialog
-            message={`You are about to permanently delete ${status.reset.total} ${status.season_year} records (ratings, check-in and team histories, schedules, analytics, calibration and cut history).`}
-            url="/api/reset-data"
-            body={{ year: status.season_year }}
-            method="PATCH"
-            open={resetOpen}
-            setOpen={setResetOpen}
-            setUpdated={refresh}
-          />
-        </StepCard>
-
-        <StepCard number={5} title="Open applications" state={states.applications}>
+        <StepCard number={4} title="Open applications" state={states.applications}>
+          <Button
+            component={RouterLink}
+            to="/application-launch"
+            size="small"
+            variant="outlined"
+            sx={{ mb: 1 }}
+          >
+            Application Launch &amp; Invitations
+          </Button>
           {appsDone ? (
             <p className="rollover-text">
               Applications are open.{" "}
