@@ -465,7 +465,7 @@ export default function ApplicationLaunchPage() {
             <TableCell>Ballcrew</TableCell>
             <TableCell align="right">Veterancy</TableCell>
             <TableCell align="right">Historical baseline</TableCell>
-            <TableCell align="right">Verified seasons after 2026</TableCell>
+            <TableCell align="right">Verified check-in seasons</TableCell>
             <TableCell>Last check-in</TableCell>
             <TableCell>Decision for {Number(year) + 1}</TableCell>
           </TableRow>
