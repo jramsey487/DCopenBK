@@ -405,7 +405,7 @@ export default function SeasonRolloverPage() {
             </>
           )}
           <ConfirmDialog
-            message={`You are about to permanently delete ${status.reset.total} ${status.year} records (ratings, check-in and team histories, schedules, analytics, calibration and cut history).`}
+            message={`You are about to permanently delete ${status.reset.total} ${status.season_year} records (ratings, check-in and team histories, schedules, analytics, calibration and cut history).`}
             url="/api/reset-data"
             body={{ year: status.season_year }}
             method="PATCH"
