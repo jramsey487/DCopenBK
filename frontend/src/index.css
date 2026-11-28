@@ -168,6 +168,177 @@ body {
   --brand-red: var(--red);
 }
 
+
+/* Dark theme: token overrides keep existing component styles theme-aware. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --nav: #101a2d;
+  --bg0: #0b1220;
+  --bg1: #111c2d;
+  --bg2: #182438;
+  --text1: #e5edf7;
+  --text2: #a7b4c8;
+  --text3: #7c8ba1;
+  --border: #2a3a50;
+
+  --green: #55c99a;
+  --green-bg: #102d28;
+  --green-text: #8ce0bb;
+  --green-border: #235b49;
+  --green-bg-hover: #163b31;
+  --green-border-hover: #347c62;
+
+  --blue-text: #93c5fd;
+  --blue-bg: #142b47;
+  --blue-border: #2b527c;
+  --blue-bg-hover: #1a385b;
+  --blue-border-hover: #3d6e9f;
+
+  --red-text: #fca5a5;
+  --red-bg: #351c29;
+  --red-border: #713344;
+  --red-bg-hover: #482332;
+  --red-border-hover: #93445b;
+
+  --purple-text: #c4b5fd;
+  --purple-bg: #282044;
+  --purple-bg-hover: #352a57;
+  --purple-border-hover: #65549b;
+
+  --success: #4ade80;
+  --danger: #f87171;
+  --rank-hot: #633044;
+
+  --login-input-border: var(--border);
+  --login-btn-hover: #1b2a47;
+  --login-btn-disabled: #38465b;
+}
+
+:root[data-theme="dark"] body {
+  background: var(--bg0);
+  color: var(--text1);
+}
+
+:root[data-theme="dark"] #root,
+:root[data-theme="dark"] #app {
+  background: var(--bg0);
+  color: var(--text1);
+}
+
+/* Common framework surfaces and native controls. */
+:root[data-theme="dark"] .MuiPaper-root,
+:root[data-theme="dark"] .MuiDialog-paper,
+:root[data-theme="dark"] .MuiMenu-paper,
+:root[data-theme="dark"] .MuiPopover-paper,
+:root[data-theme="dark"] .MuiDrawer-paper {
+  color: var(--text1);
+  background-color: var(--bg1);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .MuiTable-root,
+:root[data-theme="dark"] .MuiTableContainer-root {
+  background-color: var(--bg1);
+}
+
+:root[data-theme="dark"] .MuiTableCell-root {
+  color: var(--text1);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .MuiTableHead-root .MuiTableCell-root {
+  background-color: var(--bg2);
+}
+
+:root[data-theme="dark"] .MuiInputBase-root,
+:root[data-theme="dark"] .MuiOutlinedInput-root,
+:root[data-theme="dark"] .MuiSelect-select,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  color: var(--text1);
+  background-color: var(--bg1);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: var(--text3);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .MuiFormLabel-root,
+:root[data-theme="dark"] .MuiFormControlLabel-label,
+:root[data-theme="dark"] .MuiTypography-root {
+  color: inherit;
+}
+
+:root[data-theme="dark"] .MuiDivider-root {
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .MuiAccordion-root,
+:root[data-theme="dark"] .MuiAccordionSummary-root,
+:root[data-theme="dark"] .MuiAccordionDetails-root {
+  color: var(--text1);
+  background-color: var(--bg1);
+}
+
+:root[data-theme="dark"] .MuiListItemButton-root:hover,
+:root[data-theme="dark"] .MuiMenuItem-root:hover {
+  background-color: var(--bg2);
+}
+
+:root[data-theme="dark"] .Mui-disabled {
+  color: var(--text3) !important;
+}
+
+:root[data-theme="dark"] .account-settings-alert.success {
+  background: var(--green-bg);
+  color: var(--green-text);
+  border-color: var(--green-border);
+}
+
+:root[data-theme="dark"] .account-settings-alert.error {
+  background: var(--red-bg);
+  color: var(--red-text);
+  border-color: var(--red-border);
+}
+
+:root[data-theme="dark"] .theme-preference-option.selected {
+  background: var(--blue-bg);
+  border-color: var(--blue-border);
+  box-shadow: inset 0 0 0 1px var(--blue-border);
+}
+
+:root[data-theme="dark"] .app-navbar-dropdown-paper {
+  border-color: var(--border) !important;
+}
+
+:root[data-theme="dark"] .app-navbar-dropdown-item {
+  color: var(--text2) !important;
+}
+
+:root[data-theme="dark"] .app-navbar-dropdown-item:hover {
+  background: var(--bg2) !important;
+  color: var(--text1) !important;
+}
+
+:root[data-theme="dark"] .app-navbar-dropdown-item.logout {
+  border-color: var(--border);
+  color: var(--red-text) !important;
+}
+
+:root[data-theme="dark"] .app-navbar-dropdown-item.logout:hover {
+  background: var(--red-bg) !important;
+  color: var(--red-text) !important;
+}
+
+:root[data-theme="dark"] .ticket-count--hot {
+  color: var(--text1);
+}
+
 #app {
   width: 100%;
   height: 100%;
