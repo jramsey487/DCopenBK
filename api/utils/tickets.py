@@ -332,7 +332,12 @@ def pick_ballkid_session(ballkid, now=None):
     return previous
 
 
+@transaction.atomic
 def set_session_live(session, is_live=True):
+    # Serialize staff actions on the same round. The database partial unique
+    # constraint is the final guard against two different rounds going live
+    # concurrently for the same tournament year.
+    session = TicketSession.objects.select_for_update().get(pk=session.pk)
     if is_live:
         taken = (
             TicketSession.objects.filter(year=session.year, is_live=True)
@@ -643,6 +648,10 @@ def run_waitlist_pass(session, now=None):
     session = TicketSession.objects.select_for_update().get(pk=session.pk)
     if session.waitlist_run_at:
         return session
+    if not session.lottery_run_at:
+        raise ValueError("Run the lottery before the waitlist pass.")
+    if now < winner_confirm_by(session):
+        raise ValueError("The winner decline deadline has not passed.")
 
     options = list(session.options.all()) or [None]
     for option in options:
