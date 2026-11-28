@@ -45,7 +45,9 @@ export function ThemeProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = window.matchMedia
+      ? window.matchMedia("(prefers-color-scheme: dark)")
+      : { matches: false, addListener: null, removeListener: null };
 
     const applyTheme = () => {
       const resolvedTheme = getResolvedTheme(
