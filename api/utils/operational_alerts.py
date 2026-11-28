@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from api.models.schedule import Tournament
+from api.utils.contact_email import get_contact_tournament, get_tournament_contact_email
 
 logger = logging.getLogger("api.notifications")
 
@@ -38,21 +38,12 @@ def alert_delivery_outbox_health(
         cache.delete(ALERT_CACHE_KEY)
         return False
 
-    today = timezone.localdate()
-    tournament = (
-        Tournament.objects.filter(start_date__lte=today, end_date__gte=today)
-        .order_by("-start_date", "year")
-        .first()
-        or Tournament.objects.filter(start_date__gte=today)
-        .order_by("start_date", "year")
-        .first()
-        or Tournament.objects.filter(year=today.year).first()
-    )
+    tournament = get_contact_tournament()
     recipient = (
         (getattr(tournament, "operational_alert_email", "") or "").strip()
         if tournament is not None
         else ""
-    ) or (getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
+    ) or get_tournament_contact_email()
     if not recipient:
         logger.error("Cannot send delivery health alert: no tournament recipient or SMTP mailbox configured")
         return False
