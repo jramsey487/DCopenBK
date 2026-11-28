@@ -5,8 +5,6 @@ import logging
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
-from django.utils import timezone
-
 from api.utils.contact_email import get_contact_tournament, get_tournament_contact_email
 
 logger = logging.getLogger("api.notifications")
@@ -22,10 +20,10 @@ def alert_delivery_outbox_health(
     ticket_email_failed,
     ticket_email_stale,
 ):
-    """Email the shared SMTP account when terminal or stale delivery work exists.
+    """Email the configured operational recipient for stale or failed delivery work.
 
-    The tournament can override the recipient; blank settings fall back to the
-    existing SMTP sender mailbox, keeping one default volunteer address.
+    An alert-specific recipient wins; otherwise use the tournament public
+    contact email, which itself falls back to the configured support mailbox.
     """
     metrics = {
         "Failed push notifications": push_failed,
@@ -78,7 +76,7 @@ def alert_delivery_outbox_health(
         return False
 
     logger.warning(
-        "Sent delivery health alert to configured SMTP mailbox; "
+        "Sent delivery health alert to configured recipient; "
         "push_failed=%s push_stale=%s ticket_email_failed=%s ticket_email_stale=%s",
         push_failed,
         push_stale,
