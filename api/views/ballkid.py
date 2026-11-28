@@ -1119,9 +1119,9 @@ class ResetData(APIView):
                 {"year": "Provide a valid calendar year."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if year < 1900 or year > get_current_year():
+        if year < 1900 or year > get_current_year() + 1:
             return Response(
-                {"year": "Year must be between 1900 and the current calendar year."},
+                {"year": "Year must be between 1900 and next calendar year."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
