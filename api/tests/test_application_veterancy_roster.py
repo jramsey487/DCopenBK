@@ -18,6 +18,7 @@ from api.serializers_application import (
     BallcrewApplicationSubmitSerializer,
 )
 from api.views.application import (
+    ApplicationSettingsView,
     ApplicationLaunchDecisionView,
     ApplicationLaunchPreviewView,
     ApplicationLaunchSendView,
@@ -29,6 +30,11 @@ from api.views.application import (
 class TestApplicationVeterancyRosterView(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
+        # Start each test from a known closed state; the singleton default may
+        # otherwise already be open and make rejected-open assertions misleading.
+        app_settings = ApplicationSettings.get_solo()
+        app_settings.is_open = False
+        app_settings.save(update_fields=["is_open"])
         self.user = User.objects.create_user(
             username="launch-chair", email="chair@example.com", password="test"
         )
@@ -41,6 +47,8 @@ class TestApplicationVeterancyRosterView(TestCase):
             year=2026,
             start_date=date(2027, 7, 24),
             end_date=date(2027, 8, 1),
+            tryout_date_1=date(2027, 6, 12),
+            tryout_location_1="Rock Creek Park Tennis Center",
         )
 
         self.ballkid = Ballkid.objects.create(
@@ -65,6 +73,53 @@ class TestApplicationVeterancyRosterView(TestCase):
             year=2027,
             source=SeasonParticipation.SOURCE_CHECKIN,
         )
+
+    def test_application_open_requires_tournament_dates_and_tryout_date_location(self):
+        tournament = Tournament.objects.get(year=2026)
+        tournament.start_date = None
+        tournament.end_date = None
+        tournament.tryout_date_1 = None
+        tournament.tryout_location_1 = ""
+        tournament.save(update_fields=[
+            "start_date", "end_date", "tryout_date_1", "tryout_location_1"
+        ])
+
+        request = self.factory.patch(
+            "/api/application-settings", {"is_open": True}, format="json"
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationSettingsView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("tournament start and end dates", response.data["detail"])
+        self.assertIn("tryout date and location", response.data["detail"])
+        self.assertFalse(ApplicationSettings.get_solo().is_open)
+
+    def test_application_open_rejects_tryout_slot_with_date_but_no_location(self):
+        tournament = Tournament.objects.get(year=2026)
+        tournament.tryout_date_1 = date(2027, 6, 12)
+        tournament.tryout_location_1 = ""
+        tournament.save(update_fields=["tryout_date_1", "tryout_location_1"])
+
+        request = self.factory.patch(
+            "/api/application-settings", {"is_open": True}, format="json"
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationSettingsView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Complete both the date and location", response.data["detail"])
+        self.assertFalse(ApplicationSettings.get_solo().is_open)
+
+    def test_application_open_succeeds_with_tournament_dates_and_complete_tryout(self):
+        request = self.factory.patch(
+            "/api/application-settings", {"is_open": True}, format="json"
+        )
+        force_authenticate(request, user=self.user)
+        response = ApplicationSettingsView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["is_open"])
 
     def test_applicant_api_no_longer_exposes_years_experience(self):
         self.assertNotIn("years_experience", BallcrewApplicationSubmitSerializer().fields)
@@ -279,6 +334,12 @@ class TestApplicationVeterancyRosterView(TestCase):
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     @patch("api.utils.application_launch_email.EmailMultiAlternatives.send", side_effect=[Exception("temporary SMTP failure"), 1])
     def test_failed_launch_email_can_be_retried(self, _send):
+        # Launch notification tests exercise email retry behavior, which is
+        # available only after applications have been opened.
+        settings_obj = ApplicationSettings.get_solo()
+        settings_obj.is_open = True
+        settings_obj.save(update_fields=["is_open"])
+
         ApplicationLaunchDecision.objects.create(
             ballkid=self.ballkid,
             year=2027,
