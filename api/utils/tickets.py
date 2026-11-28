@@ -338,6 +338,9 @@ def set_session_live(session, is_live=True):
     # constraint is the final guard against two different rounds going live
     # concurrently for the same tournament year.
     session = TicketSession.objects.select_for_update().get(pk=session.pk)
+    if is_live and session.is_live:
+        # Repeated PATCHes should not rebroadcast the round-live email.
+        return session
     if is_live:
         taken = (
             TicketSession.objects.filter(year=session.year, is_live=True)
@@ -714,6 +717,8 @@ def allocate_waitlist_ticket(ticket, now=None):
         raise ValueError("No ticket round found.")
     session = TicketSession.objects.select_for_update().get(pk=session_id)
     ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
+    if not session.lottery_run_at:
+        raise ValueError("Run the lottery before allocating waitlist tickets.")
     if ticket.status not in (TICKET_STATUS.WAITLIST, TICKET_STATUS.DENIED):
         raise ValueError("Only waitlisted or denied requests can be allocated.")
     if ticket.ballkid_id:
