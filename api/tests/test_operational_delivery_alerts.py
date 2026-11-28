@@ -1,12 +1,22 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import SimpleTestCase
+from django.test import TestCase
+from django.utils import timezone
 
+from api.models.schedule import Tournament
 from api.utils.operational_alerts import alert_delivery_outbox_health
 
 
-class OperationalDeliveryAlertTests(SimpleTestCase):
+class OperationalDeliveryAlertTests(TestCase):
+    def setUp(self):
+        self.tournament = Tournament.objects.create(
+            year=timezone.localdate().year + 1,
+            start_date=timezone.localdate() + timedelta(days=30),
+            end_date=timezone.localdate() + timedelta(days=32),
+            operational_alert_email="tournament-alerts@example.org",
+        )
     @patch("api.utils.operational_alerts.cache.delete")
     @patch("api.utils.operational_alerts.cache.add", return_value=True)
     @patch("api.utils.operational_alerts.send_mail", return_value=1)
@@ -23,7 +33,7 @@ class OperationalDeliveryAlertTests(SimpleTestCase):
         self.assertTrue(sent)
         cache_add.assert_called_once()
         args = send_mail.call_args.kwargs
-        self.assertEqual(args["recipient_list"], [settings.EMAIL_HOST_USER])
+        self.assertEqual(args["recipient_list"], [self.tournament.operational_alert_email])
         self.assertEqual(args["from_email"], settings.DEFAULT_FROM_EMAIL)
         self.assertIn("Failed push notifications: 2", args["message"])
         self.assertIn("Stale ticket-email leases: 3", args["message"])
