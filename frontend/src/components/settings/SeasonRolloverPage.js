@@ -148,8 +148,11 @@ export default function SeasonRolloverPage() {
         setNotice({ severity: "success", text: "Applications are now open." });
         return refresh();
       })
-      .catch(() =>
-        setNotice({ severity: "error", text: "Could not open applications." })
+      .catch((err) =>
+        setNotice({
+          severity: "error",
+          text: err.message || "Could not open applications.",
+        })
       )
       .finally(() => setOpening(false));
   };
