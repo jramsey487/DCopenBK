@@ -18,6 +18,7 @@ from api.utils.tickets import (
     remaining_tickets,
     run_lottery,
     run_waitlist_pass,
+    set_session_live,
     ticket_event_date,
 )
 from api.utils.utils import get_current_year
@@ -151,6 +152,16 @@ class TicketLotteryInvariantTests(TicketInvariantTestCase):
         self.assertEqual(
             total_before, sum(ballkid.num_tickets for ballkid in Ballkid.objects.all())
         )
+
+    def test_lottery_closes_round_and_round_cannot_be_reopened(self):
+        session, _ = make_round(pool=1)
+
+        run_lottery(session)
+
+        session.refresh_from_db()
+        self.assertFalse(session.is_live)
+        with self.assertRaisesRegex(ValueError, "cannot be reopened"):
+            set_session_live(session, True)
 
     def test_database_prevents_two_live_rounds_for_the_same_year(self):
         session, _ = make_round(pool=1)
