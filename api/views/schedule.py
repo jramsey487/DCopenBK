@@ -544,17 +544,21 @@ class GetTournament(APIView):
         for field, value in tryout_values.items():
             setattr(tournament, field, value)
 
-        if "operational_alert_email" in request.data:
-            alert_email = (request.data.get("operational_alert_email") or "").strip()
-            if alert_email:
-                try:
-                    validate_email(alert_email)
-                except ValidationError:
-                    return Response(
-                        {"detail": "Operational alert email must be a valid email address."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-            tournament.operational_alert_email = alert_email
+        for field, label in (
+            ("operational_alert_email", "Operational alert email"),
+            ("contact_email", "Ballcrew contact email"),
+        ):
+            if field in request.data:
+                email = (request.data.get(field) or "").strip()
+                if email:
+                    try:
+                        validate_email(email)
+                    except ValidationError:
+                        return Response(
+                            {"detail": f"{label} must be a valid email address."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                setattr(tournament, field, email)
 
         if "timezone" in request.data:
             timezone_name = parse_tournament_timezone(request.data["timezone"])
