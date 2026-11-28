@@ -54,6 +54,8 @@ class Tournament(models.Model):
     rcal_year_threshold = models.IntegerField(default=2000)
     rcal_bucket_size = models.IntegerField(default=3)
     ticket_emails_enabled = models.BooleanField(default=True)
+    operational_alert_email = models.EmailField(blank=True, default="")
+    contact_email = models.EmailField(blank=True, default="")
 
     def __str__(self):
         return f"Year {self.year} with show_teams {self.show_teams}, show_finals_teams {self.show_finals_teams}, and on_rain_delay {self.on_rain_delay}"

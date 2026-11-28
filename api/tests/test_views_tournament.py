@@ -44,6 +44,85 @@ class TestGetTournament(APITestCase):
         self.assertEqual(response.data["start_date"], "2026-07-18")
         self.assertEqual(response.data["end_date"], "2026-07-26")
 
+    def test_patch_operational_alert_email(self):
+        Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"operational_alert_email": "alerts@example.org"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year)
+        self.assertEqual(tournament.operational_alert_email, "alerts@example.org")
+        settings_response = self.client.get(reverse("get-tournament"))
+        self.assertEqual(settings_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            settings_response.data["operational_alert_email"], "alerts@example.org"
+        )
+
+    def test_patch_contact_email_and_readback(self):
+        Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"contact_email": "contact@example.org"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament = Tournament.objects.get(year=self.year)
+        self.assertEqual(tournament.contact_email, "contact@example.org")
+        self.assertEqual(response.data["contact_email"], "contact@example.org")
+
+    def test_patch_rejects_invalid_contact_email(self):
+        tournament = Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+            contact_email="old@example.org",
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"contact_email": "not-an-email"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.contact_email, "old@example.org")
+
+    def test_public_application_settings_include_contact_email(self):
+        Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+            contact_email="public-contact@example.org",
+        )
+        response = self.client.get(reverse("application-settings"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["contact_email"], "public-contact@example.org")
+
+    def test_patch_rejects_invalid_operational_alert_email(self):
+        tournament = Tournament.objects.create(
+            year=self.year,
+            start_date=date(self.year, 7, 18),
+            end_date=date(self.year, 7, 26),
+            operational_alert_email="existing@example.org",
+        )
+        response = self.client.patch(
+            reverse("get-tournament"),
+            {"operational_alert_email": "not-an-email"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.operational_alert_email, "existing@example.org")
+
     def test_patch_dates(self):
         Tournament.objects.create(
             year=self.year,

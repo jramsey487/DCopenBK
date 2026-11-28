@@ -180,7 +180,7 @@ def _from_email():
     return getattr(
         settings,
         "DEFAULT_FROM_EMAIL",
-        getattr(settings, "EMAIL_HOST_USER", "mubadalacitiopenballcrew@gmail.com"),
+        getattr(settings, "EMAIL_HOST_USER", ""),
     )
 
 

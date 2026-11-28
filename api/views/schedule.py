@@ -15,6 +15,9 @@ from api.utils.utils import get_current_year, refresh_ballkid_ages
 
 import logging
 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 logger = logging.getLogger("api.schedule")
 
 
@@ -540,6 +543,22 @@ class GetTournament(APIView):
             )
         for field, value in tryout_values.items():
             setattr(tournament, field, value)
+
+        for field, label in (
+            ("operational_alert_email", "Operational alert email"),
+            ("contact_email", "Ballcrew contact email"),
+        ):
+            if field in request.data:
+                email = (request.data.get(field) or "").strip()
+                if email:
+                    try:
+                        validate_email(email)
+                    except ValidationError:
+                        return Response(
+                            {"detail": f"{label} must be a valid email address."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                setattr(tournament, field, email)
 
         if "timezone" in request.data:
             timezone_name = parse_tournament_timezone(request.data["timezone"])

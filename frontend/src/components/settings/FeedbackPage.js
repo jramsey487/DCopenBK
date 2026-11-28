@@ -1,9 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { Banners } from "../Utils";
 import "./settings-pages.css";
 
 export default function FeedbackPage() {
+  const [contactEmail, setContactEmail] = useState("");
+
+  useEffect(() => {
+    fetch("/api/application-settings")
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => setContactEmail(data.contact_email || ""))
+      .catch(() => setContactEmail(""));
+  }, []);
+
   return (
     <div className="page settings-shell">
       <Banners />
@@ -37,15 +46,15 @@ export default function FeedbackPage() {
                 Opens our Google Form in a new tab
               </span>
             </a>
-            <a
-              className="settings-link-card"
-              href="mailto:mdetennis.ballcrew@gmail.com"
-            >
-              <span className="settings-link-card-title">Email the ballcrew</span>
-              <span className="settings-link-card-desc">
-                mdetennis.ballcrew@gmail.com
-              </span>
-            </a>
+            {contactEmail ? (
+              <a
+                className="settings-link-card"
+                href={`mailto:${contactEmail}`}
+              >
+                <span className="settings-link-card-title">Email the ballcrew</span>
+                <span className="settings-link-card-desc">{contactEmail}</span>
+              </a>
+            ) : null}
           </div>
         </section>
       </div>

@@ -719,6 +719,142 @@ function TournamentDates({
   );
 }
 
+function BallcrewContactEmail({
+  tournament,
+  setUpdated,
+  setSuccessMsg,
+  setErrorMsg,
+}) {
+  const [email, setEmail] = useState(tournament.contact_email || "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setEmail(tournament.contact_email || "");
+  }, [tournament.contact_email]);
+
+  const dirty = email.trim() !== (tournament.contact_email || "");
+
+  return (
+    <section className="tournament-settings-card">
+      <h2 className="tournament-settings-section-title">Ballcrew contact</h2>
+      <p className="tournament-settings-create-note">
+        Public email address shown to applicants and ballcrew in contact and
+        help links. Also used as the default recipient for operational alerts
+        unless an alert-specific address is set. Leave blank to use the
+        configured support mailbox.
+      </p>
+      <div className="tournament-settings-date-row">
+        <TextField
+          label="Ballcrew contact email"
+          variant="standard"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          inputProps={{ maxLength: 254 }}
+          sx={{ minWidth: 280, flex: 1 }}
+        />
+      </div>
+      <Button
+        color="primary"
+        variant="contained"
+        size="small"
+        disabled={!dirty || saving}
+        onClick={() => {
+          setSaving(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({ contact_email: email.trim() }),
+          })
+            .then(async (response) => {
+              if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || "Error updating contact email.");
+              }
+              setSuccessMsg("Ballcrew contact email updated.");
+              setErrorMsg("");
+              setUpdated(true);
+            })
+            .catch((error) => {
+              setSuccessMsg("");
+              setErrorMsg(error.message || "Error updating contact email.");
+            })
+            .finally(() => setSaving(false));
+        }}
+      >
+        {saving ? "Saving…" : "Save contact email"}
+      </Button>
+    </section>
+  );
+}
+
+function OperationalAlertEmail({
+  tournament,
+  setUpdated,
+  setSuccessMsg,
+  setErrorMsg,
+}) {
+  const [email, setEmail] = useState(tournament.operational_alert_email || "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setEmail(tournament.operational_alert_email || "");
+  }, [tournament.operational_alert_email]);
+
+  const dirty = email.trim() !== (tournament.operational_alert_email || "");
+
+  return (
+    <section className="tournament-settings-card">
+      <h2 className="tournament-settings-section-title">Operational alerts</h2>
+      <p className="tournament-settings-create-note">
+        Email address for alerts when background notification or ticket-email
+        delivery gets stuck or fails. Leave blank to use the public ballcrew contact email.
+      </p>
+      <div className="tournament-settings-date-row">
+        <TextField
+          label="Operational alert email"
+          variant="standard"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          inputProps={{ maxLength: 254 }}
+          sx={{ minWidth: 280, flex: 1 }}
+        />
+      </div>
+      <Button
+        color="primary"
+        variant="contained"
+        size="small"
+        disabled={!dirty || saving}
+        onClick={() => {
+          setSaving(true);
+          fetch("/api/get-tournament", {
+            method: "PATCH",
+            headers: getAuthHeader(),
+            body: JSON.stringify({ operational_alert_email: email.trim() }),
+          })
+            .then(async (response) => {
+              if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || "Error updating alert email.");
+              }
+              setSuccessMsg("Operational alert email updated.");
+              setErrorMsg("");
+              setUpdated(true);
+            })
+            .catch((error) => {
+              setSuccessMsg("");
+              setErrorMsg(error.message || "Error updating alert email.");
+            })
+            .finally(() => setSaving(false));
+        }}
+      >
+        {saving ? "Saving…" : "Save alert email"}
+      </Button>
+    </section>
+  );
+}
+
 // Tryout dates and where each is held. These feed the public application
 // form -- rookies pick a tryout to attend, veterans check the ones they can
 // help at -- so setting them here (per season, alongside the tournament's
@@ -1128,6 +1264,20 @@ export default function TournamentSettings(props) {
             </section>
 
             <TournamentDates
+              tournament={tournament}
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+
+            <BallcrewContactEmail
+              tournament={tournament}
+              setUpdated={setUpdated}
+              setSuccessMsg={setSuccessMsg}
+              setErrorMsg={setErrorMsg}
+            />
+
+            <OperationalAlertEmail
               tournament={tournament}
               setUpdated={setUpdated}
               setSuccessMsg={setSuccessMsg}
