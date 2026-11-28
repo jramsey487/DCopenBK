@@ -140,9 +140,10 @@ export default function SeasonRolloverPage() {
       headers: getAuthHeader(),
       body: JSON.stringify({ is_open: true }),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
-          throw new Error();
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.detail || "Could not open applications.");
         }
         setNotice({ severity: "success", text: "Applications are now open." });
         return refresh();
