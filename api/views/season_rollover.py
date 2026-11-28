@@ -57,9 +57,17 @@ def _rollover_seasons(today=None):
         .first()
     )
     if target is None:
-        target = Tournament.objects.filter(year=get_current_year()).first()
-
-    if target is None:
+        # Off-season with no next tournament configured yet: advance from the
+        # most recent actual tournament instead of treating the old calendar
+        # year's tournament as the target.
+        previous = (
+            Tournament.objects.filter(start_date__lt=today)
+            .order_by("-start_date", "-year")
+            .first()
+        )
+        if previous and previous.start_date:
+            season_year = previous.start_date.year
+            return None, season_year + 1, season_year
         target_year = get_current_year()
         return None, target_year, target_year - 1
 
