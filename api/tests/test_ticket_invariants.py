@@ -235,6 +235,15 @@ class TicketDeclineAndWaitlistInvariantTests(TicketInvariantTestCase):
         self.assertEqual(counts[S.WAITLIST], 0)
         self.assertEqual(counts[S.DECLINED], 1)
 
+    def test_staff_allocation_cannot_precede_lottery(self):
+        session, option = make_round(pool=1)
+        ticket = request_ticket(session, option, make_ballkid("NotYetDrawn"))
+        ticket.status = S.WAITLIST
+        ticket.save(update_fields=["status"])
+
+        with self.assertRaisesRegex(ValueError, "Run the lottery"):
+            allocate_waitlist_ticket(ticket)
+
     def test_staff_allocation_fails_when_pool_is_empty(self):
         session, option = make_round(pool=1)
         for name in "AB":
