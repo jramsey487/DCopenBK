@@ -38,6 +38,26 @@ class OperationalDeliveryAlertTests(TestCase):
         self.assertIn("Failed push notifications: 2", args["message"])
         self.assertIn("Stale ticket-email leases: 3", args["message"])
 
+    @patch("api.utils.operational_alerts.get_tournament_contact_email", return_value="contact@example.org")
+    @patch("api.utils.operational_alerts.cache.delete")
+    @patch("api.utils.operational_alerts.cache.add", return_value=True)
+    @patch("api.utils.operational_alerts.send_mail", return_value=1)
+    def test_alert_falls_back_to_tournament_contact_email(
+        self, send_mail, cache_add, cache_delete, get_contact_email
+    ):
+        self.tournament.operational_alert_email = ""
+        self.tournament.save(update_fields=["operational_alert_email"])
+
+        sent = alert_delivery_outbox_health(
+            push_failed=1,
+            push_stale=0,
+            ticket_email_failed=0,
+            ticket_email_stale=0,
+        )
+
+        self.assertTrue(sent)
+        self.assertEqual(send_mail.call_args.kwargs["recipient_list"], ["contact@example.org"])
+
     @patch("api.utils.operational_alerts.cache.delete")
     @patch("api.utils.operational_alerts.cache.add", return_value=False)
     @patch("api.utils.operational_alerts.send_mail")
