@@ -808,8 +808,7 @@ function OperationalAlertEmail({
       <h2 className="tournament-settings-section-title">Operational alerts</h2>
       <p className="tournament-settings-create-note">
         Email address for alerts when background notification or ticket-email
-        delivery gets stuck or fails. Leave blank to use the configured SMTP
-        volunteer mailbox.
+        delivery gets stuck or fails. Leave blank to use the public ballcrew contact email.
       </p>
       <div className="tournament-settings-date-row">
         <TextField
