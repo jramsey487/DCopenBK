@@ -180,6 +180,7 @@ export default function SeasonRolloverPage() {
   const exportDone = status.export.done;
   const tournamentDone =
     status.tournament.exists && status.tournament.has_dates;
+  const tryoutDone = Boolean(status.tryouts?.done);
   const archiveDone = status.archive.done;
   const appsDone = status.applications.is_open;
 
@@ -188,17 +189,19 @@ export default function SeasonRolloverPage() {
     tournament: tournamentDone ? "done" : "ready",
     archive: archiveDone
       ? "done"
-      : exportDone && tournamentDone
+      : exportDone && tournamentDone && tryoutDone
       ? "ready"
       : "locked",
+    tryouts: tryoutDone ? "done" : tournamentDone ? "ready" : "locked",
     applications: appsDone
       ? "done"
-      : archiveDone && tournamentDone
+      : archiveDone && tournamentDone && tryoutDone
       ? "ready"
       : "locked",
   };
 
-  const allDone = exportDone && tournamentDone && archiveDone && appsDone;
+  const allDone =
+    exportDone && tournamentDone && tryoutDone && archiveDone && appsDone;
   return (
     <div className="page rollover-shell">
       <Banners />
@@ -305,7 +308,39 @@ export default function SeasonRolloverPage() {
           )}
         </StepCard>
 
-        <StepCard number={3} title="Archive last season's ballcrew" state={states.archive}>
+        <StepCard number={3} title="Set tryout dates and locations" state={states.tryouts}>
+          {tryoutDone ? (
+            <p className="rollover-text">
+              {status.tryouts.complete_slots} tryout session
+              {status.tryouts.complete_slots === 1 ? "" : "s"} configured.
+              {status.tryouts.dates.map((date, index) =>
+                date && status.tryouts.locations[index]
+                  ? ` ${date} — ${status.tryouts.locations[index]}.`
+                  : ""
+              ).join("")}
+            </p>
+          ) : (
+            <>
+              <p className="rollover-text">
+                Configure at least one tryout date and its location. Any session
+                with a date or location must have both before applications can open.
+              </p>
+              {states.tryouts === "locked" ? (
+                <p className="rollover-meta">Set the tournament dates first.</p>
+              ) : null}
+            </>
+          )}
+          <Button
+            component={RouterLink}
+            to="/tournament-settings"
+            size="small"
+            variant={tryoutDone ? "outlined" : "contained"}
+          >
+            {tryoutDone ? "Edit tryout settings" : "Set tryout dates and locations"}
+          </Button>
+        </StepCard>
+
+        <StepCard number={4} title="Archive last season's ballcrew" state={states.archive}>
           {archiveDone ? (
             <p className="rollover-text">No active ballkids. Nothing to archive.</p>
           ) : (
@@ -345,7 +380,7 @@ export default function SeasonRolloverPage() {
           />
         </StepCard>
 
-        <StepCard number={4} title="Open applications" state={states.applications}>
+        <StepCard number={5} title="Open applications" state={states.applications}>
           <Button
             component={RouterLink}
             to="/application-launch"
@@ -375,7 +410,7 @@ export default function SeasonRolloverPage() {
               </p>
               {states.applications === "locked" ? (
                 <p className="rollover-meta">
-                  Create the tournament and archive the roster first.
+                  Finish the tournament dates, tryout settings, and archive steps first.
                 </p>
               ) : null}
               <LoadingButton
