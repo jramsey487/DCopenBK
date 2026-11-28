@@ -363,6 +363,7 @@ export default function ApplicationPage() {
   const isEditing = Boolean(editToken);
 
   const [applicationsOpen, setApplicationsOpen] = useState(null);
+  const [contactEmail, setContactEmail] = useState("");
   const [tournamentStartDate, setTournamentStartDate] = useState(null);
   const [minimumAge, setMinimumAge] = useState(null);
   const [tryoutSlots, setTryoutSlots] = useState([]);
@@ -430,6 +431,7 @@ export default function ApplicationPage() {
       .then((res) => res.json())
       .then((data) => {
         setApplicationsOpen(Boolean(data.is_open));
+        setContactEmail(data.contact_email || "");
         setTournamentStartDate(
           data.tournament_start_date || null
         );
@@ -661,7 +663,7 @@ export default function ApplicationPage() {
         <Typography>
           This edit link is invalid or incomplete. Open the link
           from your confirmation email, or email
-          mdetennis.ballcrew@gmail.com for help.
+          {contactEmail || "the ballcrew"} for help.
         </Typography>
       </Paper>
     );
