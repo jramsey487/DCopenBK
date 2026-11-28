@@ -52,6 +52,7 @@ from api.models.application import (
 )
 from api.models.ballkid import Ballkid, SeasonParticipation
 from api.utils.utils import get_current_year
+from api.utils.contact_email import get_tournament_contact_email
 from api.models.schedule import Tournament
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
@@ -183,6 +184,7 @@ class ApplicationSettingsView(APIView):
         return Response(
             {
                 "is_open": ApplicationSettings.get_solo().is_open,
+                "contact_email": get_tournament_contact_email(),
                 "send_confirmation_emails": ApplicationSettings.get_solo().send_confirmation_emails,
                 # Lets the public form compute and display real calendar
                 # dates (e.g. "Saturday, July 25") for each semantic day key
