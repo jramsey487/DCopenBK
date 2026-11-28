@@ -242,6 +242,12 @@ class SubmitApplicationView(generics.CreateAPIView):
                 {"detail": "Applications are currently closed."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        blockers = application_opening_blockers()
+        if blockers:
+            return Response(
+                {"detail": "Applications are unavailable until setup is complete: " + " ".join(blockers)},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
