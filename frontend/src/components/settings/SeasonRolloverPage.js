@@ -182,7 +182,8 @@ export default function SeasonRolloverPage() {
     status.tournament.exists && status.tournament.has_dates;
   const tryoutDone = Boolean(status.tryouts?.done);
   const archiveDone = status.archive.done;
-  const appsDone = status.applications.is_open;
+  const appsDone =
+    status.applications.is_open && tournamentDone && tryoutDone;
 
   const states = {
     export: exportDone ? "done" : "ready",
@@ -352,7 +353,7 @@ export default function SeasonRolloverPage() {
               </p>
               {states.archive === "locked" ? (
                 <p className="rollover-meta">
-                  Finish steps 1 and 2 first.
+                  Finish steps 1, 2, and 3 first.
                 </p>
               ) : null}
               <Button
