@@ -910,7 +910,12 @@ class TicketSession(models.Model):
             models.UniqueConstraint(
                 fields=["year", "ticket_date"],
                 name="unique_ticket_session_year_date",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["year"],
+                condition=Q(is_live=True),
+                name="unique_live_ticket_round_per_year",
+            ),
         ]
 
     def __str__(self):
