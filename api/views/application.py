@@ -127,6 +127,45 @@ class ApplicationEditThrottle(AnonRateThrottle):
     rate = "60/hour"
 
 
+def application_opening_blockers():
+    """Return human-readable missing requirements before public applications open.
+
+    At least one tryout slot must have both a date and a location. A partially
+    filled slot is also a blocker so applicants never see an incomplete option.
+    """
+    today = timezone.localdate()
+    tournament = (
+        Tournament.objects.filter(start_date__gte=today)
+        .order_by("start_date", "year")
+        .first()
+        or Tournament.objects.filter(year=get_current_year()).first()
+        or Tournament.objects.order_by("-year").first()
+    )
+    blockers = []
+    if not tournament or not tournament.start_date or not tournament.end_date:
+        blockers.append("Configure both tournament start and end dates in Tournament Settings.")
+
+    complete_slots = 0
+    partial_slots = []
+    for slot in (1, 2):
+        tryout_date = getattr(tournament, f"tryout_date_{slot}", None) if tournament else None
+        location = (getattr(tournament, f"tryout_location_{slot}", "") or "").strip() if tournament else ""
+        if tryout_date and location:
+            complete_slots += 1
+        elif tryout_date or location:
+            partial_slots.append(slot)
+    if partial_slots:
+        blockers.append(
+            "Complete both the date and location for tryout slot"
+            + ("s " if len(partial_slots) > 1 else " ")
+            + ", ".join(str(slot) for slot in partial_slots)
+            + "."
+        )
+    if complete_slots == 0:
+        blockers.append("Configure at least one tryout date and location in Tournament Settings.")
+    return blockers
+
+
 class ApplicationSettingsView(APIView):
     """
     GET is public (the /apply page checks this before showing the form).
@@ -165,7 +204,16 @@ class ApplicationSettingsView(APIView):
                 value = request.data[field]
                 if value is None:
                     raise ValidationError({field: "This field may not be null."})
-                setattr(settings_obj, field, bool(value))
+                parsed_value = _as_bool(value, default=False)
+                if field == "is_open" and parsed_value:
+                    blockers = application_opening_blockers()
+                    if blockers:
+                        return Response(
+                            {"detail": "Cannot open applications yet: " + " ".join(blockers),
+                             "requirements": blockers},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                setattr(settings_obj, field, parsed_value)
                 update_fields.append(field)
         if not update_fields:
             raise ValidationError(
