@@ -5,6 +5,9 @@ import logging
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.utils import timezone
+
+from api.models.schedule import Tournament
 
 logger = logging.getLogger("api.notifications")
 
@@ -21,8 +24,8 @@ def alert_delivery_outbox_health(
 ):
     """Email the shared SMTP account when terminal or stale delivery work exists.
 
-    The configured SMTP account is also the recipient, so the project keeps one
-    shared volunteer mailbox rather than introducing a second alert address.
+    The tournament can override the recipient; blank settings fall back to the
+    existing SMTP sender mailbox, keeping one default volunteer address.
     """
     metrics = {
         "Failed push notifications": push_failed,
@@ -35,9 +38,20 @@ def alert_delivery_outbox_health(
         cache.delete(ALERT_CACHE_KEY)
         return False
 
-    recipient = (getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
+    today = timezone.localdate()
+    tournament = (
+        Tournament.objects.filter(start_date__gte=today)
+        .order_by("start_date", "year")
+        .first()
+        or Tournament.objects.filter(year=today.year).first()
+    )
+    recipient = (
+        (getattr(tournament, "operational_alert_email", "") or "").strip()
+        if tournament is not None
+        else ""
+    ) or (getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
     if not recipient:
-        logger.error("Cannot send delivery health alert: EMAIL_HOST_USER is not configured")
+        logger.error("Cannot send delivery health alert: no tournament recipient or SMTP mailbox configured")
         return False
 
     # One alert per incident window; a persistent issue is re-reported every
