@@ -71,9 +71,13 @@ class TestApplicationVeterancyRosterView(TestCase):
 
     def test_application_open_requires_tournament_dates_and_tryout_date_location(self):
         tournament = Tournament.objects.get(year=2026)
+        tournament.start_date = None
+        tournament.end_date = None
         tournament.tryout_date_1 = None
         tournament.tryout_location_1 = ""
-        tournament.save(update_fields=["tryout_date_1", "tryout_location_1"])
+        tournament.save(update_fields=[
+            "start_date", "end_date", "tryout_date_1", "tryout_location_1"
+        ])
 
         request = self.factory.patch(
             "/api/application-settings", {"is_open": True}, format="json"
