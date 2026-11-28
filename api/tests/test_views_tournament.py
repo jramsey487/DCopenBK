@@ -58,7 +58,11 @@ class TestGetTournament(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         tournament = Tournament.objects.get(year=self.year)
         self.assertEqual(tournament.operational_alert_email, "alerts@example.org")
-        self.assertEqual(response.data["operational_alert_email"], "alerts@example.org")
+        settings_response = self.client.get(reverse("get-tournament"))
+        self.assertEqual(settings_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            settings_response.data["operational_alert_email"], "alerts@example.org"
+        )
 
     def test_patch_rejects_invalid_operational_alert_email(self):
         tournament = Tournament.objects.create(
