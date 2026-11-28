@@ -40,7 +40,10 @@ def alert_delivery_outbox_health(
 
     today = timezone.localdate()
     tournament = (
-        Tournament.objects.filter(start_date__gte=today)
+        Tournament.objects.filter(start_date__lte=today, end_date__gte=today)
+        .order_by("-start_date", "year")
+        .first()
+        or Tournament.objects.filter(start_date__gte=today)
         .order_by("start_date", "year")
         .first()
         or Tournament.objects.filter(year=today.year).first()
