@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from api.models.ballkid import Ballkid, Ticket, TicketOption, TicketSession
@@ -17,6 +18,7 @@ from api.utils.tickets import (
     remaining_tickets,
     run_lottery,
     run_waitlist_pass,
+    set_session_live,
     ticket_event_date,
 )
 from api.utils.utils import get_current_year
@@ -151,8 +153,50 @@ class TicketLotteryInvariantTests(TicketInvariantTestCase):
             total_before, sum(ballkid.num_tickets for ballkid in Ballkid.objects.all())
         )
 
+    def test_lottery_closes_round_and_round_cannot_be_reopened(self):
+        session, _ = make_round(pool=1)
+
+        run_lottery(session)
+
+        session.refresh_from_db()
+        self.assertFalse(session.is_live)
+        with self.assertRaisesRegex(ValueError, "cannot be reopened"):
+            set_session_live(session, True)
+
+    def test_database_prevents_two_live_rounds_for_the_same_year(self):
+        session, _ = make_round(pool=1)
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                TicketSession.objects.create(
+                    year=YEAR,
+                    ticket_date=session.ticket_date + timedelta(days=1),
+                    closes_at=for_storage(now_et()),
+                    pool_size=1,
+                    is_live=True,
+                )
+
 
 class TicketDeclineAndWaitlistInvariantTests(TicketInvariantTestCase):
+    def test_waitlist_pass_cannot_run_before_lottery(self):
+        session, _ = make_round(pool=1)
+
+        with self.assertRaisesRegex(ValueError, "Run the lottery"):
+            run_waitlist_pass(session)
+
+        session.refresh_from_db()
+        self.assertIsNone(session.waitlist_run_at)
+
+    def test_waitlist_pass_cannot_close_before_decline_deadline(self):
+        session, option = make_round(pool=1)
+        request_ticket(session, option, make_ballkid("Requested"))
+        run_lottery(session)
+
+        with self.assertRaisesRegex(ValueError, "decline deadline"):
+            run_waitlist_pass(session)
+
+        session.refresh_from_db()
+        self.assertIsNone(session.waitlist_run_at)
+
     def test_decline_reallocates_released_grant_to_waitlist(self):
         session, option = make_round(pool=1)
         for name in "AB":
@@ -187,6 +231,8 @@ class TicketDeclineAndWaitlistInvariantTests(TicketInvariantTestCase):
         run_lottery(session)
 
         decline(session.tickets.filter(status=S.CONFIRMED).first(), reallocate=False)
+        session.winner_confirm_by = for_storage(now_et() - timedelta(minutes=1))
+        session.save(update_fields=["winner_confirm_by"])
         run_waitlist_pass(session)
 
         session.refresh_from_db()
@@ -199,6 +245,15 @@ class TicketDeclineAndWaitlistInvariantTests(TicketInvariantTestCase):
         self.assertEqual(counts[S.DENIED], 1)
         self.assertEqual(counts[S.WAITLIST], 0)
         self.assertEqual(counts[S.DECLINED], 1)
+
+    def test_staff_allocation_cannot_precede_lottery(self):
+        session, option = make_round(pool=1)
+        ticket = request_ticket(session, option, make_ballkid("NotYetDrawn"))
+        ticket.status = S.WAITLIST
+        ticket.save(update_fields=["status"])
+
+        with self.assertRaisesRegex(ValueError, "Run the lottery"):
+            allocate_waitlist_ticket(ticket)
 
     def test_staff_allocation_fails_when_pool_is_empty(self):
         session, option = make_round(pool=1)

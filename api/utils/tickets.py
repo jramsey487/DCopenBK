@@ -332,7 +332,17 @@ def pick_ballkid_session(ballkid, now=None):
     return previous
 
 
+@transaction.atomic
 def set_session_live(session, is_live=True):
+    # Serialize staff actions on the same round. The database partial unique
+    # constraint is the final guard against two different rounds going live
+    # concurrently for the same tournament year.
+    session = TicketSession.objects.select_for_update().get(pk=session.pk)
+    if is_live and session.lottery_run_at:
+        raise ValueError("A ticket round cannot be reopened after the lottery.")
+    if is_live and session.is_live:
+        # Repeated PATCHes should not rebroadcast the round-live email.
+        return session
     if is_live:
         taken = (
             TicketSession.objects.filter(year=session.year, is_live=True)
@@ -632,7 +642,10 @@ def run_lottery(session, now=None):
         _lottery_one_option(session, None, tickets, now=now)
 
     session.lottery_run_at = for_storage(now)
-    session.save(update_fields=["lottery_run_at"])
+    # Running the lottery closes the request window even if staff manually
+    # trigger it before the configured close time.
+    session.is_live = False
+    session.save(update_fields=["lottery_run_at", "is_live"])
     email_lottery_results(session)
     return session
 
@@ -643,6 +656,10 @@ def run_waitlist_pass(session, now=None):
     session = TicketSession.objects.select_for_update().get(pk=session.pk)
     if session.waitlist_run_at:
         return session
+    if not session.lottery_run_at:
+        raise ValueError("Run the lottery before the waitlist pass.")
+    if now < winner_confirm_by(session):
+        raise ValueError("The winner decline deadline has not passed.")
 
     options = list(session.options.all()) or [None]
     for option in options:
@@ -705,6 +722,8 @@ def allocate_waitlist_ticket(ticket, now=None):
         raise ValueError("No ticket round found.")
     session = TicketSession.objects.select_for_update().get(pk=session_id)
     ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
+    if not session.lottery_run_at:
+        raise ValueError("Run the lottery before allocating waitlist tickets.")
     if ticket.status not in (TICKET_STATUS.WAITLIST, TICKET_STATUS.DENIED):
         raise ValueError("Only waitlisted or denied requests can be allocated.")
     if ticket.ballkid_id:

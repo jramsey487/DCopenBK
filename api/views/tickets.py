@@ -2,7 +2,7 @@
 
 from datetime import datetime, date
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F, Max, Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
@@ -441,15 +441,21 @@ class TicketSessionView(APIView):
                 is_live = is_live.lower() not in ("false", "0", "no")
             try:
                 session = set_session_live(session, bool(is_live))
-            except ValueError as exc:
+            except (ValueError, IntegrityError) as exc:
                 return Response(
-                    {"detail": str(exc)},
+                    {
+                        "detail": (
+                            str(exc)
+                            or "Another ticket round is already live. Take it down first."
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             if session.is_live:
                 session = maybe_advance_session(session)
         return Response(_admin_rounds_payload(session))
 
+    @transaction.atomic
     def delete(self, request, format=None):
         denied = _require_ticket_admin(request.user)
         if denied:
@@ -460,16 +466,30 @@ class TicketSessionView(APIView):
                 {"detail": "id is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        session = get_object_or_404(TicketSession, id=session_id)
-        confirmed = session.tickets.filter(
-            status=TICKET_STATUS.CONFIRMED
-        ).select_related("ballkid")
-        for ticket in confirmed:
-            if not ticket.ballkid_id or not ticket.num_granted:
-                continue
-            ballkid = ticket.ballkid
+        session = get_object_or_404(
+            TicketSession.objects.select_for_update(), id=session_id
+        )
+        grants_by_ballkid = {}
+        for ballkid_id, grant in session.tickets.filter(
+            status=TICKET_STATUS.CONFIRMED,
+            ballkid_id__isnull=False,
+        ).values_list("ballkid_id", "num_granted"):
+            if grant:
+                grants_by_ballkid[ballkid_id] = (
+                    grants_by_ballkid.get(ballkid_id, 0) + grant
+                )
+
+        # Lock volunteers in a stable order before adjusting balances. The
+        # round lock serializes this refund against lottery/decline/allocation.
+        ballkids = list(
+            Ballkid.objects.select_for_update()
+            .filter(pk__in=grants_by_ballkid)
+            .order_by("pk")
+        )
+        for ballkid in ballkids:
             ballkid.num_tickets = max(
-                0, (ballkid.num_tickets or 0) - ticket.num_granted
+                0,
+                (ballkid.num_tickets or 0) - grants_by_ballkid[ballkid.pk],
             )
             ballkid.save(update_fields=["num_tickets"])
         session.delete()
@@ -516,6 +536,23 @@ class RequestTickets(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return session, None
+
+    def _locked_round_error(self, session):
+        # The initial open-round lookup happens before the row lock. Recheck
+        # against the freshly locked row so a request cannot slip in behind
+        # the lottery or after the close time.
+        now = now_et()
+        if not session.is_live or session.lottery_run_at:
+            return Response(
+                {"detail": "The ticket request window is no longer open."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if now >= now_et(session.closes_at):
+            return Response(
+                {"detail": "The request window is closed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return None
 
     def _ballkid_and_open_session(self, request):
         ballkid = _my_ballkid(request.user)
@@ -564,6 +601,9 @@ class RequestTickets(APIView):
 
         # Keep the lock order consistent with lottery allocation: round, then ballkid.
         session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        locked_error = self._locked_round_error(session)
+        if locked_error:
+            return locked_error
         ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         remaining = remaining_tickets(ballkid)
@@ -657,6 +697,9 @@ class RequestTickets(APIView):
 
         # Keep the lock order consistent with lottery allocation: round, then ballkid.
         session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        locked_error = self._locked_round_error(session)
+        if locked_error:
+            return locked_error
         ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         remaining = remaining_tickets(ballkid)
@@ -773,6 +816,9 @@ class RequestTickets(APIView):
 
         # Keep the lock order consistent with lottery allocation: round, then ballkid.
         session = TicketSession.objects.select_for_update().get(pk=session.pk)
+        locked_error = self._locked_round_error(session)
+        if locked_error:
+            return locked_error
         ballkid = Ballkid.objects.select_for_update().get(pk=ballkid.pk)
 
         qs = session.tickets.filter(
@@ -955,7 +1001,13 @@ class RunTicketWaitlist(APIView):
                 {"detail": "No ticket round found."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        session = run_waitlist_pass(session)
+        try:
+            session = run_waitlist_pass(session)
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({"session": serialize_session(session)})
 
 
