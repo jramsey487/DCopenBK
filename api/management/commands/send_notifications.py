@@ -18,6 +18,7 @@ from api.utils.push_notifications import deliver_push, web_push_configured
 logger = logging.getLogger("api.notifications")
 
 IDLE_SLEEP_SECONDS = 30
+HEARTBEAT_INTERVAL_SECONDS = 300
 # How long an assignment must stay put before we tell the ballkid.
 TEAM_CHANGE_STABLE_MINUTES = 5
 # Don't announce assignments that have been in place longer than this.
@@ -50,17 +51,69 @@ class Command(BaseCommand):
             self.run_once(verbose=True)
             return
 
-        self.stdout.write("Notification loop started.")
+        logger.info(
+            "Notification worker started; heartbeat interval=%s seconds",
+            HEARTBEAT_INTERVAL_SECONDS,
+        )
+        last_heartbeat = time.monotonic()
         while True:
             active = False
             try:
                 active = self.run_once(verbose=False)
+                if time.monotonic() - last_heartbeat >= HEARTBEAT_INTERVAL_SECONDS:
+                    self.log_health()
+                    last_heartbeat = time.monotonic()
             except Exception:
                 logger.exception("Notification check failed")
             finally:
                 # Long-lived process: don't hold on to stale DB connections.
                 close_old_connections()
             time.sleep(options["interval"] if active else IDLE_SLEEP_SECONDS)
+
+    def log_health(self):
+        """Emit a periodic scheduler/outbox heartbeat to the platform logs."""
+        now = timezone.now()
+
+        push_pending = NotificationDelivery.objects.filter(
+            status=NotificationDelivery.STATUS_PENDING
+        ).count()
+        push_processing = NotificationDelivery.objects.filter(
+            status=NotificationDelivery.STATUS_PROCESSING
+        ).count()
+        push_failed = NotificationDelivery.objects.filter(
+            status=NotificationDelivery.STATUS_FAILED
+        ).count()
+        push_stale = NotificationDelivery.objects.filter(
+            status=NotificationDelivery.STATUS_PROCESSING
+        ).filter(Q(locked_until__lte=now) | Q(locked_until__isnull=True)).count()
+
+        email_pending = TicketEmailDelivery.objects.filter(
+            status=TicketEmailDelivery.STATUS_PENDING
+        ).count()
+        email_processing = TicketEmailDelivery.objects.filter(
+            status=TicketEmailDelivery.STATUS_PROCESSING
+        ).count()
+        email_failed = TicketEmailDelivery.objects.filter(
+            status=TicketEmailDelivery.STATUS_FAILED
+        ).count()
+        email_stale = TicketEmailDelivery.objects.filter(
+            status=TicketEmailDelivery.STATUS_PROCESSING
+        ).filter(Q(locked_until__lte=now) | Q(locked_until__isnull=True)).count()
+
+        logger.info(
+            "Notification worker heartbeat: "
+            "push_pending=%s push_processing=%s push_failed=%s push_stale=%s; "
+            "ticket_email_pending=%s ticket_email_processing=%s "
+            "ticket_email_failed=%s ticket_email_stale=%s",
+            push_pending,
+            push_processing,
+            push_failed,
+            push_stale,
+            email_pending,
+            email_processing,
+            email_failed,
+            email_stale,
+        )
 
     # ------------------------------------------------------------------
 

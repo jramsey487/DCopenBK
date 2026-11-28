@@ -299,75 +299,40 @@ if USE_R2_STORAGE:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOG_DIR = BASE_DIR / "logs"
-if not os.path.exists(LOG_DIR):
-    os.mkdir(LOG_DIR)
-
+# Production runs on ephemeral Fly machines. Send logs to stdout/stderr so
+# Fly captures them in its centralized application logs instead of writing
+# unrotated files that disappear on restart.
 LOGGING = {
-    "version": 1,  # The version number of our log
+    "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "verbose": {
-            "format": "{asctime} [{levelname} | {module}] {message} @ {pathname} : {lineno} : {funcName}",
+        "console": {
+            "format": "{asctime} {levelname} {name}: {message}",
             "style": "{",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        "simple": {
-            "format": "{asctime} {levelname} {module} {message}",
-            "style": "{",
-        },
     },
     "handlers": {
-        "infoFile": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": LOG_DIR / "info.log",
-            "formatter": "simple",
-        },
-        "warningFile": {
-            "level": "WARNING",
-            "class": "logging.FileHandler",
-            "filename": LOG_DIR / "warning.log",
-            "formatter": "verbose",
-        },
-        "djangoFile": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": LOG_DIR / "django.log",
-            "formatter": "verbose",
-        },
         "console": {
             "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "console",
         },
     },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
     "loggers": {
-        "api.ballkid": {
-            "handlers": ["infoFile", "warningFile"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "api.rating": {
-            "handlers": ["infoFile", "warningFile"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "api.utils": {
-            "handlers": ["infoFile", "warningFile"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "api.schedule": {
-            "handlers": ["infoFile", "warningFile"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "accounts": {
-            "handlers": ["infoFile", "warningFile"],
-            "level": "INFO",
-            "propagate": True,
-        },
         "django": {
-            "handlers": ["djangoFile"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "api.notifications": {
+            "level": "INFO",
+            "propagate": True,
+        },
+        "api.ticket_emails": {
             "level": "INFO",
             "propagate": True,
         },
