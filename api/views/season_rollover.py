@@ -57,6 +57,15 @@ def _rollover_seasons(today=None):
         .first()
     )
     if target is None:
+        # Older setup flows may create an undated current-year tournament
+        # before its schedule is entered. Preserve that record in the wizard.
+        current_year = get_current_year()
+        undated_current = Tournament.objects.filter(
+            year=current_year, start_date__isnull=True
+        ).first()
+        if undated_current is not None:
+            return undated_current, current_year, current_year - 1
+
         # Off-season with no next tournament configured yet: advance from the
         # most recent actual tournament instead of treating the old calendar
         # year's tournament as the target.
