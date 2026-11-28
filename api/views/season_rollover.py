@@ -115,6 +115,21 @@ class SeasonRolloverStatus(APIView):
         )
 
         active_count = Ballkid.objects.filter(is_active=True).count()
+        tryout_dates = [
+            tournament.tryout_date_1.isoformat() if tournament and tournament.tryout_date_1 else None,
+            tournament.tryout_date_2.isoformat() if tournament and tournament.tryout_date_2 else None,
+        ]
+        tryout_locations = [
+            (tournament.tryout_location_1 or "").strip() if tournament else "",
+            (tournament.tryout_location_2 or "").strip() if tournament else "",
+        ]
+        complete_tryout_slots = sum(
+            bool(tryout_dates[index] and tryout_locations[index]) for index in range(2)
+        )
+        partial_tryout_slots = any(
+            bool(tryout_dates[index]) != bool(tryout_locations[index]) for index in range(2)
+        )
+        tryout_done = complete_tryout_slots > 0 and not partial_tryout_slots
         reset = _reset_counts(season_year)
         reset_total = sum(reset.values())
 
@@ -136,6 +151,13 @@ class SeasonRolloverStatus(APIView):
                 "has_dates": bool(
                     tournament and tournament.start_date and tournament.end_date
                 ),
+            },
+            "tryouts": {
+                "done": tryout_done,
+                "complete_slots": complete_tryout_slots,
+                "partial_slots": partial_tryout_slots,
+                "dates": tryout_dates,
+                "locations": tryout_locations,
             },
             "archive": {"active_count": active_count, "done": active_count == 0},
             "reset": {
