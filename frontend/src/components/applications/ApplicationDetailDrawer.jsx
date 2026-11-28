@@ -300,7 +300,6 @@ export default function ApplicationDetailDrawer({
 
         {app.is_veteran ? (
           <Section title="Returning ball crew">
-            <Field label="Years of experience" value={app.years_experience} />
             <Field label="Position" value={app.position} />
             <Field label="Likelihood they'll volunteer" value={LIKELIHOOD_LABELS[app.likelihood]} />
             <Field label="Sunday / Monday" value={SUN_MON_LABELS[app.veteran_sunday_or_monday]} />

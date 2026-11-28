@@ -134,7 +134,6 @@ const emptyForm = {
   is_veteran: null,
 
   // veteran-only
-  years_experience: "",
   position: "",
   likelihood: "",
   headshot_update: null,
@@ -217,7 +216,6 @@ function validateStep(step, form, existingFiles = {}) {
   if (step === 1) {
     if (form.is_veteran) {
       [
-        "years_experience",
         "position",
         "likelihood",
         "veteran_sunday_or_monday",
@@ -723,7 +721,7 @@ export default function ApplicationPage() {
           {minimumAge
             ? `You must be ${minimumAge} or older by the start of the tournament. `
             : ""}
-          First-time applicants and veterans who did not receive a returning invitation must attend a tryout.
+          If you do not have a returning invitation, you must attend a tryout.
         </Typography>
 
         {upcomingTryouts.length > 0 ? (
@@ -1058,14 +1056,14 @@ export default function ApplicationPage() {
             <FormControlLabel
               value="true"
               control={<Radio />}
-              label="I'm a Veteran"
+              label="I Have A Returning Invite"
               disabled={isEditing}
             />
 
             <FormControlLabel
               value="false"
               control={<Radio />}
-              label="This is my first time"
+              label="I Need To Tryout"
               disabled={
                 isEditing || !rookieTryoutsAvailable
               }
@@ -1091,15 +1089,6 @@ export default function ApplicationPage() {
           <Typography variant="h6">
             Veteran Ballperson
           </Typography>
-
-          <TextField
-            label="Years of experience (not counting this year)"
-            type="number"
-            value={form.years_experience}
-            onChange={set("years_experience")}
-            required
-            {...fp("years_experience")}
-          />
 
           <TextField
             select

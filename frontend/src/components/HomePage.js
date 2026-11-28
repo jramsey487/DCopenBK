@@ -50,12 +50,13 @@ import AnnouncementsPage from "./settings/AnnouncementsPage";
 import ApplicationPage from "./applications/ApplicationPage";
 import SizingReportPage from "./applications/SizingReportPage";
 import ApplicationsReviewPage from "./applications/ApplicationsReviewPage";
+import ApplicationLaunchPage from "./applications/ApplicationLaunchPage";
 import TryoutReviewPage from "./applications/TryoutReviewPage";
 import ShiftGroupsPage from "./applications/ShiftGroupsPage";
 import HandbookPage from "./applications/HandbookPage";
 import TriviaPage from "./applications/TriviaPage";
 
-import { useToken, getLocalStorage, useIsMobile } from "./Utils";
+import { useToken, getLocalStorage, getIsSuperuser, useIsMobile } from "./Utils";
 import { setUnauthorizedHandler } from "./api";
 
 function chairpersonRoutes(isMobile, setToken) {
@@ -64,6 +65,7 @@ function chairpersonRoutes(isMobile, setToken) {
       <Route exact path="/" element={<BallkidList />} />
       <Route path="/list" element={<BallkidList />} />
       <Route path="/ballkid/:pk" element={<BallkidPageChairperson />} />
+      <Route path="/application-launch" element={<ApplicationLaunchPage />} />
       <Route path="/applications" element={<ApplicationsReviewPage />} />
       <Route path="/action-log" element={<ActionLogPage />} />
       <Route path="/checkin" element={<CheckinPage />} />
@@ -212,6 +214,7 @@ export default function HomePage(props) {
   }, [setToken]);
 
   const group = getLocalStorage("group");
+  const isSuperuser = getIsSuperuser();
 
   return !token ? (
     <Router>
@@ -221,7 +224,7 @@ export default function HomePage(props) {
   ) : (
     <Router>
       <Navbar isLoggedIn={true} setToken={setToken} />
-      {group === "chairperson"
+      {group === "chairperson" || isSuperuser
         ? chairpersonRoutes(isMobile, setToken)
         : group === "captain"
         ? captainRoutes(setToken)

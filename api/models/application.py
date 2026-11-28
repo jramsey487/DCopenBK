@@ -393,6 +393,102 @@ class ApplicationInterest(models.Model):
         return self.email
 
 
+class ApplicationLaunchDecision(models.Model):
+    """Chairperson's returning-veteran invitation / tryout decision for a season."""
+
+    DECISION_UNDECIDED = "undecided"
+    DECISION_INVITE_BACK = "invite_back"
+    DECISION_MUST_TRY_OUT = "must_try_out"
+    DECISION_CHOICES = (
+        (DECISION_UNDECIDED, "Undecided"),
+        (DECISION_INVITE_BACK, "Invite back"),
+        (DECISION_MUST_TRY_OUT, "Must try out"),
+    )
+
+    ballkid = models.ForeignKey(
+        "api.Ballkid",
+        on_delete=models.CASCADE,
+        related_name="application_launch_decisions",
+    )
+    # The year the invitation applies to (e.g. 2027); source_year is the
+    # prior tournament year whose check-in established eligibility.
+    year = models.PositiveSmallIntegerField()
+    source_year = models.PositiveSmallIntegerField()
+    decision = models.CharField(
+        max_length=20,
+        choices=DECISION_CHOICES,
+        default=DECISION_UNDECIDED,
+    )
+    notes = models.TextField(blank=True, default="")
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="application_launch_decisions",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("ballkid", "year"),
+                name="application_launch_decision_kid_year_uniq",
+            ),
+        ]
+        ordering = ["year", "ballkid_id"]
+
+    def __str__(self):
+        return f"{self.ballkid.get_name()} {self.year}: {self.get_decision_display()}"
+
+
+class ApplicationLaunchEmailLog(models.Model):
+    """Per-recipient durable send state for returning-volunteer launch emails."""
+
+    STATUS_SENDING = "sending"
+    STATUS_SENT = "sent"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = (
+        (STATUS_SENDING, "Sending"),
+        (STATUS_SENT, "Sent"),
+        (STATUS_FAILED, "Failed"),
+    )
+
+    ballkid = models.ForeignKey(
+        "api.Ballkid",
+        on_delete=models.CASCADE,
+        related_name="application_launch_email_logs",
+    )
+    year = models.PositiveSmallIntegerField()
+    source_year = models.PositiveSmallIntegerField()
+    kind = models.CharField(max_length=20)
+    recipient_email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_SENDING
+    )
+    attempts = models.PositiveSmallIntegerField(default=1)
+    last_error = models.TextField(blank=True, default="")
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("ballkid", "year", "kind"),
+                name="launch_email_kid_year_kind_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=("year", "status"), name="launch_email_year_status_idx"),
+        ]
+        ordering = ["year", "ballkid_id"]
+
+    def __str__(self):
+        return f"{self.ballkid.get_name()} {self.year} {self.kind}: {self.status}"
+
+
 class BallkidAdditionalContact(models.Model):
     """
     An extra email address (a parent, spouse, etc.) to copy whenever the

@@ -42,6 +42,9 @@ class Ballkid(models.Model):
     emergency_name = models.CharField(max_length=160, blank=True, null=True)
     emergency_phone = PhoneNumberField(null=True, blank=True)
     num_years_experience = models.IntegerField(default=0)
+    # One-time historical experience baseline; future years require a recorded check-in.
+    veterancy_baseline_years = models.PositiveSmallIntegerField(default=0)
+    veterancy_baseline_through_year = models.PositiveSmallIntegerField(default=2026)
     is_out_of_town = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
     is_chairperson = models.BooleanField(default=False)
@@ -128,6 +131,32 @@ class Ballkid(models.Model):
             )
             history.save()
 
+            # A dated, explicit season record is the reliable source for
+            # returning-veteran eligibility. Keep it independent of the
+            # transient active/archive status on Ballkid.
+            local_checkin = timezone.localtime(now)
+            participation, created = SeasonParticipation.objects.get_or_create(
+                ballkid=self,
+                year=local_checkin.year,
+                defaults={
+                    "first_checkin": now,
+                    "last_checkin": now,
+                    "source": SeasonParticipation.SOURCE_CHECKIN,
+                },
+            )
+            if not created:
+                update_fields = []
+                if participation.first_checkin is None or now < participation.first_checkin:
+                    participation.first_checkin = now
+                    update_fields.append("first_checkin")
+                if participation.last_checkin is None or now > participation.last_checkin:
+                    participation.last_checkin = now
+                    update_fields.append("last_checkin")
+                if participation.source == SeasonParticipation.SOURCE_IMPORTED:
+                    participation.source = SeasonParticipation.SOURCE_CHECKIN
+                    update_fields.append("source")
+                if update_fields:
+                    participation.save(update_fields=update_fields)
         # If checking out, update most recent checkin history row
         else:
             histories = CheckinHistory.objects.filter(ballkid=self)
@@ -586,6 +615,28 @@ class Ballkid(models.Model):
         """
         return f"{self.first_name} {self.last_name}"
 
+    def get_veterancy_years(self, as_of_year=None):
+        """
+        Return the historical baseline plus distinct verified seasons after
+        the baseline cutoff. A season is earned by at least one check-in.
+        """
+        participations = self.season_participations.filter(
+            year__gt=self.veterancy_baseline_through_year
+        )
+        if as_of_year is not None:
+            participations = participations.filter(year__lte=as_of_year)
+        verified_years = participations.values("year").distinct().count()
+        return self.veterancy_baseline_years + verified_years
+
+    def get_verified_veterancy_years(self, as_of_year=None):
+        """Count distinct check-in-earned seasons after the historical cutoff."""
+        participations = self.season_participations.filter(
+            year__gt=self.veterancy_baseline_through_year
+        )
+        if as_of_year is not None:
+            participations = participations.filter(year__lte=as_of_year)
+        return participations.values("year").distinct().count()
+
     def get_preferred_position(self):
         """
         Returns the ballkid's preferred position
@@ -708,6 +759,43 @@ class CheckinHistory(models.Model):
 
     def __str__(self):
         return f"{self.ballkid.get_name()} checked in at {self.start} and checked out at {self.end} (total duration: {self.duration})"
+
+
+
+class SeasonParticipation(models.Model):
+    """A durable record that a ballkid worked during a particular season."""
+
+    SOURCE_CHECKIN = "checkin"
+    SOURCE_IMPORTED = "imported"
+    SOURCE_CHOICES = (
+        (SOURCE_CHECKIN, "Recorded check-in"),
+        (SOURCE_IMPORTED, "Imported historical record"),
+    )
+
+    ballkid = models.ForeignKey(
+        Ballkid, on_delete=models.CASCADE, related_name="season_participations"
+    )
+    year = models.PositiveSmallIntegerField()
+    first_checkin = models.DateTimeField(null=True, blank=True)
+    last_checkin = models.DateTimeField(null=True, blank=True)
+    source = models.CharField(
+        max_length=12, choices=SOURCE_CHOICES, default=SOURCE_CHECKIN
+    )
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("ballkid", "year"),
+                name="season_participation_ballkid_year_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=("year", "ballkid"), name="seasonpart_year_kid_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.ballkid.get_name()} worked in {self.year}"
 
 
 class CheckinAnalytics(models.Model):

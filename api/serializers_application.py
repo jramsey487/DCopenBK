@@ -3,6 +3,9 @@ Serializers for the ballcrew application + tryout review workflow.
 """
 
 from rest_framework import serializers
+from django.utils import timezone
+
+from api.utils.utils import get_current_year
 
 from api.models.application import (
     ApplicationSettings,
@@ -37,11 +40,18 @@ def get_tournament_start_date():
     row exists yet (age validation is skipped in that case rather than
     guessing at a date).
     """
-    tournament = Tournament.objects.order_by("-year").first()
+    today = timezone.localdate()
+    tournament = (
+        Tournament.objects.filter(start_date__gte=today)
+        .order_by("start_date", "year")
+        .first()
+        or Tournament.objects.filter(year=get_current_year()).first()
+        or Tournament.objects.order_by("-year").first()
+    )
     return tournament.start_date if tournament else None
 
 
-def get_tryout_slot_info(exclude_application_id=None):
+def get_tryout_slot_info(exclude_application_id=None, tournament_year=None):
     """
     Returns a list of dicts, one per tryout slot ("first"/"second"), each
     with the slot's date and place (set per season on the current
@@ -64,14 +74,29 @@ def get_tryout_slot_info(exclude_application_id=None):
     offer) -- one source of truth for both.
     """
     settings_obj = ApplicationSettings.get_solo()
-    tournament = Tournament.objects.order_by("-year").first()
-    year = tournament.year if tournament else None
+    if tournament_year is not None:
+        # Match the calendar year of the configured start date first. Legacy
+        # records may still have Tournament.year set to the year they were
+        # originally saved rather than the actual tournament year.
+        tournament = (
+            Tournament.objects.filter(start_date__year=tournament_year).order_by("year").first()
+            or Tournament.objects.filter(year=tournament_year).first()
+        )
+    else:
+        today = timezone.localdate()
+        tournament = (
+            Tournament.objects.filter(start_date__gte=today)
+            .order_by("start_date", "year")
+            .first()
+            or Tournament.objects.order_by("-year").first()
+        )
+    year = tournament.year if tournament else tournament_year
 
     slots = []
     for value, label in TRYOUT_SLOT_CHOICES:
         n = 1 if value == "first" else 2
         date = getattr(tournament, f"tryout_date_{n}", None) if tournament else None
-        if date is None:
+        if date is None and tournament_year is None:
             date = getattr(settings_obj, f"tryout_date_{n}")
         location = (
             getattr(tournament, f"tryout_location_{n}", "") if tournament else ""
@@ -150,7 +175,6 @@ class ApplicationValidationMixin:
 
         if is_veteran:
             required = [
-                "years_experience",
                 "position",
                 "likelihood",
                 "veteran_sunday_or_monday",
@@ -251,7 +275,7 @@ class BallcrewApplicationSubmitSerializer(
 
     class Meta:
         model = BallcrewApplication
-        exclude = _REVIEW_WORKFLOW_FIELDS
+        exclude = _REVIEW_WORKFLOW_FIELDS + ["years_experience"]
 
 
 class BallcrewApplicationEditSerializer(
@@ -268,7 +292,7 @@ class BallcrewApplicationEditSerializer(
 
     class Meta:
         model = BallcrewApplication
-        exclude = _REVIEW_WORKFLOW_FIELDS + ["edit_token"]
+        exclude = _REVIEW_WORKFLOW_FIELDS + ["edit_token", "years_experience"]
         read_only_fields = ["is_veteran"]
 
 

@@ -17,6 +17,7 @@ URLs (see api/urls.py):
 """
 
 import csv
+import logging
 import re
 from datetime import date
 
@@ -40,6 +41,8 @@ from rest_framework.views import APIView
 from accounts.emails import send_set_password_emails_async
 from api.models.application import (
     ApplicationInterest,
+    ApplicationLaunchDecision,
+    ApplicationLaunchEmailLog,
     ApplicationSettings,
     APPLICATION_STATUS_CHOICES,
     BallcrewApplication,
@@ -47,7 +50,8 @@ from api.models.application import (
     derive_last_day,
     TryoutReview,
 )
-from api.models.ballkid import Ballkid
+from api.models.ballkid import Ballkid, SeasonParticipation
+from api.utils.utils import get_current_year
 from api.models.schedule import Tournament
 from api.permissions import IsChairperson, IsChairpersonOrCaptain
 from api.serializers_application import (
@@ -59,6 +63,12 @@ from api.serializers_application import (
     get_tryout_slot_info,
     recommendation_counts,
     TryoutReviewSerializer,
+)
+from api.utils.application_launch_email import (
+    build_launch_preview,
+    launch_send_in_progress,
+    send_launch_notifications_async,
+    send_launch_test_email,
 )
 from api.utils.application_decision_email import (
     applicant_emails_enabled,
@@ -76,6 +86,9 @@ from api.utils.application_email import (
     send_interest_notifications_async,
 )
 
+
+
+logger = logging.getLogger(__name__)
 
 def _as_bool(value, default=True):
     """Request values may be real booleans or strings like "false"."""
@@ -299,6 +312,361 @@ class ApplicationListView(generics.ListAPIView):
         if status_filter:
             qs = qs.filter(status=status_filter)
         return qs
+
+
+class ApplicationVeterancyRosterView(APIView):
+    """
+    Chairperson-only roster of Ballkids who checked in during a selected
+    season. This is the evidence-based prior-season list used by Application
+    Launch; roster assignment alone never creates a row.
+    """
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        current_year = get_current_year()
+        default_year = (
+            current_year
+            if SeasonParticipation.objects.filter(year=current_year).exists()
+            else current_year - 1
+        )
+        raw_year = request.query_params.get("year", default_year)
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if year < 1900 or year > get_current_year():
+            return Response(
+                {"year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation_rows = list(
+            SeasonParticipation.objects.filter(year=year)
+            .select_related("ballkid", "ballkid__user")
+            .prefetch_related(
+                Prefetch(
+                    "ballkid__season_participations",
+                    queryset=SeasonParticipation.objects.filter(
+                        year__lte=year,
+                        year__gt=F("ballkid__veterancy_baseline_through_year"),
+                    ).only("ballkid_id", "year"),
+                    to_attr="veterancy_participations",
+                )
+            )
+            .order_by("ballkid__last_name", "ballkid__first_name", "ballkid_id")
+        )
+        decisions = {
+            decision.ballkid_id: decision
+            for decision in ApplicationLaunchDecision.objects.filter(
+                year=year + 1,
+                source_year=year,
+                ballkid_id__in=[row.ballkid_id for row in participation_rows],
+            )
+        }
+        roster = []
+        for participation in participation_rows:
+            ballkid = participation.ballkid
+            launch_decision = decisions.get(ballkid.id)
+            verified_years = len(
+                {
+                    season.year
+                    for season in getattr(ballkid, "veterancy_participations", [])
+                }
+            )
+            historical_years = ballkid.veterancy_baseline_years
+            roster.append(
+                {
+                    "ballkid_id": ballkid.id,
+                    "first_name": ballkid.first_name,
+                    "last_name": ballkid.last_name,
+                    "full_name": ballkid.get_name(),
+                    "email": ballkid.user.email if ballkid.user_id else "",
+                    "participation_year": participation.year,
+                    "decision": (
+                        launch_decision.decision
+                        if launch_decision
+                        else ApplicationLaunchDecision.DECISION_UNDECIDED
+                    ),
+                    "decision_notes": launch_decision.notes if launch_decision else "",
+                    "last_checkin": (
+                        participation.last_checkin.isoformat()
+                        if participation.last_checkin
+                        else None
+                    ),
+                    "historical_veterancy_years": historical_years,
+                    "verified_veterancy_years": verified_years,
+                    "veterancy_years": historical_years + verified_years,
+                }
+            )
+        return Response(
+            {
+                "year": year,
+                "available_years": list(
+                    SeasonParticipation.objects.order_by("-year")
+                    .values_list("year", flat=True)
+                    .distinct()
+                ),
+                "count": len(roster),
+                "results": roster,
+            }
+        )
+
+
+class ApplicationLaunchDecisionView(APIView):
+    """Save a chairperson's per-season invite-back / tryout decision."""
+
+    permission_classes = [IsChairperson]
+
+    def patch(self, request, ballkid_id):
+        target_year = request.data.get("year", get_current_year())
+        try:
+            year = int(target_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if year < 1900 or year > get_current_year() + 1:
+            return Response(
+                {"year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        decision = request.data.get("decision")
+        allowed_decisions = {
+            value for value, _label in ApplicationLaunchDecision.DECISION_CHOICES
+        }
+        if decision not in allowed_decisions:
+            return Response(
+                {"decision": "Choose invite back, must try out, or undecided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        source_year = year - 1
+        if not SeasonParticipation.objects.filter(
+            ballkid_id=ballkid_id, year=source_year
+        ).exists():
+            return Response(
+                {"detail": "No recorded check-in for this Ballkid in the prior tournament year."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        launch_decision, _created = ApplicationLaunchDecision.objects.get_or_create(
+            ballkid_id=ballkid_id,
+            year=year,
+            defaults={
+                "source_year": source_year,
+                "decision": decision,
+                "updated_by": request.user,
+            },
+        )
+        launch_decision.source_year = source_year
+        launch_decision.decision = decision
+        launch_decision.updated_by = request.user
+        if "notes" in request.data:
+            launch_decision.notes = request.data.get("notes") or ""
+        launch_decision.save()
+        return Response(
+            {
+                "ballkid_id": ballkid_id,
+                "year": year,
+                "source_year": source_year,
+                "decision": launch_decision.decision,
+                "notes": launch_decision.notes,
+                "updated_at": launch_decision.updated_at.isoformat(),
+            }
+        )
+
+
+class ApplicationLaunchTournamentView(APIView):
+    """Read target tournament dates configured in Tournament Settings."""
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        raw_year = request.query_params.get("year")
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            raise ValidationError({"year": "Provide a valid target tournament year."})
+        if year < 1900 or year > get_current_year() + 10:
+            raise ValidationError({"year": "Target tournament year is outside the supported range."})
+
+        # Older settings may still be keyed to the year they were saved,
+        # while the tournament itself belongs to start_date.year. Prefer the
+        # date-derived year so Application Launch works before settings are
+        # re-saved and normalized.
+        tournament = (
+            Tournament.objects.filter(start_date__year=year).order_by("year").first()
+            or Tournament.objects.filter(year=year).first()
+        )
+        return Response({
+            "year": year,
+            "exists": tournament is not None,
+            "start_date": tournament.start_date.isoformat() if tournament and tournament.start_date else "",
+            "end_date": tournament.end_date.isoformat() if tournament and tournament.end_date else "",
+            "configured": bool(tournament and tournament.start_date and tournament.end_date),
+        })
+
+
+class ApplicationLaunchPreviewView(APIView):
+    """Chairperson-only, side-effect-free preview of returning-volunteer emails."""
+
+    permission_classes = [IsChairperson]
+
+    def get(self, request):
+        raw_year = request.query_params.get("source_year")
+        if raw_year is None:
+            current_year = get_current_year()
+            raw_year = (
+                current_year
+                if SeasonParticipation.objects.filter(year=current_year).exists()
+                else current_year - 1
+            )
+        try:
+            source_year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"source_year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if source_year < 1900 or source_year > get_current_year():
+            return Response(
+                {"source_year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(build_launch_preview(source_year))
+
+
+class ApplicationLaunchSendView(APIView):
+    """Start a guarded, resumable batch of returning-volunteer invitations."""
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        raw_year = request.data.get("source_year")
+        try:
+            source_year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"source_year": "Provide the prior tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if source_year < 1900 or source_year > get_current_year():
+            return Response(
+                {"source_year": "Year must be between 1900 and the current tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not ApplicationSettings.get_solo().is_open:
+            return Response(
+                {"detail": "Open applications before sending invitation emails."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if launch_send_in_progress():
+            return Response(
+                {"detail": "A launch email batch is already in progress."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        preview = build_launch_preview(source_year)
+        if not preview["tournament_configured"]:
+            return Response(
+                {"detail": f"Configure start and end dates for tournament {source_year + 1} before sending."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if preview["undecided"]:
+            return Response(
+                {
+                    "detail": "Resolve all invitation / tryout decisions before sending.",
+                    "undecided": preview["undecided"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if preview["missing_email"]:
+            return Response(
+                {
+                    "detail": "Add an email address for every person being invited.",
+                    "missing_email": preview["missing_email"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        send_launch_notifications_async(source_year)
+        return Response(
+            {
+                "queued": preview["sendable"],
+                "year": preview["year"],
+                "detail": "Invitation batch started. Refresh the preview to see delivery status.",
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+
+class ApplicationLaunchTestEmailView(APIView):
+    """Send a selected launch-email preview only to the requesting chairperson."""
+
+    permission_classes = [IsChairperson]
+
+    def post(self, request):
+        try:
+            ballkid_id = int(request.data.get("ballkid_id"))
+            source_year = int(request.data.get("source_year"))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Provide a Ballkid and prior tournament year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not request.user.email:
+            return Response(
+                {"detail": "Add an email address to your chairperson account before sending a test."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        decision_row = get_object_or_404(
+            ApplicationLaunchDecision,
+            ballkid_id=ballkid_id,
+            year=source_year + 1,
+            source_year=source_year,
+        )
+        if decision_row.decision not in (
+            ApplicationLaunchDecision.DECISION_INVITE_BACK,
+            ApplicationLaunchDecision.DECISION_MUST_TRY_OUT,
+        ):
+            return Response(
+                {"detail": "Choose invite back or must try out before sending a test."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ballkid = get_object_or_404(Ballkid, pk=ballkid_id)
+        tournament = (
+            Tournament.objects.filter(start_date__year=source_year + 1).order_by("year").first()
+            or Tournament.objects.filter(year=source_year + 1).first()
+        )
+        tournament_dates = (
+            f"{tournament.start_date.strftime('%B %d, %Y').replace(' 0', ' ')} – "
+            f"{tournament.end_date.strftime('%B %d, %Y').replace(' 0', ' ')}"
+            if tournament and tournament.start_date and tournament.end_date
+            else None
+        )
+        try:
+            subject = send_launch_test_email(
+                ballkid.first_name,
+                decision_row.decision,
+                source_year + 1,
+                tournament_dates,
+                request.user.email,
+            )
+        except Exception:
+            logger.exception("Application launch test email failed")
+            return Response(
+                {"detail": "Unable to send the test email. Check server email logs."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        return Response(
+            {"sent": True, "to": request.user.email, "subject": subject},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ApplicationDetailView(generics.RetrieveAPIView):

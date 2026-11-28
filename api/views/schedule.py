@@ -490,8 +490,11 @@ class GetTournament(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Tournament year is the calendar year of its start date. The client
+        # no longer supplies a separate year that can disagree with the dates.
+        tournament_year = start.year
         tournament, _ = Tournament.objects.update_or_create(
-            year=request.data["year"],
+            year=tournament_year,
             defaults={
                 "start_date": start,
                 "end_date": end,
@@ -499,11 +502,22 @@ class GetTournament(APIView):
                 **tryout_values,
             },
         )
-        refresh_ballkid_ages(year=request.data["year"])
+        refresh_ballkid_ages(year=tournament_year)
         return Response(TournamentSerializer(tournament).data)
 
+    def _settings_tournament(self):
+        # Prefer the next upcoming tournament so dates can be configured well
+        # ahead of the calendar year; fall back to the current-year record.
+        today = timezone.localdate()
+        tournament = (
+            Tournament.objects.filter(start_date__gte=today)
+            .order_by("start_date", "year")
+            .first()
+        )
+        return tournament or Tournament.objects.filter(year=get_current_year()).first()
+
     def get(self, request, format=None):
-        tournament = Tournament.objects.filter(year=get_current_year()).first()
+        tournament = self._settings_tournament()
         logger.info(f"[GetTournament GET] tournament {tournament}")
         return Response(
             TournamentSerializer(tournament).data, status=status.HTTP_200_OK
@@ -511,8 +525,11 @@ class GetTournament(APIView):
 
     def patch(self, request, format=None):
         current_year = get_current_year()
-        tournament = Tournament.objects.get(year=current_year)
+        tournament = self._settings_tournament()
+        if tournament is None:
+            tournament = Tournament.objects.create(year=current_year)
         previous_start = tournament.start_date
+        previous_year = tournament.year
 
         # Validate tryout dates/places up front so a bad value is rejected
         # before any of the other updates below take effect.
@@ -600,10 +617,36 @@ class GetTournament(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+        # Normalize the record's year from the start date, even when
+        # dates were saved before this behavior was introduced.
+        if tournament.start_date:
+            inferred_year = tournament.start_date.year
+            existing_target = Tournament.objects.filter(year=inferred_year).exclude(pk=tournament.pk).first()
+            if existing_target:
+                # Preserve the already-existing target record's non-date
+                # settings, while moving this record's date/tryout settings.
+                for field in (
+                    "start_date", "end_date", "tryout_date_1", "tryout_date_2",
+                    "tryout_location_1", "tryout_location_2",
+                ):
+                    setattr(existing_target, field, getattr(tournament, field))
+                existing_target.save()
+                if tournament.year != inferred_year:
+                    tournament.start_date = None
+                    tournament.end_date = None
+                    tournament.tryout_date_1 = None
+                    tournament.tryout_date_2 = None
+                    tournament.tryout_location_1 = ""
+                    tournament.tryout_location_2 = ""
+                    tournament.save()
+                tournament = existing_target
+            else:
+                tournament.year = inferred_year
+
         tournament.save()
 
-        if tournament.start_date != previous_start:
-            refresh_ballkid_ages(year=current_year)
+        if tournament.start_date != previous_start or tournament.year != previous_year:
+            refresh_ballkid_ages(year=tournament.year)
 
         logger.info(
             f"[GetTournament PATCH] tournament {tournament} updated with request {request.data}"

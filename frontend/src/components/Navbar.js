@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 
 import BallcrewLogo from "./BallcrewLogo";
 import MobileNavDrawer from "./MobileNavDrawer";
-import { getLocalStorage, useIsMobile } from "./Utils";
+import { getLocalStorage, getIsSuperuser, useIsMobile } from "./Utils";
 import { removeDeviceSubscriptionOnLogout } from "./pushLogout";
 import { clearApiCache } from "./api";
 import "./navbar.css";
@@ -47,6 +47,7 @@ const chairpersonTabs = [
     subtabs: [
       { label: "Apply", url: "/apply" },
       { label: "Ball Crew Handbook", url: "/handbook" },
+      { label: "Application Launch", url: "/application-launch" },
       { label: "Review Applications", url: "/applications" },
       { label: "Submit Tryout Review", url: "/tryout-review" },
       { label: "Sizing Report", url: "/sizing-report" },
@@ -276,11 +277,15 @@ function DesktopNavbarItem({ tab, useIconButton, setToken }) {
 
 export default function Navbar({ isLoggedIn, setToken }) {
   const group = getLocalStorage("group");
+  const isSuperuser = getIsSuperuser();
   const isMobile = useIsMobile();
 
   var accountTab = {};
   var tabs = [];
-  switch (group) {
+  if (isSuperuser) {
+    tabs = chairpersonTabs;
+    accountTab = chairpersonAccountTab;
+  } else switch (group) {
     case "ballkid":
       tabs = ballkidTabs;
       accountTab = ballkidAccountTab;
@@ -332,7 +337,11 @@ export default function Navbar({ isLoggedIn, setToken }) {
         <div className="app-navbar-right">
           {isLoggedIn ? (
             isMobile ? (
-              <MobileNavDrawer group={group} setToken={setToken} />
+              <MobileNavDrawer
+                group={group}
+                isSuperuser={isSuperuser}
+                setToken={setToken}
+              />
             ) : (
               <DesktopNavbarItem
                 tab={accountTab}
