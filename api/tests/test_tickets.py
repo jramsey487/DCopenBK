@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User, Group
 from django.test import override_settings
@@ -119,6 +120,27 @@ class TicketFlowTests(APITestCase):
         response = self._request(1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Ticket.objects.filter(ballkid=self.ballkid).count(), 1)
+
+    def test_request_rechecks_round_state_after_waiting_for_lock(self):
+        self._auth(self.bk_user)
+        stale_session = TicketSession.objects.get(pk=self.session.pk)
+        TicketSession.objects.filter(pk=self.session.pk).update(
+            is_live=False,
+            lottery_run_at=_naive(self.now),
+        )
+
+        with patch(
+            "api.views.tickets.RequestTickets._live_open_session",
+            return_value=(stale_session, None),
+        ):
+            response = self._request(1)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("no longer open", response.data["detail"].lower())
+        self.assertFalse(
+            Ticket.objects.filter(ballkid=self.ballkid, ticket_session=self.session)
+            .exists()
+        )
 
     def test_cannot_request_more_than_remaining(self):
         self._auth(self.bk_user)
