@@ -137,9 +137,7 @@ class SeasonRolloverStatus(APIView):
             },
             "applications": {
                 "is_open": ApplicationSettings.get_solo().is_open,
-                "pending_review": BallcrewApplication.objects.filter(
-                    status="pending", submitted_at__year=target_year
-                ).count(),
+                "pending_review": BallcrewApplication.objects.filter(status="pending").count(),
                 "interest_waiting": len(pending_interest_entries()),
             },
         })
