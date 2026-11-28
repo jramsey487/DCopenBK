@@ -338,6 +338,8 @@ def set_session_live(session, is_live=True):
     # constraint is the final guard against two different rounds going live
     # concurrently for the same tournament year.
     session = TicketSession.objects.select_for_update().get(pk=session.pk)
+    if is_live and session.lottery_run_at:
+        raise ValueError("A ticket round cannot be reopened after the lottery.")
     if is_live and session.is_live:
         # Repeated PATCHes should not rebroadcast the round-live email.
         return session
@@ -640,7 +642,10 @@ def run_lottery(session, now=None):
         _lottery_one_option(session, None, tickets, now=now)
 
     session.lottery_run_at = for_storage(now)
-    session.save(update_fields=["lottery_run_at"])
+    # Running the lottery closes the request window even if staff manually
+    # trigger it before the configured close time.
+    session.is_live = False
+    session.save(update_fields=["lottery_run_at", "is_live"])
     email_lottery_results(session)
     return session
 
