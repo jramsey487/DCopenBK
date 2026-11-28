@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
+from unittest.mock import patch
 
 from api.management.commands.send_notifications import Command
 from api.models.notifications import NotificationDelivery, TicketEmailDelivery
@@ -66,8 +67,11 @@ class NotificationWorkerObservabilityTests(TestCase):
             locked_until=expired_lease,
         )
 
-        with self.assertLogs("api.notifications", level="INFO") as captured:
-            Command().log_health()
+        with patch(
+            "api.management.commands.send_notifications.alert_delivery_outbox_health"
+        ):
+            with self.assertLogs("api.notifications", level="INFO") as captured:
+                Command().log_health()
 
         message = captured.output[0]
         self.assertIn("push_pending=1", message)
