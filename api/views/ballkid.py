@@ -1111,7 +1111,19 @@ class ResetData(APIView):
     permission_classes = [IsChairperson]
 
     def patch(self, request, format=None):
-        year = get_current_year()
+        raw_year = request.data.get("year", get_current_year())
+        try:
+            year = int(raw_year)
+        except (TypeError, ValueError):
+            return Response(
+                {"year": "Provide a valid calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if year < 1900 or year > get_current_year():
+            return Response(
+                {"year": "Year must be between 1900 and the current calendar year."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Check out and archive all ballkids
         for ballkid in Ballkid.objects.filter(is_active=True):
