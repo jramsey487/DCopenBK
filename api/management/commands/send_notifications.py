@@ -51,7 +51,10 @@ class Command(BaseCommand):
             self.run_once(verbose=True)
             return
 
-        logger.info("Notification worker started; heartbeat interval=%s seconds", HEARTBEAT_INTERVAL_SECONDS)
+        logger.info(
+            "Notification worker started; heartbeat interval=%s seconds",
+            HEARTBEAT_INTERVAL_SECONDS,
+        )
         last_heartbeat = time.monotonic()
         while True:
             active = False
