@@ -228,9 +228,10 @@ export default function SeasonRolloverPage() {
           <h1 className="rollover-title">Start a new season</h1>
           <p className="rollover-subtitle">
             Work through these steps in order. Each one checks the real state of
-            the data, so you can leave and come back. This runs against{" "}
-            <strong>{status.year}</strong>: the app ties each season to the
-            calendar year, so do it once the new year has started.
+            the data, so you can leave and come back. This archives{" "}
+            <strong>{status.season_year}</strong> and prepares the configured
+            upcoming tournament in <strong>{status.target_year}</strong>. You can
+            set up next season before January.
           </p>
         </header>
 
@@ -291,8 +292,8 @@ export default function SeasonRolloverPage() {
           ) : (
             <>
               <p className="rollover-text">
-                This has to come before archiving: archiving looks up the
-                current year's tournament and fails without one.
+                Set the upcoming tournament dates before archiving, so the rollover is
+                anchored to the season you are preparing.
               </p>
               <div className="rollover-fields">
                 <label className="rollover-field">
@@ -366,19 +367,19 @@ export default function SeasonRolloverPage() {
 
         <StepCard
           number={4}
-          title={`Clear leftover ${status.year} test data`}
+          title={`Clear leftover ${status.season_year} test data`}
           state={states.reset}
         >
           {resetDone ? (
             <p className="rollover-text">
-              No {status.year} ratings, check-ins, schedules or analytics. Nothing
+              No {status.season_year} ratings, check-ins, schedules or analytics. Nothing
               to clear.
             </p>
           ) : (
             <>
               <p className="rollover-text">
-                Optional. Deletes {status.year} data left over from testing or a
-                dry run. If this is real {status.year} data you want to keep,
+                Optional. Deletes {status.season_year} data left over from testing or a
+                dry run. If this is real {status.season_year} data you want to keep,
                 skip this step.
               </p>
               <ul className="rollover-counts">
@@ -399,14 +400,14 @@ export default function SeasonRolloverPage() {
                 disabled={states.reset === "locked"}
                 onClick={() => setResetOpen(true)}
               >
-                Reset {status.year} data
+                Reset {status.season_year} data
               </Button>
             </>
           )}
           <ConfirmDialog
             message={`You are about to permanently delete ${status.reset.total} ${status.year} records (ratings, check-in and team histories, schedules, analytics, calibration and cut history).`}
             url="/api/reset-data"
-            body={{}}
+            body={{ year: status.season_year }}
             method="PATCH"
             open={resetOpen}
             setOpen={setResetOpen}
