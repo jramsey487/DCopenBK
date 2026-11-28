@@ -14,6 +14,7 @@ from api.models.schedule import Schedule, Tournament
 from api.utils.notification_outbox import process_notification_outbox
 from api.utils.ticket_email_outbox import process_ticket_email_outbox
 from api.utils.push_notifications import deliver_push, web_push_configured
+from api.utils.operational_alerts import alert_delivery_outbox_health
 
 logger = logging.getLogger("api.notifications")
 
@@ -113,6 +114,13 @@ class Command(BaseCommand):
             email_processing,
             email_failed,
             email_stale,
+        )
+
+        alert_delivery_outbox_health(
+            push_failed=push_failed,
+            push_stale=push_stale,
+            ticket_email_failed=email_failed,
+            ticket_email_stale=email_stale,
         )
 
     # ------------------------------------------------------------------
