@@ -1134,14 +1134,14 @@ export default function TournamentSettings(props) {
               setErrorMsg={setErrorMsg}
             />
 
-            <TournamentTimezone
+            <TournamentTryouts
               tournament={tournament}
               setUpdated={setUpdated}
               setSuccessMsg={setSuccessMsg}
               setErrorMsg={setErrorMsg}
             />
 
-            <TournamentTryouts
+            <TournamentTimezone
               tournament={tournament}
               setUpdated={setUpdated}
               setSuccessMsg={setSuccessMsg}
