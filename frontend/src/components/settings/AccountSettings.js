@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { Banners, getAuthHeader } from "../Utils";
 import PushNotificationSettings from "./PushNotificationSettings";
+import ThemePreference from "./ThemePreference";
 import "./account-settings.css";
 
 function ChangePassword() {
@@ -152,6 +153,7 @@ export default function AccountSettings() {
             Keep your account secure with a strong password.
           </p>
         </header>
+        <ThemePreference />
         <ChangePassword />
         <PushNotificationSettings />
       </div>
